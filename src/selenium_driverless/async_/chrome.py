@@ -28,7 +28,7 @@ MAX_PAYLOAD_SIZE_BYTES = 2 ** 23
 MAX_PAYLOAD_SIZE_MB = MAX_PAYLOAD_SIZE_BYTES / 1024 ** 2
 
 
-class ChromewhipException(Exception):
+class DriverlessException(Exception):
     pass
 
 
@@ -37,11 +37,11 @@ class TimeoutError(Exception):
     pass
 
 
-class ProtocolError(ChromewhipException):
+class ProtocolError(DriverlessException):
     pass
 
 
-class JSScriptError(ChromewhipException):
+class JSScriptError(DriverlessException):
     pass
 
 
@@ -183,7 +183,7 @@ class ChromeTab(metaclass=SyncAdder):
         result = {'ack': None, 'event': None}
 
         try:
-            msg = json.dumps(request, cls=helpers.ChromewhipJSONEncoder)
+            msg = json.dumps(request, cls=helpers.DriverlessJSONEncoder)
             self._send_log.info('Sending command = %s' % msg)
             self._current_task = asyncio.ensure_future(self._ws.send(msg))
             await asyncio.wait_for(self._current_task, timeout=TIMEOUT_S)  # send

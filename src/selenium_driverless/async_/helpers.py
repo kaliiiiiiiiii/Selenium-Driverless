@@ -89,7 +89,7 @@ def json_to_event(payload) -> BaseEvent:
     except ValueError:
         log.error('invalid method name "%s", must contain a module and event joined with a "."' % payload['method'])
         return None
-    module_name = 'chromewhip.protocol.%s' % prot_name.lower()
+    module_name = f'selenium_driverless.async_.protocol.' + prot_name.lower()
     try:
         prot_module = sys.modules[module_name]
     except KeyError:
@@ -111,7 +111,7 @@ class ChromeTypeBase:
         return self.__dict__
 
 
-class ChromewhipJSONEncoder(json.JSONEncoder):
+class DriverlessJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, BaseEvent):
             return {'method': obj.js_name, 'params': obj.__dict__}

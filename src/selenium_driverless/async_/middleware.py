@@ -13,7 +13,7 @@ import traceback
 
 from aiohttp import web
 
-from .chrome import ChromewhipException
+from .chrome import DriverlessException
 
 
 def json_error(message):
@@ -33,7 +33,7 @@ async def error_middleware(app, handler):
             return response
         except web.HTTPException as ex:
             return json_error(ex.reason)
-        except ChromewhipException as ex:
+        except DriverlessException as ex:
             return json_error(ex.args[0])
         except Exception as ex:
             verbose_tb = traceback.format_exc()

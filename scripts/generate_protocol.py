@@ -19,7 +19,7 @@ from jinja2 import Template
 #
 # sys.path.insert(0, PACKAGE_DIR)
 #
-# from chromewhip.helpers import camelize
+# from selenium_driverles.async_.helpers import camelize
 
 FULL_CAP_WORDS = ['url', 'dom', 'css', 'html']
 
