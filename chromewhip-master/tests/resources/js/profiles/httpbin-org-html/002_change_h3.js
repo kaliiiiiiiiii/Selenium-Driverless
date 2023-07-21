@@ -1,1 +1,0 @@
-document.getElementsByTagName('h3')[0].innerText = 'All profiles ran!';

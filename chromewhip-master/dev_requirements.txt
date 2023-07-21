@@ -1,2 +1,0 @@
-Jinja2==2.10.1
-jsonpatch==1.23
