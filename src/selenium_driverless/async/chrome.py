@@ -19,9 +19,9 @@ import websockets
 import websockets.protocol
 import websockets.exceptions
 
-from chromewhip import helpers
-from chromewhip.base import SyncAdder
-from chromewhip.protocol import page, runtime, target, input, inspector, browser, accessibility
+from . import helpers
+from .base import SyncAdder
+from .protocol import page, runtime, target, input, inspector, browser, accessibility
 
 TIMEOUT_S = 25
 MAX_PAYLOAD_SIZE_BYTES = 2 ** 23
@@ -32,6 +32,7 @@ class ChromewhipException(Exception):
     pass
 
 
+# noinspection PyShadowingBuiltins
 class TimeoutError(Exception):
     pass
 
@@ -73,7 +74,7 @@ class ChromeTab(metaclass=SyncAdder):
             ws_url = 'ws://{}:{}/devtools/page/{}'.format(host,
                                                           port,
                                                           tab_id)
-        t = cls(json_['title'], json_['url'],  ws_url, json_['id'])
+        t = cls(json_['title'], json_['url'], ws_url, json_['id'])
         await t.connect()
         return t
 
@@ -236,10 +237,12 @@ class ChromeTab(metaclass=SyncAdder):
                 try:
                     # TODO: put in a `strict` flag so that we can catch differences between the protocol spec and the
                     # underlying implementation.
-                    cleaned_hash_input_dict = {k: v for k, v in hash_input_dict.items() if k in trigger_event_cls.hashable}
+                    cleaned_hash_input_dict = {k: v for k, v in hash_input_dict.items() if
+                                               k in trigger_event_cls.hashable}
                     hash_ = trigger_event_cls.build_hash(**cleaned_hash_input_dict)
                 except TypeError:
-                    raise TypeError(f'Event "{trigger_event_cls.js_name}" hash cannot be built with "{hash_input_dict}"')
+                    raise TypeError(
+                        f'Event "{trigger_event_cls.js_name}" hash cannot be built with "{hash_input_dict}"')
                 event = self._event_payloads.get(hash_)
                 if not event:
                     self._send_log.debug('Waiting for event with hash "%s"...' % hash_)
@@ -264,7 +267,9 @@ class ChromeTab(metaclass=SyncAdder):
                 elif close_code == 1007:
                     raise ProtocolError('Unicode decode error occured for "%s" with id=%s' % (method, id_))
                 elif close_code == 1009:
-                    raise ProtocolError('Recv\'d payload exceeded %sMB for "%s" with id=%s, consider increasing this limit' % (MAX_PAYLOAD_SIZE_MB, method, id_))
+                    raise ProtocolError(
+                        'Recv\'d payload exceeded %sMB for "%s" with id=%s, consider increasing this limit' % (
+                        MAX_PAYLOAD_SIZE_MB, method, id_))
             raise TimeoutError('Unknown cause for timeout to occurs for "%s" with id=%s' % (method, id_))
 
     async def new_message_handler(self, request):
@@ -293,14 +298,13 @@ class ChromeTab(metaclass=SyncAdder):
         max_retries = 3
         while not finished:
             try:
-                return await self._send(*command, input_event_cls=input_event_type, trigger_event_cls=await_on_event_type)
+                return await self._send(*command, input_event_cls=input_event_type,
+                                        trigger_event_cls=await_on_event_type)
             except websockets.exceptions.ConnectionClosed:
                 if retries > max_retries:
                     self._log.error(f'Failed to execute send command {command} after {retries} times!')
                     finished = True
                 await self.connect()
-
-
 
     async def html(self):
         result = await self.evaluate('document.documentElement.outerHTML')
@@ -372,7 +376,6 @@ class Chrome(metaclass=SyncAdder):
                 self._log.debug("Connected to Chrome! Found {} tabs".format(len(self._tabs)))
         self.is_connected = True
 
-
     @property
     def host(self):
         return self._host
@@ -403,5 +406,3 @@ class Chrome(metaclass=SyncAdder):
         await tab.disconnect()
         async with aiohttp.ClientSession() as session:
             await session.get(self._url + f'/json/close/{tab.id_}')
-
-

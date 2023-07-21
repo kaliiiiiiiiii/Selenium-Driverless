@@ -20,10 +20,9 @@ import time
 from aiohttp import web
 import yaml
 
-from chromewhip.chrome import Chrome
-from chromewhip.middleware import error_middleware
-from chromewhip.routes import setup_routes
-
+from .chrome import Chrome
+from .middleware import error_middleware
+from .routes import setup_routes
 
 log = logging.getLogger(__name__)
 
@@ -31,6 +30,7 @@ HOST = '127.0.0.1'
 PORT = 9222
 NUM_TABS = 4
 DISPLAY = ':99'
+
 
 async def on_shutdown(app):
     c = app['chrome-driver']
@@ -51,11 +51,13 @@ async def on_shutdown(app):
     except asyncio.TimeoutError:
         log.error('Timed out trying to shutdown Chrome gracefully!')
 
+
 Settings = namedtuple('Settings', [
     'chrome_fp',
     'chrome_flags',
     'should_run_xfvb'
 ])
+
 
 def get_settings():
     chrome_flags = [
@@ -142,6 +144,7 @@ def setup_app(loop=None, js_profiles_path=None):
 if __name__ == '__main__':
     import argparse
     import sys
+
     config_fp = os.path.abspath(os.path.join(os.path.dirname(__file__), '../config/dev.yaml'))
     config_f = open(config_fp)
     config = yaml.load(config_f)
@@ -157,7 +160,7 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
 
     env = {
-       'DISPLAY': DISPLAY
+        'DISPLAY': DISPLAY
     }
 
     settings = get_settings()

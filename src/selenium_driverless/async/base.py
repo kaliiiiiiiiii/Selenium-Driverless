@@ -20,9 +20,10 @@ class SyncAdder(type):
     original function name.
 
     """
+
     def __new__(cls, clsname, bases, dct, **kwargs):
         new_dct = {}
-        for name,val in dct.items():
+        for name, val in dct.items():
             # Make a sync version of all coroutine functions
             if asyncio.iscoroutinefunction(val):
                 meth = cls.sync_maker(name)
@@ -38,4 +39,5 @@ class SyncAdder(type):
         def sync_func(self, *args, **kwargs):
             meth = getattr(self, func)
             return asyncio.get_event_loop().run_until_complete(meth(*args, **kwargs))
+
         return sync_func

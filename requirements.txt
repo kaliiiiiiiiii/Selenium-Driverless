@@ -1,2 +1,9 @@
 selenium
 setuptools==68.0.0
+
+# chromewhip
+bs4
+aiohttp
+websockets
+PyYAML
+jinja2 

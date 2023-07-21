@@ -10,11 +10,10 @@
 
 import json
 import traceback
-import pprint
 
 from aiohttp import web
 
-from chromewhip.chrome import ChromewhipException
+from .chrome import ChromewhipException
 
 
 def json_error(message):
@@ -23,6 +22,7 @@ def json_error(message):
     #     content_type='application/json')
     # return web.Response(text=pprint.pformat({'error': message}))
     return web.Response(text=json.dumps({'error': message}, indent=4))
+
 
 async def error_middleware(app, handler):
     async def middleware_handler(request):
@@ -38,4 +38,5 @@ async def error_middleware(app, handler):
         except Exception as ex:
             verbose_tb = traceback.format_exc()
             return json_error(verbose_tb)
+
     return middleware_handler

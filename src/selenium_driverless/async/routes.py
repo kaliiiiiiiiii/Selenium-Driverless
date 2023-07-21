@@ -8,7 +8,7 @@
 #
 # modified by kaliiiiiiiiii | Aurin Aegerter
 
-from chromewhip.views import render_html, render_png
+from .views import render_html, render_png
 
 
 def setup_routes(app):

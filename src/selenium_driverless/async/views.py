@@ -12,17 +12,17 @@ import asyncio
 import functools
 import logging
 
-from bs4 import BeautifulSoup
 from aiohttp import web
+from bs4 import BeautifulSoup
 
-from chromewhip.protocol import page, emulation, browser, dom, runtime
+from .protocol import page, dom, runtime
 
 BS = functools.partial(BeautifulSoup, features="lxml")
 
 log = logging.getLogger('chromewhip.views')
 
-async def _go(request: web.Request):
 
+async def _go(request: web.Request):
     js_profiles = request.app['js-profiles']
     c = request.app['chrome-driver']
 
@@ -117,4 +117,3 @@ async def render_png(request: web.Request):
         output = BytesIO()
         full_image.save(output, format='png')
         return web.Response(body=output.getvalue(), content_type='image/png')
-
