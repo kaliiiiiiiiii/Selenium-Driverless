@@ -18,8 +18,10 @@
 # modified by kaliiiiiiiiii | Aurin Aegerter
 
 """The WebDriver implementation."""
+import asyncio
 import contextlib
 import copy
+import os.path
 import pkgutil
 import subprocess
 import types
@@ -56,7 +58,6 @@ from selenium.webdriver.remote.errorhandler import ErrorHandler
 from selenium.webdriver.remote.file_detector import FileDetector
 from selenium.webdriver.remote.file_detector import LocalFileDetector
 from selenium.webdriver.remote.mobile import Mobile
-from selenium.webdriver.remote.remote_connection import RemoteConnection
 from selenium.webdriver.remote.script_key import ScriptKey
 from selenium.webdriver.remote.shadowroot import ShadowRoot
 from selenium.webdriver.remote.switch_to import SwitchTo
@@ -91,17 +92,6 @@ def _create_caps(caps):
     for k, v in caps.items():
         always_match[k] = v
     return {"capabilities": {"firstMatch": [{}], "alwaysMatch": always_match}}
-
-
-def get_remote_connection(capabilities, command_executor, keep_alive):
-    from selenium.webdriver.chromium.remote_connection import ChromiumRemoteConnection
-    from selenium.webdriver.firefox.remote_connection import FirefoxRemoteConnection
-    from selenium.webdriver.safari.remote_connection import SafariRemoteConnection
-
-    candidates = [RemoteConnection, ChromiumRemoteConnection, SafariRemoteConnection, FirefoxRemoteConnection]
-    handler = next((c for c in candidates if c.browser_name == capabilities.get("browserName")), RemoteConnection)
-
-    return handler(command_executor, keep_alive=keep_alive)
 
 
 def create_matches(options: List[BaseOptions]) -> Dict:
@@ -162,7 +152,14 @@ class ChromeDriver(BaseWebDriver):
         :Args:
          - options - this takes an instance of ChromeOptions
         """
+        self.conn = None
         self.browser_pid = None
+        async_used = None
+        try:
+            self._loop = asyncio.get_running_loop()
+            async_used = True
+        except RuntimeError:
+            self._loop = asyncio.get_event_loop()
 
         try:
             options = options or Options()
@@ -173,9 +170,9 @@ class ChromeDriver(BaseWebDriver):
             self.vendor_prefix = vendor_prefix
 
             if isinstance(options, list):
-                capabilities = create_matches(options)
+                self._capabilities = create_matches(options)
             else:
-                capabilities = options.to_capabilities()
+                self._capabilities = options.to_capabilities()
             self._is_remote = True
             self.session_id = None
             self.caps = {}
@@ -186,7 +183,8 @@ class ChromeDriver(BaseWebDriver):
             self.file_detector = LocalFileDetector()
             self._authenticator_id = None
             self.start_client()
-            self.start_session(capabilities)
+            if not async_used:
+                self._loop.run_until_complete(self.start_session(self._capabilities))
 
         except Exception:
             self.quit()
@@ -239,13 +237,18 @@ class ChromeDriver(BaseWebDriver):
         """
         pass
 
-    def start_session(self, capabilities: dict) -> None:
+    async def start_session(self, capabilities: dict or None = None) -> None:
         """Creates a new session with the desired capabilities.
 
         :Args:
          - capabilities - a capabilities dict to start the session with.
         """
-        from selenium_driverless.utils.utils import IS_POSIX
+        if not capabilities:
+            capabilities = self._capabilities
+        del self._capabilities
+        from selenium_driverless.utils.utils import IS_POSIX, read
+        from pycdp.asyncio import connect_cdp
+        from pycdp import cdp
 
         options = capabilities["goog:chromeOptions"]
         caps = _create_caps(capabilities)
@@ -257,8 +260,17 @@ class ChromeDriver(BaseWebDriver):
             stderr=subprocess.PIPE,
             close_fds=IS_POSIX,
         )
+        path = self._options.user_data_dir + "/DevToolsActivePort"
+        while not os.path.isfile(path):
+            await asyncio.sleep(0.1)
+        self._options.debugger_address = "localhost:" + read(path, sel_root=False).split("\n")[0]
+        self.conn = await connect_cdp(f'http://{self._options.debugger_address}')
         self.browser_pid = browser.pid
-        # todo: self.session_id = response.get("sessionId")
+        targets = await self.conn.execute(cdp.target.get_targets())
+        for target in targets:
+            if target.type_ == "page":
+                self.session_id = target.target_id
+                break
         self.caps = capabilities
 
     def _wrap_value(self, value):
@@ -292,7 +304,7 @@ class ChromeDriver(BaseWebDriver):
             return list(self._unwrap_value(item) for item in value)
         return value
 
-    def execute(self, driver_command: str, params: dict = None) -> dict:
+    async def execute(self, driver_command: str, params: dict = None) -> dict:
         """Sends a command to be executed by a command.CommandExecutor.
 
         :Args:
@@ -303,12 +315,10 @@ class ChromeDriver(BaseWebDriver):
           The command's JSON response loaded into a dictionary object.
         """
         if driver_command == "executeCdpCommand":
-            raise NotImplementedError("'executeCdpCommand' not yet implemented")
+            value = await self.execute_cdp_cmd(params["script"], params["params"])
+            return {"success": 0, "value": value, "sessionId": self.session_id}
         else:
             raise NotImplementedError("chrome not started with chromedriver")
-        # If the server doesn't send a response, assume the command was
-        # a success
-        return {"success": 0, "value": None, "sessionId": self.session_id}
 
     def get(self, url: str) -> None:
         """Loads a web page in the current browser session."""
@@ -426,11 +436,19 @@ class ChromeDriver(BaseWebDriver):
         """
         import os
         import shutil
+        import time
+        import signal
         # noinspection PyBroadException
         try:
             try:
-                # todo: quit command self.execute(Command.QUIT)
-                os.kill(self.browser_pid, 15)
+                # wait for process to be killed
+                while True:
+                    try:
+                        os.kill(self.browser_pid, 15)
+                    except OSError:
+                        break
+                    time.sleep(0.1)
+
                 shutil.rmtree(self._options.user_data_dir, ignore_errors=True)
             finally:
                 self.stop_client()
@@ -1160,7 +1178,7 @@ class ChromeDriver(BaseWebDriver):
         """
         self.execute("setPermissions", {"descriptor": {"name": name}, "state": value})
 
-    def execute_cdp_cmd(self, cmd: str, cmd_args: dict):
+    async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None):
         """Execute Chrome Devtools Protocol command and get returned result The
         command and command args should follow chrome devtools protocol
         domains/commands, refer to link
@@ -1178,7 +1196,16 @@ class ChromeDriver(BaseWebDriver):
             For example to getResponseBody:
             {'base64Encoded': False, 'body': 'response body string'}
         """
-        return self.execute("executeCdpCommand", {"cmd": cmd, "params": cmd_args})["value"]
+        if not cmd_args:
+            cmd_args = {}
+
+        def execute_cdp_cmd(cmd_dict):
+            json = yield cmd_dict
+            return json
+
+        cmd_dict = dict(method=cmd, params=cmd_args)
+        request = execute_cdp_cmd(cmd_dict)
+        return await self.conn.execute(request)
 
     def get_sinks(self) -> list:
         """

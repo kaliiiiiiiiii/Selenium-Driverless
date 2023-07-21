@@ -1,10 +1,18 @@
 # from https://github.com/ultrafunkamsterdam/undetected-chromedriver/blob/1c704a71cf4f29181a59ecf19ddff32f1b4fbfc0/undetected_chromedriver/__init__.py#L844
 # edited by kaliiiiiiiiii | Aurin Aegerter
 
-import os
 import sys
+from dataclasses import dataclass
+import typing
+import json
+import os
+
+import selenium_driverless
+import socket
+from contextlib import closing
 
 IS_POSIX = sys.platform.startswith(("darwin", "cygwin", "linux", "linux2"))
+T_JSON_DICT = typing.Dict[str, typing.Any]
 
 
 def find_chrome_executable():
@@ -50,13 +58,6 @@ def find_chrome_executable():
     for candidate in candidates:
         if os.path.exists(candidate) and os.access(candidate, os.X_OK):
             return os.path.normpath(candidate)
-
-import json
-import os
-
-import selenium_driverless
-import socket
-from contextlib import closing
 
 
 def sel_driverless_path():

@@ -34,7 +34,6 @@ class Options(metaclass=ABCMeta):
     def __init__(self) -> None:
         from selenium_driverless.utils.utils import find_chrome_executable, sel_driverless_path
         import uuid
-        import os
         super().__init__()
 
         self._caps = self.default_capabilities
@@ -46,11 +45,11 @@ class Options(metaclass=ABCMeta):
         self._extension_files = []
         self._extensions = []
         self._experimental_options = {}
-        self._debugger_address = "localhost:0"
-        self.user_data_dir = sel_driverless_path() + "/files/tmp/" + uuid.uuid4().hex
-        os.makedirs(self.user_data_dir, exist_ok=True)
-
+        self._debugger_address = None
+        self.user_data_dir = None
         self._arguments = []
+        self.add_argument("--user-data-dir=" + sel_driverless_path() + "/files/tmp/" + uuid.uuid4().hex)
+        self.add_argument("--remote-debugging-port=0")
         self._ignore_local_proxy = False
 
     @property
@@ -255,13 +254,15 @@ class Options(metaclass=ABCMeta):
         :Args:
          - Sets the arguments
         """
-        if argument[:16] == "--user-data-dir=":
-            user_data_dir = argument[16:]
-            if os.path.isdir(user_data_dir):
-                self.user_data_dir = user_data_dir
-            else:
-                os.makedirs(user_data_dir, exist_ok=True)
         if argument:
+            if argument[:16] == "--user-data-dir=":
+                user_data_dir = argument[16:]
+                if not os.path.isdir(user_data_dir):
+                    os.makedirs(user_data_dir, exist_ok=True)
+                self.user_data_dir = user_data_dir
+            elif argument[:24] == "--remote-debugging-port=":
+                port = int(argument[24:])
+                self.debugger_address = f"localhost:{port}"
             self._arguments.append(argument)
         else:
             raise ValueError("argument can not be null")
