@@ -19,6 +19,40 @@
 
 ### Usage
 
+#### example script
+```python
+import asyncio
+import logging
+import subprocess
+
+from selenium_driverless.async_ import Chrome
+from selenium_driverless.async_.protocol import browser, page
+from selenium_driverless.utils.utils import find_chrome_executable
+
+# see logging from Driverless
+logging.basicConfig(level=logging.DEBUG)
+
+
+async def main():
+    HOST = '127.0.0.1'
+    PORT = 9222
+    subprocess.Popen([find_chrome_executable(), f"--remote-debugging-port={PORT}"])
+    c = Chrome(host=HOST, port=PORT)
+
+    await c.connect()
+    tab = c.tabs[0]
+    await tab.enable_page_events()
+
+    await tab.send_command(page.Page.navigate(url='http://nowsecure.nl#relax'),
+                           await_on_event_type=page.FrameStartedLoadingEvent)
+
+    await tab.send_command(browser.Browser.close())
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```
 
 ## Help
 
