@@ -1,0 +1,35 @@
+logging:
+  version: 1
+  disable_existing_loggers: True
+  formatters:
+    simple:
+      format: '%(levelname)s %(message)s'
+    standard:
+      format: '%(asctime)s %(name)-64s %(levelname)-8s %(message)s'
+
+  handlers:
+    console:
+      level: 'DEBUG'
+      class: 'logging.StreamHandler'
+      formatter: 'standard'
+  loggers:
+    aiohttp.access:
+      handlers: []
+      propagate: True
+      level: 'INFO'
+    websockets.protocol:
+      handlers: ['console']
+      propagate: True
+      level: 'INFO'
+    chromewhip.chrome:
+      handlers: ['console']
+      propagate: True
+      level: 'DEBUG'
+    chromewhip.protocol:
+      handlers: []
+      propagate: True
+      level: 'DEBUG'
+    chromewhip.helpers:
+      handlers: []
+      propagate: True
+      level: 'DEBUG'
