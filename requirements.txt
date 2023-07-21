@@ -6,5 +6,7 @@ bs4
 aiohttp
 websockets
 PyYAML
+
+# dev-chromewhip
 Jinja2==3.1.2
 jsonpatch==1.23
