@@ -1,4 +1,4 @@
-selenium
+selenium~=4.10.0
 setuptools==68.0.0
 chrome-devtools-protocol
 
