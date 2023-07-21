@@ -1,6 +1,7 @@
 # Selenium-Driverless
 
-* 
+* use selenium without chromedriver
+* undetected by cloudfare and others
 
 ### Feel free to test my code!
 
