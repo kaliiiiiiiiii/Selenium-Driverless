@@ -8,7 +8,7 @@
 
 ### Dependencies
 
-* [Python >= 3.7](https://www.python.org/downloads/)
+* [Python >= 3.8](https://www.python.org/downloads/)
 * [Chrome-Browser](https://www.google.de/chrome/) installed
 
 ### Installing
@@ -22,36 +22,35 @@
 #### example script
 ```python
 import asyncio
-import logging
-import subprocess
-
-from selenium_driverless.async_ import Chrome
-from selenium_driverless.async_.protocol import browser, page
+from pycdp import cdp
+from pycdp.browser import ChromeLauncher
+from pycdp.asyncio import connect_cdp
 from selenium_driverless.utils.utils import find_chrome_executable
-
-# see logging from Driverless
-logging.basicConfig(level=logging.DEBUG)
 
 
 async def main():
-    HOST = '127.0.0.1'
     PORT = 9222
-    subprocess.Popen([find_chrome_executable(), f"--remote-debugging-port={PORT}"])
-    c = Chrome(host=HOST, port=PORT)
+    chrome = ChromeLauncher(
+        binary=find_chrome_executable(),
+        args=[f'--remote-debugging-port={PORT}']
+    )
+    # ChromeLauncher.launch() is blocking, run it on a background thread
+    await asyncio.get_running_loop().run_in_executor(None, chrome.launch)
+    conn = await connect_cdp(f'http://localhost:{PORT}')
+    target_id = await conn.execute(cdp.target.create_target('about:blank'))
+    target_session = await conn.connect_session(target_id)
+    await target_session.execute(cdp.page.enable())
+    # you may use "async for target_session.listen()" to listen multiple events, here we listen just a single event.
+    with target_session.safe_wait_for(cdp.page.DomContentEventFired) as navigation:
+        await target_session.execute(cdp.page.navigate('http://nowsecure.nl#relax'))
+        await navigation
+        
+    await target_session.execute(cdp.page.close())
+    await conn.close()
+    await asyncio.get_running_loop().run_in_executor(None, chrome.kill)
 
-    await c.connect()
-    tab = c.tabs[0]
-    await tab.enable_page_events()
 
-    await tab.send_command(page.Page.navigate(url='http://nowsecure.nl#relax'),
-                           await_on_event_type=page.FrameStartedLoadingEvent)
-
-    await tab.send_command(browser.Browser.close())
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
-
+asyncio.run(main())
 ```
 
 ## Help

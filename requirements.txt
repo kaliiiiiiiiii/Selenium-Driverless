@@ -1,8 +1,9 @@
 selenium
 setuptools==68.0.0
+chrome-devtools-protocol
 
 # chromewhip
-bs4
+bs4~=0.0.1
 aiohttp==3.8.5
 websockets==11.0.3
 PyYAML==6.0.1
@@ -10,3 +11,4 @@ PyYAML==6.0.1
 # dev-chromewhip
 Jinja2==3.1.2
 jsonpatch==1.23
+beautifulsoup4~=4.12.2
