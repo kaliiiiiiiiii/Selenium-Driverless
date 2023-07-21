@@ -152,6 +152,7 @@ class ChromeDriver(BaseWebDriver):
         :Args:
          - options - this takes an instance of ChromeOptions
         """
+        self.session = None
         self.conn = None
         self.browser_pid = None
         async_used = None
@@ -260,10 +261,11 @@ class ChromeDriver(BaseWebDriver):
             stderr=subprocess.PIPE,
             close_fds=IS_POSIX,
         )
-        path = self._options.user_data_dir + "/DevToolsActivePort"
-        while not os.path.isfile(path):
-            await asyncio.sleep(0.1)
-        self._options.debugger_address = "localhost:" + read(path, sel_root=False).split("\n")[0]
+        if self._options.debugger_address.split(":")[1] == "0":
+            path = self._options.user_data_dir + "/DevToolsActivePort"
+            while not os.path.isfile(path):
+                await asyncio.sleep(0.1)
+            self._options.debugger_address = "localhost:" + read(path, sel_root=False).split("\n")[0]
         self.conn = await connect_cdp(f'http://{self._options.debugger_address}')
         self.browser_pid = browser.pid
         targets = await self.conn.execute(cdp.target.get_targets())
@@ -271,6 +273,7 @@ class ChromeDriver(BaseWebDriver):
             if target.type_ == "page":
                 self.session_id = target.target_id
                 break
+        self.session = await self.conn.connect_session(self.session_id)
         self.caps = capabilities
 
     def _wrap_value(self, value):
@@ -320,9 +323,13 @@ class ChromeDriver(BaseWebDriver):
         else:
             raise NotImplementedError("chrome not started with chromedriver")
 
-    def get(self, url: str) -> None:
+    async def get(self, url: str) -> None:
+        from pycdp import cdp
         """Loads a web page in the current browser session."""
-        self.execute(Command.GET, {"url": url})
+        await self.session.execute(cdp.page.enable())
+        with self.session.safe_wait_for(cdp.page.DomContentEventFired) as navigation:
+            await self.session.execute(cdp.page.navigate(url))
+            await navigation
 
     @property
     def title(self) -> str:
@@ -426,7 +433,7 @@ class ChromeDriver(BaseWebDriver):
         """
         self.execute(Command.CLOSE)
 
-    def quit(self) -> None:
+    async def quit(self) -> None:
         """Quits the driver and closes every associated window.
 
         :Usage:
@@ -437,10 +444,11 @@ class ChromeDriver(BaseWebDriver):
         import os
         import shutil
         import time
-        import signal
+        from pycdp import cdp
         # noinspection PyBroadException
         try:
             try:
+                await self.session.execute(cdp.page.close())
                 # wait for process to be killed
                 while True:
                     try:

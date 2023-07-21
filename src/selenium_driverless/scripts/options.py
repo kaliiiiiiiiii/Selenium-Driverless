@@ -32,7 +32,7 @@ class Options(metaclass=ABCMeta):
     KEY = "goog:chromeOptions"
 
     def __init__(self) -> None:
-        from selenium_driverless.utils.utils import find_chrome_executable, sel_driverless_path
+        from selenium_driverless.utils.utils import find_chrome_executable, sel_driverless_path, random_port
         import uuid
         super().__init__()
 
@@ -49,7 +49,8 @@ class Options(metaclass=ABCMeta):
         self.user_data_dir = None
         self._arguments = []
         self.add_argument("--user-data-dir=" + sel_driverless_path() + "/files/tmp/" + uuid.uuid4().hex)
-        self.add_argument("--remote-debugging-port=0")
+        port = random_port("localhost")
+        self.add_argument(f"--remote-debugging-port={port}")
         self._ignore_local_proxy = False
 
     @property

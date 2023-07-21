@@ -22,35 +22,21 @@
 #### example script
 ```python
 import asyncio
-from pycdp import cdp
-from pycdp.browser import ChromeLauncher
-from pycdp.asyncio import connect_cdp
-from selenium_driverless.utils.utils import find_chrome_executable
 
 
 async def main():
-    PORT = 9222
-    chrome = ChromeLauncher(
-        binary=find_chrome_executable(),
-        args=[f'--remote-debugging-port={PORT}']
-    )
-    # ChromeLauncher.launch() is blocking, run it on a background thread
-    await asyncio.get_running_loop().run_in_executor(None, chrome.launch)
-    conn = await connect_cdp(f'http://localhost:{PORT}')
-    target_id = await conn.execute(cdp.target.create_target('about:blank'))
-    target_session = await conn.connect_session(target_id)
-    await target_session.execute(cdp.page.enable())
-    # you may use "async for target_session.listen()" to listen multiple events, here we listen just a single event.
-    with target_session.safe_wait_for(cdp.page.DomContentEventFired) as navigation:
-        await target_session.execute(cdp.page.navigate('http://nowsecure.nl#relax'))
-        await navigation
-        
-    await target_session.execute(cdp.page.close())
-    await conn.close()
-    await asyncio.get_running_loop().run_in_executor(None, chrome.kill)
+    from selenium_driverless.async_.webdriver import ChromeDriver
+    from selenium_driverless.scripts.options import Options
+    options = Options()
+    driver = ChromeDriver(options=options)
+    await driver.start_session()
+    await driver.get('http://nowsecure.nl#relax')
+    y = await driver.execute_cdp_cmd("Browser.getVersion")
+    await driver.quit()
 
 
 asyncio.run(main())
+
 ```
 
 ## Help
