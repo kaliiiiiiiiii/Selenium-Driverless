@@ -258,7 +258,7 @@ class ChromeTab(metaclass=SyncAdder):
             method = request['method']
             id_ = request['id']
             self._send_log.error(msg)
-            if self._ws.state != websockets.protocol.OPEN:
+            if self._ws.state != websockets.protocol.State.OPEN:
                 close_code = self._ws.close_code
                 if close_code == 1002:
                     raise ProtocolError('Websocket protocol error occured for "%s" with id=%s' % (method, id_))
