@@ -19,10 +19,10 @@ and `data/js_protocol.json` as inputs! Please do not modify this file.
 import logging
 from typing import Any, Optional, Union
 
-from chromewhip.helpers import PayloadMixin, BaseEvent, ChromeTypeBase
+from ..helpers import PayloadMixin, BaseEvent, ChromeTypeBase
 
 log = logging.getLogger(__name__)
-from chromewhip.protocol import io as IO
+from . import io as IO
 
 # MemoryDumpConfig: Configuration for memory dump. Used only when "memory-infra" category is enabled.
 MemoryDumpConfig = dict

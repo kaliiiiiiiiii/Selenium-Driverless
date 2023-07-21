@@ -19,11 +19,11 @@ and `data/js_protocol.json` as inputs! Please do not modify this file.
 import logging
 from typing import Any, Optional, Union
 
-from chromewhip.helpers import PayloadMixin, BaseEvent, ChromeTypeBase
+from ..helpers import PayloadMixin, BaseEvent, ChromeTypeBase
 
 log = logging.getLogger(__name__)
-from chromewhip.protocol import runtime as Runtime
-from chromewhip.protocol import debugger as Debugger
+from . import runtime as Runtime
+from . import debugger as Debugger
 
 # ProfileNode: Profile node. Holds callsite information, execution statistics and child nodes.
 class ProfileNode(ChromeTypeBase):
