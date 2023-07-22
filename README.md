@@ -31,9 +31,10 @@ async def main():
     options = Options()
     async with ChromeDriver(options=options) as driver:
         await driver.get('http://nowsecure.nl#relax')
-        y = await driver.title
-        z = await driver.current_url
-        a = await driver.page_source
+        await asyncio.sleep(4)
+        title = await driver.title
+        url = await driver.current_url
+        source = await driver.page_source
         await driver.quit()
 
 

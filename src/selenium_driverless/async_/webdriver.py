@@ -1279,7 +1279,7 @@ class ChromeDriver(BaseWebDriver):
 
         cmd_dict = dict(method=cmd, params=cmd_args)
         request = execute_cdp_cmd(cmd_dict)
-        return await self.conn.execute(request)
+        return await self.session.execute(request)
 
     def get_sinks(self) -> list:
         """
