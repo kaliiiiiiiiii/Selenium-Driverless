@@ -32,7 +32,9 @@ async def main():
     driver = ChromeDriver(options=options)
     await driver.start_session()
     await driver.get('http://nowsecure.nl#relax')
-    y = await driver.execute_cdp_cmd("Browser.getVersion")
+    y = await driver.title
+    z = await driver.current_url
+    a = await driver.page_source
     await driver.quit()
 
 

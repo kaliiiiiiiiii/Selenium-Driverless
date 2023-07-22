@@ -175,7 +175,7 @@ class ChromeDriver(BaseWebDriver):
             else:
                 self._capabilities = options.to_capabilities()
             self._is_remote = True
-            self.session_id = None
+            self.target_id = None
             self.caps = {}
             self.pinned_scripts = {}
             self.error_handler = ErrorHandler()
@@ -184,7 +184,9 @@ class ChromeDriver(BaseWebDriver):
             self.file_detector = LocalFileDetector()
             self._authenticator_id = None
             self.start_client()
-            if not async_used:
+            if async_used:
+                warnings.warn("__init__ can't be async, use await driver.start_session() to start")
+            else:
                 self._loop.run_until_complete(self.start_session(self._capabilities))
 
         except Exception:
@@ -193,7 +195,7 @@ class ChromeDriver(BaseWebDriver):
         self._is_remote = False
 
     def __repr__(self):
-        return f'<{type(self).__module__}.{type(self).__name__} (session="{self.session_id}")>'
+        return f'<{type(self).__module__}.{type(self).__name__} (session="{self.target_id}")>'
 
     def __enter__(self):
         return self
@@ -250,6 +252,7 @@ class ChromeDriver(BaseWebDriver):
         from selenium_driverless.utils.utils import IS_POSIX, read
         from pycdp.asyncio import connect_cdp
         from pycdp import cdp
+        import atexit
 
         options = capabilities["goog:chromeOptions"]
         caps = _create_caps(capabilities)
@@ -261,6 +264,9 @@ class ChromeDriver(BaseWebDriver):
             stderr=subprocess.PIPE,
             close_fds=IS_POSIX,
         )
+
+        atexit.register(self.quit)
+
         if self._options.debugger_address.split(":")[1] == "0":
             path = self._options.user_data_dir + "/DevToolsActivePort"
             while not os.path.isfile(path):
@@ -271,9 +277,9 @@ class ChromeDriver(BaseWebDriver):
         targets = await self.conn.execute(cdp.target.get_targets())
         for target in targets:
             if target.type_ == "page":
-                self.session_id = target.target_id
+                self.target_id = target.target_id
                 break
-        self.session = await self.conn.connect_session(self.session_id)
+        self.session = await self.conn.connect_session(self.target_id)
         self.caps = capabilities
 
     def _wrap_value(self, value):
@@ -319,7 +325,7 @@ class ChromeDriver(BaseWebDriver):
         """
         if driver_command == "executeCdpCommand":
             value = await self.execute_cdp_cmd(params["script"], params["params"])
-            return {"success": 0, "value": value, "sessionId": self.session_id}
+            return {"success": 0, "value": value, "sessionId": self.target_id}
         else:
             raise NotImplementedError("chrome not started with chromedriver")
 
@@ -332,7 +338,7 @@ class ChromeDriver(BaseWebDriver):
             await navigation
 
     @property
-    def title(self) -> str:
+    async def title(self) -> str:
         """Returns the title of the current page.
 
         :Usage:
@@ -340,7 +346,8 @@ class ChromeDriver(BaseWebDriver):
 
                 title = driver.title
         """
-        return self.execute(Command.GET_TITLE).get("value", "")
+        target = await self.current_target
+        return target.title
 
     def pin_script(self, script: str, script_key=None) -> ScriptKey:
         """Store common javascript scripts to be executed later by a unique
@@ -359,7 +366,7 @@ class ChromeDriver(BaseWebDriver):
     def get_pinned_scripts(self) -> List[str]:
         return list(self.pinned_scripts)
 
-    def execute_script(self, script, *args):
+    async def execute_script(self, script, *args):
         """Synchronously Executes JavaScript in the current window/frame.
 
         :Args:
@@ -371,16 +378,26 @@ class ChromeDriver(BaseWebDriver):
 
                 driver.execute_script('return document.title;')
         """
+        import json
+        from pycdp import cdp
         if isinstance(script, ScriptKey):
             try:
                 script = self.pinned_scripts[script.id]
             except KeyError:
                 raise JavascriptException("Pinned script could not be found")
 
-        converted_args = list(args)
-        command = Command.W3C_EXECUTE_SCRIPT
+        script = f"(function(...arguments){{{script}}})(...{json.dumps(args)})"
 
-        return self.execute(command, {"script": script, "args": converted_args})["value"]
+        script = cdp.runtime.evaluate(expression=script, include_command_line_api=True,
+                                      user_gesture=True, await_promise=True,
+                                      allow_unsafe_eval_blocked_by_csp=True)
+        result = await self.session.execute(script)
+        if result[1]:
+            class JSEvalException(result[1], Exception):
+                pass
+
+            raise JSEvalException(result[1].description)
+        return result[0].value
 
     def execute_async_script(self, script: str, *args):
         """Asynchronously Executes JavaScript in the current window/frame.
@@ -402,7 +419,7 @@ class ChromeDriver(BaseWebDriver):
         return self.execute(command, {"script": script, "args": converted_args})["value"]
 
     @property
-    def current_url(self) -> str:
+    async def current_url(self) -> str:
         """Gets the URL of the current page.
 
         :Usage:
@@ -410,10 +427,11 @@ class ChromeDriver(BaseWebDriver):
 
                 driver.current_url
         """
-        return self.execute(Command.GET_CURRENT_URL)["value"]
+        target = await self.current_target
+        return target.url
 
     @property
-    def page_source(self) -> str:
+    async def page_source(self) -> str:
         """Gets the source of the current page.
 
         :Usage:
@@ -421,9 +439,9 @@ class ChromeDriver(BaseWebDriver):
 
                 driver.page_source
         """
-        return self.execute(Command.GET_PAGE_SOURCE)["value"]
+        return await self.execute_script("return document.documentElement.outerHTML")
 
-    def close(self) -> None:
+    async def close(self) -> None:
         """Closes the current window.
 
         :Usage:
@@ -431,7 +449,8 @@ class ChromeDriver(BaseWebDriver):
 
                 driver.close()
         """
-        self.execute(Command.CLOSE)
+        from pycdp import cdp
+        await self.session.execute(cdp.page.close())
 
     async def quit(self) -> None:
         """Quits the driver and closes every associated window.
@@ -443,19 +462,18 @@ class ChromeDriver(BaseWebDriver):
         """
         import os
         import shutil
-        import time
-        from pycdp import cdp
         # noinspection PyBroadException
         try:
             try:
-                await self.session.execute(cdp.page.close())
+                await self.close()
+
                 # wait for process to be killed
                 while True:
                     try:
                         os.kill(self.browser_pid, 15)
                     except OSError:
                         break
-                    time.sleep(0.1)
+                    await asyncio.sleep(0.1)
 
                 shutil.rmtree(self._options.user_data_dir, ignore_errors=True)
             finally:
@@ -467,7 +485,18 @@ class ChromeDriver(BaseWebDriver):
             pass  # self.service.stop()
 
     @property
-    def current_window_handle(self) -> str:
+    async def targets(self):
+        from pycdp import cdp
+        return await self.conn.execute(cdp.target.get_targets())
+
+    @property
+    async def current_target(self):
+        for target in await self.targets:
+            if target.attached:
+                return target
+
+    @property
+    async def current_window_handle(self) -> str:
         """Returns the handle of the current window.
 
         :Usage:
@@ -475,10 +504,20 @@ class ChromeDriver(BaseWebDriver):
 
                 driver.current_window_handle
         """
-        return self.execute(Command.W3C_GET_CURRENT_WINDOW_HANDLE)["value"]
+        target = await self.current_target
+        return target.target_id
 
     @property
-    def window_handles(self) -> List[str]:
+    async def current_window_id(self):
+        from pycdp import cdp
+        target = await self.current_target
+        target_id = target.target_id
+        script = cdp.browser.get_window_for_target(target_id)
+        result = await self.conn.execute(script)
+        return result[0]
+
+    @property
+    async def window_handles(self) -> List[str]:
         """Returns the handles of all windows within the current session.
 
         :Usage:
@@ -486,32 +525,51 @@ class ChromeDriver(BaseWebDriver):
 
                 driver.window_handles
         """
-        return self.execute(Command.W3C_GET_WINDOW_HANDLES)["value"]
+        tabs = []
+        for target in await self.targets:
+            if target.type_ == "page":
+                tabs.append(target.target_id)
+        return tabs
 
-    def maximize_window(self) -> None:
+    async def set_window_state(self, state):
+        states = ["normal", "minimized", "maximized", "fullscreen"]
+        if state not in states:
+            raise ValueError(f"expected one of {states}, but got: {state}")
+        window_id = await self.current_window_id
+        bounds = {"windowState": state}
+        await self.execute_cdp_cmd("Browser.setWindowBounds", {"bounds": bounds, "windowId": window_id})
+
+    async def normalize_window(self):
+        await self.set_window_state("normal")
+
+    async def maximize_window(self) -> None:
         """Maximizes the current window that webdriver is using."""
-        command = Command.W3C_MAXIMIZE_WINDOW
-        self.execute(command, None)
+        await self.normalize_window()
+        await self.set_window_state("maximized")
 
-    def fullscreen_window(self) -> None:
+    async def fullscreen_window(self) -> None:
         """Invokes the window manager-specific 'full screen' operation."""
-        self.execute(Command.FULLSCREEN_WINDOW)
+        await self.normalize_window()
+        await self.set_window_state("fullscreen")
 
-    def minimize_window(self) -> None:
+    async def minimize_window(self) -> None:
+        await self.normalize_window()
         """Invokes the window manager-specific 'minimize' operation."""
-        self.execute(Command.MINIMIZE_WINDOW)
+        await self.set_window_state("maximized")
 
-    def print_page(self, print_options: Optional[PrintOptions] = None) -> str:
+    async def print_page(self, print_options: Optional[PrintOptions] = None) -> str:
         """Takes PDF of the current page.
 
         The driver makes a best effort to return a PDF based on the
         provided parameters.
         """
+        from pycdp import cdp
         options = {}
         if print_options:
             options = print_options.to_dict()
-
-        return self.execute(Command.PRINT_PAGE, options)["value"]
+            raise NotImplementedError()
+        page = await self.session.execute(cdp.page.print_to_pdf())
+        return page[0]
 
     @property
     def switch_to(self) -> SwitchTo:
@@ -554,7 +612,7 @@ class ChromeDriver(BaseWebDriver):
         """
         self.execute(Command.GO_FORWARD)
 
-    def refresh(self) -> None:
+    async def refresh(self) -> None:
         """Refreshes the current page.
 
         :Usage:
@@ -562,7 +620,8 @@ class ChromeDriver(BaseWebDriver):
 
                 driver.refresh()
         """
-        self.execute(Command.REFRESH)
+        from pycdp import cdp
+        await  self.session.execute(cdp.page.reload())
 
     # Options
     def get_cookies(self) -> List[dict]:
@@ -708,7 +767,7 @@ class ChromeDriver(BaseWebDriver):
                 """
         _ = self.execute(Command.SET_TIMEOUTS, timeouts._to_json())["value"]
 
-    def find_element(self, by=By.ID, value: Optional[str] = None) -> WebElement:
+    async def find_element(self, by=By.ID, value: Optional[str] = None) -> WebElement:
         """Find an element given a By strategy and locator.
 
         :Usage:
@@ -719,7 +778,7 @@ class ChromeDriver(BaseWebDriver):
         :rtype: WebElement
         """
         if isinstance(by, RelativeBy):
-            elements = self.find_elements(by=by, value=value)
+            elements = await self.find_elements(by=by, value=value)
             if not elements:
                 raise NoSuchElementException(f"Cannot locate relative element with: {by.root}")
             return elements[0]
@@ -736,7 +795,7 @@ class ChromeDriver(BaseWebDriver):
 
         return self.execute(Command.FIND_ELEMENT, {"using": by, "value": value})["value"]
 
-    def find_elements(self, by=By.ID, value: Optional[str] = None) -> List[WebElement]:
+    async def find_elements(self, by=By.ID, value: Optional[str] = None) -> List[WebElement]:
         """Find elements given a By strategy and locator.
 
         :Usage:
@@ -750,7 +809,7 @@ class ChromeDriver(BaseWebDriver):
             _pkg = ".".join(__name__.split(".")[:-1])
             raw_function = pkgutil.get_data(_pkg, "findElements.js").decode("utf8")
             find_element_js = f"/* findElements */return ({raw_function}).apply(null, arguments);"
-            return self.execute_script(find_element_js, by.to_dict())
+            return await self.execute_script(find_element_js, by.to_dict())
 
         if by == By.ID:
             by = By.CSS_SELECTOR
@@ -767,17 +826,11 @@ class ChromeDriver(BaseWebDriver):
         return self.execute(Command.FIND_ELEMENTS, {"using": by, "value": value})["value"] or []
 
     @property
-    def desired_capabilities(self) -> dict:
-        """returns the drivers current desired capabilities being used."""
-        warnings.warn("desired_capabilities is deprecated. Please call capabilities.", DeprecationWarning, stacklevel=2)
-        return self.caps
-
-    @property
     def capabilities(self) -> dict:
         """returns the drivers current capabilities being used."""
         return self.caps
 
-    def get_screenshot_as_file(self, filename) -> bool:
+    async def get_screenshot_as_file(self, filename) -> bool:
         # noinspection GrazieInspection
         """Saves a screenshot of the current window to a PNG image file.
                 Returns False if there is any IOError, else returns True. Use full
@@ -797,7 +850,7 @@ class ChromeDriver(BaseWebDriver):
                 "name used for saved screenshot does not match file " "type. It should end with a `.png` extension",
                 UserWarning,
             )
-        png = self.get_screenshot_as_png()
+        png = await self.get_screenshot_as_png()
         try:
             with open(filename, "wb") as f:
                 f.write(png)
@@ -807,7 +860,7 @@ class ChromeDriver(BaseWebDriver):
             del png
         return True
 
-    def save_screenshot(self, filename) -> bool:
+    async def save_screenshot(self, filename) -> bool:
         # noinspection GrazieInspection
         """Saves a screenshot of the current window to a PNG image file.
                 Returns False if there is any IOError, else returns True. Use full
@@ -822,9 +875,9 @@ class ChromeDriver(BaseWebDriver):
 
                         driver.save_screenshot('/Screenshots/foo.png')
                 """
-        return self.get_screenshot_as_file(filename)
+        return await self.get_screenshot_as_file(filename)
 
-    def get_screenshot_as_png(self) -> bytes:
+    async def get_screenshot_as_png(self) -> bytes:
         """Gets the screenshot of the current window as a binary data.
 
         :Usage:
@@ -832,9 +885,10 @@ class ChromeDriver(BaseWebDriver):
 
                 driver.get_screenshot_as_png()
         """
-        return b64decode(self.get_screenshot_as_base64().encode("ascii"))
+        base_64 = await self.get_screenshot_as_base64()
+        return b64decode(base_64.encode("ascii"))
 
-    def get_screenshot_as_base64(self) -> str:
+    async def get_screenshot_as_base64(self) -> str:
         """Gets the screenshot of the current window as a base64 encoded string
         which is useful in embedded images in HTML.
 
@@ -843,10 +897,11 @@ class ChromeDriver(BaseWebDriver):
 
                 driver.get_screenshot_as_base64()
         """
-        return self.execute(Command.SCREENSHOT)["value"]
+        from pycdp import cdp
+        return await self.session.execute(cdp.page.capture_screenshot(format_="png"))
 
     # noinspection PyPep8Naming
-    def set_window_size(self, width, height, windowHandle: str = "current") -> None:
+    async def set_window_size(self, width, height, windowHandle: str = "current") -> None:
         """Sets the width and height of the current window. (window.resizeTo)
 
         :Args:
@@ -860,10 +915,10 @@ class ChromeDriver(BaseWebDriver):
         """
         if windowHandle != "current":
             warnings.warn("Only 'current' window is supported for W3C compatible browsers.")
-        self.set_window_rect(width=int(width), height=int(height))
+        await self.set_window_rect(width=int(width), height=int(height))
 
     # noinspection PyPep8Naming
-    def get_window_size(self, windowHandle: str = "current") -> dict:
+    async def get_window_size(self, windowHandle: str = "current") -> dict:
         """Gets the width and height of the current window.
 
         :Usage:
@@ -874,7 +929,7 @@ class ChromeDriver(BaseWebDriver):
 
         if windowHandle != "current":
             warnings.warn("Only 'current' window is supported for W3C compatible browsers.")
-        size = self.get_window_rect()
+        size = await self.get_window_rect()
 
         if size.get("value", None):
             size = size["value"]
@@ -882,7 +937,7 @@ class ChromeDriver(BaseWebDriver):
         return {k: size[k] for k in ("width", "height")}
 
     # noinspection PyPep8Naming
-    def set_window_position(self, x, y, windowHandle: str = "current") -> dict:
+    async def set_window_position(self, x, y, windowHandle: str = "current") -> dict:
         """Sets the x,y position of the current window. (window.moveTo)
 
         :Args:
@@ -896,10 +951,10 @@ class ChromeDriver(BaseWebDriver):
         """
         if windowHandle != "current":
             warnings.warn("Only 'current' window is supported for W3C compatible browsers.")
-        return self.set_window_rect(x=int(x), y=int(y))
+        return await self.set_window_rect(x=int(x), y=int(y))
 
     # noinspection PyPep8Naming
-    def get_window_position(self, windowHandle="current") -> dict:
+    async def get_window_position(self, windowHandle="current") -> dict:
         """Gets the x,y position of the current window.
 
         :Usage:
@@ -910,11 +965,11 @@ class ChromeDriver(BaseWebDriver):
 
         if windowHandle != "current":
             warnings.warn("Only 'current' window is supported for W3C compatible browsers.")
-        position = self.get_window_rect()
+        position = await self.get_window_rect()
 
         return {k: position[k] for k in ("x", "y")}
 
-    def get_window_rect(self) -> dict:
+    async def get_window_rect(self) -> dict:
         """Gets the x, y coordinates of the window as well as height and width
         of the current window.
 
@@ -923,9 +978,17 @@ class ChromeDriver(BaseWebDriver):
 
                 driver.get_window_rect()
         """
-        return self.execute(Command.GET_WINDOW_RECT)["value"]
+        from pycdp import cdp
+        script = cdp.browser.get_window_bounds(await self.current_window_id)
+        bounds = await self.conn.execute(script)
+        json = bounds.to_json()
+        json["x"] = json["left"]
+        del json["left"]
+        json["y"] = json["top"]
+        del json["top"]
+        return json
 
-    def set_window_rect(self, x=None, y=None, width=None, height=None) -> dict:
+    async def set_window_rect(self, x=None, y=None, width=None, height=None) -> dict:
         """Sets the x, y coordinates of the window as well as height and width
         of the current window. This method is only supported for W3C compatible
         browsers; other browsers should use `set_window_position` and
@@ -938,11 +1001,23 @@ class ChromeDriver(BaseWebDriver):
                 driver.set_window_rect(width=100, height=200)
                 driver.set_window_rect(x=10, y=10, width=100, height=200)
         """
+        from pycdp import cdp
 
         if (x is None and y is None) and (not height and not width):
             raise InvalidArgumentException("x and y or height and width need values")
 
-        return self.execute(Command.SET_WINDOW_RECT, {"x": x, "y": y, "width": width, "height": height})["value"]
+        json = {"left": x, "top": y, "width": width, 'height': height}
+        bounds = cdp.browser.Bounds()
+        bounds = bounds.from_json(json=json)
+
+        script = cdp.browser.set_window_bounds(await self.current_window_id, bounds)
+        await self.conn.execute(script)
+        json["x"] = json["left"]
+        del json["left"]
+        json["y"] = json["top"]
+        del json["top"]
+
+        return json
 
     @property
     def file_detector(self) -> FileDetector:
@@ -1055,14 +1130,7 @@ class ChromeDriver(BaseWebDriver):
         import urllib3
 
         http = urllib3.PoolManager()
-        _firefox = False
-        if self.caps.get("browserName") == "chrome":
-            debugger_address = self.caps.get("goog:chromeOptions").get("debuggerAddress")
-        elif self.caps.get("browserName") == "msedge":
-            debugger_address = self.caps.get("ms:edgeOptions").get("debuggerAddress")
-        else:
-            _firefox = True
-            debugger_address = self.caps.get("moz:debuggerAddress")
+        debugger_address = self.caps.get("goog:chromeOptions").get("debuggerAddress")
         res = http.request("GET", f"http://{debugger_address}/json/version")
         data = json.loads(res.data)
 
