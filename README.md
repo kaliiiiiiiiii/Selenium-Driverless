@@ -35,7 +35,7 @@ async def main():
         title = await driver.title
         url = await driver.current_url
         source = await driver.page_source
-        await driver.quit()
+        print(title)
 
 
 asyncio.run(main())
