@@ -47,7 +47,11 @@ Please feel free to open an issue or fork!
 
 ## Todo
 
-
+- [ ] implementations
+  - [x] implement execute_async_script
+  - [x] execute_script
+  - [ ] find element
+  - [ ] switch to & focus [source](https://chromium.googlesource.com/chromium/src/+/refs/heads/main/chrome/test/chromedriver/js/focus.js)
 
 ## Deprecated
 

@@ -384,10 +384,10 @@ class ChromeDriver(BaseWebDriver):
             except KeyError:
                 raise JavascriptException("Pinned script could not be found")
 
-        script = f"(function(...arguments){{{script}}})(...{json.dumps(args)})"
+        script = f"(async function(...arguments){{{script}}})(...{json.dumps(args)})"
 
         script = cdp.runtime.evaluate(expression=script, include_command_line_api=True,
-                                      user_gesture=True, await_promise=True,
+                                      user_gesture=True, await_promise=False,
                                       allow_unsafe_eval_blocked_by_csp=True)
         result = await self.session.execute(script)
         if result[1]:
@@ -397,7 +397,7 @@ class ChromeDriver(BaseWebDriver):
             raise JSEvalException(result[1].description)
         return result[0].value
 
-    def execute_async_script(self, script: str, *args):
+    async def execute_async_script(self, script: str, *args):
         """Asynchronously Executes JavaScript in the current window/frame.
 
         :Args:
@@ -411,10 +411,20 @@ class ChromeDriver(BaseWebDriver):
                          "window.setTimeout(function(){ callback('timeout') }, 3000);"
                 driver.execute_async_script(script)
         """
-        converted_args = list(args)
-        command = Command.W3C_EXECUTE_SCRIPT_ASYNC
-
-        return self.execute(command, {"script": script, "args": converted_args})["value"]
+        from pycdp import cdp
+        import json
+        script = """
+        (function(...arguments){
+            const promise = new Promise((resolve, reject) => {
+                arguments.push(resolve)
+            });"""+script+"return promise})(..."+json.dumps(args)+")"
+        script = cdp.runtime.evaluate(expression=script, include_command_line_api=True,
+                                      user_gesture=True, await_promise=True,
+                                      allow_unsafe_eval_blocked_by_csp=True)
+        result = await self.session.execute(script)
+        if result[1]:
+            raise Exception(result[1].description)
+        return result[0].value
 
     @property
     async def current_url(self) -> str:
