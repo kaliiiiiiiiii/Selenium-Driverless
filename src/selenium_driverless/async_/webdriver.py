@@ -190,7 +190,7 @@ class ChromeDriver(BaseWebDriver):
                 self._loop.run_until_complete(self.start_session(self._capabilities))
 
         except Exception:
-            self.quit()
+            self._loop.run_until_complete(self.quit())
             raise
         self._is_remote = False
 
@@ -206,7 +206,7 @@ class ChromeDriver(BaseWebDriver):
             exc: typing.Optional[BaseException],
             traceback: typing.Optional[types.TracebackType],
     ):
-        self.quit()
+        await self.quit()
 
     @property
     def mobile(self) -> Mobile:
@@ -460,8 +460,10 @@ class ChromeDriver(BaseWebDriver):
 
                 driver.quit()
         """
+        import atexit
         import os
         import shutil
+        atexit.unregister(self.quit)
         # noinspection PyBroadException
         try:
             try:
