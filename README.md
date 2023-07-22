@@ -29,13 +29,12 @@ async def main():
     from selenium_driverless.async_.webdriver import ChromeDriver
     from selenium_driverless.scripts.options import Options
     options = Options()
-    driver = ChromeDriver(options=options)
-    await driver.start_session()
-    await driver.get('http://nowsecure.nl#relax')
-    y = await driver.title
-    z = await driver.current_url
-    a = await driver.page_source
-    await driver.quit()
+    async with ChromeDriver(options=options) as driver:
+        await driver.get('http://nowsecure.nl#relax')
+        y = await driver.title
+        z = await driver.current_url
+        a = await driver.page_source
+        await driver.quit()
 
 
 asyncio.run(main())

@@ -184,13 +184,12 @@ class ChromeDriver(BaseWebDriver):
             self.file_detector = LocalFileDetector()
             self._authenticator_id = None
             self.start_client()
-            if async_used:
-                warnings.warn("__init__ can't be async, use await driver.start_session() to start")
-            else:
+            if not async_used:
                 self._loop.run_until_complete(self.start_session(self._capabilities))
 
         except Exception:
-            self._loop.run_until_complete(self.quit())
+            if not async_used:
+                self._loop.run_until_complete(self.quit())
             raise
         self._is_remote = False
 
@@ -200,13 +199,14 @@ class ChromeDriver(BaseWebDriver):
     def __enter__(self):
         return self
 
-    def __exit__(
-            self,
-            exc_type: typing.Optional[typing.Type[BaseException]],
-            exc: typing.Optional[BaseException],
-            traceback: typing.Optional[types.TracebackType],
-    ):
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.quit()
+
+    def __await__(self):
+        return self.start_session().__await__()
+
+    async def __aenter__(self):
+        return await self.start_session()
 
     @property
     def mobile(self) -> Mobile:
@@ -252,7 +252,6 @@ class ChromeDriver(BaseWebDriver):
         from selenium_driverless.utils.utils import IS_POSIX, read
         from pycdp.asyncio import connect_cdp
         from pycdp import cdp
-        import atexit
 
         options = capabilities["goog:chromeOptions"]
         caps = _create_caps(capabilities)
@@ -264,8 +263,6 @@ class ChromeDriver(BaseWebDriver):
             stderr=subprocess.PIPE,
             close_fds=IS_POSIX,
         )
-
-        atexit.register(self.quit)
 
         if self._options.debugger_address.split(":")[1] == "0":
             path = self._options.user_data_dir + "/DevToolsActivePort"
@@ -281,6 +278,7 @@ class ChromeDriver(BaseWebDriver):
                 break
         self.session = await self.conn.connect_session(self.target_id)
         self.caps = capabilities
+        return self
 
     def _wrap_value(self, value):
         if isinstance(value, dict):
@@ -460,10 +458,8 @@ class ChromeDriver(BaseWebDriver):
 
                 driver.quit()
         """
-        import atexit
         import os
         import shutil
-        atexit.unregister(self.quit)
         # noinspection PyBroadException
         try:
             try:
@@ -480,7 +476,7 @@ class ChromeDriver(BaseWebDriver):
                 shutil.rmtree(self._options.user_data_dir, ignore_errors=True)
             finally:
                 self.stop_client()
-        except Exception:
+        except Exception as e:
             # We don't care about the message because something probably has gone wrong
             pass
         finally:
