@@ -28,6 +28,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.proxy import Proxy
 
 
+# noinspection PyUnreachableCode
 class Options(metaclass=ABCMeta):
     KEY = "goog:chromeOptions"
 
@@ -59,6 +60,7 @@ class Options(metaclass=ABCMeta):
 
     def set_capability(self, name, value) -> None:
         """Sets a capability."""
+        raise NotImplementedError()
         self._caps[name] = value
 
     @property
@@ -66,6 +68,7 @@ class Options(metaclass=ABCMeta):
         """
         :returns: the version of the browser if set, otherwise None.
         """
+        raise NotImplementedError()
         return self._caps.get("browserVersion")
 
     @browser_version.setter
@@ -75,6 +78,7 @@ class Options(metaclass=ABCMeta):
 
         :param version: The required version of the browser
         """
+        raise NotImplementedError()
         self.set_capability("browserVersion", version)
 
     @property
@@ -82,6 +86,7 @@ class Options(metaclass=ABCMeta):
         """
         :returns: The name of the platform
         """
+        raise NotImplementedError()
         return self._caps["platformName"]
 
     @platform_name.setter
@@ -91,6 +96,7 @@ class Options(metaclass=ABCMeta):
 
         :param platform: the required name of the platform
         """
+        raise NotImplementedError()
         self.set_capability("platformName", platform)
 
     @property
@@ -98,6 +104,7 @@ class Options(metaclass=ABCMeta):
         """
         :returns: page load strategy if set, the default is "normal"
         """
+        raise NotImplementedError()
         return self._caps["pageLoadStrategy"]
 
     @page_load_strategy.setter
@@ -107,6 +114,7 @@ class Options(metaclass=ABCMeta):
 
         :param strategy: the strategy corresponding to a document readiness state
         """
+        raise NotImplementedError()
         if strategy in ["normal", "eager", "none"]:
             self.set_capability("pageLoadStrategy", strategy)
         else:
@@ -117,6 +125,7 @@ class Options(metaclass=ABCMeta):
         """
         :returns: unhandled prompt behavior if set, the default is "dismiss and notify"
         """
+        raise NotImplementedError()
         return self._caps["unhandledPromptBehavior"]
 
     @unhandled_prompt_behavior.setter
@@ -127,6 +136,7 @@ class Options(metaclass=ABCMeta):
 
         :param behavior: behavior to use when an alert is encountered
         """
+        raise NotImplementedError()
         if behavior in ["dismiss", "accept", "dismiss and notify", "accept and notify", "ignore"]:
             self.set_capability("unhandledPromptBehavior", behavior)
         else:
@@ -140,6 +150,7 @@ class Options(metaclass=ABCMeta):
         """
         :returns: Values for implicit timeout, pageLoad timeout and script timeout if set (in milliseconds)
         """
+        raise NotImplementedError()
         return self._caps["timeouts"]
 
     @timeouts.setter
@@ -149,6 +160,7 @@ class Options(metaclass=ABCMeta):
 
         :param timeouts: values in milliseconds for implicit wait, page load and script timeout
         """
+        raise NotImplementedError()
         if all(x in ("implicit", "pageLoad", "script") for x in timeouts.keys()):
             self.set_capability("timeouts", timeouts)
         else:
@@ -165,6 +177,7 @@ class Options(metaclass=ABCMeta):
         :Args:
             android_activity: The name of the android package to start
         """
+        raise NotImplementedError()
         if not android_package:
             raise AttributeError("android_package must be passed in")
         self.mobile_options = {"androidPackage": android_package}
@@ -178,6 +191,7 @@ class Options(metaclass=ABCMeta):
         """
         :returns: whether the session accepts insecure certificates
         """
+        raise NotImplementedError()
         return self._caps.get("acceptInsecureCerts", False)
 
     @accept_insecure_certs.setter
@@ -188,6 +202,7 @@ class Options(metaclass=ABCMeta):
 
         :param value: whether to accept insecure certificates
         """
+        raise NotImplementedError()
         self._caps["acceptInsecureCerts"] = value
 
     @property
@@ -195,6 +210,7 @@ class Options(metaclass=ABCMeta):
         """
         :returns: whether session is strict about file interactability
         """
+        raise NotImplementedError()
         return self._caps.get("strictFileInteractability", False)
 
     @strict_file_interactability.setter
@@ -204,6 +220,7 @@ class Options(metaclass=ABCMeta):
 
         :param value: whether file interactability is strict
         """
+        raise NotImplementedError()
         self._caps["strictFileInteractability"] = value
 
     @property
@@ -211,6 +228,7 @@ class Options(metaclass=ABCMeta):
         """
         :returns: whether the remote end supports setting window size and position
         """
+        raise NotImplementedError()
         return self._caps.get("setWindowRect", False)
 
     @set_window_rect.setter
@@ -221,6 +239,7 @@ class Options(metaclass=ABCMeta):
 
         :param value: whether remote end must support setting window resizing and repositioning
         """
+        raise NotImplementedError()
         self._caps["setWindowRect"] = value
 
     @property
@@ -228,10 +247,12 @@ class Options(metaclass=ABCMeta):
         """
         :Returns: Proxy if set, otherwise None.
         """
+        raise NotImplementedError()
         return self._proxy
 
     @proxy.setter
     def proxy(self, value: Proxy) -> None:
+        raise NotImplementedError()
         if not isinstance(value, Proxy):
             raise InvalidArgumentException("Only Proxy objects can be passed in.")
         self._proxy = value
@@ -271,6 +292,7 @@ class Options(metaclass=ABCMeta):
     def ignore_local_proxy_environment_variables(self) -> None:
         """By calling this you will ignore HTTP_PROXY and HTTPS_PROXY from
         being picked up and used."""
+        raise NotImplementedError()
         self._ignore_local_proxy = True
 
     #
@@ -304,7 +326,7 @@ class Options(metaclass=ABCMeta):
     def debugger_address(self, value: str) -> None:
         """
         Allows you to set the address of the remote devtools instance
-        that the ChromeDriver instance will try to connect to during an
+        that the Chrome instance will try to connect to during an
         active wait.
         :Args:
          - value: address of remote devtools instance if any (hostname[:port])
@@ -316,6 +338,7 @@ class Options(metaclass=ABCMeta):
         """
         :Returns: A list of encoded extensions that will be loaded
         """
+        raise NotImplementedError()
 
         def _decode(file_data: BinaryIO) -> str:
             # Should not use base64.encodestring() which inserts newlines every
@@ -332,11 +355,12 @@ class Options(metaclass=ABCMeta):
 
     def add_extension(self, extension: str) -> None:
         """Adds the path to the extension to a list that will be used to
-        extract it to the ChromeDriver.
+        extract it to the Chrome.
 
         :Args:
          - extension: path to the \\*.crx file
         """
+        raise NotImplementedError()
         if extension:
             extension_to_add = os.path.abspath(os.path.expanduser(extension))
             if os.path.exists(extension_to_add):
@@ -348,11 +372,12 @@ class Options(metaclass=ABCMeta):
 
     def add_encoded_extension(self, extension: str) -> None:
         """Adds Base64 encoded string with extension data to a list that will
-        be used to extract it to the ChromeDriver.
+        be used to extract it to the Chrome.
 
         :Args:
          - extension: Base64 encoded string with extension data
         """
+        raise NotImplementedError()
         if extension:
             self._extensions.append(extension)
         else:
@@ -363,6 +388,7 @@ class Options(metaclass=ABCMeta):
         """
         :Returns: A dictionary of experimental options for chromium
         """
+        raise NotImplementedError()
         return self._experimental_options
 
     def add_experimental_option(self, name: str, value: Union[str, int, dict, List[str]]) -> None:
@@ -372,6 +398,7 @@ class Options(metaclass=ABCMeta):
           name: The experimental option name.
           value: The option value.
         """
+        raise NotImplementedError()
         self._experimental_options[name] = value
 
     @property

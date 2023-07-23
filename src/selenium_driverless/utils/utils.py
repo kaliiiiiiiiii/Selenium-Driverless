@@ -2,10 +2,10 @@
 # edited by kaliiiiiiiiii | Aurin Aegerter
 
 import sys
-from dataclasses import dataclass
 import typing
 import json
 import os
+import selenium
 
 import selenium_driverless
 import socket
@@ -62,6 +62,10 @@ def find_chrome_executable():
 
 def sel_driverless_path():
     return os.path.dirname(selenium_driverless.__file__) + "/"
+
+
+def sel_path():
+    return os.path.dirname(selenium.__file__) + "/"
 
 
 def read(filename: str, encoding: str = "utf-8", sel_root: bool = True):
