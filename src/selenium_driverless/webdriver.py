@@ -212,24 +212,19 @@ class Chrome(BaseWebDriver):
             raise NotImplementedError("chrome not started with chromedriver")
         return self._loop.run_until_complete(self.session.execute(cmd=cmd))
 
-    async def wait_for(self, event_type, timeout):
-        from async_timeout import timeout as async_timeout
-        async with async_timeout(timeout):
-            async for event in self.session.listen(event_type, buffer_size=2):
-                yield event
-                return
-
     def get(self, url: str) -> None:
         """Loads a web page in the current browser session."""
         from pycdp import cdp
         self.execute(cmd=cdp.page.enable())
 
         async def get(_url: str):
-            with self.wait_for(cdp.page.DomContentEventFired, timeout=self._page_load_timeout) as navigation:
+            with self.session.safe_wait_for(cdp.page.DomContentEventFired) as navigation:
                 await self.session.execute(cmd=cdp.page.navigate(_url))
                 await navigation
-
-        self._loop.run_until_complete(get(url))
+        try:
+            self._loop.run_until_complete(asyncio.wait_for(get(url), self._page_load_timeout))
+        except asyncio.exceptions.TimeoutError:
+            raise TimeoutError(f"page didn't load within timeout of {self._page_load_timeout}")
 
     @property
     def title(self) -> str:

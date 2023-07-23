@@ -2,7 +2,7 @@ import setuptools
 
 requirements = ['selenium~=4.6', 'aiohttp==3.8.5', 'websockets==11.0.3',
                 'beautifulsoup4==4.7.1', 'lxml==4.6.2', 'pyyaml==6.0.1',
-                'Pillow==7.1.0', 'async-timeout']
+                'Pillow==7.1.0']
 
 with open('README.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read()
