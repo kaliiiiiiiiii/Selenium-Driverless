@@ -39,7 +39,7 @@ class Options(metaclass=ABCMeta):
 
         self._caps = self.default_capabilities
         self._proxy = None
-        self.set_capability("pageLoadStrategy", "normal")
+        # self.set_capability("pageLoadStrategy", "normal")
         self.mobile_options = None
 
         self._binary_location = find_chrome_executable()
@@ -440,10 +440,10 @@ class Options(metaclass=ABCMeta):
         :Returns: A dictionary with everything
         """
         caps = self._caps
-        chrome_options = self.experimental_options.copy()
+        chrome_options = {}  # self.experimental_options.copy()
         if self.mobile_options:
             chrome_options.update(self.mobile_options)
-        chrome_options["extensions"] = self.extensions
+        # chrome_options["extensions"] = self.extensions
         if self.binary_location:
             chrome_options["binary"] = self.binary_location
         chrome_options["args"] = self._arguments

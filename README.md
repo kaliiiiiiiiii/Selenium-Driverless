@@ -28,11 +28,7 @@ options = webdriver.Options()
 with webdriver.Chrome(options=options) as driver:
     driver.get('http://nowsecure.nl#relax')
     driver.implicitly_wait(3)
-    driver.execute_script("window.open('https://wikipedia.org')")
-
-    # !not tab index :/
-    driver.switch_to_target(driver.window_handles[1])
-
+    
     title = driver.title
     url = driver.current_url
     source = driver.page_source
@@ -45,11 +41,8 @@ Please feel free to open an issue or fork!
 
 ## Todo
 
-- [ ] implementations
-  - [x] implement execute_async_script
-  - [x] execute_script
+- implementations
   - [ ] find element
-  - [ ] switch to & focus [source](https://chromium.googlesource.com/chromium/src/+/refs/heads/main/chrome/test/chromedriver/js/focus.js)
 
 ## Deprecated
 
