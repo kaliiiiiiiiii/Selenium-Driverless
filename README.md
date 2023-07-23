@@ -22,23 +22,21 @@
 
 #### example script
 ```python
-import asyncio
+from selenium_driverless import webdriver
 
+options = webdriver.Options()
+with webdriver.Chrome(options=options) as driver:
+    driver.get('http://nowsecure.nl#relax')
+    driver.implicitly_wait(3)
+    driver.execute_script("window.open('https://wikipedia.org')")
 
-async def main():
-    from selenium_driverless.async_.webdriver import ChromeDriver
-    from selenium_driverless.scripts.options import Options
-    options = Options()
-    async with ChromeDriver(options=options) as driver:
-        await driver.get('http://nowsecure.nl#relax')
-        await asyncio.sleep(4)
-        title = await driver.title
-        url = await driver.current_url
-        source = await driver.page_source
-        print(title)
+    # !not tab index :/
+    driver.switch_to_target(driver.window_handles[1])
 
-
-asyncio.run(main())
+    title = driver.title
+    url = driver.current_url
+    source = driver.page_source
+    print(title)
 ```
 
 ## Help

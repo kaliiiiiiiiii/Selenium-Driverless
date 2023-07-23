@@ -576,7 +576,8 @@ class Chrome(BaseWebDriver):
                 driver.switch_to.parent_frame()
                 driver.switch_to.window('main')
         """
-        return self._switch_to
+        raise NotImplementedError("You might use driver.switch_to_target(driver.targets[0].target_id.) instead")
+        # return self._switch_to
 
     def switch_to_target(self, target_id):
         from pycdp import cdp
