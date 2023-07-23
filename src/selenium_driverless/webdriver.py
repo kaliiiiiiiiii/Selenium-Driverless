@@ -38,7 +38,6 @@ from selenium.common.exceptions import JavascriptException
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.html5.application_cache import ApplicationCache
 from selenium.webdriver.common.print_page_options import PrintOptions
 from selenium.webdriver.common.virtual_authenticator import Credential
 from selenium.webdriver.common.virtual_authenticator import VirtualAuthenticatorOptions
@@ -46,7 +45,6 @@ from selenium.webdriver.common.virtual_authenticator import (
     required_virtual_authenticator,
 )
 from selenium.webdriver.remote.bidi_connection import BidiConnection
-from selenium.webdriver.remote.command import Command
 from selenium.webdriver.remote.file_detector import FileDetector
 from selenium.webdriver.remote.file_detector import LocalFileDetector
 from selenium.webdriver.remote.script_key import ScriptKey
@@ -667,6 +665,7 @@ class Chrome(BaseWebDriver):
         self._page_load_timeout = timeouts["page_load"]
         self._script_timeout = timeouts["script"]
 
+    # noinspection PyUnusedLocal
     def find_element(self, by=By.ID, value: Optional[str] = None) -> WebElement:
         """Find an element given a By strategy and locator.
 
@@ -694,8 +693,9 @@ class Chrome(BaseWebDriver):
             by = By.CSS_SELECTOR
             value = f'[name="{value}"]'
 
-        return self.execute(Command.FIND_ELEMENT, {"using": by, "value": value})["value"]
+        raise NotImplementedError("not started with chromedriver")
 
+    # noinspection PyUnusedLocal
     def find_elements(self, by=By.ID, value: Optional[str] = None) -> List[WebElement]:
         """Find elements given a By strategy and locator.
 
@@ -707,7 +707,7 @@ class Chrome(BaseWebDriver):
         :rtype: list of WebElement
         """
         from selenium_driverless.utils.utils import sel_path, read
-        by = RelativeBy({by: value})
+        # by = RelativeBy({by: value})
         if isinstance(by, RelativeBy):
             _pkg = ".".join(__name__.split(".")[:-1])
             raw_function = read(sel_path() + "webdriver/remote/findElements.js", sel_root=False)
@@ -726,7 +726,7 @@ class Chrome(BaseWebDriver):
 
         # Return empty list if driver returns null
         # See https://github.com/SeleniumHQ/selenium/issues/4555
-        return self.execute(Command.FIND_ELEMENTS, {"using": by, "value": value})["value"] or []
+        raise NotImplementedError("not started with chromedriver")
 
     @property
     def capabilities(self) -> dict:
@@ -972,12 +972,6 @@ class Chrome(BaseWebDriver):
             raise NotImplementedError()
         else:
             raise WebDriverException("You can only set the orientation to 'LANDSCAPE' and 'PORTRAIT'")
-
-    @property
-    def application_cache(self):
-        """Returns a ApplicationCache Object to interact with the browser app
-        cache."""
-        return ApplicationCache(self)
 
     @property
     def log_types(self):
