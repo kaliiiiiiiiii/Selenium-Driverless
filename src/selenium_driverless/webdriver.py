@@ -19,8 +19,6 @@
 
 """The WebDriver implementation."""
 import asyncio
-import contextlib
-import copy
 import os.path
 import subprocess
 import typing
@@ -30,7 +28,6 @@ from base64 import b64decode
 from base64 import urlsafe_b64encode
 from contextlib import asynccontextmanager
 from importlib import import_module
-from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
@@ -38,15 +35,11 @@ from typing import Union
 import pycdp.cdp.target
 from selenium.common.exceptions import InvalidArgumentException
 from selenium.common.exceptions import JavascriptException
-from selenium.common.exceptions import NoSuchCookieException
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.html5.application_cache import ApplicationCache
-
-from selenium_driverless.scripts.options import Options as BaseOptions
 from selenium.webdriver.common.print_page_options import PrintOptions
-from selenium.webdriver.common.timeouts import Timeouts
 from selenium.webdriver.common.virtual_authenticator import Credential
 from selenium.webdriver.common.virtual_authenticator import VirtualAuthenticatorOptions
 from selenium.webdriver.common.virtual_authenticator import (
@@ -54,74 +47,20 @@ from selenium.webdriver.common.virtual_authenticator import (
 )
 from selenium.webdriver.remote.bidi_connection import BidiConnection
 from selenium.webdriver.remote.command import Command
-from selenium.webdriver.remote.errorhandler import ErrorHandler
 from selenium.webdriver.remote.file_detector import FileDetector
 from selenium.webdriver.remote.file_detector import LocalFileDetector
-from selenium_driverless.scripts.mobile import Mobile
 from selenium.webdriver.remote.script_key import ScriptKey
-from selenium.webdriver.remote.shadowroot import ShadowRoot
-from selenium.webdriver.remote.switch_to import SwitchTo
+from selenium.webdriver.remote.webdriver import create_matches
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.relative_locator import RelativeBy
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+
+from selenium_driverless.scripts.mobile import Mobile
 from selenium_driverless.scripts.options import Options
+from selenium_driverless.scripts.switch_to import SwitchTo
 
 
 def import_cdp():
     return import_module("selenium.webdriver.common.bidi.cdp")
-
-
-def _create_caps(caps):
-    """Makes a W3C alwaysMatch capabilities object.
-
-    Filters out capability names that are not in the W3C spec. Spec-compliant
-    drivers will reject requests containing unknown capability names.
-
-    Moves the Firefox profile, if present, from the old location to the new Firefox
-    options object.
-
-    :Args:
-     - caps - A dictionary of capabilities requested by the caller.
-    """
-    caps = copy.deepcopy(caps)
-    always_match = {}
-    for k, v in caps.items():
-        always_match[k] = v
-    return {"capabilities": {"firstMatch": [{}], "alwaysMatch": always_match}}
-
-
-def create_matches(options: List[BaseOptions]) -> Dict:
-    capabilities = {"capabilities": {}}
-    opts = []
-    for opt in options:
-        opts.append(opt.to_capabilities())
-    opts_size = len(opts)
-    samesies = {}
-
-    # Can not use bitwise operations on the dicts or lists due to
-    # https://bugs.python.org/issue38210
-    for i in range(opts_size):
-        min_index = i
-        if i + 1 < opts_size:
-            first_keys = opts[min_index].keys()
-
-            for kys in first_keys:
-                if kys in opts[i + 1].keys():
-                    if opts[min_index][kys] == opts[i + 1][kys]:
-                        samesies.update({kys: opts[min_index][kys]})
-
-    always = {}
-    for k, v in samesies.items():
-        always[k] = v
-
-    for i in opts:
-        for k in always:
-            del i[k]
-
-    capabilities["capabilities"]["alwaysMatch"] = always
-    capabilities["capabilities"]["firstMatch"] = opts
-
-    return capabilities
 
 
 class BaseWebDriver(metaclass=ABCMeta):
@@ -135,9 +74,6 @@ class BaseWebDriver(metaclass=ABCMeta):
 class Chrome(BaseWebDriver):
     """Allows you to drive the browser without chromedriver."""
 
-    _web_element_cls = WebElement
-    _shadowroot_cls = ShadowRoot
-
     def __init__(
             self,
             options: Options = None,
@@ -149,6 +85,8 @@ class Chrome(BaseWebDriver):
         :Args:
          - options - this takes an instance of ChromeOptions
         """
+        self._page_load_timeout = None
+        self._script_timeout = None
         self._conn = None
         self.session = None
         self.browser_pid = None
@@ -160,7 +98,6 @@ class Chrome(BaseWebDriver):
             options = options or Options()
             self._options = options
 
-            browser_name = DesiredCapabilities.CHROME["browserName"],
             vendor_prefix = "goog"
             self.vendor_prefix = vendor_prefix
 
@@ -172,7 +109,6 @@ class Chrome(BaseWebDriver):
             self.target_id = None
             self.caps = {}
             self.pinned_scripts = {}
-            self.error_handler = ErrorHandler()
             self._switch_to = SwitchTo(self)
             self._mobile = Mobile(self)
             self.file_detector = LocalFileDetector()
@@ -196,7 +132,8 @@ class Chrome(BaseWebDriver):
 
     @property
     def mobile(self) -> Mobile:
-        return self._mobile
+        raise NotImplementedError()
+        # return self._mobile
 
     @property
     def name(self) -> str:
@@ -240,7 +177,6 @@ class Chrome(BaseWebDriver):
         from pycdp import cdp
 
         options = capabilities["goog:chromeOptions"]
-        caps = _create_caps(capabilities)
 
         browser = subprocess.Popen(
             [options["binary"], *options["args"]],
@@ -265,36 +201,9 @@ class Chrome(BaseWebDriver):
         self.session = self._loop.run_until_complete(self._conn.connect_session(self.target_id))
         self.caps = capabilities
 
-    def _wrap_value(self, value):
-        if isinstance(value, dict):
-            converted = {}
-            for key, val in value.items():
-                converted[key] = self._wrap_value(val)
-            return converted
-        if isinstance(value, self._web_element_cls):
-            return {"element-6066-11e4-a52e-4f735466cecf": value.id}
-        if isinstance(value, self._shadowroot_cls):
-            return {"shadow-6066-11e4-a52e-4f735466cecf": value.id}
-        if isinstance(value, list):
-            return list(self._wrap_value(item) for item in value)
-        return value
-
     def create_web_element(self, element_id: str) -> WebElement:
         """Creates a web element with the specified `element_id`."""
-        return self._web_element_cls(self, element_id)
-
-    def _unwrap_value(self, value):
-        if isinstance(value, dict):
-            if "element-6066-11e4-a52e-4f735466cecf" in value:
-                return self.create_web_element(value["element-6066-11e4-a52e-4f735466cecf"])
-            if "shadow-6066-11e4-a52e-4f735466cecf" in value:
-                return self._shadowroot_cls(self, value["shadow-6066-11e4-a52e-4f735466cecf"])
-            for key, val in value.items():
-                value[key] = self._unwrap_value(val)
-            return value
-        if isinstance(value, list):
-            return list(self._unwrap_value(item) for item in value)
-        return value
+        raise NotImplementedError()
 
     def execute(self, driver_command: str = None, params: dict = None, cmd=None):
         """
@@ -305,13 +214,20 @@ class Chrome(BaseWebDriver):
             raise NotImplementedError("chrome not started with chromedriver")
         return self._loop.run_until_complete(self.session.execute(cmd=cmd))
 
+    async def wait_for(self, event_type, timeout):
+        from async_timeout import timeout as async_timeout
+        async with async_timeout(timeout):
+            async for event in self.session.listen(event_type, buffer_size=2):
+                yield event
+                return
+
     def get(self, url: str) -> None:
         """Loads a web page in the current browser session."""
         from pycdp import cdp
         self.execute(cmd=cdp.page.enable())
 
         async def get(_url: str):
-            with self.session.safe_wait_for(cdp.page.DomContentEventFired) as navigation:
+            with self.wait_for(cdp.page.DomContentEventFired, timeout=self._page_load_timeout) as navigation:
                 await self.session.execute(cmd=cdp.page.navigate(_url))
                 await navigation
 
@@ -401,7 +317,7 @@ class Chrome(BaseWebDriver):
             });""" + script + "return promise})(..." + json.dumps(args) + ")"
         script = cdp.runtime.evaluate(expression=script, include_command_line_api=True,
                                       user_gesture=True, await_promise=True,
-                                      allow_unsafe_eval_blocked_by_csp=True)
+                                      allow_unsafe_eval_blocked_by_csp=True, timeout=self._script_timeout)
         result = self.execute(cmd=script)
         if result[1]:
             raise Exception(result[1].description)
@@ -450,7 +366,7 @@ class Chrome(BaseWebDriver):
         """
         import os
         import shutil
-        # noinspection PyBroadException
+        # noinspection PyBroadException,PyUnusedLocal
         try:
             try:
                 self.close()
@@ -544,10 +460,11 @@ class Chrome(BaseWebDriver):
         """Invokes the window manager-specific 'minimize' operation."""
         self.set_window_state("maximized")
 
+    # noinspection PyUnusedLocal
     def print_page(self, print_options: Optional[PrintOptions] = None) -> str:
         """Takes PDF of the current page.
 
-        The driver makes a best effort to return a PDF based on the
+        The driver makes the best effort to return a PDF based on the
         provided parameters.
         """
         from pycdp import cdp
@@ -577,15 +494,11 @@ class Chrome(BaseWebDriver):
                 driver.switch_to.parent_frame()
                 driver.switch_to.window('main')
         """
-        raise NotImplementedError("You might use driver.switch_to_target(driver.targets[0].target_id.) instead")
-        # return self._switch_to
+        return self._switch_to
 
-    def switch_to_target(self, target_id):
-        from pycdp import cdp
-        self.session.close()
-        self.session = self._loop.run_until_complete(self._conn.connect_session(target_id))
-        self.execute(cmd=cdp.target.activate_target(self.current_window_handle))
-        return self.session
+    @property
+    def _current_history_idx(self):
+        return self.execute_cdp_cmd("Page.getNavigationHistory")["currentIndex"]
 
     # Navigation
     def back(self) -> None:
@@ -596,7 +509,7 @@ class Chrome(BaseWebDriver):
 
                 driver.back()
         """
-        self.execute(Command.GO_BACK)
+        self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": self._current_history_idx - 1})
 
     def forward(self) -> None:
         """Goes one step forward in the browser history.
@@ -606,7 +519,7 @@ class Chrome(BaseWebDriver):
 
                 driver.forward()
         """
-        self.execute(Command.GO_FORWARD)
+        self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": self._current_history_idx + 1})
 
     async def refresh(self) -> None:
         """Refreshes the current page.
@@ -629,7 +542,7 @@ class Chrome(BaseWebDriver):
 
                 driver.get_cookies()
         """
-        return self.execute(Command.GET_ALL_COOKIES)["value"]
+        return self.execute_cdp_cmd("Page.getCookies")["cookies"]
 
     def get_cookie(self, name) -> typing.Optional[typing.Dict]:
         """Get a single cookie by name. Returns the cookie if found, None if
@@ -640,11 +553,13 @@ class Chrome(BaseWebDriver):
 
                 driver.get_cookie('my_cookie')
         """
-        with contextlib.suppress(NoSuchCookieException):
-            return self.execute(Command.GET_COOKIE, {"name": name})["value"]
+        # noinspection PyTypeChecker
+        for cookie in self.get_cookies:
+            if cookie["name"] == name:
+                return cookie
         return None
 
-    def delete_cookie(self, name) -> None:
+    def delete_cookie(self, name: str, url: str = None, domain: str = None, path: str = None) -> None:
         """Deletes a single cookie with the given name.
 
         :Usage:
@@ -652,7 +567,14 @@ class Chrome(BaseWebDriver):
 
                 driver.delete_cookie('my_cookie')
         """
-        self.execute(Command.DELETE_COOKIE, {"name": name})
+        args = {"name": name}
+        if url:
+            args["url"] = url
+        if domain:
+            args["domain"] = domain
+        if path:
+            args["path"] = path
+        self.execute_cdp_cmd("Network.deleteCookies", args)
 
     def delete_all_cookies(self) -> None:
         """Delete all cookies in the scope of the session.
@@ -662,7 +584,7 @@ class Chrome(BaseWebDriver):
 
                 driver.delete_all_cookies()
         """
-        self.execute(Command.DELETE_ALL_COOKIES)
+        self.execute_cdp_cmd("Network.clearBrowserCookies")
 
     def add_cookie(self, cookie_dict) -> None:
         """Adds a cookie to your current session.
@@ -681,9 +603,7 @@ class Chrome(BaseWebDriver):
         """
         if "sameSite" in cookie_dict:
             assert cookie_dict["sameSite"] in ["Strict", "Lax", "None"]
-            self.execute(Command.ADD_COOKIE, {"cookie": cookie_dict})
-        else:
-            self.execute(Command.ADD_COOKIE, {"cookie": cookie_dict})
+        self.execute_cdp_cmd("Network.setCookie", cookie_dict)
 
     # Timeouts
     def implicitly_wait(self, time_to_wait: float) -> None:
@@ -714,7 +634,7 @@ class Chrome(BaseWebDriver):
 
                 driver.set_script_timeout(30)
         """
-        self.execute(Command.SET_TIMEOUTS, {"script": int(float(time_to_wait) * 1000)})
+        self._script_timeout = time_to_wait
 
     def set_page_load_timeout(self, time_to_wait: float) -> None:
         """Set the amount of time to wait for a page load to complete before
@@ -728,13 +648,10 @@ class Chrome(BaseWebDriver):
 
                 driver.set_page_load_timeout(30)
         """
-        try:
-            self.execute(Command.SET_TIMEOUTS, {"pageLoad": int(float(time_to_wait) * 1000)})
-        except WebDriverException:
-            self.execute(Command.SET_TIMEOUTS, {"ms": float(time_to_wait) * 1000, "type": "page load"})
+        self._page_load_timeout = time_to_wait
 
     @property
-    def timeouts(self) -> Timeouts:
+    def timeouts(self) -> dict:
         """Get all the timeouts that have been set on the current session.
 
         :Usage:
@@ -743,25 +660,12 @@ class Chrome(BaseWebDriver):
                 driver.timeouts
         :rtype: Timeout
         """
-        timeouts = self.execute(Command.GET_TIMEOUTS)["value"]
-        timeouts["implicit_wait"] = timeouts.pop("implicit") / 1000
-        timeouts["page_load"] = timeouts.pop("pageLoad") / 1000
-        timeouts["script"] = timeouts.pop("script") / 1000
-        return Timeouts(**timeouts)
+        return {"page_load": self._page_load_timeout, "script": self._script_timeout}
 
     @timeouts.setter
-    def timeouts(self, timeouts) -> None:
-        # noinspection GrazieInspection
-        """Set all timeouts for the session. This will override any previously
-                set timeouts.
-
-                :Usage:
-                    ::
-                        my_timeouts = Timeouts()
-                        my_timeouts.implicit_wait = 10
-                        driver.timeouts = my_timeouts
-                """
-        _ = self.execute(Command.SET_TIMEOUTS, timeouts._to_json())["value"]
+    def timeouts(self, timeouts):
+        self._page_load_timeout = timeouts["page_load"]
+        self._script_timeout = timeouts["script"]
 
     def find_element(self, by=By.ID, value: Optional[str] = None) -> WebElement:
         """Find an element given a By strategy and locator.
@@ -829,7 +733,7 @@ class Chrome(BaseWebDriver):
         """returns the drivers current capabilities being used."""
         return self.caps
 
-    async def get_screenshot_as_file(self, filename) -> bool:
+    def get_screenshot_as_file(self, filename) -> bool:
         # noinspection GrazieInspection
         """Saves a screenshot of the current window to a PNG image file.
                 Returns False if there is any IOError, else returns True. Use full
@@ -1049,7 +953,7 @@ class Chrome(BaseWebDriver):
 
                 orientation = driver.orientation
         """
-        return self.execute(Command.GET_SCREEN_ORIENTATION)["value"]
+        raise NotImplementedError()
 
     @orientation.setter
     def orientation(self, value) -> None:
@@ -1065,7 +969,7 @@ class Chrome(BaseWebDriver):
         """
         allowed_values = ["LANDSCAPE", "PORTRAIT"]
         if value.upper() in allowed_values:
-            self.execute(Command.SET_SCREEN_ORIENTATION, {"orientation": value})
+            raise NotImplementedError()
         else:
             raise WebDriverException("You can only set the orientation to 'LANDSCAPE' and 'PORTRAIT'")
 
@@ -1085,7 +989,7 @@ class Chrome(BaseWebDriver):
 
                 driver.log_types
         """
-        return self.execute(Command.GET_AVAILABLE_LOG_TYPES)["value"]
+        raise NotImplementedError("not started with chromedriver")
 
     def get_log(self, log_type):
         """Gets the log for a given log type.
@@ -1101,7 +1005,7 @@ class Chrome(BaseWebDriver):
                 driver.get_log('client')
                 driver.get_log('server')
         """
-        return self.execute(Command.GET_LOG, {"type": log_type})["value"]
+        raise NotImplementedError("not started with chromedriver")
 
     @asynccontextmanager
     async def bidi_connection(self):
@@ -1144,12 +1048,14 @@ class Chrome(BaseWebDriver):
     # Virtual Authenticator Methods
     def add_virtual_authenticator(self, options: VirtualAuthenticatorOptions) -> None:
         """Adds a virtual authenticator with the given options."""
-        self._authenticator_id = self.execute(Command.ADD_VIRTUAL_AUTHENTICATOR, options.to_dict())["value"]
+        # self._authenticator_id = self.execute(Command.ADD_VIRTUAL_AUTHENTICATOR, options.to_dict())["value"]
+        raise NotImplementedError("not started with chromedriver")
 
     @property
     def virtual_authenticator_id(self) -> str:
         """Returns the id of the virtual authenticator."""
-        return self._authenticator_id
+        raise NotImplementedError("not started with chromedriver")
+        # return self._authenticator_id
 
     @required_virtual_authenticator
     def remove_virtual_authenticator(self) -> None:
@@ -1158,35 +1064,35 @@ class Chrome(BaseWebDriver):
         The authenticator is no longer valid after removal, so no
         methods may be called.
         """
-        self.execute(Command.REMOVE_VIRTUAL_AUTHENTICATOR, {"authenticatorId": self._authenticator_id})
-        self._authenticator_id = None
+        raise NotImplementedError("not started with chromedriver")
+        # self._authenticator_id = None
 
     @required_virtual_authenticator
     def add_credential(self, credential: Credential) -> None:
         """Injects a credential into the authenticator."""
-        self.execute(Command.ADD_CREDENTIAL, {**credential.to_dict(), "authenticatorId": self._authenticator_id})
+        raise NotImplementedError("not started with chromedriver")
 
+    # noinspection PyTypeChecker
     @required_virtual_authenticator
     def get_credentials(self) -> List[Credential]:
         """Returns the list of credentials owned by the authenticator."""
-        credential_data = self.execute(Command.GET_CREDENTIALS, {"authenticatorId": self._authenticator_id})
-        return [Credential.from_dict(credential) for credential in credential_data["value"]]
+        # credential_data = self.execute(Command.GET_CREDENTIALS, {"authenticatorId": self._authenticator_id})
+        raise NotImplementedError("not started with chromedriver")
 
     @required_virtual_authenticator
     def remove_credential(self, credential_id: Union[str, bytearray]) -> None:
         """Removes a credential from the authenticator."""
         # Check if the credential is bytearray converted to b64 string
         if isinstance(credential_id, bytearray):
+            # noinspection PyUnusedLocal
             credential_id = urlsafe_b64encode(credential_id).decode()
 
-        self.execute(
-            Command.REMOVE_CREDENTIAL, {"credentialId": credential_id, "authenticatorId": self._authenticator_id}
-        )
+        raise NotImplementedError("not started with chromedriver")
 
     @required_virtual_authenticator
     def remove_all_credentials(self) -> None:
         """Removes all credentials from the authenticator."""
-        self.execute(Command.REMOVE_ALL_CREDENTIALS, {"authenticatorId": self._authenticator_id})
+        raise NotImplementedError("not started with chromedriver")
 
     @required_virtual_authenticator
     def set_user_verified(self, verified: bool) -> None:
@@ -1195,15 +1101,16 @@ class Chrome(BaseWebDriver):
 
         verified: True if the authenticator will pass user verification, False otherwise.
         """
-        self.execute(Command.SET_USER_VERIFIED, {"authenticatorId": self._authenticator_id, "isUserVerified": verified})
+        raise NotImplementedError("not started with chromedriver")
 
     #
     # selenium.webdriver.chrome.WebDriver props from here on
     #
 
+    # noinspection PyShadowingBuiltins
     def launch_app(self, id):
         """Launches Chromium app specified by id."""
-        return self.execute("launchApp", {"id": id})
+        raise NotImplementedError("not started with chromedriver")
 
     def get_network_conditions(self):
         """Gets Chromium network emulation settings.
@@ -1257,7 +1164,6 @@ class Chrome(BaseWebDriver):
         args = {"permission": {"name": name}, "setting": value}
         if origin:
             args["origin"] = origin
-        from pycdp import cdp
         self.execute_cdp_cmd("Browser.setPermission", args)
 
     def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None):
@@ -1289,18 +1195,19 @@ class Chrome(BaseWebDriver):
         request = execute_cdp_cmd(cmd_dict)
         return self.execute(cmd=request)
 
+    # noinspection PyTypeChecker
     def get_sinks(self) -> list:
         """
         :Returns: A list of sinks available for Cast.
         """
         self.execute_cdp_cmd("Cast.enable")
-        return self.execute("getSinks")["value"]
+        raise NotImplementedError("not started with chromedriver")
 
     def get_issue_message(self):
         """
         :Returns: An error message when there is any issue in a Cast session.
         """
-        return self.execute("getIssueMessage")["value"]
+        raise NotImplementedError("not started with chromedriver")
 
     def set_sink_to_use(self, sink_name: str) -> dict:
         """Sets a specific sink, using its name, as a Cast session receiver

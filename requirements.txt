@@ -1,6 +1,7 @@
 selenium~=4.10.0
 setuptools==68.0.0
 chrome-devtools-protocol
+async-timeout
 
 # chromewhip
 bs4~=0.0.1
