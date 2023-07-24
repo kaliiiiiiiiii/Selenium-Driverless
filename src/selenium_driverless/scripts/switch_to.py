@@ -23,17 +23,19 @@ import warnings
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchFrameException
-from selenium_driverless.scripts.alert import Alert
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
 from selenium.webdriver.remote.command import Command
 
+from selenium_driverless.scripts.alert import Alert
+from selenium_driverless.sync.alert import Alert as SyncAlert
+
 
 class SwitchTo:
     def __init__(self, driver) -> None:
+        self._loop = None
         import weakref
-
         self._driver = weakref.proxy(driver)
 
     @property
@@ -48,7 +50,7 @@ class SwitchTo:
         raise NotImplementedError("You might use driver.switch_to.target(driver.targets[0].target_id)")
 
     @property
-    def alert(self) -> Alert:
+    async def alert(self) -> Alert:
         """Switches focus to an alert on the page.
 
         :Usage:
@@ -56,11 +58,14 @@ class SwitchTo:
 
                 alert = driver.switch_to.alert
         """
-        alert = Alert(self._driver)
+        if self._loop:
+            alert = SyncAlert(self._driver, loop=self._loop)
+        else:
+            alert = Alert(self._driver)
         warnings.warn("can't detect if a alert exists yet")
         return alert
 
-    def default_content(self) -> None:
+    async def default_content(self) -> None:
         """Switch focus to the default frame.
 
         :Usage:
@@ -70,7 +75,7 @@ class SwitchTo:
         """
         raise NotImplementedError("You might use driver.switch_to.target(driver.targets[0].target_id)")
 
-    def frame(self, frame_reference: Union[str, int, WebElement]) -> None:
+    async def frame(self, frame_reference: Union[str, int, WebElement]) -> None:
         """Switches focus to the specified frame, by index, name, or
         webelement.
 
@@ -87,24 +92,24 @@ class SwitchTo:
         """
         if isinstance(frame_reference, str):
             try:
-                frame_reference = self._driver.find_element(By.ID, frame_reference)
+                frame_reference = await self._driver.find_element(By.ID, frame_reference)
             except NoSuchElementException:
                 try:
-                    frame_reference = self._driver.find_element(By.NAME, frame_reference)
+                    frame_reference = await self._driver.find_element(By.NAME, frame_reference)
                 except NoSuchElementException:
                     raise NoSuchFrameException(frame_reference)
 
         raise NotImplementedError("You might use driver.switch_to.target(driver.targets[0].target_id)")
 
-    def target(self, target_id):
+    async def target(self, target_id):
         from pycdp import cdp
         self._driver.session.close()
         # noinspection PyProtectedMember
-        self._driver.session = self._driver._loop.run_until_complete(self._driver._conn.connect_session(target_id))
-        self._driver.execute(cmd=cdp.target.activate_target(self._driver.current_window_handle))
+        self._driver.session = await self._driver._conn.connect_session(target_id)
+        await self._driver.execute(cmd=cdp.target.activate_target(await self._driver.current_window_handle))
         return self._driver.session
 
-    def new_window(self, type_hint: Optional[str] = "tab", url="") -> None:
+    async def new_window(self, type_hint: Optional[str] = "tab", url="") -> None:
         """Switches to a new top-level browsing context.
 
         The type hint can be one of "tab" or "window". If not specified the
@@ -123,9 +128,11 @@ class SwitchTo:
             new_window = True
         from pycdp import cdp
         cmd = cdp.target.create_target(url=url, new_window=new_window, for_tab=new_tab)
-        return self._driver.execute(cmd=cmd)
+        target_id = await self._driver.execute(cmd=cmd)
+        await self.target(target_id)
+        return target_id
 
-    def parent_frame(self) -> None:
+    async def parent_frame(self) -> None:
         """Switches focus to the parent context. If the current context is the
         top level browsing context, the context remains unchanged.
 
@@ -134,9 +141,9 @@ class SwitchTo:
 
                 driver.switch_to.parent_frame()
         """
-        self._driver.execute(Command.SWITCH_TO_PARENT_FRAME)
+        await self._driver.execute(Command.SWITCH_TO_PARENT_FRAME)
 
-    def window(self, window_name) -> None:
+    async def window(self, window_name) -> None:
         """Switches focus to the specified window.
 
         :Args:
@@ -147,4 +154,4 @@ class SwitchTo:
 
                 driver.switch_to.window('main')
         """
-        self.target(window_name)
+        await self.target(window_name)

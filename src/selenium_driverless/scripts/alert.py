@@ -55,16 +55,16 @@ class Alert:
         self.driver = driver
 
     @property
-    def text(self) -> str:
+    async def text(self) -> str:
         """Gets the text of the Alert."""
-        return self.driver.execute(Command.W3C_GET_ALERT_TEXT)["value"]
+        return await self.driver.execute(Command.W3C_GET_ALERT_TEXT)["value"]
 
-    def dismiss(self) -> None:
+    async def dismiss(self) -> None:
         """Dismisses the alert available."""
         from pycdp import cdp
-        self.driver.execute(cmd=cdp.page.handle_java_script_dialog(accept=False))
+        await self.driver.execute(cmd=cdp.page.handle_java_script_dialog(accept=False))
 
-    def accept(self) -> None:
+    async def accept(self) -> None:
         """Accepts the alert available.
 
         :Usage:
@@ -73,14 +73,14 @@ class Alert:
                 Alert(driver).accept() # Confirm a alert dialog.
         """
         from pycdp import cdp
-        self.driver.execute(cmd=cdp.page.handle_java_script_dialog(accept=True))
+        await self.driver.execute(cmd=cdp.page.handle_java_script_dialog(accept=True))
 
     # noinspection PyPep8Naming
-    def send_keys(self, keysToSend: str) -> None:
+    async def send_keys(self, keysToSend: str) -> None:
         """Send Keys to the Alert.
 
         :Args:
          - keysToSend: The text to be sent to Alert.
         """
         from pycdp import cdp
-        self.driver.execute(cmd=cdp.page.handle_java_script_dialog(accept=True, prompt_text=keysToSend))
+        await self.driver.execute(cmd=cdp.page.handle_java_script_dialog(accept=True, prompt_text=keysToSend))

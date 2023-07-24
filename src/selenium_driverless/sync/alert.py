@@ -1,16 +1,14 @@
-from selenium_driverless.scripts.options import Options
+from selenium_driverless.scripts.alert import Alert as AsyncAlert
 import asyncio
-from selenium_driverless.webdriver import Chrome as AsyncDriver
 import inspect
 
 
-class Chrome(AsyncDriver):
-    def __init__(self, options: Options = None, loop: asyncio.AbstractEventLoop = None):
-        super().__init__(options=options)
+class Alert(AsyncAlert):
+    def __init__(self, driver, loop):
+        super().__init__(driver=driver)
         if not loop:
             loop = asyncio.new_event_loop()
         self._loop = loop
-        self.start_session()
 
     def __enter__(self):
         return self

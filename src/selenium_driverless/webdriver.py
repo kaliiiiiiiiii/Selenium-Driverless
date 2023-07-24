@@ -51,10 +51,11 @@ from selenium.webdriver.remote.script_key import ScriptKey
 from selenium.webdriver.remote.webdriver import create_matches
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.relative_locator import RelativeBy
+from selenium.webdriver.remote.mobile import Mobile
 
-from selenium_driverless.scripts.mobile import Mobile
 from selenium_driverless.scripts.options import Options
 from selenium_driverless.scripts.switch_to import SwitchTo
+from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
 
 
 def import_cdp():
@@ -82,8 +83,9 @@ class Chrome(BaseWebDriver):
         :Args:
          - options - this takes an instance of ChromeOptions
         """
-        self._page_load_timeout = None
-        self._script_timeout = None
+        self._loop = None
+        self._page_load_timeout = 300
+        self._script_timeout = 30
         self._conn = None
         self.session = None
         self.browser_pid = None
@@ -178,6 +180,9 @@ class Chrome(BaseWebDriver):
         from selenium_driverless.utils.utils import IS_POSIX, read
         from pycdp.asyncio import connect_cdp
         from pycdp import cdp
+
+        if self._loop:
+            self._switch_to = SyncSwitchTo(driver=self, loop=self._loop)
 
         options = capabilities["goog:chromeOptions"]
 
@@ -286,7 +291,7 @@ class Chrome(BaseWebDriver):
         script = cdp.runtime.evaluate(expression=script, include_command_line_api=True,
                                       user_gesture=True, await_promise=False,
                                       allow_unsafe_eval_blocked_by_csp=True, return_by_value=True)
-        result = await self.execute(cmd=script)
+        result = await asyncio.wait_for(self.execute(cmd=script), self._script_timeout)
         if result[1]:
             class JSEvalException(result[1], Exception):
                 pass
@@ -314,11 +319,13 @@ class Chrome(BaseWebDriver):
         (function(...arguments){
             const promise = new Promise((resolve, reject) => {
                 arguments.push(resolve)
-            });""" + script + "return promise})(..." + json.dumps(args) + ")"
+            });""" + script + ";return promise})(..." + json.dumps(args) + ")"
+        timeout = cdp.runtime.TimeDelta
+        timeout = timeout.from_json(self._script_timeout)
         script = cdp.runtime.evaluate(expression=script, include_command_line_api=True,
                                       user_gesture=True, await_promise=True,
-                                      allow_unsafe_eval_blocked_by_csp=True, timeout=self._script_timeout)
-        result = await self.execute(cmd=script)
+                                      allow_unsafe_eval_blocked_by_csp=True, timeout=timeout)
+        result = await asyncio.wait_for(self.execute(cmd=script), timeout=self._script_timeout)
         if result[1]:
             raise Exception(result[1].description)
         return result[0].value
@@ -355,7 +362,9 @@ class Chrome(BaseWebDriver):
                 driver.close()
         """
         from pycdp import cdp
+        window_handles = await self.window_handles
         await self.execute(cmd=cdp.page.close())
+        await self.switch_to.window(window_handles[0])
 
     async def quit(self) -> None:
         """Quits the driver and closes every associated window.
@@ -428,7 +437,6 @@ class Chrome(BaseWebDriver):
 
                 driver.window_handles
         """
-        warnings.warn("window_handles aren't ordered by tab position")
         tabs = []
         for target in await self.targets:
             if target.type_ == "page":
@@ -439,7 +447,7 @@ class Chrome(BaseWebDriver):
         states = ["normal", "minimized", "maximized", "fullscreen"]
         if state not in states:
             raise ValueError(f"expected one of {states}, but got: {state}")
-        window_id = self.current_window_id
+        window_id = await self.current_window_id
         bounds = {"windowState": state}
         await self.execute_cdp_cmd("Browser.setWindowBounds", {"bounds": bounds, "windowId": window_id})
 
