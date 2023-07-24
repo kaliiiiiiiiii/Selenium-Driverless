@@ -29,7 +29,6 @@ import asyncio
 async def main():
     options = webdriver.Options()
     async with webdriver.Chrome(options=options) as driver:
-        # driver.set_page_load_timeout(0.1)
         await driver.get('http://nowsecure.nl#relax')
         await driver.implicitly_wait(3)
 
@@ -65,7 +64,7 @@ Please feel free to open an issue or fork!
 
 ## Todo
 
-- implementations
+- [ ] page-interactions
   - [ ] find element
 
 ## Deprecated

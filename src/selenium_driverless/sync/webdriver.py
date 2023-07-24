@@ -1,6 +1,6 @@
 from selenium_driverless.scripts.options import Options
 import asyncio
-from selenium_driverless.async_.webdriver import Chrome as AsyncDriver
+from selenium_driverless.webdriver import Chrome as AsyncDriver
 import inspect
 
 
@@ -10,7 +10,6 @@ class Chrome(AsyncDriver):
             loop = asyncio.new_event_loop()
         self._loop = loop
         super().__init__(options=options)
-        self.start_session()
 
     def __enter__(self):
         return self.__aenter__()
