@@ -10,9 +10,10 @@ class Chrome(AsyncDriver):
             loop = asyncio.new_event_loop()
         self._loop = loop
         super().__init__(options=options)
+        self.start_session()
 
     def __enter__(self):
-        return self.__aenter__()
+        return self
 
     def __exit__(self, *args, **kwargs):
         self.__aexit__(*args, **kwargs)
