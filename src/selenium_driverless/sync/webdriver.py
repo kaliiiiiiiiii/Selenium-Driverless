@@ -17,6 +17,9 @@ class Chrome(AsyncDriver):
 
     def __exit__(self, *args, **kwargs):
         self.__aexit__(*args, **kwargs)
+    
+    def quit(self) -> None:
+        self._loop.run_until_complete(super().quit())
 
     def __getattribute__(self, item):
         item = super().__getattribute__(item)
