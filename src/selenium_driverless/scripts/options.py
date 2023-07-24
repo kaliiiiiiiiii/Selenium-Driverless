@@ -61,14 +61,16 @@ class Options(metaclass=ABCMeta):
     def set_capability(self, name: str, value: dict) -> None:
         """Sets a capability."""
         if name == "proxy":
+            proxy = None
             proxy_keys = ['ftpProxy', 'httpProxy', 'sslProxy']
             warnings.warn("not started with chromedriver, only aplying single proxy")
             for key, value in value.items():
                 if key in proxy_keys:
                     self.add_argument(f'--proxy-server={value}')
-                    if not self._proxy:
-                        self._proxy = value
-                    value[key] = self._proxy
+                    if not proxy:
+                        proxy = value
+                    value[key] = proxy
+            self._proxy = Proxy(value)
         else:
             raise NotImplementedError()
         self._caps[name] = value
@@ -255,7 +257,8 @@ class Options(metaclass=ABCMeta):
         """
         :Returns: Proxy if set, otherwise None.
         """
-        return self._proxy
+        proxy = Proxy(self._proxy)
+        return proxy
 
     @proxy.setter
     def proxy(self, value: Proxy) -> None:
