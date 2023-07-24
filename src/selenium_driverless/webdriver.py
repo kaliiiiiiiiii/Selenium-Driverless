@@ -379,7 +379,7 @@ class Chrome(BaseWebDriver):
         # noinspection PyBroadException,PyUnusedLocal
         try:
             try:
-                await self.close()
+                await self._conn.close()
 
                 # wait for process to be killed
                 while True:
