@@ -20,9 +20,33 @@
 
 ### Usage
 
-#### example script
+#### with asyncio
 ```python
 from selenium_driverless import webdriver
+import asyncio
+
+
+async def main():
+    options = webdriver.Options()
+    async with webdriver.Chrome(options=options) as driver:
+        # driver.set_page_load_timeout(0.1)
+        await driver.get('http://nowsecure.nl#relax')
+        await driver.implicitly_wait(3)
+
+        title = await driver.title
+        url = await driver.current_url
+        source = await driver.page_source
+        print(title)
+
+
+asyncio.run(main())
+```
+
+#### synchronous
+asyncified, might be buggy
+
+```python
+from selenium_driverless.sync import webdriver
 
 options = webdriver.Options()
 with webdriver.Chrome(options=options) as driver:
