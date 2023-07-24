@@ -14,7 +14,7 @@
 
 ### Installing
 
-* [Windows] Install [Chrome-Browser](https://www.google.de/chrome/)
+* Install [Chrome-Browser](https://www.google.de/chrome/)
 * ```pip install selenium-driverless```
 
 
