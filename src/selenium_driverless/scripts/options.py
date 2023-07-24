@@ -58,9 +58,19 @@ class Options(metaclass=ABCMeta):
     def capabilities(self):
         return self._caps
 
-    def set_capability(self, name, value) -> None:
+    def set_capability(self, name: str, value: dict) -> None:
         """Sets a capability."""
-        raise NotImplementedError()
+        if name == "proxy":
+            proxy_keys = ['ftpProxy', 'httpProxy', 'sslProxy']
+            warnings.warn("not started with chromedriver, only aplying single proxy")
+            for key, value in value.items():
+                if key in proxy_keys:
+                    self.add_argument(f'--proxy-server={value}')
+                    if not self._proxy:
+                        self._proxy = value
+                    value[key] = self._proxy
+        else:
+            raise NotImplementedError()
         self._caps[name] = value
 
     @property
@@ -228,8 +238,7 @@ class Options(metaclass=ABCMeta):
         """
         :returns: whether the remote end supports setting window size and position
         """
-        raise NotImplementedError()
-        return self._caps.get("setWindowRect", False)
+        return True
 
     @set_window_rect.setter
     def set_window_rect(self, value: bool) -> None:
@@ -239,15 +248,13 @@ class Options(metaclass=ABCMeta):
 
         :param value: whether remote end must support setting window resizing and repositioning
         """
-        raise NotImplementedError()
-        self._caps["setWindowRect"] = value
+        pass
 
     @property
     def proxy(self) -> Proxy:
         """
         :Returns: Proxy if set, otherwise None.
         """
-        raise NotImplementedError()
         return self._proxy
 
     @proxy.setter
@@ -255,8 +262,8 @@ class Options(metaclass=ABCMeta):
         raise NotImplementedError()
         if not isinstance(value, Proxy):
             raise InvalidArgumentException("Only Proxy objects can be passed in.")
-        self._proxy = value
-        self._caps["proxy"] = value.to_capabilities()
+        warnings.warn("not started with chromedriver, only aplying single proxy")
+        self.set_capability("proxy", value=value.to_dict())
 
     #
     # Options(BaseOptions) from here on
