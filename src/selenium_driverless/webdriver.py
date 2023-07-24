@@ -89,6 +89,9 @@ class Chrome(BaseWebDriver):
         self._conn = None
         self.session = None
         self.browser_pid = None
+        if not options.binary_location:
+            from selenium_driverless.utils.utils import find_chrome_executable
+            options.binary_location = find_chrome_executable()
 
         try:
             options = options or Options()
