@@ -32,7 +32,6 @@ from typing import List
 from typing import Optional
 from typing import Union
 
-import pycdp.cdp.target
 from selenium.common.exceptions import InvalidArgumentException
 from selenium.common.exceptions import JavascriptException
 from selenium.common.exceptions import NoSuchElementException
@@ -105,7 +104,6 @@ class Chrome(BaseWebDriver):
             else:
                 self._capabilities = options.to_capabilities()
             self._is_remote = True
-            self.target_id = None
             self.caps = {}
             self.pinned_scripts = {}
             self._switch_to = SwitchTo(self)
@@ -119,7 +117,7 @@ class Chrome(BaseWebDriver):
         self._is_remote = False
 
     def __repr__(self):
-        return f'<{type(self).__module__}.{type(self).__name__} (session="{self.target_id}")>'
+        return f'<{type(self).__module__}.{type(self).__name__} (session="{self.current_window_handle}")>'
 
     async def __aenter__(self):
         await self.start_session()
@@ -207,9 +205,10 @@ class Chrome(BaseWebDriver):
         targets = await self._conn.execute(cdp.target.get_targets())
         for target in targets:
             if target.type_ == "page":
-                self.target_id = target.target_id
+                target_id = target.target_id
                 break
-        self.session = await self._conn.connect_session(self.target_id)
+        # noinspection PyUnboundLocalVariable
+        self.session = await self._conn.connect_session(target_id)
         self.caps = capabilities
 
     async def create_web_element(self, element_id: str) -> WebElement:
@@ -225,14 +224,17 @@ class Chrome(BaseWebDriver):
             raise NotImplementedError("chrome not started with chromedriver")
         return await self.session.execute(cmd=cmd)
 
-    async def get(self, url: str) -> None:
+    async def get(self, url: str, referrer: str = None) -> None:
         """Loads a web page in the current browser session."""
         from pycdp import cdp
-        await self.execute(cmd=cdp.page.enable())
+        await self.execute_cdp_cmd("Page.enable")
+        args = {"url": url}
+        if referrer:
+            args["referrer"] = referrer
 
         async def get(_url: str):
             with self.session.safe_wait_for(cdp.page.DomContentEventFired) as navigation:
-                await self.session.execute(cmd=cdp.page.navigate(_url))
+                await self.execute_cdp_cmd("Page.navigate", args)
                 await navigation
 
         try:
@@ -250,7 +252,7 @@ class Chrome(BaseWebDriver):
                 title = driver.title
         """
         target = await self.current_target
-        return target.title
+        return target["title"]
 
     def pin_script(self, script: str, script_key=None) -> ScriptKey:
         """Store common javascript scripts to be executed later by a unique
@@ -269,7 +271,27 @@ class Chrome(BaseWebDriver):
     def get_pinned_scripts(self) -> List[str]:
         return list(self.pinned_scripts)
 
-    async def execute_script(self, script, *args):
+    def _parse_script(self, script, args=None, async_exec=False):
+        import json
+        if not args:
+            args = []
+        if isinstance(script, ScriptKey):
+            try:
+                script = self.pinned_scripts[script.id]
+            except KeyError:
+                raise JavascriptException("Pinned script could not be found")
+        if async_exec:
+            script = """
+                    (function(...arguments){
+                        const promise = new Promise((resolve, reject) => {
+                            arguments.push(resolve)
+                        });""" + script + ";return promise})"
+        else:
+            script = f"(function(...arguments){{{script}}})"
+        return script + "(..." + json.dumps(args) + ")"
+
+    async def execute_raw_script(self, script, as_user_gesture: bool = True, timeout: int = None,
+                                 serialization: str = None, max_depth: int = 2, await_promise: bool = False):
         """Synchronously Executes JavaScript in the current window/frame.
 
         :Args:
@@ -281,28 +303,48 @@ class Chrome(BaseWebDriver):
 
                 driver.execute_script('return document.title;')
         """
-        import json
-        from pycdp import cdp
-        if isinstance(script, ScriptKey):
-            try:
-                script = self.pinned_scripts[script.id]
-            except KeyError:
-                raise JavascriptException("Pinned script could not be found")
+        if not timeout:
+            timeout = self._script_timeout
+        if not serialization:
+            serialization = "json"
+        serialization_vals = ["deep", "json", "idOnly"]
+        if serialization not in serialization_vals:
+            raise ValueError(f"expected one of {serialization_vals}, but got {serialization}")
+        serialization = {"serialization": serialization, "maxDepth": max_depth,
+                         "additionalParameters": {"includeShadowTree": "all"}}
 
-        script = f"(function(...arguments){{{script}}})(...{json.dumps(args)})"
-
-        script = cdp.runtime.evaluate(expression=script, include_command_line_api=True,
-                                      user_gesture=True, await_promise=False,
-                                      allow_unsafe_eval_blocked_by_csp=True, return_by_value=True)
-        result = await asyncio.wait_for(self.execute(cmd=script), self._script_timeout)
-        if result[1]:
-            class JSEvalException(result[1], Exception):
+        args = {"expression": script, "includeCommandLineAPI": True,
+                "userGesture": as_user_gesture, "awaitPromise": await_promise,
+                "timeout": timeout * 1000, "allowUnsafeEvalBlockedByCSP": True,
+                "serializationOptions": serialization}
+        result = await asyncio.wait_for(self.execute_cdp_cmd("Runtime.evaluate", args), timeout)
+        if "exceptionDetails" in result.keys():
+            class JSEvalException(Exception):
                 pass
 
-            raise JSEvalException(result[1].description)
-        return result[0].value
+            raise JSEvalException(result["exceptionDetails"].description)
+        return result["result"]
 
-    async def execute_async_script(self, script: str, *args):
+    async def execute_script(self, script, *args, as_user_gesture: bool = True, timeout: int = None):
+        """Synchronously Executes JavaScript in the current window/frame.
+
+        :Args:
+         - script: The JavaScript to execute.
+         - \\*args: Any applicable arguments for your JavaScript.
+
+        :Usage:
+            ::
+
+                driver.execute_script('return document.title;')
+        """
+        script = self._parse_script(script=script, args=args, async_exec=False)
+
+        result = await self.execute_raw_script(script=script, as_user_gesture=as_user_gesture,
+                                               timeout=timeout, serialization="json",
+                                               await_promise=False)
+        return result["value"]
+
+    async def execute_async_script(self, script: str, *args, as_user_gesture, timeout=None):
         """Asynchronously Executes JavaScript in the current window/frame.
 
         :Args:
@@ -316,22 +358,12 @@ class Chrome(BaseWebDriver):
                          "window.setTimeout(function(){ callback('timeout') }, 3000);"
                 driver.execute_async_script(script)
         """
-        from pycdp import cdp
-        import json
-        script = """
-        (function(...arguments){
-            const promise = new Promise((resolve, reject) => {
-                arguments.push(resolve)
-            });""" + script + ";return promise})(..." + json.dumps(args) + ")"
-        timeout = cdp.runtime.TimeDelta
-        timeout = timeout.from_json(self._script_timeout)
-        script = cdp.runtime.evaluate(expression=script, include_command_line_api=True,
-                                      user_gesture=True, await_promise=True,
-                                      allow_unsafe_eval_blocked_by_csp=True, timeout=timeout)
-        result = await asyncio.wait_for(self.execute(cmd=script), timeout=self._script_timeout)
-        if result[1]:
-            raise Exception(result[1].description)
-        return result[0].value
+        script = self._parse_script(script=script, args=args, async_exec=True)
+
+        result = await self.execute_raw_script(script=script, as_user_gesture=as_user_gesture,
+                                               timeout=timeout, serialization="json",
+                                               await_promise=True)
+        return result["value"]
 
     @property
     async def current_url(self) -> str:
@@ -343,7 +375,7 @@ class Chrome(BaseWebDriver):
                 driver.current_url
         """
         target = await self.current_target
-        return target.url
+        return target["url"]
 
     @property
     async def page_source(self) -> str:
@@ -364,9 +396,8 @@ class Chrome(BaseWebDriver):
 
                 driver.close()
         """
-        from pycdp import cdp
         window_handles = await self.window_handles
-        await self.execute(cmd=cdp.page.close())
+        await self.execute_cdp_cmd("Page.close")
         await self.switch_to.window(window_handles[0])
 
     async def quit(self) -> None:
@@ -402,17 +433,17 @@ class Chrome(BaseWebDriver):
             pass  # self.service.stop()
 
     @property
-    async def targets(self):
-        from pycdp import cdp
-        return await self.execute(cmd=cdp.target.get_targets())
+    async def targets(self) -> dict:
+        res = await self.execute_cdp_cmd("Target.getTargets")
+        return res["targetInfos"]
 
     @property
     async def current_target(self):
-        from pycdp import cdp
-        return await self.execute(cmd=cdp.target.get_target_info(await self.current_window_handle))
+        res = await self.execute_cdp_cmd("Target.getTargetInfo", {"targetId": self.current_window_handle})
+        return res["targetInfo"]
 
     @property
-    async def current_window_handle(self) -> pycdp.cdp.target.TargetID:
+    def current_window_handle(self) -> str:
         """Returns the handle of the current window.
 
         :Usage:
@@ -421,15 +452,12 @@ class Chrome(BaseWebDriver):
                 driver.current_window_handle
         """
         # noinspection PyProtectedMember
-        return self.session._target_id
+        return str(self.session._target_id)
 
     @property
     async def current_window_id(self):
-        from pycdp import cdp
-        target_id = await self.current_window_handle
-        script = cdp.browser.get_window_for_target(target_id)
-        result = await self.execute(cmd=script)
-        return result[0]
+        result = await self.execute_cdp_cmd("Browser.getWindowForTarget", {"targetId": self.current_window_handle})
+        return result["windowId"]
 
     @property
     async def window_handles(self) -> List[str]:
@@ -479,14 +507,13 @@ class Chrome(BaseWebDriver):
         The driver makes the best effort to return a PDF based on the
         provided parameters.
         """
-        from pycdp import cdp
         options = {}
         if print_options:
             options = print_options.to_dict()
             raise NotImplementedError()
 
-        page = await self.execute(cmd=cdp.page.print_to_pdf())
-        return page[0]
+        page = await self.execute_cdp_cmd("Page.printToPDF")
+        return page["data"]
 
     @property
     def switch_to(self) -> SwitchTo:
@@ -542,8 +569,7 @@ class Chrome(BaseWebDriver):
 
                 driver.refresh()
         """
-        from pycdp import cdp
-        await self.execute(cmd=cdp.page.reload())
+        await self.execute_cdp_cmd("Page.reload")
 
     # Options
     async def get_cookies(self) -> List[dict]:
@@ -815,8 +841,8 @@ class Chrome(BaseWebDriver):
 
                 driver.get_screenshot_as_base64()
         """
-        from pycdp import cdp
-        return await self.execute(cmd=cdp.page.capture_screenshot(format_="png"))
+        res = await self.execute_cdp_cmd("Page.captureScreenshot", {"format": "png"})
+        return res["data"]
 
     # noinspection PyPep8Naming
     async def set_window_size(self, width, height, windowHandle: str = "current") -> None:
@@ -896,10 +922,8 @@ class Chrome(BaseWebDriver):
 
                 driver.get_window_rect()
         """
-        from pycdp import cdp
-        script = cdp.browser.get_window_bounds(await self.current_window_id)
-        bounds = await self.execute(cmd=script)
-        json = bounds.to_json()
+        json = await self.execute_cdp_cmd("Browser.getWindowBounds", {"windowId": await self.current_window_id})
+        json = json["bounds"]
         json["x"] = json["left"]
         del json["left"]
         json["y"] = json["top"]
@@ -919,23 +943,18 @@ class Chrome(BaseWebDriver):
                 driver.set_window_rect(width=100, height=200)
                 driver.set_window_rect(x=10, y=10, width=100, height=200)
         """
-        from pycdp import cdp
 
         if (x is None and y is None) and (not height and not width):
             raise InvalidArgumentException("x and y or height and width need values")
 
-        json = {"left": x, "top": y, "width": width, 'height': height}
-        bounds = cdp.browser.Bounds()
-        bounds = bounds.from_json(json=json)
+        bounds = {"left": x, "top": y, "width": width, 'height': height}
+        await self.execute_cdp_cmd("Browser.setWindowBounds", {"windowId": await self.current_window_id, "bounds": bounds})
+        bounds["x"] = bounds["left"]
+        del bounds["left"]
+        bounds["y"] = bounds["top"]
+        del bounds["top"]
 
-        script = cdp.browser.set_window_bounds(await self.current_window_id, bounds)
-        await self.execute(cmd=script)
-        json["x"] = json["left"]
-        del json["left"]
-        json["y"] = json["top"]
-        del json["top"]
-
-        return json
+        return bounds
 
     @property
     def file_detector(self) -> FileDetector:
@@ -1131,7 +1150,8 @@ class Chrome(BaseWebDriver):
         """
         raise NotImplementedError("not started with chromedriver")
 
-    async def set_network_conditions(self, **network_conditions) -> None:
+    async def set_network_conditions(self, offline: bool, latency: int, download_throughput: int,
+                                     upload_throughput: int, connection_type: None) -> None:
         """Sets Chromium network emulation settings.
 
         :Args:
@@ -1144,12 +1164,23 @@ class Chrome(BaseWebDriver):
                     offline=False,
                     latency=5,  # additional latency (ms)
                     download_throughput=500 * 1024,  # maximal throughput
-                    upload_throughput=500 * 1024)  # maximal throughput
+                    upload_throughput=500 * 1024,  # maximal throughput
+                    connection_type="wifi")
 
             Note: 'throughput' can be used to set both (for download and upload).
         """
-        from pycdp import cdp
-        await self.execute(cmd=cdp.network.emulate_network_conditions(**network_conditions))
+        args = {"offline": offline, "latency": latency,
+                "downloadThroughput": download_throughput,
+                "uploadThroughput": upload_throughput}
+
+        conn_types = ["none", "cellular2g", "cellular3g", "cellular4g", "bluetooth", "ethernet", "wifi", "wimax",
+                      "other"]
+        if connection_type:
+            if connection_type not in conn_types:
+                raise ValueError(f"expected {conn_types} for connection_type,  but got {connection_type}")
+            args["connectionType"] = connection_type
+
+        await self.execute_cdp_cmd("Network.emulateNetworkConditions", args)
 
     def delete_network_conditions(self) -> None:
         """Resets Chromium network emulation settings."""
@@ -1175,7 +1206,7 @@ class Chrome(BaseWebDriver):
             args["origin"] = origin
         await self.execute_cdp_cmd("Browser.setPermission", args)
 
-    async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None):
+    async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None) -> dict:
         """Execute Chrome Devtools Protocol command and get returned result The
         command and command args should follow chrome devtools protocol
         domains/commands, refer to link
@@ -1202,7 +1233,7 @@ class Chrome(BaseWebDriver):
 
         cmd_dict = dict(method=cmd, params=cmd_args)
         request = execute_cdp_cmd(cmd_dict)
-        return await self.execute(cmd=request)
+        return await self.session.execute(request)
 
     # noinspection PyTypeChecker
     async def get_sinks(self) -> list:
