@@ -66,6 +66,10 @@ Please feel free to open an issue or fork!
 
 - [ ] page-interactions
   - [ ] find element
+- protocoll
+  - [ ] add cdp event handler
+- [x] sync
+  - [ ] move sync to threaded for allowing event_handlers
 
 ## Deprecated
 
