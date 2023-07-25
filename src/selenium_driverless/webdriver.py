@@ -303,6 +303,7 @@ class Chrome(BaseWebDriver):
 
                 driver.execute_script('return document.title;')
         """
+        from selenium_driverless.types import JSEvalException
         if not timeout:
             timeout = self._script_timeout
         if not serialization:
@@ -311,7 +312,7 @@ class Chrome(BaseWebDriver):
         if serialization not in serialization_vals:
             raise ValueError(f"expected one of {serialization_vals}, but got {serialization}")
         serialization = {"serialization": serialization, "maxDepth": max_depth,
-                         "additionalParameters": {"includeShadowTree": "all"}}
+                         "additionalParameters": {"includeShadowTree": "all","maxNodeDepth":max_depth}}
 
         args = {"expression": script, "includeCommandLineAPI": True,
                 "userGesture": as_user_gesture, "awaitPromise": await_promise,
@@ -319,9 +320,6 @@ class Chrome(BaseWebDriver):
                 "serializationOptions": serialization}
         result = await asyncio.wait_for(self.execute_cdp_cmd("Runtime.evaluate", args), timeout)
         if "exceptionDetails" in result.keys():
-            class JSEvalException(Exception):
-                pass
-
             raise JSEvalException(result["exceptionDetails"].description)
         return result["result"]
 
@@ -707,67 +705,17 @@ class Chrome(BaseWebDriver):
         self._script_timeout = timeouts["script"]
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by=By.ID, value: Optional[str] = None) -> WebElement:
-        """Find an element given a By strategy and locator.
+    def find_element(self, by: str, value: str, parent=None):
+        from selenium_injector.types.webelement import WebElement
+        if not parent:
+            parent = WebElement(driver=self, js="document")
+        return parent.find_element(by=by, value=value)
 
-        :Usage:
-            ::
-
-                element = driver.find_element(By.ID, 'foo')
-
-        :rtype: WebElement
-        """
-        # by = RelativeBy({by: value})
-        if isinstance(by, RelativeBy):
-            elements = await self.find_elements(by=by, value=value)
-            if not elements:
-                raise NoSuchElementException(f"Cannot locate relative element with: {by.root}")
-            return elements[0]
-
-        if by == By.ID:
-            by = By.CSS_SELECTOR
-            value = f'[id="{value}"]'
-        elif by == By.CLASS_NAME:
-            by = By.CSS_SELECTOR
-            value = f".{value}"
-        elif by == By.NAME:
-            by = By.CSS_SELECTOR
-            value = f'[name="{value}"]'
-
-        raise NotImplementedError("not started with chromedriver")
-
-    # noinspection PyUnusedLocal
-    async def find_elements(self, by=By.ID, value: Optional[str] = None) -> List[WebElement]:
-        """Find elements given a By strategy and locator.
-
-        :Usage:
-            ::
-
-                elements = driver.find_elements(By.CLASS_NAME, 'foo')
-
-        :rtype: list of WebElement
-        """
-        from selenium_driverless.utils.utils import sel_path, read
-        # by = RelativeBy({by: value})
-        if isinstance(by, RelativeBy):
-            _pkg = ".".join(__name__.split(".")[:-1])
-            raw_function = read(sel_path() + "webdriver/remote/findElements.js", sel_root=False)
-            find_element_js = f"/* findElements */return ({raw_function}).apply(null, arguments);"
-            return await self.execute_script(find_element_js, by.to_dict())
-
-        if by == By.ID:
-            by = By.CSS_SELECTOR
-            value = f'[id="{value}"]'
-        elif by == By.CLASS_NAME:
-            by = By.CSS_SELECTOR
-            value = f".{value}"
-        elif by == By.NAME:
-            by = By.CSS_SELECTOR
-            value = f'[name="{value}"]'
-
-        # Return empty list if driver returns null
-        # See https://github.com/SeleniumHQ/selenium/issues/4555
-        raise NotImplementedError("not started with chromedriver")
+    def find_elements(self, by: str, value: str, parent=None):
+        from selenium_injector.types.webelement import WebElement
+        if not parent:
+            parent = WebElement(driver=self, js="document")
+        return parent.find_elements(by=by, value=value)
 
     @property
     def capabilities(self) -> dict:
