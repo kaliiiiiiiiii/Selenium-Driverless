@@ -33,10 +33,7 @@ from typing import Optional
 from typing import Union
 
 from selenium.common.exceptions import InvalidArgumentException
-from selenium.common.exceptions import JavascriptException
-from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.common.by import By
 from selenium.webdriver.common.print_page_options import PrintOptions
 from selenium.webdriver.common.virtual_authenticator import Credential
 from selenium.webdriver.common.virtual_authenticator import VirtualAuthenticatorOptions
@@ -46,15 +43,14 @@ from selenium.webdriver.common.virtual_authenticator import (
 from selenium.webdriver.remote.bidi_connection import BidiConnection
 from selenium.webdriver.remote.file_detector import FileDetector
 from selenium.webdriver.remote.file_detector import LocalFileDetector
+from selenium.webdriver.remote.mobile import Mobile
 from selenium.webdriver.remote.script_key import ScriptKey
 from selenium.webdriver.remote.webdriver import create_matches
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support.relative_locator import RelativeBy
-from selenium.webdriver.remote.mobile import Mobile
 
 from selenium_driverless.scripts.options import Options
 from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
+from selenium_driverless.types.webelement import WebElement, RemoteObject
 
 
 def import_cdp():
@@ -271,97 +267,93 @@ class Chrome(BaseWebDriver):
     def get_pinned_scripts(self) -> List[str]:
         return list(self.pinned_scripts)
 
-    def _parse_script(self, script, args=None, async_exec=False):
-        import json
-        if not args:
-            args = []
-        if isinstance(script, ScriptKey):
-            try:
-                script = self.pinned_scripts[script.id]
-            except KeyError:
-                raise JavascriptException("Pinned script could not be found")
-        if async_exec:
-            script = """
-                    (function(...arguments){
-                        const promise = new Promise((resolve, reject) => {
-                            arguments.push(resolve)
-                        });""" + script + ";return promise})"
-        else:
-            script = f"(function(...arguments){{{script}}})"
-        return script + "(..." + json.dumps(args) + ")"
+    async def _parse_res(self, res):
+        if "subtype" in res.keys():
+            if res["subtype"] == 'node':
+                res["value"] = await WebElement(driver=self, obj_id=res["objectId"], check_existence=False)
+        if 'className' in res.keys():
+            class_name = res['className']
+            if class_name in ['NodeList', 'HTMLCollection']:
+                elems = []
+                obj = await RemoteObject(driver=self, obj_id=res["objectId"], check_existence=False)
+                for idx in range(int(res['description'][-2])):
+                    elems.append(await obj.execute_script("return this[arguments[0]]", idx))
+                res["value"] = elems
+            elif class_name == 'XPathResult':
+                elems = []
+                obj = await RemoteObject(driver=self, obj_id=res["objectId"], check_existence=False)
+                if await obj.execute_script("return [7].includes(this.resultType)"):
+                    for idx in range(await obj.execute_script("return this.snapshotLength")):
+                        elems.append(await obj.execute_script("return this.snapshotItem(arguments[0])", idx))
+                    res["value"] = elems
+        return res
 
-    async def execute_raw_script(self, script, as_user_gesture: bool = True, timeout: int = None,
-                                 serialization: str = None, max_depth: int = 2, await_promise: bool = False):
-        """Synchronously Executes JavaScript in the current window/frame.
-
-        :Args:
-         - script: The JavaScript to execute.
-         - \\*args: Any applicable arguments for your JavaScript.
-
-        :Usage:
-            ::
-
-                driver.execute_script('return document.title;')
+    async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
+                                 max_depth: int = None, timeout: int = 2, obj_id=None):
         """
-        from selenium_driverless.types import JSEvalException
+        example:
+        script= "function(...arguments){this.click()}"
+        "this" will be the element object
+        """
+        from selenium_driverless.types import RemoteObject, JSEvalException
+        if not obj_id:
+            global_this = await RemoteObject(driver=self, js="globalThis", check_existence=False)
+            obj_id = await global_this.obj_id
         if not timeout:
             timeout = self._script_timeout
+        if not args:
+            args = []
         if not serialization:
             serialization = "json"
-        serialization_vals = ["deep", "json", "idOnly"]
-        if serialization not in serialization_vals:
-            raise ValueError(f"expected one of {serialization_vals}, but got {serialization}")
-        serialization = {"serialization": serialization, "maxDepth": max_depth,
-                         "additionalParameters": {"includeShadowTree": "all","maxNodeDepth":max_depth}}
+        _args = []
+        for arg in args:
+            if isinstance(arg, RemoteObject):
+                _args.append({"objectId": await arg.obj_id})
+            else:
+                _args.append({"value": arg})
 
-        args = {"expression": script, "includeCommandLineAPI": True,
-                "userGesture": as_user_gesture, "awaitPromise": await_promise,
-                "timeout": timeout * 1000, "allowUnsafeEvalBlockedByCSP": True,
-                "serializationOptions": serialization}
-        result = await asyncio.wait_for(self.execute_cdp_cmd("Runtime.evaluate", args), timeout)
-        if "exceptionDetails" in result.keys():
-            raise JSEvalException(result["exceptionDetails"].description)
-        return result["result"]
+        ser_opts = {"serialization": serialization, "maxDepth": max_depth,
+                    "additionalParameters": {"includeShadowTree": "all", "maxNodeDepth": max_depth}}
+        args = {"functionDeclaration": script, "objectId": obj_id,
+                "arguments": _args, "userGesture": True, "awaitPromise": await_res, "serializationOptions": ser_opts}
+        res = await asyncio.wait_for(self.execute_cdp_cmd("Runtime.callFunctionOn", args), timeout=timeout)
+        if "exceptionDetails" in res.keys():
+            raise JSEvalException(res["exceptionDetails"])
+        res = res["result"]
+        res = await self._parse_res(res)
+        return res
 
-    async def execute_script(self, script, *args, as_user_gesture: bool = True, timeout: int = None):
-        """Synchronously Executes JavaScript in the current window/frame.
-
-        :Args:
-         - script: The JavaScript to execute.
-         - \\*args: Any applicable arguments for your JavaScript.
-
-        :Usage:
-            ::
-
-                driver.execute_script('return document.title;')
+    async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
+                             timeout: int = None,
+                             only_value=True, obj_id=None):
         """
-        script = self._parse_script(script=script, args=args, async_exec=False)
-
-        result = await self.execute_raw_script(script=script, as_user_gesture=as_user_gesture,
-                                               timeout=timeout, serialization="json",
-                                               await_promise=False)
-        return result["value"]
-
-    async def execute_async_script(self, script: str, *args, as_user_gesture, timeout=None):
-        """Asynchronously Executes JavaScript in the current window/frame.
-
-        :Args:
-         - script: The JavaScript to execute.
-         - \\*args: Any applicable arguments for your JavaScript.
-
-        :Usage:
-            ::
-
-                script = "var callback = arguments[arguments.length - 1]; " \\
-                         "window.setTimeout(function(){ callback('timeout') }, 3000);"
-                driver.execute_async_script(script)
+        exaple: script = "return elem.click()"
         """
-        script = self._parse_script(script=script, args=args, async_exec=True)
+        script = f"(function(...arguments){{{script}}})"
+        res = await self.execute_raw_script(script, *args, max_depth=max_depth,
+                                            serialization=serialization, timeout=timeout,
+                                            await_res=False, obj_id=obj_id)
+        if only_value:
+            if "value" in res.keys():
+                return res["value"]
+        else:
+            return res
 
-        result = await self.execute_raw_script(script=script, as_user_gesture=as_user_gesture,
-                                               timeout=timeout, serialization="json",
-                                               await_promise=True)
-        return result["value"]
+    async def execute_async_script(self, script: str, *args, max_depth: int = None,
+                                   serialization: str = None, timeout: int = 2,
+                                   only_value=True, obj_id=None):
+        script = """(function(...arguments){
+                       const promise = new Promise((resolve, reject) => {
+                              arguments.push(resolve)
+                        });""" + script + ";return promise})"
+        res = await self.execute_raw_script(script, *args, max_depth=max_depth,
+                                            serialization=serialization, timeout=timeout,
+                                            await_res=True, obj_id=obj_id)
+        if only_value:
+            if "value" in res.keys():
+                return res["value"]
+        else:
+            return res
 
     @property
     async def current_url(self) -> str:
@@ -705,17 +697,15 @@ class Chrome(BaseWebDriver):
         self._script_timeout = timeouts["script"]
 
     # noinspection PyUnusedLocal
-    def find_element(self, by: str, value: str, parent=None):
-        from selenium_injector.types.webelement import WebElement
+    async def find_element(self, by: str, value: str, parent=None):
         if not parent:
-            parent = WebElement(driver=self, js="document")
-        return parent.find_element(by=by, value=value)
+            parent = await WebElement(driver=self, js="document", check_existence=False)
+        return await parent.find_element(by=by, value=value)
 
-    def find_elements(self, by: str, value: str, parent=None):
-        from selenium_injector.types.webelement import WebElement
+    async def find_elements(self, by: str, value: str, parent=None):
         if not parent:
-            parent = WebElement(driver=self, js="document")
-        return parent.find_elements(by=by, value=value)
+            parent = await WebElement(driver=self, js="document",check_existence=False)
+        return await parent.find_elements(by=by, value=value)
 
     @property
     def capabilities(self) -> dict:
@@ -896,7 +886,8 @@ class Chrome(BaseWebDriver):
             raise InvalidArgumentException("x and y or height and width need values")
 
         bounds = {"left": x, "top": y, "width": width, 'height': height}
-        await self.execute_cdp_cmd("Browser.setWindowBounds", {"windowId": await self.current_window_id, "bounds": bounds})
+        await self.execute_cdp_cmd("Browser.setWindowBounds",
+                                   {"windowId": await self.current_window_id, "bounds": bounds})
         bounds["x"] = bounds["left"]
         del bounds["left"]
         bounds["y"] = bounds["top"]
