@@ -32,6 +32,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 
+from pyparsing import Char
 from selenium.common.exceptions import InvalidArgumentException
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.print_page_options import PrintOptions
@@ -47,7 +48,7 @@ from selenium.webdriver.remote.mobile import Mobile
 from selenium.webdriver.remote.script_key import ScriptKey
 from selenium.webdriver.remote.webdriver import create_matches
 
-from selenium_driverless.scripts.options import Options
+from selenium_driverless.scripts.options import Options as ChromeOptions
 from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
 from selenium_driverless.types.webelement import WebElement, RemoteObject
@@ -71,7 +72,7 @@ class Chrome(BaseWebDriver):
 
     def __init__(
             self,
-            options: Options = None,
+            options: ChromeOptions = None,
     ) -> None:
         """Creates a new instance of the chrome driver. Starts the service and
         then creates new instance of chrome driver.
@@ -91,7 +92,7 @@ class Chrome(BaseWebDriver):
             options.binary_location = find_chrome_executable()
 
         try:
-            options = options or Options()
+            options = options or ChromeOptions()
             self._options = options
 
             vendor_prefix = "goog"
@@ -183,6 +184,11 @@ class Chrome(BaseWebDriver):
         if self._loop:
             self._switch_to = SyncSwitchTo(driver=self, loop=self._loop)
 
+        if not self._options.debugger_address:
+            from selenium_driverless.utils.utils import random_port
+            port = random_port("localhost")
+            self._options._debugger_address = f"localhost:{port}"
+            self._options.add_argument(f"--remote-debugging-port={port}")
         options = capabilities["goog:chromeOptions"]
 
         browser = subprocess.Popen(
