@@ -16,6 +16,7 @@
 
 * Install [Chrome-Browser](https://www.google.de/chrome/)
 * ```pip install selenium-driverless```
+* `pip install git+https://github.com/HMaker/python-cdp.git@latest`
 
 
 ### Usage
@@ -67,6 +68,7 @@ Please feel free to open an issue or fork!
   - [ ] add cdp event handler
 - [x] sync
   - [ ] move sync to threaded for allowing event_handlers
+- [ ] remove pycdp dependency -_-
 
 ## Deprecated
 
