@@ -16,7 +16,6 @@
 
 * Install [Chrome-Browser](https://www.google.de/chrome/)
 * ```pip install selenium-driverless```
-* `pip install git+https://github.com/HMaker/python-cdp.git@latest`
 
 
 ### Usage
