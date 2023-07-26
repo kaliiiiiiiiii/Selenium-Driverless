@@ -4,7 +4,7 @@ import asyncio
 
 
 async def main():
-    options = webdriver.Options()
+    options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
         await driver.get('https://hmaker.github.io/selenium-detector/')
         elem = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-token")

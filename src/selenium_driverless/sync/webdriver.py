@@ -1,4 +1,4 @@
-from selenium_driverless.scripts.options import Options
+from selenium_driverless.scripts.options import Options as ChromeOptions
 import asyncio
 from selenium_driverless.webdriver import Chrome as AsyncDriver
 import inspect

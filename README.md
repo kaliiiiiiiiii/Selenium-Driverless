@@ -28,7 +28,7 @@ import asyncio
 
 
 async def main():
-    options = webdriver.Options()
+    options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
         await driver.get('http://nowsecure.nl#relax')
         await driver.implicitly_wait(3)
@@ -48,7 +48,7 @@ asyncified, might be buggy
 ```python
 from selenium_driverless.sync import webdriver
 
-options = webdriver.Options()
+options = webdriver.ChromeOptions()
 with webdriver.Chrome(options=options) as driver:
     driver.get('http://nowsecure.nl#relax')
     driver.implicitly_wait(3)
