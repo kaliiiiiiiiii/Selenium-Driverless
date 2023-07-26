@@ -63,9 +63,6 @@ with webdriver.Chrome(options=options) as driver:
 Please feel free to open an issue or fork!
 
 ## Todo
-
-- [ ] page-interactions
-  - [ ] find element
 - protocoll
   - [ ] add cdp event handler
 - [x] sync

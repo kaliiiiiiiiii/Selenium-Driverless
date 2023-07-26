@@ -51,6 +51,7 @@ from selenium_driverless.scripts.options import Options
 from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
 from selenium_driverless.types.webelement import WebElement, RemoteObject
+from selenium_driverless.sync.webelement import WebElement as SyncWebElement
 
 
 def import_cdp():
@@ -78,6 +79,7 @@ class Chrome(BaseWebDriver):
         :Args:
          - options - this takes an instance of ChromeOptions
         """
+        self._global_this = None
         self._loop = None
         self._page_load_timeout = 300
         self._script_timeout = 30
@@ -205,6 +207,7 @@ class Chrome(BaseWebDriver):
                 break
         # noinspection PyUnboundLocalVariable
         self.session = await self._conn.connect_session(target_id)
+        self._global_this = await RemoteObject(driver=self, js="globalThis", check_existence=False)
         self.caps = capabilities
 
     async def create_web_element(self, element_id: str) -> WebElement:
@@ -270,21 +273,27 @@ class Chrome(BaseWebDriver):
     async def _parse_res(self, res):
         if "subtype" in res.keys():
             if res["subtype"] == 'node':
-                res["value"] = await WebElement(driver=self, obj_id=res["objectId"], check_existence=False)
+                if self._loop:
+                    res["value"] = await SyncWebElement(driver=self, loop=self._loop,
+                                                        obj_id=res["objectId"],
+                                                        check_existence=False)
+                else:
+                    res["value"] = await WebElement(driver=self, obj_id=res["objectId"],
+                                                    check_existence=False)
         if 'className' in res.keys():
             class_name = res['className']
             if class_name in ['NodeList', 'HTMLCollection']:
                 elems = []
                 obj = await RemoteObject(driver=self, obj_id=res["objectId"], check_existence=False)
                 for idx in range(int(res['description'][-2])):
-                    elems.append(await obj.execute_script("return this[arguments[0]]", idx))
+                    elems.append(await obj.execute_script("return this[arguments[0]]", idx, serialization="deep"))
                 res["value"] = elems
             elif class_name == 'XPathResult':
                 elems = []
                 obj = await RemoteObject(driver=self, obj_id=res["objectId"], check_existence=False)
-                if await obj.execute_script("return [7].includes(this.resultType)"):
-                    for idx in range(await obj.execute_script("return this.snapshotLength")):
-                        elems.append(await obj.execute_script("return this.snapshotItem(arguments[0])", idx))
+                if await obj.execute_script("return [7].includes(this.resultType)", serialization="json"):
+                    for idx in range(await obj.execute_script("return this.snapshotLength", serialization="json")):
+                        elems.append(await obj.execute_script("return this.snapshotItem(arguments[0])", idx, serialization="deep"))
                     res["value"] = elems
         return res
 
@@ -297,14 +306,15 @@ class Chrome(BaseWebDriver):
         """
         from selenium_driverless.types import RemoteObject, JSEvalException
         if not obj_id:
-            global_this = await RemoteObject(driver=self, js="globalThis", check_existence=False)
-            obj_id = await global_this.obj_id
+            if not self._global_this:
+                self._global_this = await RemoteObject(driver=self, js="globalThis", check_existence=False)
+            obj_id = await self._global_this.obj_id
         if not timeout:
             timeout = self._script_timeout
         if not args:
             args = []
         if not serialization:
-            serialization = "json"
+            serialization = "deep"
         _args = []
         for arg in args:
             if isinstance(arg, RemoteObject):
@@ -339,7 +349,7 @@ class Chrome(BaseWebDriver):
         else:
             return res
 
-    async def execute_async_script(self, script: str, *args, max_depth: int = None,
+    async def execute_async_script(self, script: str, *args, max_depth: int = 2,
                                    serialization: str = None, timeout: int = 2,
                                    only_value=True, obj_id=None):
         script = """(function(...arguments){
@@ -704,7 +714,7 @@ class Chrome(BaseWebDriver):
 
     async def find_elements(self, by: str, value: str, parent=None):
         if not parent:
-            parent = await WebElement(driver=self, js="document",check_existence=False)
+            parent = await WebElement(driver=self, js="document", check_existence=False)
         return await parent.find_elements(by=by, value=value)
 
     @property

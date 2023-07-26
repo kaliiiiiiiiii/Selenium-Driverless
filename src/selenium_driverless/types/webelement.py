@@ -18,7 +18,6 @@
 
 import warnings
 from base64 import b64decode
-import asyncio
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.shadowroot import ShadowRoot
@@ -48,10 +47,8 @@ class WebElement(RemoteObject):
     instance will fail.
     """
 
-    def __init__(self, driver, js: str = None, obj_id=None, parent=None, by: str = None,
-                 value: str = None, check_existence=True) -> None:
-        self._by = by
-        self._value = value
+    def __init__(self, driver, js: str = None, obj_id=None, parent=None, check_existence=True) -> None:
+        self._loop = None
         if not parent:
             self._parent = WebElement(js="document", driver=driver, parent="undefined", check_existence=False)
         elif parent == "undefined":
@@ -114,9 +111,11 @@ class WebElement(RemoteObject):
             value = f'//*[@name="{value}"]'
 
         if by == By.TAG_NAME:
-            return await self.execute_script("return this.getElementsByTagName(arguments[0])", value)
+            return await self.execute_script("return this.getElementsByTagName(arguments[0])",
+                                             value, serialization="deep")
         elif by == By.CSS_SELECTOR:
-            return await self.execute_script("return this.querySelectorAll(arguments[0])", value)
+            return await self.execute_script("return this.querySelectorAll(arguments[0])",
+                                             value, serialization="deep")
         elif by == By.XPATH:
             scipt = """return this.evaluate(
                           arguments[0],
@@ -125,7 +124,7 @@ class WebElement(RemoteObject):
                           XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
                           null,
                         );"""
-            return await self.execute_script(scipt, value)
+            return await self.execute_script(scipt, value, serialization="deep")
         else:
             return ValueError("unexpected by")
 

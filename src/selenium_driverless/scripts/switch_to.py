@@ -102,10 +102,11 @@ class SwitchTo:
         raise NotImplementedError("You might use driver.switch_to.target(driver.targets[0].target_id)")
 
     async def target(self, target_id):
-        from pycdp import cdp
+        from selenium_driverless.types import RemoteObject
         self._driver.session.close()
         # noinspection PyProtectedMember
         self._driver.session = await self._driver._conn.connect_session(target_id)
+        self._driver._global_this = await RemoteObject(driver=self, js="globalThis", check_existence=False)
         await self._driver.execute_cdp_cmd("Target.activateTarget",
                                            {"targetId": await self._driver.current_window_handle})
         return self._driver.session
