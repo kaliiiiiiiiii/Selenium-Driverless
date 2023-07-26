@@ -5,7 +5,7 @@ import inspect
 
 
 class Chrome(AsyncDriver):
-    def __init__(self, options: Options = None, loop: asyncio.AbstractEventLoop = None):
+    def __init__(self, options: ChromeOptions = None, loop: asyncio.AbstractEventLoop = None):
         super().__init__(options=options)
         if not loop:
             loop = asyncio.new_event_loop()
