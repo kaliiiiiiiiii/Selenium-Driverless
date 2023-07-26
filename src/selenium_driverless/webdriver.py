@@ -293,7 +293,8 @@ class Chrome(BaseWebDriver):
                 obj = await RemoteObject(driver=self, obj_id=res["objectId"], check_existence=False)
                 if await obj.execute_script("return [7].includes(this.resultType)", serialization="json"):
                     for idx in range(await obj.execute_script("return this.snapshotLength", serialization="json")):
-                        elems.append(await obj.execute_script("return this.snapshotItem(arguments[0])", idx, serialization="deep"))
+                        elems.append(await obj.execute_script("return this.snapshotItem(arguments[0])", idx,
+                                                              serialization="deep"))
                     res["value"] = elems
         return res
 

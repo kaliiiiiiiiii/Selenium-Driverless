@@ -47,12 +47,8 @@ class WebElement(RemoteObject):
     instance will fail.
     """
 
-    def __init__(self, driver, js: str = None, obj_id=None, parent=None, check_existence=True) -> None:
+    def __init__(self, driver, js: str = None, obj_id=None, check_existence=True) -> None:
         self._loop = None
-        if not parent:
-            self._parent = WebElement(js="document", driver=driver, parent="undefined", check_existence=False)
-        elif parent == "undefined":
-            self._parent = None
         super().__init__(driver=driver, js=js, obj_id=obj_id, check_existence=check_existence)
 
     def __await__(self):
@@ -88,7 +84,7 @@ class WebElement(RemoteObject):
             raise NoSuchElementException()
         return elems[idx]
 
-    async def find_elements(self, by=By.ID, value=None, base_element=None):
+    async def find_elements(self, by=By.ID, value=None):
         """Find elements given a By strategy and locator.
 
         :Usage:
@@ -155,6 +151,11 @@ class WebElement(RemoteObject):
         """The text of the element."""
         return await self.get_property("textContent")
 
+    @property
+    async def value(self) -> str:
+        """The value of the element."""
+        return await self.get_property("value")
+
     async def click(self) -> None:
         """Clicks the element."""
         await self.execute_script("this.click()")
@@ -176,7 +177,7 @@ class WebElement(RemoteObject):
 
     async def clear(self) -> None:
         """Clears the text if it's a text entry element."""
-        await self.execute_script("this.reset()")
+        await self.execute_script("this.value = ''")
 
     async def get_dom_attribute(self, name: str) -> str:
         """Gets the given attribute of the element. Unlike
@@ -289,8 +290,8 @@ class WebElement(RemoteObject):
         coordinates if the element is not visible.
         """
         "arguments[0].scrollIntoView(true); return arguments[0].getBoundingClientRect()"
-        self.t.exec(self.t.path("scrollIntoView", obj=self._raw), args=[True])
-        result = self.rect
+        await self.execute_script("this.scrollIntoView(true)")
+        result = await self.rect
         return {"x": round(result["x"]), "y": round(result["y"])}
 
     @property
@@ -299,38 +300,34 @@ class WebElement(RemoteObject):
         size = await self.rect
         return {"height": size["height"], "width": size["width"]}
 
-    def value_of_css_property(self, property_name) -> str:
+    async def value_of_css_property(self, property_name) -> str:
         """The value of a CSS property."""
         raise NotImplementedError("you might use get_attribute instead")
 
     @property
-    def location(self) -> dict:
+    async def location(self) -> dict:
         """The location of the element in the renderable canvas."""
-        result = self.rect
+        result = await self.rect
         return {"x": round(result["x"]), "y": round(result["y"])}
 
     @property
     async def rect(self) -> dict:
         """A dictionary with the size and location of the element."""
-        result = await self.execute_script("this.getBoundingClientRect()", only_value=False, serialization="deep")
+        result = await self.execute_script("return this.getBoundingClientRect().toJSON()", serialization="json")
         return result
 
     @property
-    def _rect(self):
-        return self.t.exec(self.t.path("", obj=self._raw))
-
-    @property
-    def aria_role(self) -> str:
+    async def aria_role(self) -> str:
         """Returns the ARIA role of the current web element."""
-        return self.get_property("ariaRoleDescription")
+        return await self.get_property("ariaRoleDescription")
 
     @property
-    def accessible_name(self) -> str:
+    async def accessible_name(self) -> str:
         """Returns the ARIA Level of the current webelement."""
-        return self.get_property("ariaLevel")
+        return await self.get_property("ariaLevel")
 
     @property
-    def screenshot_as_base64(self) -> str:
+    async def screenshot_as_base64(self) -> str:
         """Gets the screenshot of the current element as a base64 encoded
         string.
 
@@ -342,7 +339,7 @@ class WebElement(RemoteObject):
         raise NotImplementedError()
 
     @property
-    def screenshot_as_png(self) -> bytes:
+    async def screenshot_as_png(self) -> bytes:
         """Gets the screenshot of the current element as a binary data.
 
         :Usage:
@@ -350,9 +347,10 @@ class WebElement(RemoteObject):
 
                 element_png = element.screenshot_as_png
         """
-        return b64decode(self.screenshot_as_base64.encode("ascii"))
+        res = await self.screenshot_as_base64
+        return b64decode(res.encode("ascii"))
 
-    def screenshot(self, filename) -> bool:
+    async def screenshot(self, filename) -> bool:
         """Saves a screenshot of the current element to a PNG image file.
         Returns False if there is any IOError, else returns True. Use full
         paths in your filename.
@@ -371,7 +369,7 @@ class WebElement(RemoteObject):
                 "name used for saved screenshot does not match file " "type. It should end with a `.png` extension",
                 UserWarning,
             )
-        png = self.screenshot_as_png
+        png = await self.screenshot_as_png
         try:
             with open(filename, "wb") as f:
                 f.write(png)
@@ -385,29 +383,8 @@ class WebElement(RemoteObject):
     def parent(self):
         """Internal reference to the WebDriver instance this element was found
         from."""
-        return self._parent
+        raise NotImplementedError("can't get paren't yet")
 
     @property
     def children(self):
         return self.find_elements(By.CSS_SELECTOR, "*")
-
-    def _css_selector(self, current=False):
-        def getter():
-            from selenium_driverless.types import JSEvalException
-            script = self.t.exec(self.t.path("CSSSelector", obj=self.t.this()), args=[self._raw])
-            try:
-                return self._injector.tabs.exec(type_dict=script, tab_id=self._tab_id)["result"][0]
-            except JSEvalException as e:
-                if e.message[:25] == "Cannot read properties of":
-                    # is window.document
-                    return ""
-                else:
-                    raise e
-
-        if not self._persistent_css_selector:
-            self._persistent_css_selector = getter()
-        if current:
-            return getter()
-        return self._persistent_css_selector
-
-    # noinspection PyStatementEffect
