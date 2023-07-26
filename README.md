@@ -16,7 +16,6 @@
 
 * Install [Chrome-Browser](https://www.google.de/chrome/)
 * ```pip install selenium-driverless```
-* `pip install git+https://github.com/HMaker/python-cdp.git@latest`
 
 
 ### Usage
@@ -48,7 +47,7 @@ asyncified, might be buggy
 ```python
 from selenium_driverless.sync import webdriver
 
-options = webdriver.Options()
+options = webdriver.ChromeOptions()
 with webdriver.Chrome(options=options) as driver:
     driver.get('http://nowsecure.nl#relax')
     driver.implicitly_wait(3)

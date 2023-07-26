@@ -1,12 +1,22 @@
 import setuptools
-import warnings
 
 requirements = ['selenium~=4.6']
 
-try:
-    from pycdp import cdp
-except ImportError:
-    warnings.warn("pycdp ins't installed yet, install with pip install git+https://github.com/HMaker/python-cdp.git@latest")
+# pycdp-requirements
+requirements.extend([
+    "aiohttp~=3.8.5",
+    "aiosignal~=1.3.1",
+    "async-timeout~=4.0.2",
+    "attrs~=23.1.0",
+    "charset-normalizer~=3.2.0",
+    "deprecated~=1.2.14",
+    "frozenlist~=1.4.0",
+    "idna~=3.4",
+    "inflection~=0.5.1",
+    "multidict~=6.0.4",
+    "wrapt~=1.15.0",
+    "yarl~=1.9.2",
+])
 
 with open('README.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read()

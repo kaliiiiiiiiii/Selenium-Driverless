@@ -32,7 +32,6 @@ from typing import List
 from typing import Optional
 from typing import Union
 
-from pyparsing import Char
 from selenium.common.exceptions import InvalidArgumentException
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.print_page_options import PrintOptions
@@ -178,8 +177,8 @@ class Chrome(BaseWebDriver):
             capabilities = self._capabilities
         del self._capabilities
         from selenium_driverless.utils.utils import IS_POSIX, read
-        from pycdp.asyncio import connect_cdp
-        from pycdp import cdp
+        from selenium_driverless.pycdp.asyncio import connect_cdp
+        from selenium_driverless.pycdp.cdp.target import get_targets
 
         if self._loop:
             self._switch_to = SyncSwitchTo(driver=self, loop=self._loop)
@@ -206,7 +205,7 @@ class Chrome(BaseWebDriver):
             self._options.debugger_address = "localhost:" + read(path, sel_root=False).split("\n")[0]
         self._conn = await connect_cdp(f'http://{self._options.debugger_address}')
         self.browser_pid = browser.pid
-        targets = await self._conn.execute(cdp.target.get_targets())
+        targets = await self._conn.execute(get_targets())
         for target in targets:
             if target.type_ == "page":
                 target_id = target.target_id
@@ -231,14 +230,14 @@ class Chrome(BaseWebDriver):
 
     async def get(self, url: str, referrer: str = None) -> None:
         """Loads a web page in the current browser session."""
-        from pycdp import cdp
+        from selenium_driverless.pycdp.cdp.page import DomContentEventFired
         await self.execute_cdp_cmd("Page.enable")
         args = {"url": url}
         if referrer:
             args["referrer"] = referrer
 
         async def get(_url: str):
-            with self.session.safe_wait_for(cdp.page.DomContentEventFired) as navigation:
+            with self.session.safe_wait_for(DomContentEventFired) as navigation:
                 await self.execute_cdp_cmd("Page.navigate", args)
                 await navigation
 
