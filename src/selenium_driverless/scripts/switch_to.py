@@ -102,11 +102,13 @@ class SwitchTo:
         raise NotImplementedError("You might use driver.switch_to.target(driver.targets[0].target_id)")
 
     async def target(self, target_id):
-        from pycdp import cdp
+        from selenium_driverless.types import RemoteObject
         self._driver.session.close()
         # noinspection PyProtectedMember
         self._driver.session = await self._driver._conn.connect_session(target_id)
-        await self._driver.execute(cmd=cdp.target.activate_target(await self._driver.current_window_handle))
+        self._driver._global_this = await RemoteObject(driver=self, js="globalThis", check_existence=False)
+        await self._driver.execute_cdp_cmd("Target.activateTarget",
+                                           {"targetId": await self._driver.current_window_handle})
         return self._driver.session
 
     async def new_window(self, type_hint: Optional[str] = "tab", url="") -> None:
@@ -126,9 +128,8 @@ class SwitchTo:
             new_window = True
         if type_hint == "tab":
             new_window = True
-        from pycdp import cdp
-        cmd = cdp.target.create_target(url=url, new_window=new_window, for_tab=new_tab)
-        target_id = await self._driver.execute(cmd=cmd)
+        args = {"url": url, "newWindow": new_tab, "forTab": new_tab}
+        target_id = await self._driver.execute_cdp_cmd("Target.createTarget", args)
         await self.target(target_id)
         return target_id
 

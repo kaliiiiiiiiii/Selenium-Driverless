@@ -50,8 +50,6 @@ class Options(metaclass=ABCMeta):
         self.user_data_dir = None
         self._arguments = []
         self.add_argument("--user-data-dir=" + sel_driverless_path() + "/files/tmp/" + uuid.uuid4().hex)
-        port = random_port("localhost")
-        self.add_argument(f"--remote-debugging-port={port}")
         self._ignore_local_proxy = False
 
     @property

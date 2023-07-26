@@ -1,6 +1,12 @@
 import setuptools
+import warnings
 
-requirements = ['selenium~=4.6', "chrome-devtools-protocol"]
+requirements = ['selenium~=4.6']
+
+try:
+    from pycdp import cdp
+except ImportError:
+    warnings.warn("pycdp ins't installed yet, install with pip install git+https://github.com/HMaker/python-cdp.git@latest")
 
 with open('README.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read()

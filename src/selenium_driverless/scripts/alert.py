@@ -40,7 +40,7 @@ class Alert:
         name_prompt.accept()
 
 
-    Reading a the text of a prompt for verification::
+    Reading the text of a prompt for verification::
 
         alert_text = Alert(driver).text
         self.assertEqual("Do you wish to quit?", alert_text)
@@ -61,8 +61,7 @@ class Alert:
 
     async def dismiss(self) -> None:
         """Dismisses the alert available."""
-        from pycdp import cdp
-        await self.driver.execute(cmd=cdp.page.handle_java_script_dialog(accept=False))
+        await self.driver.execute_cdp_cmd("Page.handleJavaScriptDialog", {"accept": False})
 
     async def accept(self) -> None:
         """Accepts the alert available.
@@ -72,8 +71,7 @@ class Alert:
 
                 Alert(driver).accept() # Confirm a alert dialog.
         """
-        from pycdp import cdp
-        await self.driver.execute(cmd=cdp.page.handle_java_script_dialog(accept=True))
+        await self.driver.execute_cdp_cmd("Page.handleJavaScriptDialog", {"accept": True})
 
     # noinspection PyPep8Naming
     async def send_keys(self, keysToSend: str) -> None:
@@ -82,5 +80,4 @@ class Alert:
         :Args:
          - keysToSend: The text to be sent to Alert.
         """
-        from pycdp import cdp
-        await self.driver.execute(cmd=cdp.page.handle_java_script_dialog(accept=True, prompt_text=keysToSend))
+        await self.driver.execute_cdp_cmd("Page.handleJavaScriptDialog", {"accept": False, "promptText": keysToSend})
