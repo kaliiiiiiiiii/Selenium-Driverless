@@ -65,9 +65,9 @@ note: please check the todo's below at first!
 
 ## Todo
 - implementations
-  - [ ] `WebDriverWait`
-  - [ ] `EC` (expected-conditions)
-  - [ ] `driver.switch_to.frame`
+  - [ ] [`WebDriverWait`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7)
+  - [ ] [`EC`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7) (expected-conditions)
+  - [ ] [`driver.switch_to.frame`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7)
   - [ ] [`ActionChains`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
       - [ ] [`TouchActions`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
 - protocoll
