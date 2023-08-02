@@ -61,8 +61,15 @@ with webdriver.Chrome(options=options) as driver:
 ## Help
 
 Please feel free to open an issue or fork!
+note: please check the todo's below at first!
 
 ## Todo
+- implementations
+  - [ ] `WebDriverWait`
+  - [ ] `EC` (expected-conditions)
+  - [ ] `driver.switch_to.frame`
+  - [ ] `ActionChains`
+      - [ ] `TouchActions`
 - protocoll
   - [ ] add cdp event handler
 - [x] sync
