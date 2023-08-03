@@ -61,8 +61,15 @@ with webdriver.Chrome(options=options) as driver:
 ## Help
 
 Please feel free to open an issue or fork!
+note: please check the todo's below at first!
 
 ## Todo
+- implementations
+  - [ ] [`WebDriverWait`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7)
+  - [ ] [`EC`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7) (expected-conditions)
+  - [ ] [`driver.switch_to.frame`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7)
+  - [ ] [`ActionChains`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
+      - [ ] [`TouchActions`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
 - protocoll
   - [ ] add cdp event handler
 - [x] sync
