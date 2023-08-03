@@ -476,7 +476,7 @@ class Chrome(BaseWebDriver):
         """
         tabs = []
         for target in await self.targets:
-            if target.type_ == "page":
+            if target["type"] == "page":
                 tabs.append(target.target_id)
         return tabs
 
