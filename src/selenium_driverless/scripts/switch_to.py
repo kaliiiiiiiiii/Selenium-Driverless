@@ -47,7 +47,7 @@ class SwitchTo:
 
                 element = driver.switch_to.active_element
         """
-        raise NotImplementedError("You might use driver.switch_to.target(driver.targets[0].target_id)")
+        raise NotImplementedError('You might use driver.switch_to.target(driver.targets[0]["targetId"])')
 
     @property
     async def alert(self) -> Alert:
@@ -73,7 +73,7 @@ class SwitchTo:
 
                 driver.switch_to.default_content()
         """
-        raise NotImplementedError("You might use driver.switch_to.target(driver.targets[0].target_id)")
+        raise NotImplementedError('You might use driver.switch_to.target(driver.targets[0]["targetId"])')
 
     async def frame(self, frame_reference: Union[str, int, WebElement]) -> None:
         """Switches focus to the specified frame, by index, name, or
@@ -99,16 +99,18 @@ class SwitchTo:
                 except NoSuchElementException:
                     raise NoSuchFrameException(frame_reference)
 
-        raise NotImplementedError("You might use driver.switch_to.target(driver.targets[0].target_id)")
+        raise NotImplementedError('You might use driver.switch_to.target(driver.targets[0]["targetId"])')
 
     async def target(self, target_id):
         from selenium_driverless.types import RemoteObject
+        from selenium_driverless.pycdp.cdp.target import TargetID
+
         self._driver.session.close()
         # noinspection PyProtectedMember
-        self._driver.session = await self._driver._conn.connect_session(target_id)
+        self._driver.session = await self._driver._conn.connect_session(TargetID(target_id))
         self._driver._global_this = await RemoteObject(driver=self, js="globalThis", check_existence=False)
         await self._driver.execute_cdp_cmd("Target.activateTarget",
-                                           {"targetId": await self._driver.current_window_handle})
+                                           {"targetId": self._driver.current_window_handle})
         return self._driver.session
 
     async def new_window(self, type_hint: Optional[str] = "tab", url="") -> None:
@@ -122,14 +124,16 @@ class SwitchTo:
 
                 driver.switch_to.new_window('tab')
         """
-        new_window = False
         new_tab = False
         if type_hint == "window":
-            new_window = True
-        if type_hint == "tab":
-            new_window = True
+            new_tab = True
+        elif type_hint == "tab":
+            pass
+        else:
+            raise ValueError("type hint needs to be 'window' or 'tab'")
         args = {"url": url, "newWindow": new_tab, "forTab": new_tab}
-        target_id = await self._driver.execute_cdp_cmd("Target.createTarget", args)
+        target = await self._driver.execute_cdp_cmd("Target.createTarget", args)
+        target_id = target["targetId"]
         await self.target(target_id)
         return target_id
 
