@@ -108,7 +108,7 @@ class SwitchTo:
         self._driver.session.close()
         # noinspection PyProtectedMember
         self._driver.session = await self._driver._conn.connect_session(TargetID(target_id))
-        self._driver._global_this = await RemoteObject(driver=self, js="globalThis", check_existence=False)
+        self._driver._global_this = await RemoteObject(driver=self._driver, js="globalThis", check_existence=False)
         await self._driver.execute_cdp_cmd("Target.activateTarget",
                                            {"targetId": self._driver.current_window_handle})
         return self._driver.session

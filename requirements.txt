@@ -1,4 +1,4 @@
-selenium~=4.10.0
+selenium==4.11.2
 setuptools==68.0.0
 
 # pycdp
