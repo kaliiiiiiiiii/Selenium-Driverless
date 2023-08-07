@@ -474,10 +474,11 @@ class Chrome(BaseWebDriver):
 
                 driver.window_handles
         """
+        warnings.warn("targets aren't ordered")
         tabs = []
         for target in await self.targets:
             if target["type"] == "page":
-                tabs.append(target.target_id)
+                tabs.append(target['targetId'])
         return tabs
 
     async def set_window_state(self, state):
