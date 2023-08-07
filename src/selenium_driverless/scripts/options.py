@@ -33,8 +33,7 @@ class Options(metaclass=ABCMeta):
     KEY = "goog:chromeOptions"
 
     def __init__(self) -> None:
-        from selenium_driverless.utils.utils import find_chrome_executable, sel_driverless_path, random_port
-        import uuid
+        from selenium_driverless.utils.utils import find_chrome_executable
         super().__init__()
 
         self._caps = self.default_capabilities
@@ -49,7 +48,6 @@ class Options(metaclass=ABCMeta):
         self._debugger_address = None
         self.user_data_dir = None
         self._arguments = []
-        self.add_argument("--user-data-dir=" + sel_driverless_path() + "/files/tmp/" + uuid.uuid4().hex)
         self._ignore_local_proxy = False
 
     @property

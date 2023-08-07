@@ -89,6 +89,10 @@ class Chrome(BaseWebDriver):
         if not options.binary_location:
             from selenium_driverless.utils.utils import find_chrome_executable
             options.binary_location = find_chrome_executable()
+        if not options.user_data_dir:
+            from selenium_driverless.utils.utils import sel_driverless_path
+            import uuid
+            options.add_argument("--user-data-dir=" + sel_driverless_path() + "/files/tmp/" + uuid.uuid4().hex)
 
         try:
             options = options or ChromeOptions()
@@ -474,10 +478,11 @@ class Chrome(BaseWebDriver):
 
                 driver.window_handles
         """
+        warnings.warn("window_handles aren't ordered")
         tabs = []
         for target in await self.targets:
             if target["type"] == "page":
-                tabs.append(target.target_id)
+                tabs.append(target['targetId'])
         return tabs
 
     async def set_window_state(self, state):
