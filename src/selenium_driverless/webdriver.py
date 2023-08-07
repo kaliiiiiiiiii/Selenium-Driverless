@@ -474,7 +474,7 @@ class Chrome(BaseWebDriver):
 
                 driver.window_handles
         """
-        warnings.warn("targets aren't ordered")
+        warnings.warn("window_handles aren't ordered")
         tabs = []
         for target in await self.targets:
             if target["type"] == "page":
