@@ -194,12 +194,15 @@ class Chrome(BaseWebDriver):
             self._options.add_argument(f"--remote-debugging-port={port}")
         options = capabilities["goog:chromeOptions"]
 
+        args = " ".join(options["args"])
+        path = options["binary"]
         browser = subprocess.Popen(
-            [options["binary"], *options["args"]],
+            [f'"{path}" {args}'],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             close_fds=IS_POSIX,
+            shell=True
         )
 
         if self._options.debugger_address.split(":")[1] == "0":
