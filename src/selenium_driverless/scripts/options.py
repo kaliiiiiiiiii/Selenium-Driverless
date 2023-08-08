@@ -49,6 +49,7 @@ class Options(metaclass=ABCMeta):
         self.user_data_dir = None
         self._arguments = []
         self._ignore_local_proxy = False
+        self.add_argument("--no-first-run")
 
     @property
     def capabilities(self):
