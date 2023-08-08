@@ -33,7 +33,7 @@ class Options(metaclass=ABCMeta):
     KEY = "goog:chromeOptions"
 
     def __init__(self) -> None:
-        from selenium_driverless.utils.utils import find_chrome_executable
+        from selenium_driverless.utils.utils import find_chrome_executable, IS_POSIX
         super().__init__()
 
         self._caps = self.default_capabilities
@@ -50,6 +50,8 @@ class Options(metaclass=ABCMeta):
         self._arguments = []
         self._ignore_local_proxy = False
         self.add_argument("--no-first-run")
+        if IS_POSIX:
+            self.add_argument("--password-store=basic")
 
     @property
     def capabilities(self):

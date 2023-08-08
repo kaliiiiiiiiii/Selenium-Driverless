@@ -199,6 +199,7 @@ class Chrome(BaseWebDriver):
         args = options["args"]
         cmds = [path, *args]
         if IS_POSIX:
+
             args = " ".join(args)
             cmds = [f'"{path}" {args}']
         browser = subprocess.Popen(
