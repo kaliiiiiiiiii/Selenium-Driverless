@@ -183,6 +183,7 @@ class Chrome(BaseWebDriver):
         from selenium_driverless.utils.utils import IS_POSIX, read
         from selenium_driverless.pycdp.asyncio import connect_cdp
         from selenium_driverless.pycdp.cdp.target import get_targets
+        import platform
 
         if self._loop:
             self._switch_to = SyncSwitchTo(driver=self, loop=self._loop)
@@ -194,12 +195,20 @@ class Chrome(BaseWebDriver):
             self._options.add_argument(f"--remote-debugging-port={port}")
         options = capabilities["goog:chromeOptions"]
 
+        path = options["binary"]
+        args = options["args"]
+        cmds = [path, *args]
+        if IS_POSIX:
+
+            args = " ".join(args)
+            cmds = [f'"{path}" {args}']
         browser = subprocess.Popen(
-            [options["binary"], *options["args"]],
+            cmds,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             close_fds=IS_POSIX,
+            shell=IS_POSIX
         )
 
         if self._options.debugger_address.split(":")[1] == "0":
