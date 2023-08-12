@@ -1,22 +1,6 @@
 import setuptools
 
-requirements = ['selenium~=4.6']
-
-# pycdp-requirements
-requirements.extend([
-    "aiohttp~=3.8.5",
-    "aiosignal~=1.3.1",
-    "async-timeout~=4.0.2",
-    "attrs~=23.1.0",
-    "charset-normalizer~=3.2.0",
-    "deprecated~=1.2.14",
-    "frozenlist~=1.4.0",
-    "idna~=3.4",
-    "inflection~=0.5.1",
-    "multidict~=6.0.4",
-    "wrapt~=1.15.0",
-    "yarl~=1.9.2",
-])
+requirements = ['selenium~=4.6', "cdp-socket>=1.0.6"]
 
 with open('README.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read()
@@ -56,7 +40,7 @@ setuptools.setup(
         'Topic :: Internet :: WWW/HTTP :: Browsers',
 
     ],
-    python_requires='>=3.8',
+    python_requires='>=3.7',
     install_requires=requirements,
     include_package_data=True,
     extras_require={
