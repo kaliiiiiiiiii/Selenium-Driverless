@@ -1,7 +1,7 @@
 # Selenium-Driverless
 
-* use selenium without chromedriver
-* undetected by cloudfare, bet365 and others
+* use selenium __without chromedriver__
+* undetected by __cloudfare__, __bet365__ and others
 
 ### Feel free to test my code!
 
