@@ -53,6 +53,8 @@ from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
 from selenium_driverless.types.webelement import WebElement, RemoteObject
 from selenium_driverless.sync.webelement import WebElement as SyncWebElement
 
+from cdp_socket.socket import CDPSocket, SingleCDPSocket
+
 
 def import_cdp():
     return import_module("selenium.webdriver.common.bidi.cdp")
@@ -72,6 +74,7 @@ class Chrome(BaseWebDriver):
     def __init__(
             self,
             options: ChromeOptions = None,
+            disconnect_connect=True
     ) -> None:
         """Creates a new instance of the chrome driver. Starts the service and
         then creates new instance of chrome driver.
@@ -80,12 +83,14 @@ class Chrome(BaseWebDriver):
          - options - this takes an instance of ChromeOptions
         """
         self._global_this = None
-        self._loop = None
-        self._page_load_timeout = 300
-        self._script_timeout = 30
-        self._conn = None
-        self.session = None
-        self.browser_pid = None
+        self._loop: asyncio.AbstractEventLoop or None = None
+        self._page_load_timeout: int = 10
+        self._script_timeout: int = 30
+        self._base = None
+        self.browser_pid: int or None = None
+        self._targets: list = []
+        self._current_target: str or None = None
+        self._disconnect_connect: bool = disconnect_connect
         if not options.binary_location:
             from selenium_driverless.utils.utils import find_chrome_executable
             options.binary_location = find_chrome_executable()
@@ -181,9 +186,6 @@ class Chrome(BaseWebDriver):
             capabilities = self._capabilities
         del self._capabilities
         from selenium_driverless.utils.utils import IS_POSIX, read
-        from selenium_driverless.pycdp.asyncio import connect_cdp
-        from selenium_driverless.pycdp.cdp.target import get_targets
-        import platform
 
         if self._loop:
             self._switch_to = SyncSwitchTo(driver=self, loop=self._loop)
@@ -199,7 +201,6 @@ class Chrome(BaseWebDriver):
         args = options["args"]
         cmds = [path, *args]
         if IS_POSIX:
-
             args = " ".join(args)
             cmds = [f'"{path}" {args}']
         browser = subprocess.Popen(
@@ -210,21 +211,20 @@ class Chrome(BaseWebDriver):
             close_fds=IS_POSIX,
             shell=IS_POSIX
         )
-
-        if self._options.debugger_address.split(":")[1] == "0":
+        host, port = self._options.debugger_address.split(":")
+        port = int(port)
+        if port == 0:
             path = self._options.user_data_dir + "/DevToolsActivePort"
             while not os.path.isfile(path):
                 await self.implicitly_wait(0.1)
-            self._options.debugger_address = "localhost:" + read(path, sel_root=False).split("\n")[0]
-        self._conn = await connect_cdp(f'http://{self._options.debugger_address}')
+            port = int(read(path, sel_root=False).split("\n")[0])
+            self._options.debugger_address = f"localhost:{port}"
+        self._base = await CDPSocket(port=port, host=host, loop=self._loop)
         self.browser_pid = browser.pid
-        targets = await self._conn.execute(get_targets())
+        targets = await self._base.targets
         for target in targets:
-            if target.type_ == "page":
-                target_id = target.target_id
-                break
-        # noinspection PyUnboundLocalVariable
-        self.session = await self._conn.connect_session(target_id)
+            if target["type"] == "page":
+                self._current_target = target["id"]
         self._global_this = await RemoteObject(driver=self, js="globalThis", check_existence=False)
         self.caps = capabilities
 
@@ -232,32 +232,31 @@ class Chrome(BaseWebDriver):
         """Creates a web element with the specified `element_id`."""
         raise NotImplementedError()
 
-    async def execute(self, driver_command: str = None, params: dict = None, cmd=None):
+    async def execute(self, driver_command: str = None, params: dict = None):
         """
         executes on current pycdp.cdp cmd on current session
         driver_command and params aren't used
         """
-        if driver_command or params:
-            raise NotImplementedError("chrome not started with chromedriver")
-        return await self.session.execute(cmd=cmd)
+        raise NotImplementedError("chrome not started with chromedriver")
 
-    async def get(self, url: str, referrer: str = None) -> None:
+    # noinspection PyUnboundLocalVariable
+    async def get(self, url: str, referrer: str = None, wait_load: bool = True) -> None:
         """Loads a web page in the current browser session."""
-        from selenium_driverless.pycdp.cdp.page import DomContentEventFired
-        await self.execute_cdp_cmd("Page.enable")
-        args = {"url": url}
+        if wait_load:
+            loop = self._loop
+            if not loop:
+                loop = asyncio.get_running_loop()
+            await self.execute_cdp_cmd("Page.enable", disconnect_connect=False)
+            task = loop.create_task(self.wait_for_cdp("Page.loadEventFired", timeout=self._page_load_timeout))
+        args = {"url": url, "transitionType": "link"}
         if referrer:
             args["referrer"] = referrer
-
-        async def get(_url: str):
-            with self.session.safe_wait_for(DomContentEventFired) as navigation:
-                await self.execute_cdp_cmd("Page.navigate", args)
-                await navigation
-
-        try:
-            await asyncio.wait_for(get(url), self._page_load_timeout)
-        except asyncio.exceptions.TimeoutError:
-            raise TimeoutError(f"page didn't load within timeout of {self._page_load_timeout}")
+        await self.execute_cdp_cmd("Page.navigate", args, disconnect_connect=not wait_load)
+        if wait_load:
+            try:
+                await asyncio.wait([task])
+            except asyncio.exceptions.TimeoutError:
+                raise TimeoutError(f"page didn't load within timeout of {self._page_load_timeout}")
 
     @property
     async def title(self) -> str:
@@ -432,8 +431,7 @@ class Chrome(BaseWebDriver):
         # noinspection PyBroadException,PyUnusedLocal
         try:
             try:
-                await self._conn.close()
-
+                await self.base.close()
                 # wait for process to be killed
                 while True:
                     try:
@@ -471,7 +469,7 @@ class Chrome(BaseWebDriver):
                 driver.current_window_handle
         """
         # noinspection PyProtectedMember
-        return str(self.session._target_id)
+        return self._current_target
 
     @property
     async def current_window_id(self):
@@ -1175,7 +1173,39 @@ class Chrome(BaseWebDriver):
             args["origin"] = origin
         await self.execute_cdp_cmd("Browser.setPermission", args)
 
-    async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None) -> dict:
+    @property
+    def base(self):
+        return self._base
+
+    @property
+    def sockets(self):
+        return self.base.sockets
+
+    @property
+    async def current_socket(self) -> SingleCDPSocket:
+        sock_id = self.current_window_handle
+        socket = self.sockets[sock_id]
+        if not socket:
+            socket = await self.base.get_socket(sock_id=sock_id)
+        return socket
+
+    async def wait_for_cdp(self, event: str, timeout: float or None = None):
+        socket = await self.current_socket
+        return await asyncio.wait_for(socket.wait_for(event), timeout=timeout)
+
+    async def add_cdp_listener(self, event: str, callback: callable):
+        socket = await self.current_socket
+        socket.add_listener(method=event, callback=callback)
+
+    async def remove_cdp_listener(self, event: str, callback: callable):
+        socket = await self.current_socket
+        socket.remove_listener(method=event, callback=callback)
+
+    async def get_cdp_event_iter(self, event: str):
+        socket = await self.current_socket
+        return socket.method_iterator(method=event)
+
+    async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None, disconnect_connect=None) -> dict:
         """Execute Chrome Devtools Protocol command and get returned result The
         command and command args should follow chrome devtools protocol
         domains/commands, refer to link
@@ -1193,16 +1223,12 @@ class Chrome(BaseWebDriver):
             For example to getResponseBody:
             {'base64Encoded': False, 'body': 'response body string'}
         """
-        if not cmd_args:
-            cmd_args = {}
 
-        def execute_cdp_cmd(_cmd_dict):
-            json = yield _cmd_dict
-            return json
-
-        cmd_dict = dict(method=cmd, params=cmd_args)
-        request = execute_cdp_cmd(cmd_dict)
-        return await self.session.execute(request)
+        socket: SingleCDPSocket = await self.current_socket
+        result = await socket.exec(method=cmd, params=cmd_args, timeout=self._script_timeout)
+        if disconnect_connect:
+            await socket.close()
+        return result
 
     # noinspection PyTypeChecker
     async def get_sinks(self) -> list:

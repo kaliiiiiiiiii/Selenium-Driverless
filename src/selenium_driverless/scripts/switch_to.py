@@ -103,15 +103,13 @@ class SwitchTo:
 
     async def target(self, target_id):
         from selenium_driverless.types import RemoteObject
-        from selenium_driverless.pycdp.cdp.target import TargetID
 
-        self._driver.session.close()
-        # noinspection PyProtectedMember
-        self._driver.session = await self._driver._conn.connect_session(TargetID(target_id))
+        socket = await self._driver.current_socket
+        await socket.close()
+        self._driver._current_target = target_id
         self._driver._global_this = await RemoteObject(driver=self._driver, js="globalThis", check_existence=False)
         await self._driver.execute_cdp_cmd("Target.activateTarget",
                                            {"targetId": self._driver.current_window_handle})
-        return self._driver.session
 
     async def new_window(self, type_hint: Optional[str] = "tab", url="") -> None:
         """Switches to a new top-level browsing context.

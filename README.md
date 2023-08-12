@@ -30,7 +30,8 @@ async def main():
     options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
         await driver.get('http://nowsecure.nl#relax')
-        await driver.implicitly_wait(3)
+        # wait for redirected page
+        await driver.wait_for_cdp(event="Page.loadEventFired", timeout=5)
 
         title = await driver.title
         url = await driver.current_url
@@ -50,12 +51,49 @@ from selenium_driverless.sync import webdriver
 options = webdriver.ChromeOptions()
 with webdriver.Chrome(options=options) as driver:
     driver.get('http://nowsecure.nl#relax')
-    driver.implicitly_wait(3)
-    
+    # wait for redirected page
+    driver.wait_for_cdp(event="Page.loadEventFired", timeout=5)
+
     title = driver.title
     url = driver.current_url
     source = driver.page_source
     print(title)
+```
+
+#### use events
+Note: synchronous might not work properly
+```python
+from selenium_driverless import webdriver
+import asyncio
+
+global driver
+
+
+async def on_request(params):
+    await driver.execute_cdp_cmd("Fetch.continueRequest", {"requestId": params['requestId']},
+                                 disconnect_connect=False)
+    print(params["request"]["url"])
+
+
+async def main():
+    global driver
+    options = webdriver.ChromeOptions()
+    async with webdriver.Chrome(options=options) as driver:
+        await driver.get('http://nowsecure.nl#relax')
+
+        # enable Fetch, we don't want to disconnect after "Fetch.enable"
+        await driver.execute_cdp_cmd("Fetch.enable", disconnect_connect=False)
+        await driver.add_cdp_listener("Fetch.requestPaused", on_request)
+
+        await driver.wait_for_cdp(event="Page.loadEventFired", timeout=5)
+
+        await driver.remove_cdp_listener("Fetch.requestPaused", on_request)
+        await driver.execute_cdp_cmd("Fetch.disable")
+
+        print(await driver.title)
+
+
+asyncio.run(main())
 ```
 
 ## Help
@@ -103,4 +141,4 @@ I am not responsible what you use the code for!!! Also no warranty!
 
 Inspiration, code snippets, etc.
 * [selenium_driverless/utils/find_chrome_executable](https://github.com/ultrafunkamsterdam/undetected-chromedriver/blob/1c704a71cf4f29181a59ecf19ddff32f1b4fbfc0/undetected_chromedriver/__init__.py#L844)
-* [python-cdp](https://github.com/HMaker/python-cdp)
+* [cdp-socket](https://github.com/kaliiiiiiiiii/CDP-Socket)
