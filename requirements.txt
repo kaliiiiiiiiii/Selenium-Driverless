@@ -4,3 +4,4 @@ cdp-socket>=1.0.6
 # dev
 setuptools==68.0.0
 twine
+pytest
