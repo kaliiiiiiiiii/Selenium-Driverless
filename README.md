@@ -112,7 +112,6 @@ note: please check the todo's below at first!
   - [ ] add cdp event handler
 - [x] sync
   - [ ] move sync to threaded for allowing event_handlers
-- [ ] remove pycdp dependency -_-
 
 ## Deprecated
 

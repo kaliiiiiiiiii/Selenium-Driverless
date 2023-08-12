@@ -91,6 +91,8 @@ class Chrome(BaseWebDriver):
         self._targets: list = []
         self._current_target: str or None = None
         self._disconnect_connect: bool = disconnect_connect
+        if not options:
+            options = ChromeOptions()
         if not options.binary_location:
             from selenium_driverless.utils.utils import find_chrome_executable
             options.binary_location = find_chrome_executable()
@@ -100,7 +102,6 @@ class Chrome(BaseWebDriver):
             options.add_argument("--user-data-dir=" + sel_driverless_path() + "/files/tmp/" + uuid.uuid4().hex)
 
         try:
-            options = options or ChromeOptions()
             self._options = options
 
             vendor_prefix = "goog"
@@ -227,6 +228,7 @@ class Chrome(BaseWebDriver):
                 self._current_target = target["id"]
         self._global_this = await RemoteObject(driver=self, js="globalThis", check_existence=False)
         self.caps = capabilities
+        return self
 
     async def create_web_element(self, element_id: str) -> WebElement:
         """Creates a web element with the specified `element_id`."""

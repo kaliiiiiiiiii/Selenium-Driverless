@@ -1,83 +1,74 @@
-import time
 import unittest
-from selenium.webdriver.common.by import By  # locate elements
+
+from selenium_driverless import webdriver
+from selenium_driverless.types.by import By
+
+import asyncio
+
+driver: webdriver.Chrome = None
+loop = asyncio.new_event_loop()
 
 
-def return_driver():
-    from selenium_profiles import driver as mydriver
-    from selenium_profiles.profiles import profiles
-
-    mydriver = mydriver()
-    profile = profiles.Windows()
-
+async def make_driver():
     global driver
-    driver = mydriver.start(profile, uc_driver=False)
+    driver = await webdriver.Chrome()
     return driver
 
 
-async def at_request(event, connection):
-    global cdp_listener
-    session, devtools = connection.session, connection.devtools
-    cdp_listener.print_event(event)
-    body = await cdp_listener.get_response_body(event.request_id)
+async def nowsecure():
+    global driver
+    await driver.get("https://nowsecure.nl#relax")
+    await driver.wait_for_cdp(event="Page.loadEventFired", timeout=10)
+    await asyncio.sleep(0.5)
+    elem = await driver.find_element(By.XPATH, "/html/body/div[2]/div/main/p[2]/a")
+    await elem.click()
+    await asyncio.sleep(0.5)
+    alert = await driver.switch_to.alert
+    get = loop.create_task(driver.get("chrome://version"))
+    accept = loop.create_task(alert.accept())
+    await get
+    await accept
 
-    rc_type = event.resource_type.name.lower()
-    if rc_type == "xhr" and body[0]:
-        decoded = cdp_listener.decode_body(body[0], event)
-        if '/api/headers' in event.request.url:
-            decoded['cloudfront-viewer-city'] = "Welcome to Hell!"
-        encoded = cdp_listener.encode_body(decoded)
-        body = (encoded, body[1])
-        return devtools.fetch.fulfill_request(request_id=event.request_id, response_code=event.response_status_code,
-                                              body=body[0], response_headers=event.response_headers)
-    else:
-        return devtools.fetch.continue_response(request_id=event.request_id)
+
+async def bet365():
+    global driver
+    await driver.get('https://www.365365824.com/#/IP/B16')
+    await driver.wait_for_cdp("Page.frameStoppedLoading", timeout=10)
+    await asyncio.sleep(0.5)
+    login_button = await driver.find_element(By.XPATH, value='//div[contains(@class, "ovm-ParticipantOddsOnly")]')
+    await login_button.click()
+
+
+async def selenium_detector():
+    await driver.get('https://hmaker.github.io/selenium-detector/')
+    elem = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-token")
+    await elem.send_keys(await driver.execute_script('return window.token'))
+    elem2 = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-asynctoken")
+    async_token = await driver.execute_async_script('window.getAsyncToken().then(arguments[0])')
+    await elem2.send_keys(async_token)
+    elem3 = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-test")
+    await elem3.click()
+    passed = await driver.find_element(By.XPATH, '//*[@id="chromedriver-test-container"]/span')
+    text = await passed.text
+    assert text == "Passed!"
 
 
 class Driver(unittest.TestCase):
-    def test_headers(self):
-        from selenium_interceptor.interceptor import cdp_listener
-        my_platform = "Test_Platform"
-        driver = return_driver()
-        cdp_listener = cdp_listener(driver=driver)
-        cdp_listener.specify_headers({"sec-ch-ua-platform": my_platform})
-        thread = cdp_listener.start_threaded(
-            listener={"listener": cdp_listener.requests, "at_event": cdp_listener.modify_headers})
+    def test_all(self):
+        global loop
+        loop.run_until_complete(self._test_all())
+        self.assertEqual(True, True)
 
-        driver.get('https://modheader.com/headers?product=ModHeader')
-        time.sleep(4)
-        driver.refresh()
-        driver.get('https://modheader.com/headers?product=ModHeader')
-        time.sleep(2)
-        platform = driver.find_element(By.XPATH,
-                                       '/html/body/div[1]/main/div[1]/div/div/div/table[1]/tbody/tr[19]/td[2]').accessible_name
+    async def _test_all(self):
+        global driver
+        await make_driver()
 
-        time.sleep(1)
-        cdp_listener.terminate_all()
-        self.assertEqual(platform, my_platform)  # add assertion here
+        await nowsecure()
+        await bet365()
+        await selenium_detector()
 
-    def test_response_mod(self):
-        from selenium_interceptor.interceptor import cdp_listener
-
-        my_city = "Welcome to Hell!"
-
-        driver = return_driver()
-        global cdp_listener
-        cdp_listener = cdp_listener(driver=driver)
-        thread = cdp_listener.start_threaded(
-            listener={"listener": cdp_listener.responses, "at_event": at_request})
-
-        driver.get('https://modheader.com/headers?product=ModHeader')
-        time.sleep(4)
-        driver.find_element(By.XPATH, '/html/body/div[1]/main/div[1]/div/div/div/div/button').click()
-        time.sleep(4)
-        city = driver.find_element(By.XPATH,
-                                   '/html/body/div[1]/main/div[1]/div/div/div/table[1]/tbody/tr[10]/td[2]').accessible_name
-
-        time.sleep(1)
-        cdp_listener.terminate_all()
-        self.assertEqual(city, my_city)
+        await driver.quit()
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.TestCase("test_all")
