@@ -108,6 +108,8 @@ note: please check the todo's below at first!
   - [ ] [`driver.switch_to.frame`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7) [workaround](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/9#issuecomment-1663436234)
   - [ ] [`ActionChains`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
       - [ ] [`TouchActions`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
+  - [x] `execute_script` and `execute_async_script`
+    - [ ] make serialization use `deep`
 - protocoll
   - [ ] add cdp event handler
 - [x] sync
