@@ -74,7 +74,7 @@ class Chrome(BaseWebDriver):
     def __init__(
             self,
             options: ChromeOptions = None,
-            disconnect_connect=True
+            disconnect_connect=False
     ) -> None:
         """Creates a new instance of the chrome driver. Starts the service and
         then creates new instance of chrome driver.
@@ -82,9 +82,12 @@ class Chrome(BaseWebDriver):
         :Args:
          - options - this takes an instance of ChromeOptions
         """
+        if disconnect_connect:
+            warnings.warn("disconnect_connect=True might be buggy")
+        self._page_enabled = None
         self._global_this = None
         self._loop: asyncio.AbstractEventLoop or None = None
-        self._page_load_timeout: int = 10
+        self._page_load_timeout: int = 30
         self._script_timeout: int = 30
         self._base = None
         self.browser_pid: int or None = None
@@ -114,7 +117,7 @@ class Chrome(BaseWebDriver):
             self._is_remote = True
             self.caps = {}
             self.pinned_scripts = {}
-            self._switch_to = SwitchTo(self)
+            self._switch_to = None
             self._mobile = Mobile(self)
             self.file_detector = LocalFileDetector()
             self._authenticator_id = None
@@ -188,9 +191,6 @@ class Chrome(BaseWebDriver):
         del self._capabilities
         from selenium_driverless.utils.utils import IS_POSIX, read
 
-        if self._loop:
-            self._switch_to = SyncSwitchTo(driver=self, loop=self._loop)
-
         if not self._options.debugger_address:
             from selenium_driverless.utils.utils import random_port
             port = random_port("localhost")
@@ -228,6 +228,17 @@ class Chrome(BaseWebDriver):
                 self._current_target = target["id"]
         self._global_this = await RemoteObject(driver=self, js="globalThis", check_existence=False)
         self.caps = capabilities
+
+        if self._loop:
+            self._switch_to = SyncSwitchTo(driver=self, loop=self._loop)
+        else:
+            self._switch_to = await SwitchTo(driver=self)
+
+        def clear_global_this(data):
+            self._global_this = None
+
+        await self.add_cdp_listener("Page.loadEventFired", clear_global_this)
+
         return self
 
     async def create_web_element(self, element_id: str) -> WebElement:
@@ -242,23 +253,29 @@ class Chrome(BaseWebDriver):
         raise NotImplementedError("chrome not started with chromedriver")
 
     # noinspection PyUnboundLocalVariable
-    async def get(self, url: str, referrer: str = None, wait_load: bool = True) -> None:
+    async def get(self, url: str, referrer: str = None, wait_load: bool = True,
+                  disconnect_connect: bool = None) -> None:
         """Loads a web page in the current browser session."""
+        loop = self._loop
+        if not loop:
+            loop = asyncio.get_running_loop()
         if wait_load:
-            loop = self._loop
-            if not loop:
-                loop = asyncio.get_running_loop()
             await self.execute_cdp_cmd("Page.enable", disconnect_connect=False)
-            task = loop.create_task(self.wait_for_cdp("Page.loadEventFired", timeout=self._page_load_timeout))
+            wait = loop.create_task(self.wait_for_cdp("Page.loadEventFired", timeout=self._page_load_timeout))
         args = {"url": url, "transitionType": "link"}
         if referrer:
             args["referrer"] = referrer
-        await self.execute_cdp_cmd("Page.navigate", args, disconnect_connect=not wait_load)
+        _disconnect = None
+        if disconnect_connect is False:
+            _disconnect = False
+        get = loop.create_task(self.execute_cdp_cmd("Page.navigate", args, disconnect_connect=_disconnect))
         if wait_load:
             try:
-                await asyncio.wait([task])
-            except asyncio.exceptions.TimeoutError:
+                await wait
+            except asyncio.TimeoutError:
                 raise TimeoutError(f"page didn't load within timeout of {self._page_load_timeout}")
+        await get
+        self._global_this = None
 
     @property
     async def title(self) -> str:
@@ -1193,7 +1210,7 @@ class Chrome(BaseWebDriver):
 
     async def wait_for_cdp(self, event: str, timeout: float or None = None):
         socket = await self.current_socket
-        return await asyncio.wait_for(socket.wait_for(event), timeout=timeout)
+        return await socket.wait_for(event, timeout=timeout)
 
     async def add_cdp_listener(self, event: str, callback: callable):
         socket = await self.current_socket
@@ -1225,11 +1242,18 @@ class Chrome(BaseWebDriver):
             For example to getResponseBody:
             {'base64Encoded': False, 'body': 'response body string'}
         """
+        if not disconnect_connect:
+            disconnect_connect = self._disconnect_connect
 
         socket: SingleCDPSocket = await self.current_socket
         result = await socket.exec(method=cmd, params=cmd_args, timeout=self._script_timeout)
+        if cmd == "Page.enable":
+            self._page_enabled = True
+        elif cmd == "Page.disable":
+            self._page_enabled = False
         if disconnect_connect:
             await socket.close()
+            self._page_enabled = False
         return result
 
     # noinspection PyTypeChecker

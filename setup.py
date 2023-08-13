@@ -1,6 +1,6 @@
 import setuptools
 
-requirements = ['selenium~=4.6', "cdp-socket>=1.0.6"]
+requirements = ['selenium~=4.6', "cdp-socket>=1.0.8"]
 
 with open('README.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read()
