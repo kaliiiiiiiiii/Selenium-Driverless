@@ -34,9 +34,24 @@ from selenium_driverless.sync.alert import Alert as SyncAlert
 
 class SwitchTo:
     def __init__(self, driver) -> None:
+        from selenium_driverless.webdriver import Chrome
         self._loop = None
-        import weakref
-        self._driver = weakref.proxy(driver)
+        self._driver: Chrome = driver
+        self._alert = None
+
+    def __await__(self):
+        return self._init().__await__()
+
+    async def _init(self):
+        def set_alert(alert):
+            self._alert = alert
+
+        def remove_alert(alert):
+            self._alert = None
+
+        await self._driver.add_cdp_listener("Page.javascriptDialogOpening", set_alert)
+        await self._driver.add_cdp_listener("Page.javascriptDialogClosed", remove_alert)
+        return self
 
     @property
     def active_element(self) -> WebElement:
@@ -61,8 +76,10 @@ class SwitchTo:
         if self._loop:
             alert = SyncAlert(self._driver, loop=self._loop)
         else:
-            alert = Alert(self._driver)
-        warnings.warn("can't detect if a alert exists yet")
+            alert = await Alert(self._driver)
+        # noinspection PyProtectedMember
+        if not self._driver._page_enabled:
+            await self._driver.execute_cdp_cmd("Page.enable", disconnect_connect=False)
         return alert
 
     async def default_content(self) -> None:
@@ -103,13 +120,14 @@ class SwitchTo:
 
     async def target(self, target_id):
         from selenium_driverless.types import RemoteObject
+        from cdp_socket.socket import SingleCDPSocket
 
-        socket = await self._driver.current_socket
-        await socket.close()
-        self._driver._current_target = target_id
+        socket: SingleCDPSocket = await self._driver.base.get_socket(sock_id=target_id)
+        self._driver._current_target = socket.id
         self._driver._global_this = await RemoteObject(driver=self._driver, js="globalThis", check_existence=False)
         await self._driver.execute_cdp_cmd("Target.activateTarget",
                                            {"targetId": self._driver.current_window_handle})
+        return target_id
 
     async def new_window(self, type_hint: Optional[str] = "tab", url="") -> None:
         """Switches to a new top-level browsing context.

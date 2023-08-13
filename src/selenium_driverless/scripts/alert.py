@@ -18,10 +18,13 @@
 # modified by kaliiiiiiiiii | Aurin Aegerter
 
 """The Alert implementation."""
+import asyncio
+import warnings
 
 from selenium.webdriver.remote.command import Command
 
 
+# noinspection PyProtectedMember
 class Alert:
     """Allows to work with alerts.
 
@@ -52,12 +55,55 @@ class Alert:
         :Args:
          - driver: The WebDriver instance which performs user actions.
         """
-        self.driver = driver
+        from selenium_driverless.scripts.switch_to import SwitchTo
+        from selenium_driverless.webdriver import Chrome
+        self.driver: Chrome = driver
+        self.switch_to: SwitchTo = driver.switch_to
+
+    def __await__(self):
+        return self._init().__await__()
+
+    async def _init(self):
+        if not self.switch_to._alert:
+            try:
+                await self.driver.wait_for_cdp("Page.javascriptDialogOpening", 10)
+            except asyncio.TimeoutError:
+                self._warn_not_detected()
+        return self
+
+    def _warn_not_detected(self):
+        warnings.warn("clouldn't detect if dialog is shown, you might execute Page.enable before")
 
     @property
-    async def text(self) -> str:
+    def text(self) -> str:
         """Gets the text of the Alert."""
-        return await self.driver.execute(Command.W3C_GET_ALERT_TEXT)["value"]
+        if self.switch_to._alert:
+            return self.switch_to._alert["message"]
+        self._warn_not_detected()
+
+    @property
+    def url(self) -> str:
+        if self.switch_to._alert:
+            return self.switch_to._alert["url"]
+        self._warn_not_detected()
+
+    @property
+    def type(self) -> str:
+        if self.switch_to._alert:
+            return self.switch_to._alert["type"]
+        self._warn_not_detected()
+
+    @property
+    def has_browser_handler(self) -> bool:
+        if self.switch_to._alert:
+            return self.switch_to._alert["hasBrowserHandler"]
+        self._warn_not_detected()
+
+    @property
+    def default_prompt(self):
+        if self.switch_to._alert:
+            return self.switch_to._alert["defaultPrompt"]
+        self._warn_not_detected()
 
     async def dismiss(self) -> None:
         """Dismisses the alert available."""
@@ -80,4 +126,4 @@ class Alert:
         :Args:
          - keysToSend: The text to be sent to Alert.
         """
-        await self.driver.execute_cdp_cmd("Page.handleJavaScriptDialog", {"accept": False, "promptText": keysToSend})
+        await self.driver.execute_cdp_cmd("Page.handleJavaScriptDialog", {"accept": True, "promptText": keysToSend})
