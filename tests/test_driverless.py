@@ -27,7 +27,7 @@ async def bet365():
     global driver
     await driver.get('https://www.365365824.com/#/IP/B16')
     await driver.wait_for_cdp("Page.frameStoppedLoading", timeout=10)
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(1)
     login_button = await driver.find_element(By.XPATH, value='//div[contains(@class, "ovm-ParticipantOddsOnly")]')
     await login_button.click()
 
