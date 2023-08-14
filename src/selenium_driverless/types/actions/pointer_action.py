@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
+import asyncio
 # edited by kaliiiiiiiiii
 from typing import Optional
 
@@ -50,6 +50,13 @@ class Buttons:
     FORWARD = 16
 
 
+class EventType:
+    PRESS = "mousePressed"
+    RELEASE = "mouseReleased"
+    MOVE = "mouseMoved"
+    WHEEL = "mouseWheel"
+
+
 class PointerEvent:
     def __init__(self, type_: str, x: int, y: int,
                  modifiers: int = Modifiers.NONE,
@@ -74,6 +81,8 @@ class PointerEvent:
         delta_x: int = 0, delta_y: int = 0,
         pointer_type: str = PointerType.MOUSE
         """
+        self._comand = "Input.dispatchMouseEvent"
+
         self.type_ = type_
         self.x = x
         self.y = y
@@ -112,9 +121,33 @@ class PointerEvent:
             _json["timestamp"] = self.timestamp
         if self.buttons:
             _json["buttons"] = self.buttons
+        return [self._comand, _json]
 
 
-class PointerAction:
+class Pointer:
     def __init__(self, driver, pointer_type: str = PointerType.MOUSE):
         self.pointer_type = pointer_type
         self._driver = driver
+
+    async def dispatch(self, event: PointerEvent):
+        await self._driver.execute_cdp_cmd(*event.to_json())
+
+    async def down(self, **kwargs):
+        event = PointerEvent(type_=EventType.PRESS, **kwargs)
+        await self.dispatch(event)
+
+    async def up(self, **kwargs):
+        event = PointerEvent(type_=EventType.RELEASE, **kwargs)
+        await self.dispatch(event)
+
+    async def click(self, timeout: float = 0.25, **kwargs):
+        await self.down(click_count=0, **kwargs)
+        await asyncio.sleep(timeout)
+        await self.up(click_count=1, **kwargs, )
+
+    async def doubble_click(self, timeout: float = 0.25, **kwargs):
+        await self.click(timeout=timeout, **kwargs)
+        await asyncio.sleep(timeout)
+        await self.down(click_count=1, **kwargs)
+        await asyncio.sleep(timeout)
+        await self.up(click_count=2, **kwargs)
