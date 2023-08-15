@@ -48,6 +48,7 @@ class Buttons:
     MIDDLE = 4
     BACK = 8
     FORWARD = 16
+    DEFAULT = None
 
 
 class EventType:
@@ -60,7 +61,7 @@ class EventType:
 class PointerEvent:
     def __init__(self, type_: str, x: int, y: int,
                  modifiers: int = Modifiers.NONE,
-                 timestamp: float = None, button: str = MouseButton.LEFT, buttons: int = None,
+                 timestamp: float = None, button: str = MouseButton.LEFT, buttons: int = Buttons.DEFAULT,
                  click_count: int = 0, force: float = 0, tangential_pressure: float = 0,
                  tilt_x: float = 0, tilt_y: float = 0, twist: float = 0, delta_x: int = 0, delta_y: int = 0,
                  pointer_type: str = PointerType.MOUSE):
@@ -141,13 +142,13 @@ class Pointer:
         await self.dispatch(event)
 
     async def click(self, timeout: float = 0.25, **kwargs):
-        await self.down(click_count=0, **kwargs)
+        await self.down(click_count=1, **kwargs)
         await asyncio.sleep(timeout)
         await self.up(click_count=1, **kwargs, )
 
     async def doubble_click(self, timeout: float = 0.25, **kwargs):
         await self.click(timeout=timeout, **kwargs)
         await asyncio.sleep(timeout)
-        await self.down(click_count=1, **kwargs)
+        await self.down(click_count=2, **kwargs)
         await asyncio.sleep(timeout)
         await self.up(click_count=2, **kwargs)

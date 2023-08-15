@@ -23,6 +23,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.shadowroot import ShadowRoot
 
 from selenium_driverless.types import JSEvalException, RemoteObject
+from selenium_driverless.input.pointer import Pointer
 
 
 class NoSuchElementException(Exception):
@@ -156,24 +157,14 @@ class WebElement(RemoteObject):
         """The value of the element."""
         return await self.get_property("value")
 
-    async def click(self) -> None:
+    async def click(self, timeout: float = 0.25) -> None:
         """Clicks the element."""
-        script = """
-        // https://stackoverflow.com/a/38073679/20443541
-        function fireClick(node){
-            if (document.createEvent) {
-                var evt = document.createEvent('MouseEvents');
-                evt.initEvent('click', true, false);
-                node.dispatchEvent(evt);    
-            } else if (document.createEventObject) {
-                node.fireEvent('onclick') ; 
-            } else if (typeof node.onclick == 'function') {
-                node.onclick(); 
-            }
-        };
-        fireClick(this)
-        """
-        await self.execute_script(script=script)
+        await self.scroll_to()
+        rect = await self.rect
+        x = rect["x"]
+        y = rect["y"]
+        p = Pointer(driver=self._driver)
+        await p.click(x=x, y=y, timeout=timeout)
 
     async def submit(self):
         """Submits a form."""
@@ -308,6 +299,12 @@ class WebElement(RemoteObject):
         await self.execute_script("this.scrollIntoView(true)")
         result = await self.rect
         return {"x": round(result["x"]), "y": round(result["y"])}
+
+    async def scroll_to(self, rect: dict = None):
+        args = {"objectId": self._obj_id}
+        if rect:
+            args["rect"] = rect
+        await self._driver.execute_cdp_cmd("DOM.scrollIntoViewIfNeeded", args)
 
     @property
     async def size(self) -> dict:

@@ -91,6 +91,20 @@ async def main():
 asyncio.run(main())
 ```
 
+### Pointer Interaction
+```python
+from selenium_driverless.input.pointer import
+
+await elem.scroll_to()
+rect = await elem.rect
+
+p = Pointer(driver=driver)
+x = rect["x"]
+y = rect["y"]
+await p.click(x=x, y=y)
+await p.doubble_click(x=x, y=y)
+```
+
 ## Help
 
 Please feel free to open an issue or fork!
