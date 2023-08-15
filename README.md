@@ -30,9 +30,6 @@ async def main():
     options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
         await driver.get('http://nowsecure.nl#relax')
-        # wait for redirected page
-        await driver.wait_for_cdp(event="Page.loadEventFired", timeout=5)
-
         title = await driver.title
         url = await driver.current_url
         source = await driver.page_source
@@ -51,8 +48,6 @@ from selenium_driverless.sync import webdriver
 options = webdriver.ChromeOptions()
 with webdriver.Chrome(options=options) as driver:
     driver.get('http://nowsecure.nl#relax')
-    # wait for redirected page
-    driver.wait_for_cdp(event="Page.loadEventFired", timeout=5)
 
     title = driver.title
     url = driver.current_url
