@@ -123,6 +123,7 @@ note: please check the todo's below at first!
   - [ ] add cdp event handler
 - [x] sync
   - [ ] move sync to threaded for allowing event_handlers
+  - [ ] support multithreading with sync version
 
 ## Deprecated
 
