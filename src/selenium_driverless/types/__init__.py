@@ -1,4 +1,4 @@
-import asyncio
+import warnings
 
 
 class JSEvalException(Exception):
@@ -8,7 +8,6 @@ class JSEvalException(Exception):
         self.text = exception_details["text"]
         self.line_n = exception_details['lineNumber']
         self.column_n = exception_details['columnNumber']
-        self.script_id = 11
         exc = exception_details["exception"]
         self.type = exc["type"]
         self.subtype = exc["subtype"]
@@ -48,7 +47,7 @@ class RemoteObject:
         return self._obj_id
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                                 max_depth: int = 2, timeout: int = 2):
+                                 max_depth: int = 2, timeout: int = 2, warn=False):
         """
         example:
         script= "function(...arguments){this.click()}"
@@ -56,25 +55,25 @@ class RemoteObject:
         """
         obj_id = await self.obj_id
         return await self._driver.execute_raw_script(script, *args, await_res=await_res, serialization=serialization,
-                                                     max_depth=max_depth, timeout=timeout, obj_id=obj_id)
+                                                     max_depth=max_depth, timeout=timeout, obj_id=obj_id, warn=warn)
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None, timeout: int = 2,
-                             only_value=True):
+                             only_value=True, warn=False):
         """
         exaple: script = "return this.click()"
         """
         obj_id = await self.obj_id
         return await self._driver.execute_script(script, *args, serialization=serialization,
                                                  max_depth=max_depth, timeout=timeout, obj_id=obj_id,
-                                                 only_value=only_value)
+                                                 only_value=only_value, warn=warn)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                                    timeout: int = 2,
-                                   only_value=True):
+                                   only_value=True, warn=False):
         obj_id = await self.obj_id
         return await self._driver.execute_async_script(script, *args, serialization=serialization,
                                                        max_depth=max_depth, timeout=timeout, obj_id=obj_id,
-                                                       only_value=only_value)
+                                                       only_value=only_value, warn=warn)
 
     async def get_props(self, own_properties_only=False,
                         accessor_props_only=False, non_indexed_props_only=False):
@@ -88,7 +87,7 @@ class RemoteObject:
         if isinstance(other, RemoteObject):
             if not (other._obj_id and self._obj_id):
                 raise RuntimeError("RemoteObject isn't initialized, call RemoteObject._obj_id to initialize")
-            return self._obj_id[:-1] == other._obj_id[:-1]
+            return self._obj_id.split(".")[0] == other._obj_id.split(".")[0]
         else:
             return False
 

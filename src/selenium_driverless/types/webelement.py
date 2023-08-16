@@ -20,7 +20,6 @@ import warnings
 from base64 import b64decode
 
 from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.shadowroot import ShadowRoot
 
 from selenium_driverless.types import JSEvalException, RemoteObject
 from selenium_driverless.input.pointer import Pointer
@@ -57,27 +56,55 @@ class WebElement(RemoteObject):
     instance will fail.
     """
 
-    def __init__(self, driver, js: str = None, obj_id=None, check_existence=True) -> None:
+    def __init__(self, driver, js: str = None, obj_id=None, node_id=None, check_existence=True) -> None:
         self._loop = None
+        if not (obj_id or node_id or js):
+            raise ValueError("either js, obj_id or node_id need to be specified")
+        self._node_id = node_id
         super().__init__(driver=driver, js=js, obj_id=obj_id, check_existence=check_existence)
 
     def __await__(self):
         return super().__await__()
 
+    async def __aenter__(self):
+        if self._check_exist:
+            await self.obj_id
+
+        # noinspection PyUnusedLocal
+        async def clear_node_id(data):
+            if not self._obj_id:
+                await self.obj_id
+            self._node_id = None
+
+        await self._driver.add_cdp_listener("Page.loadEventFired", clear_node_id)
+
+        return self
+
     @property
     async def obj_id(self):
         if not self._obj_id:
-            res = await self._driver.execute_cdp_cmd("Runtime.evaluate",
-                                                     {"expression": self._js,
-                                                      "serializationOptions": {
-                                                          "serialization": "idOnly"}})
-            if "exceptionDetails" in res.keys():
-                raise JSEvalException(res["exceptionDetails"])
-            res = res["result"]
-            self._obj_id = res['objectId']
-            if res["subtype"] != "node":
-                raise ValueError("object isn't a node")
+            if self._js:
+                res = await self._driver.execute_cdp_cmd("Runtime.evaluate",
+                                                         {"expression": self._js,
+                                                          "serializationOptions": {
+                                                              "serialization": "idOnly"}})
+                if "exceptionDetails" in res.keys():
+                    raise JSEvalException(res["exceptionDetails"])
+                res = res["result"]
+                self._obj_id = res['objectId']
+                if res["subtype"] != "node":
+                    raise ValueError("object isn't a node")
+            else:
+                res = await self._driver.execute_cdp_cmd("DOM.resolveNode", {"nodeId": self._node_id})
+                self._obj_id = res["object"]["objectId"]
         return self._obj_id
+
+    @property
+    async def node_id(self):
+        if not self._node_id:
+            node = await self._driver.execute_cdp_cmd("DOM.requestNode", {"objectId": await self.obj_id})
+            self._node_id = node["nodeId"]
+        return self._node_id
 
     async def find_element(self, by: str, value: str, idx: int = 0):
         """Find an element given a By strategy and locator.
@@ -94,7 +121,7 @@ class WebElement(RemoteObject):
             raise NoSuchElementException()
         return elems[idx]
 
-    async def find_elements(self, by=By.ID, value=None):
+    async def find_elements(self, by: str = By.ID, value: str or None = None, warn: bool = True):
         """Find elements given a By strategy and locator.
 
         :Usage:
@@ -117,11 +144,17 @@ class WebElement(RemoteObject):
             value = f'//*[@name="{value}"]'
 
         if by == By.TAG_NAME:
+            if warn:
+                warnings.warn(f'By.TAG_NAME might be detectable, you might use driver.search_elements("{value}") or By.CSS_SELECTOR instead')
             return await self.execute_script("return this.getElementsByTagName(arguments[0])",
                                              value, serialization="deep")
         elif by == By.CSS_SELECTOR:
-            return await self.execute_script("return this.querySelectorAll(arguments[0])",
-                                             value, serialization="deep")
+            elems = []
+            res = await self._driver.execute_cdp_cmd("DOM.querySelectorAll", {"nodeId": await self.node_id,
+                                                                              "selector": value})
+            node_ids = res["nodeIds"]
+            for node_id in node_ids:
+                elems.append(await WebElement(node_id=node_id, driver=self._driver, check_existence=False))
         elif by == By.XPATH:
             scipt = """return this.evaluate(
                           arguments[0],
@@ -130,13 +163,23 @@ class WebElement(RemoteObject):
                           XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
                           null,
                         );"""
+            if warn:
+                warnings.warn(f'By.XPATH might be detectable, you might use driver.search_elements("{value}") or By.CSS_SELECTOR instead')
             return await self.execute_script(scipt, value, serialization="deep")
         else:
             return ValueError("unexpected by")
 
+    async def _describe(self):
+        res = await self._driver.execute_cdp_cmd("DOM.describeNode", {"objectId": await self.obj_id, "pierce": True})
+        return res["node"]
+
     @property
     async def source(self):
-        return await self.get_property("outerHTML")
+        res = await self._driver.execute_cdp_cmd("DOM.getOuterHTML", {"nodeId": await self.node_id})
+        return res
+
+    async def set_source(self, value: str):
+        await self._driver.execute_cdp_cmd("DOM.setOuterHTML", {"nodeId": await self.node_id, "outerHTML": value})
 
     async def get_property(self, name: str):
         """Gets the given property of the element.
@@ -149,12 +192,13 @@ class WebElement(RemoteObject):
 
                 text_length = target_element.get_property("text_length")
         """
-        return await self.execute_script(f"return this[arguments[0]]", name)
+        return await self.execute_script(f"return this[arguments[0]]", name, warn=True)
 
     @property
     async def tag_name(self) -> str:
         """This element's ``tagName`` property."""
-        return await self.get_property("tagName")
+        node = await self._describe()
+        return node["localName"]
 
     @property
     async def text(self) -> str:
@@ -166,44 +210,63 @@ class WebElement(RemoteObject):
         """The value of the element."""
         return await self.get_property("value")
 
+    async def clear(self) -> None:
+        """Clears the text if it's a text entry element."""
+        await self.execute_script("this.value = ''", warn=True)
+
+    async def remove(self):
+        await self._driver.execute_cdp_cmd("DOM.removeNode", {"nodeId": await self.node_id})
+
     async def focus(self):
-        return await self._driver.execute_cdp_cmd("DOM.focus", {"objectId": self._obj_id})
+        return await self._driver.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
 
     async def click(self, timeout: float = 0.25, random=True) -> None:
         """Clicks the element."""
         await self.scroll_to()
         x, y = await self.mid_location(random_=random)
-        elem_at = await self.execute_script("return document.elementFromPoint(arguments[0], arguments[1])", x, y)
-        if elem_at != self:
+
+        res = await self._driver.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
+                                                                            "includeUserAgentShadowDOM": True})
+        node_id_at = res["nodeId"]
+        res = await self._driver.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
+        obj_id_at = res["object"]["objectId"]
+        this_obj_id = await self.obj_id
+
+        if obj_id_at.split(".")[0] != this_obj_id.split(".")[0]:
             raise ElementNotInteractable(x, y)
         p = Pointer(driver=self._driver)
         await p.click(x=x, y=y, timeout=timeout)
 
+    async def write(self, text: str):
+        await self.focus()
+        await self._driver.execute_cdp_cmd("Input.insertText", {"text": text})
+
     async def send_keys(self, value: str) -> None:
+        # noinspection GrazieInspection
         """Simulates typing into the element.
 
-        :Args:
-            - value - A string for typing, or setting form fields.  For setting
-              file inputs, this could be a local file path.
+                :Args:
+                    - value - A string for typing, or setting form fields.  For setting
+                      file inputs, this could be a local file path.
 
-        Use this to send simple key events or to fill out form fields::
+                Use this to send simple key events or to fill out form fields::
 
-            form_textfield = driver.find_element(By.NAME, 'username')
-            form_textfield.send_keys("admin")
+                    form_textfield = driver.find_element(By.NAME, 'username')
+                    form_textfield.send_keys("admin")
 
-        This can also be used to set file inputs.
+                This can also be used to set file inputs.
 
-        ::
+                ::
 
-            file_input = driver.find_element(By.NAME, 'profilePic')
-            file_input.send_keys("path/to/profilepic.gif")
-            # Generally it's better to wrap the file path in one of the methods
-            # in os.path to return the actual path to support cross OS testing.
-            # file_input.send_keys(os.path.abspath("path/to/profilepic.gif"))
-        """
+                    file_input = driver.find_element(By.NAME, 'profilePic')
+                    file_input.send_keys("path/to/profilepic.gif")
+                    # Generally it's better to wrap the file path in one of the methods
+                    # in os.path to return the actual path to support cross OS testing.
+                    # file_input.send_keys(os.path.abspath("path/to/profilepic.gif"))
+                """
         # transfer file to another machine only if remote driver is used
         # the same behaviour as for java binding
-        await self.execute_script("this.value = this.value+arguments[0]", value)
+        raise NotImplementedError("you might use elem.write() for inputs instead")
 
     async def mid_location(self, random_: bool = True):
         """
@@ -236,7 +299,7 @@ class WebElement(RemoteObject):
         x = left + make_rand(random_) * width
         y = bottom - make_rand(random_) * height
 
-        return [x, y]
+        return [int(x), int(y)]
 
     async def submit(self):
         """Submits a form."""
@@ -251,11 +314,7 @@ class WebElement(RemoteObject):
             "e.initEvent('submit', true, true);\n"
             "if (form.dispatchEvent(e)) { HTMLFormElement.prototype.submit.call(form) }\n"
         )
-        return await self.execute_script(script)
-
-    async def clear(self) -> None:
-        """Clears the text if it's a text entry element."""
-        await self.execute_script("this.value = ''")
+        return await self.execute_script(script, warn=True)
 
     async def get_dom_attribute(self, name: str) -> str:
         """Gets the given attribute of the element. Unlike
@@ -270,7 +329,15 @@ class WebElement(RemoteObject):
 
                 text_length = target_element.get_dom_attribute("class")
         """
-        raise NotImplementedError("you might use get_attribute instead")
+        attr_str: list = await self._driver.execute_cdp_cmd("DOM.getAttributes", {"nodeId": await self.node_id})
+        for attr in attr_str:
+            key, value = attr.split("=")
+            if key == name:
+                return value[1:-1]
+
+    async def set_dom_attribute(self, name: str, value: str):
+        self._driver.execute_cdp_cmd("DOM.setAttributeValue", {"nodeId": await self.node_id,
+                                                               "name": name, "value": value})
 
     async def get_attribute(self, name):
         """Gets the given attribute or property of the element.
@@ -297,14 +364,14 @@ class WebElement(RemoteObject):
             # Check if the "active" CSS class is applied to an element.
             is_active = "active" in target_element.get_attribute("class")
         """
-        return await self.get_property(name=name)
+        return await self.get_property(name)
 
     async def is_selected(self) -> bool:
         """Returns whether the element is selected.
 
         Can be used to check if a checkbox or radio button is selected.
         """
-        result = await self.get_property("checked")
+        result = await self.get_attribute("checked")
         if result:
             return True
         else:
@@ -314,9 +381,8 @@ class WebElement(RemoteObject):
         """Returns whether the element is enabled."""
         return not await self.get_property("disabled")
 
-
     @property
-    async def shadow_root(self) -> ShadowRoot:
+    async def shadow_root(self):
         """Returns a shadow root of the element if there is one or an error.
         Only works from Chromium 96, Firefox 96, and Safari 16.4 onwards.
 
@@ -324,7 +390,8 @@ class WebElement(RemoteObject):
           - ShadowRoot object or
           - NoSuchShadowRoot - if no shadow root was attached to element
         """
-        return await self.get_attribute("ShadowRoot")
+        # todo: move to CDP
+        return await self.get_property("ShadowRoot")
 
     # RenderedWebElement Items
     async def is_displayed(self) -> bool:
@@ -371,17 +438,20 @@ class WebElement(RemoteObject):
     @property
     async def rect(self) -> dict:
         """A dictionary with the size and location of the element."""
-        result = await self.execute_script("return this.getBoundingClientRect().toJSON()", serialization="json")
+        # todo: move to DOM.getBoxModel
+        result = await self.execute_script("return this.getBoundingClientRect().toJSON()", serialization="json", warn=True)
         return result
 
     @property
     async def aria_role(self) -> str:
         """Returns the ARIA role of the current web element."""
+        # todo: move to CDP
         return await self.get_property("ariaRoleDescription")
 
     @property
     async def accessible_name(self) -> str:
         """Returns the ARIA Level of the current webelement."""
+        # todo: move to CDP
         return await self.get_property("ariaLevel")
 
     @property
@@ -438,10 +508,17 @@ class WebElement(RemoteObject):
         return True
 
     @property
-    def parent(self):
-        """Internal reference to the WebDriver instance this element was found
-        from."""
-        raise NotImplementedError("can't get paren't yet")
+    async def parent(self):
+        """The parent of this element"""
+        args = {}
+        if self._node_id:
+            args["nodeId"] = self._node_id
+        else:
+            args["objectId"] = await self.obj_id
+        node: dict = await self._describe()
+        node_id = node.get("parentId", None)
+        if node_id:
+            return WebElement(node_id=node_id, check_existence=False, driver=self._driver)
 
     @property
     def children(self):

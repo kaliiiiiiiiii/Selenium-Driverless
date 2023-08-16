@@ -85,7 +85,10 @@ class Chrome(BaseWebDriver):
         if disconnect_connect:
             warnings.warn("disconnect_connect=True might be buggy")
         self._page_enabled = None
+
         self._global_this = None
+        self._document_node_id_ = None
+
         self._loop: asyncio.AbstractEventLoop or None = None
         self._page_load_timeout: int = 30
         self._script_timeout: int = 30
@@ -231,8 +234,10 @@ class Chrome(BaseWebDriver):
         else:
             self._switch_to = await SwitchTo(driver=self)
 
+        # noinspection PyUnusedLocal
         def clear_global_this(data):
             self._global_this = None
+            self._document_node_id_ = None
 
         await self.add_cdp_listener("Page.loadEventFired", clear_global_this)
 
@@ -273,16 +278,18 @@ class Chrome(BaseWebDriver):
                 raise TimeoutError(f"page didn't load within timeout of {self._page_load_timeout}")
         await get
         self._global_this = None
+        self._document_node_id_ = None
 
     @property
     async def title(self) -> str:
+        # noinspection GrazieInspection
         """Returns the title of the current page.
 
-        :Usage:
-            ::
+                :Usage:
+                    ::
 
-                title = driver.title
-        """
+                        title = driver.title
+                """
         target = await self.current_target
         return target["title"]
 
@@ -332,13 +339,15 @@ class Chrome(BaseWebDriver):
         return res
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                                 max_depth: int = None, timeout: int = 2, obj_id=None):
+                                 max_depth: int = None, timeout: int = 2, obj_id=None, warn: bool = False):
         """
         example:
         script= "function(...arguments){this.click()}"
         "this" will be the element object
         """
         from selenium_driverless.types import RemoteObject, JSEvalException
+        if warn:
+            warnings.warn("execute_script might be detected", stacklevel=4)
         if not obj_id:
             if not self._global_this:
                 self._global_this = await RemoteObject(driver=self, js="globalThis", check_existence=False)
@@ -369,14 +378,14 @@ class Chrome(BaseWebDriver):
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                              timeout: int = None,
-                             only_value=True, obj_id=None):
+                             only_value=True, obj_id=None, warn: bool = False):
         """
         exaple: script = "return elem.click()"
         """
         script = f"(function(...arguments){{{script}}})"
         res = await self.execute_raw_script(script, *args, max_depth=max_depth,
                                             serialization=serialization, timeout=timeout,
-                                            await_res=False, obj_id=obj_id)
+                                            await_res=False, obj_id=obj_id, warn=warn)
         if only_value:
             if "value" in res.keys():
                 return res["value"]
@@ -385,14 +394,14 @@ class Chrome(BaseWebDriver):
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
                                    serialization: str = None, timeout: int = 2,
-                                   only_value=True, obj_id=None):
+                                   only_value=True, obj_id=None, warn: bool = False):
         script = """(function(...arguments){
                        const promise = new Promise((resolve, reject) => {
                               arguments.push(resolve)
                         });""" + script + ";return promise})"
         res = await self.execute_raw_script(script, *args, max_depth=max_depth,
                                             serialization=serialization, timeout=timeout,
-                                            await_res=True, obj_id=obj_id)
+                                            await_res=True, obj_id=obj_id, warn=warn)
         if only_value:
             if "value" in res.keys():
                 return res["value"]
@@ -659,6 +668,7 @@ class Chrome(BaseWebDriver):
         """
         await self.execute_cdp_cmd("Network.clearBrowserCookies")
 
+    # noinspection GrazieInspection
     async def add_cookie(self, cookie_dict) -> None:
         """Adds a cookie to your current session.
 
@@ -740,16 +750,39 @@ class Chrome(BaseWebDriver):
         self._page_load_timeout = timeouts["page_load"]
         self._script_timeout = timeouts["script"]
 
+    @property
+    async def _document_node_id(self):
+        if not self._document_node_id_:
+            res = await self.execute_cdp_cmd("DOM.getDocument", {"pierce": True})
+            self._document_node_id_ = res["root"]["nodeId"]
+        return self._document_node_id_
+
     # noinspection PyUnusedLocal
     async def find_element(self, by: str, value: str, parent=None):
         if not parent:
-            parent = await WebElement(driver=self, js="document", check_existence=False)
+            parent = await WebElement(driver=self, node_id=await self._document_node_id, check_existence=False)
         return await parent.find_element(by=by, value=value)
 
     async def find_elements(self, by: str, value: str, parent=None):
         if not parent:
-            parent = await WebElement(driver=self, js="document", check_existence=False)
+            parent = await WebElement(driver=self, node_id=await self._document_node_id, check_existence=False)
         return await parent.find_elements(by=by, value=value)
+
+    async def search_elements(self, query: str):
+        """
+        query:str | Plain text or query selector or XPath search query.
+        """
+        elems = []
+        res = await self.execute_cdp_cmd("DOM.performSearch",
+                                         {"includeUserAgentShadowDOM": True, "query": query})
+        search_id = res["searchId"]
+        elem_count = res["resultCount"]
+
+        res = await self.execute_cdp_cmd("DOM.getSearchResults",
+                                         {"searchId": search_id, "fromIndex": 0, "toIndex": elem_count - 1})
+        for node_id in res["nodeIds"]:
+            elems.append(await WebElement(driver=self, check_existence=False, node_id=node_id))
+        return elems
 
     @property
     def capabilities(self) -> dict:
@@ -963,13 +996,14 @@ class Chrome(BaseWebDriver):
 
     @property
     def orientation(self):
+        # noinspection GrazieInspection
         """Gets the current orientation of the device.
 
-        :Usage:
-            ::
+                :Usage:
+                    ::
 
-                orientation = driver.orientation
-        """
+                        orientation = driver.orientation
+                """
         raise NotImplementedError()
 
     @orientation.setter
