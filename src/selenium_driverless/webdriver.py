@@ -760,12 +760,12 @@ class Chrome(BaseWebDriver):
     # noinspection PyUnusedLocal
     async def find_element(self, by: str, value: str, parent=None):
         if not parent:
-            parent = await WebElement(driver=self, node_id=await self._document_node_id, check_existence=False)
+            parent = await WebElement(driver=self, node_id=await self._document_node_id, check_existence=False, loop=self._loop)
         return await parent.find_element(by=by, value=value)
 
     async def find_elements(self, by: str, value: str, parent=None):
         if not parent:
-            parent = await WebElement(driver=self, node_id=await self._document_node_id, check_existence=False)
+            parent = await WebElement(driver=self, node_id=await self._document_node_id, check_existence=False, loop=self._loop)
         return await parent.find_elements(by=by, value=value)
 
     async def search_elements(self, query: str):
@@ -781,7 +781,11 @@ class Chrome(BaseWebDriver):
         res = await self.execute_cdp_cmd("DOM.getSearchResults",
                                          {"searchId": search_id, "fromIndex": 0, "toIndex": elem_count - 1})
         for node_id in res["nodeIds"]:
-            elems.append(await WebElement(driver=self, check_existence=False, node_id=node_id))
+            if self._loop:
+                elem = await SyncWebElement(driver=self, check_existence=False, node_id=node_id, loop=self._loop)
+            else:
+                elem = await WebElement(driver=self, check_existence=False, node_id=node_id, loop=self._loop)
+            elems.append(elem)
         return elems
 
     @property

@@ -4,11 +4,12 @@ import inspect
 
 
 class WebElement(AsyncWebElement):
-    def __init__(self, driver, loop=None, js: str = None, obj_id=None, check_existence=True):
-        super().__init__(driver=driver, js=js, obj_id=obj_id, check_existence=check_existence)
+    def __init__(self, driver, loop=None, js: str = None, obj_id=None, node_id=None, check_existence=True):
         if not loop:
             loop = asyncio.new_event_loop()
         self._loop = loop
+        super().__init__(driver=driver, js=js, obj_id=obj_id, node_id=node_id, check_existence=check_existence, loop=self._loop)
+        self._loop.create_task(self.__aenter__())
 
     def __enter__(self):
         return self

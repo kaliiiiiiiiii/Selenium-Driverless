@@ -56,8 +56,8 @@ class WebElement(RemoteObject):
     instance will fail.
     """
 
-    def __init__(self, driver, js: str = None, obj_id=None, node_id=None, check_existence=True) -> None:
-        self._loop = None
+    def __init__(self, driver, js: str = None, obj_id=None, node_id=None, check_existence=True, loop=None) -> None:
+        self._loop = loop
         if not (obj_id or node_id or js):
             raise ValueError("either js, obj_id or node_id need to be specified")
         self._node_id = node_id
@@ -154,7 +154,12 @@ class WebElement(RemoteObject):
                                                                               "selector": value})
             node_ids = res["nodeIds"]
             for node_id in node_ids:
-                elems.append(await WebElement(node_id=node_id, driver=self._driver, check_existence=False))
+                if self._loop:
+                    from selenium_driverless.sync.webelement import WebElement as SyncWebElement
+                    elem = SyncWebElement(node_id=node_id, driver=self._driver, check_existence=False, loop=self._loop)
+                else:
+                    elem = await WebElement(node_id=node_id, driver=self._driver, check_existence=False)
+                elems.append(elem)
             return elems
         elif by == By.XPATH:
             scipt = """return this.evaluate(
@@ -177,7 +182,7 @@ class WebElement(RemoteObject):
     @property
     async def source(self):
         res = await self._driver.execute_cdp_cmd("DOM.getOuterHTML", {"nodeId": await self.node_id})
-        return res
+        return res["outerHTML"]
 
     async def set_source(self, value: str):
         await self._driver.execute_cdp_cmd("DOM.setOuterHTML", {"nodeId": await self.node_id, "outerHTML": value})
@@ -415,7 +420,7 @@ class WebElement(RemoteObject):
         return {"x": round(result["x"]), "y": round(result["y"])}
 
     async def scroll_to(self, rect: dict = None):
-        args = {"objectId": self._obj_id}
+        args = {"objectId": await self.obj_id}
         if rect:
             args["rect"] = rect
         await self._driver.execute_cdp_cmd("DOM.scrollIntoViewIfNeeded", args)
