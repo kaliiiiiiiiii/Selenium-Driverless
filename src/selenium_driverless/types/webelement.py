@@ -217,7 +217,7 @@ class WebElement(RemoteObject):
             """
             if _random:
                 rand = random.uniform(0.3, 0.7)
-                rand = ((rand - 1) ** 2) / 2.5
+                rand = ((rand - 1) ** 2) / 2
                 random_exp = random.choice([rand, -rand])
                 return random_exp + 0.5
             else:
