@@ -34,6 +34,15 @@ class StaleElementReferenceException(Exception):
     pass
 
 
+class ElementNotVisible(Exception):
+    pass
+
+
+class ElementNotInteractable(Exception):
+    def __init__(self, x: float, y: float):
+        super().__init__(f"element not interactable at x:{x}, y:{y}, it might be hidden under another one")
+
+
 # noinspection PyProtectedMember
 class WebElement(RemoteObject):
     """Represents a DOM element.
@@ -157,14 +166,48 @@ class WebElement(RemoteObject):
         """The value of the element."""
         return await self.get_property("value")
 
-    async def click(self, timeout: float = 0.25) -> None:
+    async def click(self, timeout: float = 0.25, random=True) -> None:
         """Clicks the element."""
         await self.scroll_to()
-        rect = await self.rect
-        x = rect["x"]
-        y = rect["y"]
+        x, y = await self.mid_location(random_=random)
+        elem_at = await self.execute_script("return document.elementFromPoint(arguments[0], arguments[1])", x, y)
+        if elem_at != self:
+            raise ElementNotInteractable(x, y)
         p = Pointer(driver=self._driver)
         await p.click(x=x, y=y, timeout=timeout)
+
+    async def mid_location(self, random_: bool = True):
+        """
+        returns random location in element with probability close to the middle
+        """
+        import random
+
+        def make_rand(_random: bool):
+            """
+            returns random number with probability close to 0.5
+            """
+            if _random:
+                rand = random.uniform(0.3, 0.7)
+                rand = ((rand - 1) ** 2) / 2.5
+                random_exp = random.choice([rand, -rand])
+                return random_exp + 0.5
+            else:
+                return 0.5
+
+        rect = await self.rect
+
+        bottom = rect["bottom"]
+        left = rect["left"]
+        width = rect["width"]
+        height = rect["height"]
+
+        if height == 0 or width == 0:
+            raise ElementNotVisible("elemen't doesn't have dimensions")
+
+        x = left + make_rand(random_) * width
+        y = bottom - make_rand(random_) * height
+
+        return [x, y]
 
     async def submit(self):
         """Submits a form."""
@@ -295,8 +338,7 @@ class WebElement(RemoteObject):
         Returns the top lefthand corner location on the screen, or zero
         coordinates if the element is not visible.
         """
-        "arguments[0].scrollIntoView(true); return arguments[0].getBoundingClientRect()"
-        await self.execute_script("this.scrollIntoView(true)")
+        await self.scroll_to()
         result = await self.rect
         return {"x": round(result["x"]), "y": round(result["y"])}
 
