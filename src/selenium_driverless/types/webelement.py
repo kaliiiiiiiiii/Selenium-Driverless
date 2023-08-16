@@ -166,6 +166,9 @@ class WebElement(RemoteObject):
         """The value of the element."""
         return await self.get_property("value")
 
+    async def focus(self):
+        return await self._driver.execute_cdp_cmd("DOM.focus", {"objectId": self._obj_id})
+
     async def click(self, timeout: float = 0.25, random=True) -> None:
         """Clicks the element."""
         await self.scroll_to()
@@ -175,6 +178,32 @@ class WebElement(RemoteObject):
             raise ElementNotInteractable(x, y)
         p = Pointer(driver=self._driver)
         await p.click(x=x, y=y, timeout=timeout)
+
+    async def send_keys(self, value: str) -> None:
+        """Simulates typing into the element.
+
+        :Args:
+            - value - A string for typing, or setting form fields.  For setting
+              file inputs, this could be a local file path.
+
+        Use this to send simple key events or to fill out form fields::
+
+            form_textfield = driver.find_element(By.NAME, 'username')
+            form_textfield.send_keys("admin")
+
+        This can also be used to set file inputs.
+
+        ::
+
+            file_input = driver.find_element(By.NAME, 'profilePic')
+            file_input.send_keys("path/to/profilepic.gif")
+            # Generally it's better to wrap the file path in one of the methods
+            # in os.path to return the actual path to support cross OS testing.
+            # file_input.send_keys(os.path.abspath("path/to/profilepic.gif"))
+        """
+        # transfer file to another machine only if remote driver is used
+        # the same behaviour as for java binding
+        await self.execute_script("this.value = this.value+arguments[0]", value)
 
     async def mid_location(self, random_: bool = True):
         """
@@ -212,7 +241,7 @@ class WebElement(RemoteObject):
     async def submit(self):
         """Submits a form."""
         script = (
-            "/* submitForm */var form = self;\n"
+            "/* submitForm */var form = this;\n"
             'while (form.nodeName != "FORM" && form.parentNode) {\n'
             "  form = form.parentNode;\n"
             "}\n"
@@ -285,31 +314,6 @@ class WebElement(RemoteObject):
         """Returns whether the element is enabled."""
         return not await self.get_property("disabled")
 
-    async def send_keys(self, value: str) -> None:
-        """Simulates typing into the element.
-
-        :Args:
-            - value - A string for typing, or setting form fields.  For setting
-              file inputs, this could be a local file path.
-
-        Use this to send simple key events or to fill out form fields::
-
-            form_textfield = driver.find_element(By.NAME, 'username')
-            form_textfield.send_keys("admin")
-
-        This can also be used to set file inputs.
-
-        ::
-
-            file_input = driver.find_element(By.NAME, 'profilePic')
-            file_input.send_keys("path/to/profilepic.gif")
-            # Generally it's better to wrap the file path in one of the methods
-            # in os.path to return the actual path to support cross OS testing.
-            # file_input.send_keys(os.path.abspath("path/to/profilepic.gif"))
-        """
-        # transfer file to another machine only if remote driver is used
-        # the same behaviour as for java binding
-        await self.execute_script("this.value = this.value+arguments[0]", value)
 
     @property
     async def shadow_root(self) -> ShadowRoot:
@@ -320,7 +324,7 @@ class WebElement(RemoteObject):
           - ShadowRoot object or
           - NoSuchShadowRoot - if no shadow root was attached to element
         """
-        raise NotImplementedError()
+        return await self.get_attribute("ShadowRoot")
 
     # RenderedWebElement Items
     async def is_displayed(self) -> bool:
