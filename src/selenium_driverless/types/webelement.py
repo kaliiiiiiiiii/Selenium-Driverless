@@ -155,6 +155,7 @@ class WebElement(RemoteObject):
             node_ids = res["nodeIds"]
             for node_id in node_ids:
                 elems.append(await WebElement(node_id=node_id, driver=self._driver, check_existence=False))
+            return elems
         elif by == By.XPATH:
             scipt = """return this.evaluate(
                           arguments[0],
