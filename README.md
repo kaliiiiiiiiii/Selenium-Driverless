@@ -134,7 +134,7 @@ note: please check the todo's below at first!
 The bias is based on a heatmap, which represents how far from any side the point is
 
 Example:
-![Figure_1.png](..%2F..%2FDownloads%2FFigure_1.png)
+![heatmap.png](dev%2Fassets%2Fheatmap.png)
 
 ## Authors
 
