@@ -81,7 +81,7 @@ heatmap = ax.imshow(heatmap_grid, cmap='hot', extent=[x_min, x_max, y_min, y_max
 ax.add_patch(Polygon(polygon_vertices, closed=True, edgecolor='yellow', facecolor='none'))  # Changed edgecolor to yellow
 
 ax.scatter(simulated_points[:, 0], simulated_points[:, 1], color='blue')
-ax.set_title('Random points inside element (polygon) based on heatmap')
+ax.set_title('Random points inside element (Polygon) based on heatmap')
 
 plt.tight_layout()
 plt.show()
