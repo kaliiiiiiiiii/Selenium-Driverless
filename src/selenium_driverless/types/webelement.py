@@ -24,6 +24,9 @@ from selenium.webdriver.common.by import By
 from selenium_driverless.types import JSEvalException, RemoteObject
 from selenium_driverless.input.pointer import Pointer
 
+from matplotlib.patches import Polygon
+import numpy as np
+
 
 class NoSuchElementException(Exception):
     pass
@@ -145,7 +148,8 @@ class WebElement(RemoteObject):
 
         if by == By.TAG_NAME:
             if warn:
-                warnings.warn(f'By.TAG_NAME might be detectable, you might use driver.search_elements("{value}") or By.CSS_SELECTOR instead')
+                warnings.warn(
+                    f'By.TAG_NAME might be detectable, you might use driver.search_elements("{value}") or By.CSS_SELECTOR instead')
             return await self.execute_script("return this.getElementsByTagName(arguments[0])",
                                              value, serialization="deep")
         elif by == By.CSS_SELECTOR:
@@ -170,7 +174,8 @@ class WebElement(RemoteObject):
                           null,
                         );"""
             if warn:
-                warnings.warn(f'By.XPATH might be detectable, you might use driver.search_elements("{value}") or By.CSS_SELECTOR instead')
+                warnings.warn(
+                    f'By.XPATH might be detectable, you might use driver.search_elements("{value}") or By.CSS_SELECTOR instead')
             return await self.execute_script(scipt, value, serialization="deep")
         else:
             return ValueError("unexpected by")
@@ -222,6 +227,25 @@ class WebElement(RemoteObject):
 
     async def remove(self):
         await self._driver.execute_cdp_cmd("DOM.removeNode", {"nodeId": await self.node_id})
+
+    async def highlight(self, highlight=True):
+        if highlight:
+            await self._driver.execute_cdp_cmd("Overlay.enable")
+            await self._driver.execute_cdp_cmd("Overlay.highlightNode", {"nodeId": await self.node_id,
+                                                                         "highlightConfig": {
+                                                                            "showInfo": True,
+                                                                            "borderColor": {
+                                                                                "r": 76, "g": 175, "b": 80, "a": 1
+                                                                            },
+                                                                            "contentColor": {
+                                                                                "r": 76, "g": 175, "b": 80, "a": 0.24
+                                                                            },
+                                                                            "shapeColor": {
+                                                                                "r": 76, "g": 175, "b": 80, "a": 0.24
+                                                                            }
+                                                                         }})
+        else:
+            await self._driver.execute_cdp_cmd("Overlay.disable")
 
     async def focus(self):
         return await self._driver.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
@@ -279,31 +303,24 @@ class WebElement(RemoteObject):
         returns random location in element with probability close to the middle
         """
         import random
+        from selenium_driverless.utils.utils import centroid
 
         def make_rand(_random: bool):
             """
-            returns random number with probability close to 0.5
+            returns random number with probability close to 0
             """
             if _random:
                 rand = random.uniform(0.3, 0.7)
                 rand = ((rand - 1) ** 2) / 2
                 random_exp = random.choice([rand, -rand])
-                return random_exp + 0.5
+                return random_exp
             else:
-                return 0.5
+                return 0
 
-        rect = await self.rect
-
-        bottom = rect["bottom"]
-        left = rect["left"]
-        width = rect["width"]
-        height = rect["height"]
-
-        if height == 0 or width == 0:
-            raise ElementNotVisible("elemen't doesn't have dimensions")
-
-        x = left + make_rand(random_) * width
-        y = bottom - make_rand(random_) * height
+        box = await self.box_model
+        poly = box["content"]
+        vertices = poly.get_path().vertices
+        x, y = centroid(vertices)
 
         return [int(x), int(y)]
 
@@ -444,9 +461,21 @@ class WebElement(RemoteObject):
     @property
     async def rect(self) -> dict:
         """A dictionary with the size and location of the element."""
-        # todo: move to DOM.getBoxModel
-        result = await self.execute_script("return this.getBoundingClientRect().toJSON()", serialization="json", warn=True)
+        # todo: calculate form DOM.getBoxModel
+        result = await self.execute_script("return this.getBoundingClientRect().toJSON()", serialization="json")
         return result
+
+    @property
+    async def box_model(self):
+        res = await self._driver.execute_cdp_cmd("DOM.getBoxModel", {"nodeId": await self.node_id})
+        model = res['model']
+        keys = ['content', 'padding', 'border', 'margin']
+        for key in keys:
+            quad = model[key]
+            model[key] = Polygon(
+                np.array([[quad[0], quad[1]], [quad[2], quad[3]], [quad[4], quad[5]], [quad[6], quad[7]]]), closed=True,
+                edgecolor='blue', fill=False)
+        return model
 
     @property
     async def aria_role(self) -> str:
