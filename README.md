@@ -127,6 +127,15 @@ note: please check the todo's below at first!
 
 ## Deprecated
 
+
+## Implementation Details
+
+- `elem.mid_location(random_: bool = True)` returns a random point with a bias.
+The bias is based on a heatmap, which represents how far from any side the point is
+
+Example:
+![Figure_1.png](..%2F..%2FDownloads%2FFigure_1.png)
+
 ## Authors
 
 [Aurin Aegerter](mailto:aurinliun@gmx.ch)
