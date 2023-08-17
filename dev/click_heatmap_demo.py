@@ -64,7 +64,7 @@ polygon_vertices = np.array([
 
 heatmap_grid = generate_polygon_heatmap(polygon_vertices, num_points=70)
 
-num_points_to_simulate = 500
+num_points_to_simulate = 150
 simulated_points = []
 for _ in range(num_points_to_simulate):
     random_point = generate_random_point_biased(polygon_vertices, heatmap_grid, bias_value=5)
