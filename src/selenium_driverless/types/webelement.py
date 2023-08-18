@@ -252,7 +252,7 @@ class WebElement(RemoteObject):
     async def focus(self):
         return await self._driver.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
 
-    async def click(self, timeout: float = 0.25, bias: float = 7, resolution: int = 50, debug: bool = False) -> None:
+    async def click(self, timeout: float = 0.25, bias: float = 5, resolution: int = 50, debug: bool = False) -> None:
         """Clicks the element."""
         await self.scroll_to()
 
@@ -275,9 +275,8 @@ class WebElement(RemoteObject):
             except CDPError as e:
                 # element partially within viewport, point outside viewport
                 # todo: make sure point is within viewport at def mid_location
-                if not(e.code == -32000 and e.message == 'No node found at given location'):
+                if not (e.code == -32000 and e.message == 'No node found at given location'):
                     raise e
-
 
     async def write(self, text: str):
         await self.focus()
@@ -310,7 +309,7 @@ class WebElement(RemoteObject):
         # the same behaviour as for java binding
         raise NotImplementedError("you might use elem.write() for inputs instead")
 
-    async def mid_location(self, bias: float = 7, resolution: int = 50, debug: bool = False):
+    async def mid_location(self, bias: float = 5, resolution: int = 50, debug: bool = False):
         """
         returns random location in element with probability close to the middle
         """
