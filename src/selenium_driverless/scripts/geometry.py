@@ -19,9 +19,11 @@ def gen_heatmap(polygon_vertices: np.array, num_points: int = 70):
         for j in range(len(polygon_vertices)):
             edge_start = polygon_vertices[j]
             edge_end = polygon_vertices[(j + 1) % len(polygon_vertices)]
+
             v1 = edge_end - edge_start
             v2 = point - edge_start
             distance = np.linalg.norm(np.cross(v1, v2)) / np.linalg.norm(v1)
+
             min_distance = min(min_distance, distance)
         distances[i] = min_distance
 
