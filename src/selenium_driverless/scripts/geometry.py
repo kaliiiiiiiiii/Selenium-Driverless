@@ -1,13 +1,11 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 
 
-def generate_polygon_heatmap(polygon_vertices, num_points=200):
+def gen_heatmap(polygon_vertices: np.array, num_points: int = 70):
     polygon = Polygon(polygon_vertices, closed=True, edgecolor='black', facecolor='none')
 
-    x_min, y_min = polygon_vertices.min(axis=0)
-    x_max, y_max = polygon_vertices.max(axis=0)
+    x_min, y_min, x_max, y_max = get_bounds(polygon_vertices)
 
     x_vals = np.linspace(x_min, x_max, num_points)
     y_vals = np.linspace(y_min, y_max, num_points)
@@ -36,7 +34,7 @@ def generate_polygon_heatmap(polygon_vertices, num_points=200):
     return distances_grid
 
 
-def generate_random_point_biased(polygon_vertices, heatmap_grid, bias_value=10):
+def gen_rand_point(polygon_vertices: np.array, heatmap_grid: np.array, bias_value: float = 7):
     num_points = len(heatmap_grid)
 
     heatmap_probs = heatmap_grid.flatten() ** bias_value
@@ -47,7 +45,8 @@ def generate_random_point_biased(polygon_vertices, heatmap_grid, bias_value=10):
     row = sampled_index // num_points
     col = sampled_index % num_points
 
-    x_min, y_min = polygon_vertices.min(axis=0)
+    x_min, y_min, x_max, y_max = get_bounds(polygon_vertices)
+
     x_range = polygon_vertices.max(axis=0) - polygon_vertices.min(axis=0)
     x_sample = x_min + col * (x_range[0] / (num_points - 1))
     y_sample = y_min + row * (x_range[1] / (num_points - 1))
@@ -55,33 +54,7 @@ def generate_random_point_biased(polygon_vertices, heatmap_grid, bias_value=10):
     return x_sample, y_sample
 
 
-polygon_vertices = np.array([
-    [59.13952637, -55.31472397],
-    [140.13952637, 84.98139191],
-    [126.86047363, 92.64805603],
-    [45.86047363, -47.64805603],
-])
-
-heatmap_grid = generate_polygon_heatmap(polygon_vertices, num_points=70)
-
-num_points_to_simulate = 150
-simulated_points = []
-for _ in range(num_points_to_simulate):
-    random_point = generate_random_point_biased(polygon_vertices, heatmap_grid, bias_value=5)
-    simulated_points.append(random_point)
-
-simulated_points = np.array(simulated_points)
-
-x_min, y_min = polygon_vertices.min(axis=0)
-x_max, y_max = polygon_vertices.max(axis=0)
-
-fig, ax = plt.subplots(figsize=(8, 6))
-
-heatmap = ax.imshow(heatmap_grid, cmap='hot', extent=[x_min, x_max, y_min, y_max], origin='lower')
-ax.add_patch(Polygon(polygon_vertices, closed=True, edgecolor='yellow', facecolor='none'))  # Changed edgecolor to yellow
-
-ax.scatter(simulated_points[:, 0], simulated_points[:, 1], color='blue')
-ax.set_title('Random points inside element (Polygon) based on heatmap')
-
-plt.tight_layout()
-plt.show()
+def get_bounds(vertices: np.array):
+    x_min, y_min = vertices.min(axis=0)
+    x_max, y_max = vertices.max(axis=0)
+    return x_min, y_min, x_max, y_max
