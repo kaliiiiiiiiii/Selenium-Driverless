@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib.patches import Polygon
+import matplotlib.pyplot as plt
 
 
 def gen_heatmap(polygon_vertices: np.array, num_points: int = 70):
@@ -58,3 +59,37 @@ def get_bounds(vertices: np.array):
     x_min, y_min = vertices.min(axis=0)
     x_max, y_max = vertices.max(axis=0)
     return x_min, y_min, x_max, y_max
+
+
+def centroid(vertices):
+    x, y = 0, 0
+    n = len(vertices)
+    signed_area = 0
+    for i in range(len(vertices)):
+        x0, y0 = vertices[i]
+        x1, y1 = vertices[(i + 1) % n]
+        # shoelace formula
+        area = (x0 * y1) - (x1 * y0)
+        signed_area += area
+        x += (x0 + x1) * area
+        y += (y0 + y1) * area
+    signed_area *= 0.5
+    x /= 6 * signed_area
+    y /= 6 * signed_area
+    return x, y
+
+
+def visualize(rand_points: np.array, heatmap_grid: np.array, polygon_vertices: np.array):
+    x_min, y_min, x_max, y_max = get_bounds(polygon_vertices)
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    ax.imshow(heatmap_grid, cmap='hot', extent=[x_min, x_max, y_min, y_max], origin='lower')
+    ax.add_patch(
+        Polygon(polygon_vertices, closed=True, edgecolor='yellow', facecolor='none'))  # Changed edgecolor to yellow
+
+    ax.scatter(rand_points[:, 0], rand_points[:, 1], color='blue')
+    ax.set_title('Random points inside element (Polygon) based on heatmap')
+
+    plt.tight_layout()
+    plt.show(block=True)

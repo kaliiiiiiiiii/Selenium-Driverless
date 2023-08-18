@@ -196,8 +196,8 @@ class Chrome(BaseWebDriver):
 
         if not self._options.debugger_address:
             from selenium_driverless.utils.utils import random_port
-            port = random_port("localhost")
-            self._options._debugger_address = f"localhost:{port}"
+            port = random_port()
+            self._options._debugger_address = f"192.168.0.1:{port}"
             self._options.add_argument(f"--remote-debugging-port={port}")
         options = capabilities["goog:chromeOptions"]
 

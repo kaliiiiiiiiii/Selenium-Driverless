@@ -112,37 +112,3 @@ def random_port(host: str = None):
         s.bind((host, 0))
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         return s.getsockname()[1]
-
-
-def plot_polygon(poly: Polygon):
-    import matplotlib.pyplot as plt
-    fig, ax = plt.subplots()
-    ax.add_patch(poly)
-
-    points = poly.get_path()
-    points = list(points.vertices)
-    left, right = min(points, key=lambda p: p[0]), max(points, key=lambda p: p[0])
-    bottom, top = min(points, key=lambda p: p[1]), max(points, key=lambda p: p[1])
-
-    ax.set_xlim(left[0], right[0])
-    ax.set_ylim(top[1], bottom[1])
-    ax.set_aspect('equal', adjustable='box')
-    plt.show()
-
-
-def centroid(vertices):
-    x, y = 0, 0
-    n = len(vertices)
-    signed_area = 0
-    for i in range(len(vertices)):
-        x0, y0 = vertices[i]
-        x1, y1 = vertices[(i + 1) % n]
-        # shoelace formula
-        area = (x0 * y1) - (x1 * y0)
-        signed_area += area
-        x += (x0 + x1) * area
-        y += (y0 + y1) * area
-    signed_area *= 0.5
-    x /= 6 * signed_area
-    y /= 6 * signed_area
-    return x, y

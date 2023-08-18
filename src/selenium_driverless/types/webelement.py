@@ -23,8 +23,10 @@ from selenium.webdriver.common.by import By
 
 from selenium_driverless.types import JSEvalException, RemoteObject
 from selenium_driverless.input.pointer import Pointer
+from selenium_driverless.scripts.geometry import gen_heatmap, gen_rand_point, centroid
 
-from matplotlib.patches import Polygon
+from cdp_socket.exceptions import CDPError
+
 import numpy as np
 
 
@@ -233,16 +235,16 @@ class WebElement(RemoteObject):
             await self._driver.execute_cdp_cmd("Overlay.enable")
             await self._driver.execute_cdp_cmd("Overlay.highlightNode", {"nodeId": await self.node_id,
                                                                          "highlightConfig": {
-                                                                            "showInfo": True,
-                                                                            "borderColor": {
-                                                                                "r": 76, "g": 175, "b": 80, "a": 1
-                                                                            },
-                                                                            "contentColor": {
-                                                                                "r": 76, "g": 175, "b": 80, "a": 0.24
-                                                                            },
-                                                                            "shapeColor": {
-                                                                                "r": 76, "g": 175, "b": 80, "a": 0.24
-                                                                            }
+                                                                             "showInfo": True,
+                                                                             "borderColor": {
+                                                                                 "r": 76, "g": 175, "b": 80, "a": 1
+                                                                             },
+                                                                             "contentColor": {
+                                                                                 "r": 76, "g": 175, "b": 80, "a": 0.24
+                                                                             },
+                                                                             "shapeColor": {
+                                                                                 "r": 76, "g": 175, "b": 80, "a": 0.24
+                                                                             }
                                                                          }})
         else:
             await self._driver.execute_cdp_cmd("Overlay.disable")
@@ -250,22 +252,32 @@ class WebElement(RemoteObject):
     async def focus(self):
         return await self._driver.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
 
-    async def click(self, timeout: float = 0.25, random=True) -> None:
+    async def click(self, timeout: float = 0.25, bias: float = 7, resolution: int = 50, debug: bool = False) -> None:
         """Clicks the element."""
         await self.scroll_to()
-        x, y = await self.mid_location(random_=random)
 
-        res = await self._driver.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
-                                                                            "includeUserAgentShadowDOM": True})
-        node_id_at = res["nodeId"]
-        res = await self._driver.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
-        obj_id_at = res["object"]["objectId"]
-        this_obj_id = await self.obj_id
+        while True:
+            try:
+                x, y = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
 
-        if obj_id_at.split(".")[0] != this_obj_id.split(".")[0]:
-            raise ElementNotInteractable(x, y)
-        p = Pointer(driver=self._driver)
-        await p.click(x=x, y=y, timeout=timeout)
+                res = await self._driver.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
+                                                                                    "includeUserAgentShadowDOM": True})
+                node_id_at = res["nodeId"]
+                res = await self._driver.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
+                obj_id_at = res["object"]["objectId"]
+                this_obj_id = await self.obj_id
+
+                if obj_id_at.split(".")[0] != this_obj_id.split(".")[0]:
+                    raise ElementNotInteractable(x, y)
+                p = Pointer(driver=self._driver)
+                await p.click(x=x, y=y, timeout=timeout)
+                break
+            except CDPError as e:
+                # element partially within viewport, point outside viewport
+                # todo: make sure point is within viewport at def mid_location
+                if not(e.code == -32000 and e.message == 'No node found at given location'):
+                    raise e
+
 
     async def write(self, text: str):
         await self.focus()
@@ -298,31 +310,23 @@ class WebElement(RemoteObject):
         # the same behaviour as for java binding
         raise NotImplementedError("you might use elem.write() for inputs instead")
 
-    async def mid_location(self, random_: bool = True):
+    async def mid_location(self, bias: float = 7, resolution: int = 50, debug: bool = False):
         """
         returns random location in element with probability close to the middle
         """
-        import random
-        from selenium_driverless.utils.utils import centroid
-
-        def make_rand(_random: bool):
-            """
-            returns random number with probability close to 0
-            """
-            if _random:
-                rand = random.uniform(0.3, 0.7)
-                rand = ((rand - 1) ** 2) / 2
-                random_exp = random.choice([rand, -rand])
-                return random_exp
-            else:
-                return 0
 
         box = await self.box_model
-        poly = box["content"]
-        vertices = poly.get_path().vertices
-        x, y = centroid(vertices)
+        vertices = box["content"]
+        if bias and resolution:
+            heatmap = gen_heatmap(vertices, num_points=resolution)
+            point = gen_rand_point(vertices, heatmap, bias_value=bias)
+            if debug:
+                from selenium_driverless.scripts.geometry import visualize
+                visualize(np.array([point]), heatmap, vertices)
+        else:
+            point = centroid(vertices)
 
-        return [int(x), int(y)]
+        return [int(point[0]), int(point[1])]
 
     async def submit(self):
         """Submits a form."""
@@ -472,9 +476,7 @@ class WebElement(RemoteObject):
         keys = ['content', 'padding', 'border', 'margin']
         for key in keys:
             quad = model[key]
-            model[key] = Polygon(
-                np.array([[quad[0], quad[1]], [quad[2], quad[3]], [quad[4], quad[5]], [quad[6], quad[7]]]), closed=True,
-                edgecolor='blue', fill=False)
+            model[key] = np.array([[quad[0], quad[1]], [quad[2], quad[3]], [quad[4], quad[5]], [quad[6], quad[7]]])
         return model
 
     @property
