@@ -188,7 +188,6 @@ class Chrome(BaseWebDriver):
         :Args:
          - capabilities - a capabilities dict to start the session with.
         """
-        breakpoint()
         await self.start_client()
         if not capabilities:
             capabilities = self._capabilities
@@ -228,7 +227,6 @@ class Chrome(BaseWebDriver):
 
         host, port = self._options.debugger_address.split(":")
         port = int(port)
-        breakpoint()
         self._base = await CDPSocket(port=port, host=host, loop=self._loop)
         if not self._is_remote:
             # noinspection PyUnboundLocalVariable
