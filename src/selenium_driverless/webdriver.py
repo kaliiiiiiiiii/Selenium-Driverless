@@ -201,27 +201,37 @@ class Chrome(BaseWebDriver):
             self._options.add_argument(f"--remote-debugging-port={port}")
         options = capabilities["goog:chromeOptions"]
 
-        path = options["binary"]
-        args = options["args"]
-        cmds = [path, *args]
-        browser = subprocess.Popen(
-            cmds,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            close_fds=IS_POSIX,
-            shell=IS_POSIX
-        )
+        # noinspection PyProtectedMember
+        self._is_remote = self._options._is_remote
+
+        if not self._is_remote:
+            path = options["binary"]
+            args = options["args"]
+            cmds = [path, *args]
+            browser = subprocess.Popen(
+                cmds,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                close_fds=IS_POSIX,
+                shell=IS_POSIX
+            )
+
+            # noinspection PyUnboundLocalVariable
+            if port == 0:
+                path = self._options.user_data_dir + "/DevToolsActivePort"
+                while not os.path.isfile(path):
+                    await self.implicitly_wait(0.1)
+                port = int(read(path, sel_root=False).split("\n")[0])
+                self._options.debugger_address = f"127.0.0.1:{port}"
+
         host, port = self._options.debugger_address.split(":")
         port = int(port)
-        if port == 0:
-            path = self._options.user_data_dir + "/DevToolsActivePort"
-            while not os.path.isfile(path):
-                await self.implicitly_wait(0.1)
-            port = int(read(path, sel_root=False).split("\n")[0])
-            self._options.debugger_address = f"127.0.0.1:{port}"
+
         self._base = await CDPSocket(port=port, host=host, loop=self._loop)
-        self.browser_pid = browser.pid
+        if not self._is_remote:
+            # noinspection PyUnboundLocalVariable
+            self.browser_pid = browser.pid
         targets = await self._base.targets
         for target in targets:
             if target["type"] == "page":
@@ -451,28 +461,29 @@ class Chrome(BaseWebDriver):
 
                 driver.quit()
         """
-        import os
-        import shutil
-        # noinspection PyBroadException,PyUnusedLocal
-        try:
+        if not self._is_remote:
+            import os
+            import shutil
+            # noinspection PyBroadException,PyUnusedLocal
             try:
-                await self.base.close()
-                # wait for process to be killed
-                while True:
-                    try:
-                        os.kill(self.browser_pid, 15)
-                    except OSError:
-                        break
-                    await self.implicitly_wait(0.1)
+                try:
+                    await self.base.close()
+                    # wait for process to be killed
+                    while True:
+                        try:
+                            os.kill(self.browser_pid, 15)
+                        except OSError:
+                            break
+                        await self.implicitly_wait(0.1)
 
-                shutil.rmtree(self._options.user_data_dir, ignore_errors=True)
+                    shutil.rmtree(self._options.user_data_dir, ignore_errors=True)
+                finally:
+                    await self.stop_client()
+            except Exception as e:
+                # We don't care about the message because something probably has gone wrong
+                pass
             finally:
-                await self.stop_client()
-        except Exception as e:
-            # We don't care about the message because something probably has gone wrong
-            pass
-        finally:
-            pass  # self.service.stop()
+                pass  # self.service.stop()
 
     @property
     async def targets(self) -> dict:

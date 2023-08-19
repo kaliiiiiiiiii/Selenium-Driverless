@@ -1,6 +1,5 @@
 import numpy as np
 from matplotlib.patches import Polygon
-import matplotlib.pyplot as plt
 
 
 def gen_heatmap(polygon_vertices: np.array, num_points: int = 70):
@@ -82,6 +81,7 @@ def centroid(vertices):
 
 
 def visualize(rand_points: np.array, heatmap_grid: np.array, polygon_vertices: np.array):
+    import matplotlib.pyplot as plt
     x_min, y_min, x_max, y_max = get_bounds(polygon_vertices)
 
     fig, ax = plt.subplots(figsize=(8, 6))

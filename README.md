@@ -30,6 +30,9 @@ async def main():
     options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
         await driver.get('http://nowsecure.nl#relax')
+        await driver.implicitly_wait(0.5)
+        await driver.wait_for_cdp("Page.domContentEventFired", timeout=15)
+        
         title = await driver.title
         url = await driver.current_url
         source = await driver.page_source
@@ -48,11 +51,28 @@ from selenium_driverless.sync import webdriver
 options = webdriver.ChromeOptions()
 with webdriver.Chrome(options=options) as driver:
     driver.get('http://nowsecure.nl#relax')
+    driver.implicitly_wait(0.5)
+    driver.wait_for_cdp("Page.domContentEventFired", timeout=15)
 
     title = driver.title
     url = driver.current_url
     source = driver.page_source
     print(title)
+```
+
+#### custom debugger address
+starts chrome with specified address
+```python
+from selenium_driverless import webdriver
+
+options = webdriver.ChromeOptions()
+options.debugger_address = "127.0.0.1:2005"
+
+# specify if you don't want to run remote
+# options.add_argument("--remote-debugging-port=2005")
+
+async with webdriver.Chrome(options=options) as driver:
+  await driver.get('http://nowsecure.nl#relax', wait_load=True)
 ```
 
 #### use events
