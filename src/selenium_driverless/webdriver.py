@@ -219,7 +219,7 @@ class Chrome(BaseWebDriver):
             while not os.path.isfile(path):
                 await self.implicitly_wait(0.1)
             port = int(read(path, sel_root=False).split("\n")[0])
-            self._options.debugger_address = f"localhost:{port}"
+            self._options.debugger_address = f"127.0.0.1:{port}"
         self._base = await CDPSocket(port=port, host=host, loop=self._loop)
         self.browser_pid = browser.pid
         targets = await self._base.targets
