@@ -18,6 +18,7 @@ async def make_driver():
 async def nowsecure():
     global driver
     await driver.get("https://nowsecure.nl#relax")
+    await driver.wait_for_cdp("Page.domContentEventFired")
     await asyncio.sleep(0.5)
     elem = await driver.find_element(By.XPATH, "/html/body/div[2]/div/main/p[2]/a")
 
@@ -35,10 +36,10 @@ async def selenium_detector():
     await driver.get('https://hmaker.github.io/selenium-detector/')
     elem = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-token")
     sr = await elem.source
-    await elem.send_keys(await driver.execute_script('return window.token'))
+    await elem.write(await driver.execute_script('return window.token'))
     elem2 = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-asynctoken")
     async_token = await driver.execute_async_script('window.getAsyncToken().then(arguments[0])')
-    await elem2.send_keys(async_token)
+    await elem2.write(async_token)
     elem3 = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-test")
     await elem3.click()
     passed = await driver.find_element(By.XPATH, '//*[@id="chromedriver-test-container"]/span')

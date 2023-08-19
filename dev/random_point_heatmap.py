@@ -1,5 +1,4 @@
 import numpy as np
-
 import time
 from selenium_driverless.scripts.geometry import gen_heatmap, gen_rand_point, visualize
 

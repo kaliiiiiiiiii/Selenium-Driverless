@@ -66,8 +66,8 @@ def demo(points, n_paths=30):
     paths_list = []
 
     for _ in range(n_paths):
-        full_pixel_path = gen_combined_path(points, n_points_soft=4, smooth_soft=12, n_points_distort=100,
-                                            smooth_distort=0.5)
+        full_pixel_path = gen_combined_path(points, n_points_soft=5, smooth_soft=60, n_points_distort=100,
+                                            smooth_distort=0.7)
         paths_list.append(full_pixel_path)
 
     visualize_paths(paths_list, click_points)
@@ -79,8 +79,7 @@ click_points = [(100, 100),
                 (1000, 1000),
                 (200, 800)]
 
-# demo(click_points)
+demo(click_points)
 
-path = gen_combined_path(click_points, n_points_soft=4, smooth_soft=12, n_points_distort=100,
-                         smooth_distort=0.7)
+path = gen_combined_path(click_points, n_points_soft=5, smooth_soft=60, n_points_distort=100,smooth_distort=0.7)
 visualize_paths([path], click_points)
