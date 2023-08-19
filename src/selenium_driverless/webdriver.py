@@ -188,6 +188,7 @@ class Chrome(BaseWebDriver):
         :Args:
          - capabilities - a capabilities dict to start the session with.
         """
+        breakpoint()
         await self.start_client()
         if not capabilities:
             capabilities = self._capabilities
@@ -197,7 +198,7 @@ class Chrome(BaseWebDriver):
         if not self._options.debugger_address:
             from selenium_driverless.utils.utils import random_port
             port = random_port()
-            self._options._debugger_address = f"192.168.0.1:{port}"
+            self._options._debugger_address = f"127.0.0.1:{port}"
             self._options.add_argument(f"--remote-debugging-port={port}")
         options = capabilities["goog:chromeOptions"]
 
@@ -227,7 +228,7 @@ class Chrome(BaseWebDriver):
 
         host, port = self._options.debugger_address.split(":")
         port = int(port)
-
+        breakpoint()
         self._base = await CDPSocket(port=port, host=host, loop=self._loop)
         if not self._is_remote:
             # noinspection PyUnboundLocalVariable
