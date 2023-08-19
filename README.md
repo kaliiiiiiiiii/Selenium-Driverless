@@ -30,9 +30,9 @@ async def main():
     options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
         await driver.get('http://nowsecure.nl#relax')
-        # wait for redirected page
-        await driver.wait_for_cdp(event="Page.loadEventFired", timeout=5)
-
+        await driver.implicitly_wait(0.5)
+        await driver.wait_for_cdp("Page.domContentEventFired", timeout=15)
+        
         title = await driver.title
         url = await driver.current_url
         source = await driver.page_source
@@ -51,13 +51,27 @@ from selenium_driverless.sync import webdriver
 options = webdriver.ChromeOptions()
 with webdriver.Chrome(options=options) as driver:
     driver.get('http://nowsecure.nl#relax')
-    # wait for redirected page
-    driver.wait_for_cdp(event="Page.loadEventFired", timeout=5)
+    driver.implicitly_wait(0.5)
+    driver.wait_for_cdp("Page.domContentEventFired", timeout=15)
 
     title = driver.title
     url = driver.current_url
     source = driver.page_source
     print(title)
+```
+
+#### custom debugger address
+```python
+from selenium_driverless import webdriver
+
+options = webdriver.ChromeOptions()
+options.debugger_address = "127.0.0.1:2005"
+
+# specify if you don't want to run remote
+# options.add_argument("--remote-debugging-port=2005")
+
+async with webdriver.Chrome(options=options) as driver:
+  await driver.get('http://nowsecure.nl#relax', wait_load=True)
 ```
 
 #### use events
@@ -96,6 +110,18 @@ async def main():
 asyncio.run(main())
 ```
 
+### Pointer Interaction
+```python
+from selenium_driverless.input.pointer import
+
+await elem.scroll_to()
+x, y = await elem.mid_location()
+
+p = Pointer(driver=driver)
+await p.click(x=x, y=y)
+await p.doubble_click(x=x, y=y)
+```
+
 ## Help
 
 Please feel free to open an issue or fork!
@@ -108,12 +134,18 @@ note: please check the todo's below at first!
   - [ ] [`driver.switch_to.frame`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7) [workaround](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/9#issuecomment-1663436234)
   - [ ] [`ActionChains`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
       - [ ] [`TouchActions`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
+  - [x] `execute_script` and `execute_async_script`
+    - [ ] make serialization use `deep`
 - protocoll
   - [ ] add cdp event handler
 - [x] sync
   - [ ] move sync to threaded for allowing event_handlers
+  - [ ] support multithreading with sync version
 
 ## Deprecated
+
+
+
 
 ## Authors
 

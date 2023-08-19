@@ -52,6 +52,7 @@ class Options(metaclass=ABCMeta):
         self.add_argument("--no-first-run")
         if IS_POSIX:
             self.add_argument("--password-store=basic")
+        self._is_remote = True
 
     @property
     def capabilities(self):
@@ -293,7 +294,9 @@ class Options(metaclass=ABCMeta):
                 self.user_data_dir = user_data_dir
             elif argument[:24] == "--remote-debugging-port=":
                 port = int(argument[24:])
-                self.debugger_address = f"localhost:{port}"
+                if not self._debugger_address:
+                    self._debugger_address = f"127.0.0.1:{port}"
+                self._is_remote = False
             self._arguments.append(argument)
         else:
             raise ValueError("argument can not be null")

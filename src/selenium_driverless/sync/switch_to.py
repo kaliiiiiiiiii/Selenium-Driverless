@@ -9,7 +9,7 @@ class SwitchTo(AsyncSwitchTo):
         if not loop:
             loop = asyncio.new_event_loop()
         self._loop = loop
-        self._init()
+        self._loop.create_task(self._init())
 
     def __enter__(self):
         return self

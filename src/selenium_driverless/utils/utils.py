@@ -6,6 +6,7 @@ import typing
 import json
 import os
 import selenium
+from matplotlib.patches import Polygon
 
 import selenium_driverless
 import socket
