@@ -227,7 +227,7 @@ class Chrome(BaseWebDriver):
 
         host, port = self._options.debugger_address.split(":")
         port = int(port)
-        self._base = await CDPSocket(port=port, host=host, loop=self._loop, timeout=60)
+        self._base = await CDPSocket(port=port, host=host, loop=self._loop, timeout=30)
         if not self._is_remote:
             # noinspection PyUnboundLocalVariable
             self.browser_pid = browser.pid
