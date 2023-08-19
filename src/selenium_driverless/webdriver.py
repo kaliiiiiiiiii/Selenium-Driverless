@@ -217,7 +217,8 @@ class Chrome(BaseWebDriver):
                 shell=IS_POSIX
             )
 
-            # noinspection PyUnboundLocalVariable
+            host, port = self._options.debugger_address.split(":")
+            port = int(port)
             if port == 0:
                 path = self._options.user_data_dir + "/DevToolsActivePort"
                 while not os.path.isfile(path):
