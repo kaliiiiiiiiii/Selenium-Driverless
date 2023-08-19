@@ -134,3 +134,7 @@ class Pointer:
         await self.down(click_count=2, **kwargs)
         await asyncio.sleep(timeout)
         await self.up(click_count=2, **kwargs)
+
+    async def move_to(self, **kwargs):
+        event = PointerEvent(type_=EventType.MOVE, **kwargs)
+        await self.dispatch(event)
