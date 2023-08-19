@@ -3,70 +3,84 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import splprep, splev
 
 
-def gen_path(a, b, n_points: int = 10, smooth: float = 2, n_float: int = 2):
-    smooth = smooth/100
-    def normalize(coord, min_val, max_val):
-        return (coord - min_val) / (max_val - min_val)
+def generate_path(start, end, n: int = 10, smoothness: float = 2):
+    x_points = np.linspace(start[0], end[0], n)
+    y_points = np.linspace(start[1], end[1], n)
+    x_points += np.random.normal(0, smoothness, n)
+    y_points += np.random.normal(0, smoothness, n)
 
-    def denormalize(normalized_coord, min_val, max_val):
-        return normalized_coord * (max_val - min_val) + min_val
+    x_points[0] = start[0]
+    y_points[0] = start[1]
+    x_points[-1] = end[0]
+    y_points[-1] = end[1]
 
-    min_x, min_y = min(a[0], b[0]), min(a[1], b[1])
-    max_x, max_y = max(a[0], b[0]), max(a[1], b[1])
-
-    normalized_a = (normalize(a[0], min_x, max_x), normalize(a[1], min_y, max_y))
-    normalized_b = (normalize(b[0], min_x, max_x), normalize(b[1], min_y, max_y))
-
-    n_float_resolution = 10 ** n_float
-    t_values = np.linspace(0, 1, n_float_resolution)
-
-    x = np.linspace(normalized_a[0], normalized_b[0], n_points)
-    y = np.linspace(normalized_a[1], normalized_b[1], n_points)
-    x += np.random.normal(0, smooth, n_points)
-    y += np.random.normal(0, smooth, n_points)
-
-    x[0] = normalized_a[0]
-    y[0] = normalized_a[1]
-    x[-1] = normalized_b[0]
-    y[-1] = normalized_b[1]
-
-    tck, u = splprep([x, y], s=0)
+    # noinspection PyTupleAssignmentBalance
+    tck, _ = splprep([x_points, y_points], s=0)
+    t_values = np.linspace(0, 1, int(np.linalg.norm(np.array(end) - np.array(start)) * 10))
     new_points = np.column_stack(splev(t_values, tck))
 
-    denormalized_points = [(denormalize(x, min_x, max_x), denormalize(y, min_y, max_y)) for x, y in new_points]
-
-    return denormalized_points
+    return new_points
 
 
-def gen_paths(coordinates, n_points: int = 10, smooth: float = 0.2, n_float: int = 2):
-    path = []
-    min_x, min_y = min(coord[0] for coord in coordinates), min(coord[1] for coord in coordinates)
-    max_x, max_y = max(coord[0] for coord in coordinates), max(coord[1] for coord in coordinates)
+def gen_combined_path(coordinates, n_points_soft: int = 10, smooth_soft: float = 2, n_points_distort: int = 100,
+                      smooth_distort: float = 1):
+    combined_path = []
 
     for i in range(len(coordinates) - 1):
-        a = (coordinates[i][0], coordinates[i][1])
-        b = (coordinates[i + 1][0], coordinates[i + 1][1])
-        segment_points = gen_path(a, b, n_points, smooth, n_float)
-        path.extend(segment_points)
+        start = (coordinates[i][0], coordinates[i][1])
+        end = (coordinates[i + 1][0], coordinates[i + 1][1])
 
-    return path
+        # Generate human-like segment
+        segment_soft = generate_path(start, end, n_points_soft, smooth_soft)
+
+        # Generate distorted segment
+        segment_distort = generate_path(start, end, n_points_distort, smooth_distort)
+
+        # Combine the segments with frequency-based interpolation
+        combined_segment = []
+        for t in np.linspace(0, 1, len(segment_soft)):
+            interp_x = int((1 - t) * segment_distort[int(t * (len(segment_distort) - 1)), 0] + t * segment_soft[
+                int(t * (len(segment_soft) - 1)), 0])
+            interp_y = int((1 - t) * segment_distort[int(t * (len(segment_distort) - 1)), 1] + t * segment_soft[
+                int(t * (len(segment_soft) - 1)), 1])
+            if not combined_segment or (interp_x, interp_y) != combined_segment[-1]:
+                combined_segment.append((interp_x, interp_y))
+
+        combined_path.extend(combined_segment)
+
+    return combined_path
 
 
-def visualise(path_points: np.array, points: np.array):
-    x_line_path, y_line_path = zip(*path_points)
-
+def visualize_paths(paths_list, points, trancparency=0.5):
     plt.figure(figsize=(8, 6))
-    plt.plot(x_line_path, y_line_path, linewidth=5)
+
+    for path_points in paths_list:
+        x_path, y_path = zip(*path_points)
+        plt.plot(x_path, y_path, color='blue', linewidth=1, alpha=trancparency)  # Set color and alpha for transparency
+
     plt.plot(*zip(*points), 'go')
-    plt.title('Human-like path')
-    plt.grid(True)
     plt.show(block=True)
+
+
+def demo(points, n_paths=30):
+    paths_list = []
+
+    for _ in range(n_paths):
+        full_pixel_path = gen_combined_path(points, n_points_soft=4, smooth_soft=12, n_points_distort=100,
+                                            smooth_distort=0.5)
+        paths_list.append(full_pixel_path)
+
+    visualize_paths(paths_list, click_points)
 
 
 click_points = [(100, 100),
                 (300, 500),
                 (700, 300),
-                (1000, 1000)]
+                (1000, 1000),
+                (200, 800)]
 
-path = gen_paths(click_points, n_points=4, smooth=2, n_float=1)
-visualise(path, click_points)
+# demo(click_points)
+
+path = gen_combined_path(click_points, n_points_soft=4, smooth_soft=12, n_points_distort=100,
+                         smooth_distort=0.7)
+visualize_paths([path], click_points)
