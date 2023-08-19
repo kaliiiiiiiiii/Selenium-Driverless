@@ -96,11 +96,9 @@ asyncio.run(main())
 from selenium_driverless.input.pointer import
 
 await elem.scroll_to()
-rect = await elem.rect
+x, y = await elem.mid_location()
 
 p = Pointer(driver=driver)
-x = rect["x"]
-y = rect["y"]
 await p.click(x=x, y=y)
 await p.doubble_click(x=x, y=y)
 ```
