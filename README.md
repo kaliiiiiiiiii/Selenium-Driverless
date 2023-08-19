@@ -61,7 +61,6 @@ with webdriver.Chrome(options=options) as driver:
 ```
 
 #### custom debugger address
-starts chrome with specified address
 ```python
 from selenium_driverless import webdriver
 
