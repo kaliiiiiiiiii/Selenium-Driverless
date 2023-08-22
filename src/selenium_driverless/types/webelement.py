@@ -168,7 +168,7 @@ class WebElement(RemoteObject):
                 elems.append(elem)
             return elems
         elif by == By.XPATH:
-            scipt = """return this.evaluate(
+            scipt = """return document.evaluate(
                           arguments[0],
                           this,
                           null,
