@@ -1,80 +1,25 @@
+// canvas to draw the points on
 const canvas = document.createElement("canvas");
 canvas.style.position = "fixed";
 canvas.style.top = "0";
 canvas.style.left = "0";
-canvas.style.zIndex = "999";
+canvas.style.zIndex = "1"; // Set a lower z-index for the canvas
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 document.body.appendChild(canvas);
 
-// Get the 2D drawing context
-const ctx = canvas.getContext("2d");
-
-// Event listener for mousemove
-let lastEventTime = 0;
-let timeSinceClear = 0; // Track time since last clear
-let timeDeltaData = [];
-
-function plot_point(x, y, color="red", radius="2"){
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-document.addEventListener("mousemove", event => {
-  const currentTime = Date.now();
-  const delta = currentTime - lastEventTime;
-
-  const x = event.x;
-  const y = event.y
-
-  if (delta <= 100) { // Ignore time-deltas larger than 0.1 seconds
-    if (lastEventTime !== 0) {
-      timeSinceClear += delta;
-
-      // Add the new time-delta to the data array
-      timeDeltaData.push(delta);
-
-      const averageDelta = timeDeltaData.length === 0 ? 0 : timeDeltaData.reduce((sum, value) => sum + value) / timeDeltaData.length;
-      const frequency = averageDelta === 0 ? 0 : 1000 / averageDelta; // Calculate frequency in Hz
-
-      tab.textContent = `Average Frequency: ${frequency.toFixed(2)} Hz, count:${timeDeltaData.length}, x:${x}, y:${y}`;
-
-      // Draw the time-delta graph
-      drawTimeDeltaGraph();
-    }
-  }
-
-  lastEventTime = currentTime;
-
-  plot_point(x, y)
-});
-
-document.addEventListener("click",(e) => {
-  plot_point(e.x, e.y, "green",5)
-})
-
-function clear(){
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  lastEventTime = 0;
-  timeSinceClear = 0;
-  timeDeltaData = [];
-  tab.textContent = "Average Frequency: 0.00 Hz, count:0, x:0, y:0";
-}
-
-// Create a button to clear the points and reset time-delta
+// clear button
 const clearButton = document.createElement("button");
 clearButton.textContent = "Clear";
 clearButton.style.position = "fixed";
 clearButton.style.top = "10px";
 clearButton.style.left = "10px";
 clearButton.id = "clear"; // Add the "clear" ID to the button
-clearButton.style.zIndex = "1000"; // Set lower z-index for the button
-clearButton.addEventListener("click", clear);
+clearButton.style.zIndex = "3"; // Set a higher z-index for the button
+clearButton.style.opacity = "0.7";
 document.body.appendChild(clearButton);
 
-// Create the tab-like element for displaying average frequency
+// information button
 const tab = document.createElement("div");
 tab.style.position = "fixed";
 tab.style.top = "10px"; // Adjust the position to avoid overdrawn elements
@@ -85,18 +30,54 @@ tab.style.cursor = "pointer";
 tab.style.fontFamily = "Arial, sans-serif";
 tab.style.fontSize = "14px";
 tab.style.fontWeight = "bold";
+tab.style.zIndex = 3
 tab.textContent = "Average Frequency: 0.00 Hz, count:0, x:0, y:0";
 document.body.appendChild(tab);
 
-// Create the graph canvas
+// graph canvas
 const graphCanvas = document.createElement("canvas");
 graphCanvas.width = window.innerWidth;
 graphCanvas.height = 200; // Set an initial height
 graphCanvas.style.position = "fixed";
 graphCanvas.style.bottom = "0";
 graphCanvas.style.left = "0";
-graphCanvas.style.zIndex = "998"; // Set lower z-index than other elements
+graphCanvas.style.zIndex = "3"; // Set lower z-index than other elements
 document.body.appendChild(graphCanvas);
+
+// Get the 2D drawing context
+const ctx = canvas.getContext("2d");
+
+// Event listener for mousemove
+let lastEventTime = 0;
+let timeSinceClear = 0; // Track time since last clear
+let timeDeltaData = [];
+
+
+
+
+function plot_point(x, y, color="red", radius="2"){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+};
+
+function clear(){
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  lastEventTime = 0;
+  timeSinceClear = 0;
+  timeDeltaData = [];
+  tab.textContent = "Average Frequency: 0.00 Hz, count:0, x:0, y:0";
+};
+
+// Update canvas dimensions on window resize
+function updateCanvasDimensions() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  graphCanvas.width = window.innerWidth; // Update graph canvas width
+  drawTimeDeltaGraph();
+}
+
 
 // Function to draw the time-delta graph
 function drawTimeDeltaGraph() {
@@ -159,12 +140,42 @@ function drawTimeDeltaGraph() {
   graphCtx.fillText(`${maxTimeDelta.toFixed(2)} ms`, 2, 10);
 }
 
-// Update canvas dimensions on window resize
-function updateCanvasDimensions() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  graphCanvas.width = window.innerWidth; // Update graph canvas width
-  drawTimeDeltaGraph();
+function move_handler(event){
+  const currentTime = Date.now();
+  const delta = currentTime - lastEventTime;
+
+  const x = event.x;
+  const y = event.y;
+
+  if (delta <= 100) { // Ignore time-deltas larger than 0.1 seconds
+    if (lastEventTime !== 0) {
+      timeSinceClear += delta;
+
+      // Add the new time-delta to the data array
+      timeDeltaData.push(delta);
+
+      const averageDelta = timeDeltaData.length === 0 ? 0 : timeDeltaData.reduce((sum, value) => sum + value) / timeDeltaData.length;
+      const frequency = averageDelta === 0 ? 0 : 1000 / averageDelta; // Calculate frequency in Hz
+
+      tab.textContent = `Average Frequency: ${frequency.toFixed(2)} Hz, count:${timeDeltaData.length}, x:${x}, y:${y}`;
+
+      // Draw the time-delta graph
+      drawTimeDeltaGraph();
+    }
+  }
+
+  lastEventTime = currentTime;
+  plot_point(x, y);
 }
+
+function click_handler(e){
+  plot_point(e.x, e.y, "green", 5);
+};
+
+
+
+document.addEventListener("mousemove", move_handler);
+document.addEventListener("click",click_handler);
 window.addEventListener("resize", updateCanvasDimensions);
+clearButton.addEventListener("click", clear);
 updateCanvasDimensions(); // Initialize canvas dimensions
