@@ -268,6 +268,8 @@ class Chrome(BaseWebDriver):
     async def get(self, url: str, referrer: str = None, wait_load: bool = True,
                   disconnect_connect: bool = None) -> None:
         """Loads a web page in the current browser session."""
+        if url == "about:blank":
+            wait_load = False
         loop = self._loop
         if not loop:
             loop = asyncio.get_running_loop()
@@ -441,7 +443,7 @@ class Chrome(BaseWebDriver):
         """
         return await self.execute_script("return document.documentElement.outerHTML")
 
-    async def close(self) -> None:
+    async def close(self, timeout:float=2) -> None:
         """Closes the current window.
 
         :Usage:
@@ -449,8 +451,11 @@ class Chrome(BaseWebDriver):
 
                 driver.close()
         """
+        from warnings import simplefilter
+        simplefilter("ignore", UserWarning)
         window_handles = await self.window_handles
-        await self.execute_cdp_cmd("Page.close")
+        simplefilter("always", UserWarning)
+        await self.execute_cdp_cmd("Page.close", timeout=timeout)
         await self.switch_to.window(window_handles[0])
 
     async def quit(self) -> None:
@@ -467,7 +472,7 @@ class Chrome(BaseWebDriver):
             # noinspection PyBroadException,PyUnusedLocal
             try:
                 try:
-                    await self.base.close()
+                    await self.close()
                     # wait for process to be killed
                     while True:
                         try:
@@ -1270,7 +1275,7 @@ class Chrome(BaseWebDriver):
         socket = await self.current_socket
         return socket.method_iterator(method=event)
 
-    async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None, disconnect_connect=None) -> dict:
+    async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None, disconnect_connect=None, timeout:float or None=10) -> dict:
         """Execute Chrome Devtools Protocol command and get returned result The
         command and command args should follow chrome devtools protocol
         domains/commands, refer to link
@@ -1292,7 +1297,7 @@ class Chrome(BaseWebDriver):
             disconnect_connect = self._disconnect_connect
 
         socket: SingleCDPSocket = await self.current_socket
-        result = await socket.exec(method=cmd, params=cmd_args, timeout=self._script_timeout)
+        result = await socket.exec(method=cmd, params=cmd_args, timeout=timeout)
         if cmd == "Page.enable":
             self._page_enabled = True
         elif cmd == "Page.disable":

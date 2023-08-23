@@ -262,7 +262,8 @@ class WebElement(RemoteObject):
                 x, y = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
 
                 res = await self._driver.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
-                                                                                    "includeUserAgentShadowDOM": True})
+                                                                                    "includeUserAgentShadowDOM": True,
+                                                                                    "ignorePointerEventsNone": False})
                 node_id_at = res["nodeId"]
                 res = await self._driver.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
                 obj_id_at = res["object"]["objectId"]
@@ -471,7 +472,8 @@ class WebElement(RemoteObject):
 
     @property
     async def box_model(self):
-        res = await self._driver.execute_cdp_cmd("DOM.getBoxModel", {"nodeId": await self.node_id})
+        node_id = await self.node_id
+        res = await self._driver.execute_cdp_cmd("DOM.getBoxModel", {"nodeId": node_id})
         model = res['model']
         keys = ['content', 'padding', 'border', 'margin']
         for key in keys:

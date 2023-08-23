@@ -1,9 +1,24 @@
+function highest_z_idx() {
+  const allElements = document.querySelectorAll("*");
+  let highestZIndex = 0;
+
+  allElements.forEach((element) => {
+    const zIndex = parseInt(getComputedStyle(element).zIndex, 10);
+    if (zIndex && zIndex > highestZIndex) {
+      highestZIndex = zIndex;
+    }
+  });
+  return highestZIndex
+}
+
+z_idx = highest_z_idx()
+
 // canvas to draw the points on
 const canvas = document.createElement("canvas");
 canvas.style.position = "fixed";
 canvas.style.top = "0";
 canvas.style.left = "0";
-canvas.style.zIndex = "1"; // Set a lower z-index for the canvas
+canvas.style.zIndex = String(z_idx+1); // Set a lower z-index for the canvas
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 canvas.style.pointerEvents = "none"
@@ -15,7 +30,7 @@ clearButton.style.position = "fixed";
 clearButton.style.top = "10px";
 clearButton.style.left = "10px";
 clearButton.id = "clear"; // Add the "clear" ID to the button
-clearButton.style.zIndex = "2"; // Set a higher z-index for the button
+clearButton.style.zIndex = String(z_idx+2); // Set a higher z-index for the button
 clearButton.style.opacity = "0.7";
 
 // information element
@@ -29,7 +44,7 @@ tab.style.pointerEvents = "none"
 tab.style.fontFamily = "Arial, sans-serif";
 tab.style.fontSize = "14px";
 tab.style.fontWeight = "bold";
-tab.style.zIndex = "3";
+tab.style.zIndex = String(z_idx+3);
 tab.style.opacity = "0.8"; // Set opacity to make it slightly transparent
 tab.textContent = "Average Frequency: 0.00 Hz, count:0, x:0, y:0";
 
@@ -40,7 +55,7 @@ graphCanvas.height = 200; // Set an initial height
 graphCanvas.style.position = "fixed";
 graphCanvas.style.bottom = "0";
 graphCanvas.style.left = "0";
-graphCanvas.style.zIndex = "4"; // Set lower z-index than other elements
+graphCanvas.style.zIndex = String(z_idx+4); // Set lower z-index than other elements
 graphCanvas.style.pointerEvents = "None"
 
 // Get the 2D drawing context
@@ -85,6 +100,13 @@ function drawTimeDeltaGraph() {
   // Clear the graph canvas
   graphCtx.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
 
+  // slightly transparent background
+  graphCtx.globalAlpha = 0.3; // Adjust the transparency as needed
+  graphCtx.fillStyle = "white";
+  graphCtx.fillRect(0, 0, graphCanvas.width, graphCanvas.height);
+  graphCtx.globalAlpha = 1; // Reset the global alpha to its default value
+  graphCtx.fillStyle = "black"
+
   // Restart the graph if it runs out of space
   if (timeDeltaData.length > graphCanvas.width) {
     timeDeltaData.splice(0, timeDeltaData.length - graphCanvas.width);
@@ -95,7 +117,7 @@ function drawTimeDeltaGraph() {
 
   // Draw the grid
   const gridSpacing = 20; // Adjust this value as needed
-  graphCtx.strokeStyle = "lightgreen";
+  graphCtx.strokeStyle = "black";
   graphCtx.beginPath();
   for (let y = 0; y <= graphCanvas.height; y += gridSpacing) {
     graphCtx.moveTo(0, y);
@@ -109,20 +131,20 @@ function drawTimeDeltaGraph() {
 
   // Draw the graph lines
   graphCtx.beginPath();
-  graphCtx.strokeStyle = "lightgreen";
+  graphCtx.strokeStyle = "black";
   graphCtx.moveTo(0, 0);
   graphCtx.lineTo(graphCanvas.width, 0);
   graphCtx.stroke();
 
   graphCtx.beginPath();
-  graphCtx.strokeStyle = "lightgreen";
+  graphCtx.strokeStyle = "black";
   graphCtx.moveTo(0, graphCanvas.height);
   graphCtx.lineTo(graphCanvas.width, graphCanvas.height);
   graphCtx.stroke();
 
   // Draw the time-delta data
   graphCtx.beginPath();
-  graphCtx.strokeStyle = "red";
+  graphCtx.strokeStyle = "green";
   graphCtx.moveTo(0, graphCanvas.height - timeDeltaData[0] * scaleFactor);
 
   for (let i = 1; i < timeDeltaData.length; i++) {
@@ -132,7 +154,7 @@ function drawTimeDeltaGraph() {
   graphCtx.stroke();
 
   // Draw x and y labels
-  graphCtx.fillStyle = "green";
+  graphCtx.fillStyle = "black";
   graphCtx.font = "12px Arial";
   graphCtx.fillText("0 ms", 2, graphCanvas.height - 2);
   graphCtx.fillText(`${timeDeltaData.length - 1} ms`, graphCanvas.width - 30, graphCanvas.height - 2);
