@@ -6,7 +6,7 @@ canvas.style.left = "0";
 canvas.style.zIndex = "1"; // Set a lower z-index for the canvas
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
-document.body.appendChild(canvas);
+canvas.style.pointerEvents = "none"
 
 // clear button
 const clearButton = document.createElement("button");
@@ -15,24 +15,23 @@ clearButton.style.position = "fixed";
 clearButton.style.top = "10px";
 clearButton.style.left = "10px";
 clearButton.id = "clear"; // Add the "clear" ID to the button
-clearButton.style.zIndex = "3"; // Set a higher z-index for the button
+clearButton.style.zIndex = "2"; // Set a higher z-index for the button
 clearButton.style.opacity = "0.7";
-document.body.appendChild(clearButton);
 
-// information button
+// information element
 const tab = document.createElement("div");
 tab.style.position = "fixed";
-tab.style.top = "10px"; // Adjust the position to avoid overdrawn elements
+tab.style.top = "10px";
 tab.style.right = "10px";
 tab.style.padding = "5px 10px";
 tab.style.borderRadius = "5px";
-tab.style.cursor = "pointer";
+tab.style.pointerEvents = "none"
 tab.style.fontFamily = "Arial, sans-serif";
 tab.style.fontSize = "14px";
 tab.style.fontWeight = "bold";
-tab.style.zIndex = 3
+tab.style.zIndex = "3";
+tab.style.opacity = "0.8"; // Set opacity to make it slightly transparent
 tab.textContent = "Average Frequency: 0.00 Hz, count:0, x:0, y:0";
-document.body.appendChild(tab);
 
 // graph canvas
 const graphCanvas = document.createElement("canvas");
@@ -41,8 +40,8 @@ graphCanvas.height = 200; // Set an initial height
 graphCanvas.style.position = "fixed";
 graphCanvas.style.bottom = "0";
 graphCanvas.style.left = "0";
-graphCanvas.style.zIndex = "3"; // Set lower z-index than other elements
-document.body.appendChild(graphCanvas);
+graphCanvas.style.zIndex = "4"; // Set lower z-index than other elements
+graphCanvas.style.pointerEvents = "None"
 
 // Get the 2D drawing context
 const ctx = canvas.getContext("2d");
@@ -53,14 +52,14 @@ let timeSinceClear = 0; // Track time since last clear
 let timeDeltaData = [];
 
 
-
-
-function plot_point(x, y, color="red", radius="2"){
+function plot_point(x, y, color = "red", radius = "2", opacity = 0.5) {
   ctx.fillStyle = color;
+  ctx.globalAlpha = opacity; // Set the global alpha for transparency
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, Math.PI * 2);
   ctx.fill();
-};
+  ctx.globalAlpha = 1; // Reset the global alpha to its default value
+}
 
 function clear(){
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -96,7 +95,7 @@ function drawTimeDeltaGraph() {
 
   // Draw the grid
   const gridSpacing = 20; // Adjust this value as needed
-  graphCtx.strokeStyle = "lightgray";
+  graphCtx.strokeStyle = "lightgreen";
   graphCtx.beginPath();
   for (let y = 0; y <= graphCanvas.height; y += gridSpacing) {
     graphCtx.moveTo(0, y);
@@ -110,20 +109,20 @@ function drawTimeDeltaGraph() {
 
   // Draw the graph lines
   graphCtx.beginPath();
-  graphCtx.strokeStyle = "gray";
+  graphCtx.strokeStyle = "lightgreen";
   graphCtx.moveTo(0, 0);
   graphCtx.lineTo(graphCanvas.width, 0);
   graphCtx.stroke();
 
   graphCtx.beginPath();
-  graphCtx.strokeStyle = "gray";
+  graphCtx.strokeStyle = "lightgreen";
   graphCtx.moveTo(0, graphCanvas.height);
   graphCtx.lineTo(graphCanvas.width, graphCanvas.height);
   graphCtx.stroke();
 
   // Draw the time-delta data
   graphCtx.beginPath();
-  graphCtx.strokeStyle = "blue";
+  graphCtx.strokeStyle = "red";
   graphCtx.moveTo(0, graphCanvas.height - timeDeltaData[0] * scaleFactor);
 
   for (let i = 1; i < timeDeltaData.length; i++) {
@@ -133,7 +132,7 @@ function drawTimeDeltaGraph() {
   graphCtx.stroke();
 
   // Draw x and y labels
-  graphCtx.fillStyle = "black";
+  graphCtx.fillStyle = "green";
   graphCtx.font = "12px Arial";
   graphCtx.fillText("0 ms", 2, graphCanvas.height - 2);
   graphCtx.fillText(`${timeDeltaData.length - 1} ms`, graphCanvas.width - 30, graphCanvas.height - 2);
@@ -173,9 +172,15 @@ function click_handler(e){
 };
 
 
-
+document.body.appendChild(canvas);
+document.body.appendChild(graphCanvas);
 document.addEventListener("mousemove", move_handler);
 document.addEventListener("click",click_handler);
+
+document.body.appendChild(tab);
 window.addEventListener("resize", updateCanvasDimensions);
+
+document.body.appendChild(clearButton);
 clearButton.addEventListener("click", clear);
+
 updateCanvasDimensions(); // Initialize canvas dimensions

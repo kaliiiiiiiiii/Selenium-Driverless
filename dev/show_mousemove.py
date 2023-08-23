@@ -10,13 +10,14 @@ import time
 async def main():
     options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
-        await driver.get("about:blank", wait_load=False)
+        await driver.get("chrome://flags/", wait_load=False)
         p = Pointer(driver=driver)
         await driver.execute_script(script=read(os.getcwd() + "/show_mousemove.js", sel_root=False))
+        clear = await driver.find_element(By.ID, "clear")
 
         while True:
             i = -1
-            for y in range(50, 601, 1):
+            for y in range(50, 501, 1):
                 await p.move_to(x=100, y=y)
                 if i == -1:
                     start = time.monotonic() + 0.017  # aproximately,
@@ -24,8 +25,9 @@ async def main():
             stop = time.monotonic()
             d_time = stop - start
             events_per_sec = i / d_time
-            clear = await driver.find_element(By.ID, "clear")
-            #await clear.click(scroll_to=False)
+            print(events_per_sec)
+
+            await clear.click(scroll_to=False)
 
 
 asyncio.run(main())
