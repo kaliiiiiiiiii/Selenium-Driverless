@@ -29,12 +29,12 @@ document.addEventListener("mousemove", event => {
       const averageDelta = timeDeltaData.length === 0 ? 0 : timeDeltaData.reduce((sum, value) => sum + value) / timeDeltaData.length;
       const frequency = averageDelta === 0 ? 0 : 1000 / averageDelta; // Calculate frequency in Hz
 
-      tab.textContent = `Average Frequency: ${frequency.toFixed(2)} Hz`;
+      tab.textContent = `Average Frequency: ${frequency.toFixed(2)} Hz, count:${timeDeltaData.length}`;
 
       // Draw the time-delta graph
       drawTimeDeltaGraph();
     } else {
-      tab.textContent = "Average Frequency: 0.00 Hz"; // Set initial content
+      tab.textContent = "Average Frequency: 0.00 Hz, count:0"; // Set initial content
     }
   }
 
@@ -63,7 +63,7 @@ clearButton.addEventListener("click", () => {
   lastEventTime = 0;
   timeSinceClear = 0;
   timeDeltaData.length = 0; // Clear the time-delta data
-  tab.textContent = "Average Frequency: 0.00 Hz";
+  tab.textContent = "Average Frequency: 0.00 Hz, count:0";
   drawTimeDeltaGraph();
 });
 document.body.appendChild(clearButton);
@@ -80,7 +80,7 @@ tab.style.cursor = "pointer";
 tab.style.fontFamily = "Arial, sans-serif";
 tab.style.fontSize = "14px";
 tab.style.fontWeight = "bold";
-tab.textContent = "Average Frequency: 0.00 Hz";
+tab.textContent = "Average Frequency: 0.00 Hz, count:0";
 document.body.appendChild(tab);
 
 // Create the graph canvas
