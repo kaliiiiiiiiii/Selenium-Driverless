@@ -252,9 +252,10 @@ class WebElement(RemoteObject):
     async def focus(self):
         return await self._driver.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
 
-    async def click(self, timeout: float = 0.25, bias: float = 5, resolution: int = 50, debug: bool = False) -> None:
+    async def click(self, timeout: float = 0.25, bias: float = 5, resolution: int = 50, debug: bool = False, scroll_to=True) -> None:
         """Clicks the element."""
-        await self.scroll_to()
+        if scroll_to:
+            await self.scroll_to()
 
         while True:
             try:
