@@ -15,8 +15,9 @@ Note: this is not yet implemented
 ![img.png](assets/mousemove_events_gen.png)
 ![img.png](assets/mouse_path_gen.png)
 
-#### test based on generated path
+#### test in Browser based on generated path
 ![img.png](assets/mousemove_events_test_sample_based.png)
+![img.png](assets/mousemove_events_test_samples_based.png)
 
 #### real example
 - with [mouse event testing](https://www.vsynctester.com/testing/mouse.html)
