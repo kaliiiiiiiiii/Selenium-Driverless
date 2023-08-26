@@ -1,7 +1,9 @@
 import numpy as np
 from matplotlib.patches import Polygon
+from scipy.interpolate import splprep, splev
 
 
+# Element middle
 def gen_heatmap(polygon_vertices: np.array, num_points: int = 70):
     polygon = Polygon(polygon_vertices, closed=True, edgecolor='black', facecolor='none')
 
@@ -95,3 +97,73 @@ def visualize(rand_points: np.array, heatmap_grid: np.array, polygon_vertices: n
 
     plt.tight_layout()
     plt.show(block=True)
+
+
+# Mouse Path
+def pos_at_time(path, total_time, time, accel, mid_time=0.5):
+    def cubic_ease_in(t):
+        return t ** accel
+
+    def cubic_ease_out(t):
+        return 1.0 - (1.0 - t) ** accel
+
+    t_values = np.linspace(0, 1, len(path))
+    normalized_time = time / total_time  # Normalize the input time to the range [0, 1]
+
+    # Apply cubic easing for acceleration and deceleration
+    if normalized_time < mid_time:
+        normalized_time = cubic_ease_in(normalized_time * 2) / 2
+    else:
+        normalized_time = cubic_ease_out((normalized_time - 0.5) * 2) / 2 + 0.5
+
+    # Find the index of the closest time value in the path
+    idx = np.argmin(np.abs(t_values - normalized_time))
+
+    return path[idx]
+
+def generate_path(start, end, n: int = 10, smoothness: float = 2):
+    x_points = np.linspace(start[0], end[0], n)
+    y_points = np.linspace(start[1], end[1], n)
+    x_points += np.random.normal(0, smoothness, n)
+    y_points += np.random.normal(0, smoothness, n)
+
+    x_points[0] = start[0]
+    y_points[0] = start[1]
+    x_points[-1] = end[0]
+    y_points[-1] = end[1]
+
+    # noinspection PyTupleAssignmentBalance
+    tck, _ = splprep([x_points, y_points], s=0)
+    t_values = np.linspace(0, 1, int(np.linalg.norm(np.array(end) - np.array(start)) * 10))
+    new_points = np.column_stack(splev(t_values, tck))
+
+    return new_points
+
+
+def gen_combined_path(coordinates, n_points_soft: int = 5, smooth_soft: float = 10, n_points_distort: int = 100,
+                      smooth_distort: float = 0.4):
+    combined_path = []
+
+    for i in range(len(coordinates) - 1):
+        start = (coordinates[i][0], coordinates[i][1])
+        end = (coordinates[i + 1][0], coordinates[i + 1][1])
+
+        # Generate human-like segment
+        segment_soft = generate_path(start, end, n_points_soft, smooth_soft)
+
+        # Generate distorted segment
+        segment_distort = generate_path(start, end, n_points_distort, smooth_distort)
+
+        # Combine the segments with frequency-based interpolation
+        combined_segment = []
+        for t in np.linspace(0, 1, len(segment_soft)):
+            interp_x = int((1 - t) * segment_distort[int(t * (len(segment_distort) - 1)), 0] + t * segment_soft[
+                int(t * (len(segment_soft) - 1)), 0])
+            interp_y = int((1 - t) * segment_distort[int(t * (len(segment_distort) - 1)), 1] + t * segment_soft[
+                int(t * (len(segment_soft) - 1)), 1])
+            if not combined_segment or (interp_x, interp_y) != combined_segment[-1]:
+                combined_segment.append((interp_x, interp_y))
+
+        combined_path.extend(combined_segment)
+
+    return combined_path
