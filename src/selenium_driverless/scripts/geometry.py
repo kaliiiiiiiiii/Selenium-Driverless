@@ -99,6 +99,26 @@ def visualize(rand_points: np.array, heatmap_grid: np.array, polygon_vertices: n
     plt.show(block=True)
 
 
+import random
+
+
+def bias_0_dot_5(strength: float, max_offset: float):
+    # Calculate alpha and beta parameters for the beta distribution
+    alpha = 2 * strength
+    beta = 2 * (1 - strength)
+
+    # Calculate the valid range for the random value based on max_offset
+    lower_bound = max(0.5 - max_offset, 0)
+    upper_bound = min(0.5 + max_offset, 1)
+
+    # Generate a random value from the beta distribution
+    rand_value = random.betavariate(alpha, beta)
+
+    # Adjust the random value to the valid range
+    biased_value = lower_bound + (rand_value * (upper_bound - lower_bound))
+
+    return biased_value
+
 # Mouse Path
 def pos_at_time(path, total_time, time, accel, mid_time=0.5):
     def cubic_ease_in(t):

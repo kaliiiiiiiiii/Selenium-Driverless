@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from selenium_driverless.scripts.geometry import gen_combined_path, pos_at_time
+from selenium_driverless.scripts.geometry import gen_combined_path, pos_at_time, bias_0_dot_5
 
 
 def visualize_paths(paths_list, points, trancparency=0.5):
@@ -41,9 +41,9 @@ def visualize_events(path, points, total_time, freq=60, accel=3, mid_time=0.5):
 
         plt.plot(coordinates[0], coordinates[1], 'ro', markersize=3)
 
-    plt.title("Mousemove Events")
-    plt.xlim(min(x_path), max(x_path))
-    plt.ylim(min(y_path), max(y_path))
+    plt.title(f"Mousemove Events at {freq} Hz and {total_time} s total time")
+    plt.xlim(min(x_path) - 20, max(x_path) + 20)
+    plt.ylim(min(y_path) - 20, max(y_path) + 20)
     plt.legend()
     plt.show(block=True)
 
@@ -52,8 +52,10 @@ click_points = [(10, 100),
                 (150, 300),
                 (200, 800)]
 
-#demo(click_points)
+demo(click_points)
 
 path = gen_combined_path(click_points, n_points_soft=5, smooth_soft=10, n_points_distort=100, smooth_distort=0.4)
 
-visualize_events(path, click_points, 1, accel=3, mid_time=0.4)
+mid_time = bias_0_dot_5(0.5, max_offset=0.3)
+print(mid_time)
+visualize_events(path, click_points, 1, accel=3, mid_time=mid_time)

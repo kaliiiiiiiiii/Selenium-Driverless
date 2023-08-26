@@ -12,8 +12,8 @@
 Note: this is not yet implemented
 
 #### generated example
-![img.png](assets/mouse_path.png)
-![img.png](assets/mouse_paths.png)
+![img.png](assets/mousemove_events_gen.png)
+![img.png](assets/mouse_path_gen.png)
 
 #### real example
 - with [mouse event testing](https://www.vsynctester.com/testing/mouse.html)
