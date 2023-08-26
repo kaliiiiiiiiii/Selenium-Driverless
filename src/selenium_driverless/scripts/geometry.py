@@ -119,8 +119,12 @@ def bias_0_dot_5(strength: float, max_offset: float):
 
     return biased_value
 
+
 # Mouse Path
 def pos_at_time(path, total_time, time, accel, mid_time=0.5):
+    if time > total_time or time < 0:
+        raise ValueError("Time needs to be between 0 and total_time")
+
     def cubic_ease_in(t):
         return t ** accel
 
@@ -140,6 +144,7 @@ def pos_at_time(path, total_time, time, accel, mid_time=0.5):
     idx = np.argmin(np.abs(t_values - normalized_time))
 
     return path[idx]
+
 
 def generate_path(start, end, n: int = 10, smoothness: float = 2):
     x_points = np.linspace(start[0], end[0], n)
