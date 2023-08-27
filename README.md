@@ -20,6 +20,11 @@
 
 ### Usage
 
+__Warning__: 
+`elem.click()` and uses by `mousemove` by default, which requires the window to be active.
+
+You can specify `elem.click(move_to=False)`
+
 #### with asyncio
 ```python
 from selenium_driverless import webdriver
@@ -111,6 +116,7 @@ asyncio.run(main())
 ```
 
 ### Pointer Interaction
+see [@master/dev/show_mousemove.py](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/dev/show_mousemove.py) for visualization
 ```python
 move_kwargs = {"total_time": 0.7, "accel": 2, "smooth_soft": 20}
 
