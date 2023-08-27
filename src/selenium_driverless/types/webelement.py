@@ -23,7 +23,6 @@ from collections import defaultdict
 from selenium.webdriver.common.by import By
 
 from selenium_driverless.types import JSEvalException, RemoteObject
-from selenium_driverless.input.pointer import BasePointer
 from selenium_driverless.scripts.geometry import gen_heatmap, gen_rand_point, centroid
 
 from cdp_socket.exceptions import CDPError
@@ -255,7 +254,7 @@ class WebElement(RemoteObject):
         return await self._driver.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
 
     async def click(self, timeout: float = 0.25, bias: float = 5, resolution: int = 50, debug: bool = False,
-                    scroll_to=True) -> None:
+                    scroll_to=True, move_to:bool = True) -> None:
         """Clicks the element."""
         if scroll_to:
             await self.scroll_to()
@@ -263,19 +262,7 @@ class WebElement(RemoteObject):
         while True:
             try:
                 x, y = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
-
-                res = await self._driver.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
-                                                                                    "includeUserAgentShadowDOM": True,
-                                                                                    "ignorePointerEventsNone": False})
-                node_id_at = res["nodeId"]
-                res = await self._driver.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
-                obj_id_at = res["object"]["objectId"]
-                this_obj_id = await self.obj_id
-
-                if obj_id_at.split(".")[0] != this_obj_id.split(".")[0]:
-                    raise ElementNotInteractable(x, y)
-                p = BasePointer(driver=self._driver)
-                await p.click(x=x, y=y, timeout=timeout)
+                await self._driver.pointer.click(x, y=y, click_kwargs={"timeout": timeout}, move_to=move_to)
                 break
             except CDPError as e:
                 # element partially within viewport, point outside viewport
@@ -330,7 +317,22 @@ class WebElement(RemoteObject):
         else:
             point = centroid(vertices)
 
-        return [int(point[0]), int(point[1])]
+        x = int(point[0])
+        y = int(point[1])
+
+        # ensure element is at location
+        res = await self._driver.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
+                                                                            "includeUserAgentShadowDOM": True,
+                                                                            "ignorePointerEventsNone": False})
+        node_id_at = res["nodeId"]
+        res = await self._driver.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
+        obj_id_at = res["object"]["objectId"]
+        this_obj_id = await self.obj_id
+
+        if obj_id_at.split(".")[0] != this_obj_id.split(".")[0]:
+            raise ElementNotInteractable(x, y)
+
+        return [x, y]
 
     async def submit(self):
         """Submits a form."""

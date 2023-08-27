@@ -1,6 +1,10 @@
 import asyncio
 import time
 import inspect
+import numpy as np
+
+from selenium_driverless.types.webelement import WebElement
+from selenium_driverless.scripts.geometry import gen_combined_path, pos_at_time, bias_0_dot_5
 
 
 class Modifiers:
@@ -125,23 +129,24 @@ class BasePointer:
         event = PointerEvent(type_=EventType.RELEASE, **kwargs)
         await self.dispatch(event)
 
-    async def click(self, timeout: float = 0.25, **kwargs):
-        await self.down(click_count=1, **kwargs)
+    async def click(self, x: float, y: float, timeout: float = 0.25, **kwargs):
+        await self.down(click_count=1, x=x, y=y, **kwargs)
         await asyncio.sleep(timeout)
-        await self.up(click_count=1, **kwargs, )
+        await self.up(click_count=1, x=x, y=y, **kwargs)
 
-    async def doubble_click(self, timeout: float = 0.25, **kwargs):
-        await self.click(timeout=timeout, **kwargs)
+    async def doubble_click(self, x: float, y: float, timeout: float = 0.25, **kwargs):
+        await self.click(timeout=timeout, x=x, y=y, **kwargs)
         await asyncio.sleep(timeout)
-        await self.down(click_count=2, **kwargs)
+        await self.down(click_count=2, x=x, y=y, **kwargs)
         await asyncio.sleep(timeout)
-        await self.up(click_count=2, **kwargs)
+        await self.up(click_count=2, x=x, y=y, **kwargs)
 
-    async def move_to(self, **kwargs):
-        event = PointerEvent(type_=EventType.MOVE, **kwargs)
+    async def move_to(self, x: int, y: int, **kwargs):
+        event = PointerEvent(type_=EventType.MOVE, x=x, y=y, **kwargs)
         await self.dispatch(event)
 
-    async def move_path(self, total_time: float, pos_from_time_callback: callable, freq_assumpton: float = 60):
+    async def move_path(self, total_time: float, pos_from_time_callback: callable, freq_assumpton: float = 60,
+                        **kwargs):
         """
         param: total_time
             total time the pointer shoul take to move the path
@@ -172,8 +177,52 @@ class BasePointer:
                 await res
             x, y = res
 
-            await self.move_to(x=x, y=y)
+            await self.move_to(x=x, y=y, **kwargs)
 
             if i == -1:
-                start = time.monotonic() - (1/freq_assumpton)  # => aproximately 0.017, assuming 60 Hz
+                start = time.monotonic() - (1 / freq_assumpton)  # => aproximately 0.017, assuming 60 Hz
             i += 1
+
+
+class Pointer:
+    def __init__(self, driver, pointer_type: str = PointerType.MOUSE):
+        self.pointer_type = pointer_type
+        self._driver = driver
+        self.base = BasePointer(driver=driver, pointer_type=pointer_type)
+        self.location = [100, 0]
+
+    async def click(self, x_or_elem: float, y: float or None = None, move_to:bool=True,
+                    move_kwargs: dict or None = None, click_kwargs: dict or None = None):
+        if click_kwargs is None:
+            click_kwargs = dict()
+        if move_kwargs is None:
+            move_kwargs = dict()
+
+        if isinstance(x_or_elem, WebElement):
+            x, y = await x_or_elem.mid_location()
+        else:
+            x = x_or_elem
+        if move_to:
+            await self.move_to(x, y=y, **move_kwargs)
+        await self.base.click(x, y, **click_kwargs)
+
+    async def move_to(self, x_or_elem: int, y: int or None = None, total_time: float = 1, accel: float = 2,
+                      mid_time: float = None, smooth_soft=20, **kwargs):
+        if isinstance(x_or_elem, WebElement):
+            x, y = await x_or_elem.mid_location()
+        else:
+            x = x_or_elem
+
+        if not mid_time:
+            mid_time = bias_0_dot_5(0.5, max_offset=0.3)
+
+        # noinspection PyShadowingNames
+        def pos_from_time_callback(time: float):
+            return pos_at_time(path, total_time, time, accel, mid_time=mid_time)
+
+        points = np.array([self.location, [x, y]])
+        path = gen_combined_path(points, n_points_soft=5, smooth_soft=smooth_soft, n_points_distort=100,
+                                 smooth_distort=0.4)
+        res = await self.base.move_path(total_time=total_time, pos_from_time_callback=pos_from_time_callback, **kwargs)
+        self.location = [x, y]
+        return res

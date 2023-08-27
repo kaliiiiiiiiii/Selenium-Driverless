@@ -52,6 +52,7 @@ from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
 from selenium_driverless.types.webelement import WebElement, RemoteObject
 from selenium_driverless.sync.webelement import WebElement as SyncWebElement
+from selenium_driverless.input.pointer import Pointer
 
 from cdp_socket.socket import CDPSocket, SingleCDPSocket
 
@@ -82,6 +83,7 @@ class Chrome(BaseWebDriver):
         :Args:
          - options - this takes an instance of ChromeOptions
         """
+        self._pointer = None
         if disconnect_connect:
             warnings.warn("disconnect_connect=True might be buggy")
         self._page_enabled = None
@@ -203,6 +205,8 @@ class Chrome(BaseWebDriver):
 
         # noinspection PyProtectedMember
         self._is_remote = self._options._is_remote
+        
+        self._pointer = Pointer(driver=self)
 
         if not self._is_remote:
             path = options["binary"]
@@ -355,6 +359,10 @@ class Chrome(BaseWebDriver):
         if not self._global_this_:
             self._global_this_ = await RemoteObject(driver=self, js="globalThis", check_existence=False)
         return self._global_this_
+    
+    @property
+    def pointer(self) -> Pointer:
+        return self._pointer
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
                                  max_depth: int = None, timeout: int = 2, obj_id=None, warn: bool = False):

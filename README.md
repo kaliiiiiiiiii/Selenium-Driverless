@@ -112,14 +112,10 @@ asyncio.run(main())
 
 ### Pointer Interaction
 ```python
-from selenium_driverless.input.pointer import
+move_kwargs = {"total_time": 0.7, "accel": 2, "smooth_soft": 20}
 
-await elem.scroll_to()
-x, y = await elem.mid_location()
-
-p = Pointer(driver=driver)
-await p.click(x=x, y=y)
-await p.doubble_click(x=x, y=y)
+await driver.pointer.move_to(100, 500)
+await driver.pointer.click(500, 50, move_kwargs=move_kwargs, move_to=True)
 ```
 
 ## Help
