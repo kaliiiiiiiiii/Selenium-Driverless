@@ -1,7 +1,7 @@
 # Selenium-Driverless
 
 * use selenium __without chromedriver__
-* currently passes __cloudfare__, __bet365__, [turnstile](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/dev/assets/bypass_turnstile.mp4) and others
+* currently passes __cloudfare__, __bet365__, [turnstile](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/master/dev#bypass-turnstile) and others
 
 ### Feel free to test my code!
 
