@@ -39,4 +39,7 @@ Note: this is not yet implemented
 - with mouse
 ![img.png](assets/events_mouse.png)
 
+#### bypass turnstile
+https://github.com/kaliiiiiiiiii/Selenium-Driverless/assets/89038706/04bcc39b-0233-448e-80db-906f5b89f086
+
 
