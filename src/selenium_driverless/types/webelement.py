@@ -156,7 +156,8 @@ class WebElement(RemoteObject):
                                              value, serialization="deep")
         elif by == By.CSS_SELECTOR:
             elems = []
-            res = await self._driver.execute_cdp_cmd("DOM.querySelectorAll", {"nodeId": await self.node_id,
+            node_id = await self.node_id
+            res = await self._driver.execute_cdp_cmd("DOM.querySelectorAll", {"nodeId": node_id,
                                                                               "selector": value})
             node_ids = res["nodeIds"]
             for node_id in node_ids:

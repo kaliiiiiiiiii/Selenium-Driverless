@@ -471,6 +471,9 @@ class Chrome(BaseWebDriver):
         await self.execute_cdp_cmd("Page.close", timeout=timeout)
         await self.switch_to.window(window_handles[0])
 
+    async def focus(self):
+        await self.execute_cdp_cmd("Target.activateTarget", {"targetId": self.current_window_handle})
+
     async def quit(self) -> None:
         """Quits the driver and closes every associated window.
 
@@ -485,7 +488,6 @@ class Chrome(BaseWebDriver):
             # noinspection PyBroadException,PyUnusedLocal
             try:
                 try:
-                    await self.close()
                     # wait for process to be killed
                     while True:
                         try:
@@ -559,17 +561,14 @@ class Chrome(BaseWebDriver):
 
     async def maximize_window(self) -> None:
         """Maximizes the current window that webdriver is using."""
-        await self.normalize_window()
         await self.set_window_state("maximized")
 
     async def fullscreen_window(self) -> None:
         """Invokes the window manager-specific 'full screen' operation."""
-        await self.normalize_window()
         await self.set_window_state("fullscreen")
 
     async def minimize_window(self) -> None:
         """Invokes the window manager-specific 'minimize' operation."""
-        await self.normalize_window()
         await self.set_window_state("maximized")
 
     # noinspection PyUnusedLocal
