@@ -36,7 +36,7 @@ class Chrome(AsyncDriver):
                                  max_depth: int = None, timeout: int = 2, obj_id=None, warn: bool = False):
         # because events don't seem to work
         self._global_this = None
-        return await super().execute_raw_script(script=script, *args, await_res=await_res, serialization=serialization,
+        return await super().execute_raw_script(script, *args, await_res=await_res, serialization=serialization,
                                                 max_depth=max_depth, timeout=timeout, obj_id=obj_id, warn=warn)
 
     def __getattribute__(self, item):

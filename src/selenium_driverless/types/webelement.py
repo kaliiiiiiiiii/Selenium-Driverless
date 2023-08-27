@@ -18,6 +18,7 @@
 
 import warnings
 from base64 import b64decode
+from collections import defaultdict
 
 from selenium.webdriver.common.by import By
 
@@ -252,7 +253,8 @@ class WebElement(RemoteObject):
     async def focus(self):
         return await self._driver.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
 
-    async def click(self, timeout: float = 0.25, bias: float = 5, resolution: int = 50, debug: bool = False, scroll_to=True) -> None:
+    async def click(self, timeout: float = 0.25, bias: float = 5, resolution: int = 50, debug: bool = False,
+                    scroll_to=True) -> None:
         """Clicks the element."""
         if scroll_to:
             await self.scroll_to()
@@ -344,7 +346,19 @@ class WebElement(RemoteObject):
         )
         return await self.execute_script(script, warn=True)
 
-    async def get_dom_attribute(self, name: str) -> str:
+    @property
+    async def dom_attributes(self):
+        res = await self._driver.execute_cdp_cmd("DOM.getAttributes", {"nodeId": await self.node_id})
+        attr_list = res["attributes"]
+        attributes_dict = defaultdict(lambda: None)
+
+        for i in range(0, len(attr_list), 2):
+            key = attr_list[i]
+            value = attr_list[i + 1]
+            attributes_dict[key] = value
+        return attributes_dict
+
+    async def get_dom_attribute(self, name: str) -> str or None:
         """Gets the given attribute of the element. Unlike
         :func:`~selenium.webdriver.remote.BaseWebElement.get_attribute`, this
         method only returns attributes declared in the element's HTML markup.
@@ -357,11 +371,8 @@ class WebElement(RemoteObject):
 
                 text_length = target_element.get_dom_attribute("class")
         """
-        attr_str: list = await self._driver.execute_cdp_cmd("DOM.getAttributes", {"nodeId": await self.node_id})
-        for attr in attr_str:
-            key, value = attr.split("=")
-            if key == name:
-                return value[1:-1]
+        attrs = await self.dom_attributes
+        return attrs[name]
 
     async def set_dom_attribute(self, name: str, value: str):
         self._driver.execute_cdp_cmd("DOM.setAttributeValue", {"nodeId": await self.node_id,
