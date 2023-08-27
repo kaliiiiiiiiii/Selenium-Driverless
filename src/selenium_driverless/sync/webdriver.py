@@ -2,6 +2,7 @@ from selenium_driverless.scripts.options import Options as ChromeOptions
 import asyncio
 from selenium_driverless.webdriver import Chrome as AsyncDriver
 import inspect
+from selenium_driverless.types.webelement import RemoteObject
 
 
 class Chrome(AsyncDriver):
@@ -26,18 +27,17 @@ class Chrome(AsyncDriver):
             return self._loop.run_until_complete(super().quit())
 
     @property
-    async def _document_node_id(self):
-        # because events don't seem to work
+    async def _document_elem(self):
+        # because events don't seem to work, see https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/43
         res = await self.execute_cdp_cmd("DOM.getDocument", {"pierce": True})
-        self._document_node_id_ = res["root"]["nodeId"]
-        return self._document_node_id_
+        self._document_elem_ = res["root"]["nodeId"]
+        return self._document_elem_
 
-    async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                                 max_depth: int = None, timeout: int = 2, obj_id=None, warn: bool = False):
-        # because events don't seem to work
-        self._global_this = None
-        return await super().execute_raw_script(script, *args, await_res=await_res, serialization=serialization,
-                                                max_depth=max_depth, timeout=timeout, obj_id=obj_id, warn=warn)
+    @property
+    async def _global_this(self):
+        # because events don't seem to work, see https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/43
+        self._global_this_ = await RemoteObject(driver=self, js="globalThis", check_existence=False)
+        return self._global_this_
 
     def __getattribute__(self, item):
         item = super().__getattribute__(item)

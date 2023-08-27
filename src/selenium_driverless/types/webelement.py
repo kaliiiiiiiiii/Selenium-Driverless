@@ -23,7 +23,7 @@ from collections import defaultdict
 from selenium.webdriver.common.by import By
 
 from selenium_driverless.types import JSEvalException, RemoteObject
-from selenium_driverless.input.pointer import Pointer
+from selenium_driverless.input.pointer import BasePointer
 from selenium_driverless.scripts.geometry import gen_heatmap, gen_rand_point, centroid
 
 from cdp_socket.exceptions import CDPError
@@ -274,7 +274,7 @@ class WebElement(RemoteObject):
 
                 if obj_id_at.split(".")[0] != this_obj_id.split(".")[0]:
                     raise ElementNotInteractable(x, y)
-                p = Pointer(driver=self._driver)
+                p = BasePointer(driver=self._driver)
                 await p.click(x=x, y=y, timeout=timeout)
                 break
             except CDPError as e:

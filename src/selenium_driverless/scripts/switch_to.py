@@ -19,7 +19,6 @@
 
 from typing import Optional
 from typing import Union
-import warnings
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchFrameException
@@ -46,6 +45,7 @@ class SwitchTo:
         def set_alert(alert):
             self._alert = alert
 
+        # noinspection PyUnusedLocal
         def remove_alert(alert):
             self._alert = None
 
@@ -119,12 +119,10 @@ class SwitchTo:
         raise NotImplementedError('You might use driver.switch_to.target(driver.targets[0]["targetId"])')
 
     async def target(self, target_id):
-        from selenium_driverless.types import RemoteObject
         from cdp_socket.socket import SingleCDPSocket
 
         socket: SingleCDPSocket = await self._driver.base.get_socket(sock_id=target_id)
         self._driver._current_target = socket.id
-        self._driver._global_this = await RemoteObject(driver=self._driver, js="globalThis", check_existence=False)
         await self._driver.execute_cdp_cmd("Target.activateTarget",
                                            {"targetId": self._driver.current_window_handle})
         return target_id

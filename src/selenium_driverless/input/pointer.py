@@ -1,4 +1,6 @@
 import asyncio
+import time
+import inspect
 
 
 class Modifiers:
@@ -107,7 +109,7 @@ class PointerEvent:
         return [self._comand, _json]
 
 
-class Pointer:
+class BasePointer:
     def __init__(self, driver, pointer_type: str = PointerType.MOUSE):
         self.pointer_type = pointer_type
         self._driver = driver
@@ -138,3 +140,40 @@ class Pointer:
     async def move_to(self, **kwargs):
         event = PointerEvent(type_=EventType.MOVE, **kwargs)
         await self.dispatch(event)
+
+    async def move_path(self, total_time: float, pos_from_time_callback: callable, freq_assumpton: float = 60):
+        """
+        param: total_time
+            total time the pointer shoul take to move the path
+        param: pos_from_time_callback
+            a function which returns cordinates for a specific time
+            def callback(time:float):
+                # do something
+                return [x, y]
+        param freq_assumption:
+            assumption on mousemove event frequency, required for accuracy
+        """
+        x = None
+        y = None
+        i = -1
+        start = None
+        while True:
+            if i == -1:
+                _time = 0
+            else:
+                _time = time.monotonic() - start
+
+            if _time > total_time or _time < 0:
+                return x, y
+
+            # get cordinates at time
+            res = pos_from_time_callback(_time)
+            if inspect.iscoroutinefunction(pos_from_time_callback):
+                await res
+            x, y = res
+
+            await self.move_to(x=x, y=y)
+
+            if i == -1:
+                start = time.monotonic() - (1/freq_assumpton)  # => aproximately 0.017, assuming 60 Hz
+            i += 1
