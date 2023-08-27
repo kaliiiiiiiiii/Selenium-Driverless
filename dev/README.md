@@ -9,7 +9,6 @@
 
 
 ### mouse path
-Note: this is not yet implemented
 
 #### generated example
 ![img.png](assets/mousemove_events_gen.png)
