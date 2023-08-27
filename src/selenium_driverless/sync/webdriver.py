@@ -25,6 +25,20 @@ class Chrome(AsyncDriver):
         except RuntimeError:
             return self._loop.run_until_complete(super().quit())
 
+    @property
+    async def _document_node_id(self):
+        # because events don't seem to work
+        res = await self.execute_cdp_cmd("DOM.getDocument", {"pierce": True})
+        self._document_node_id_ = res["root"]["nodeId"]
+        return self._document_node_id_
+
+    async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
+                                 max_depth: int = None, timeout: int = 2, obj_id=None, warn: bool = False):
+        # because events don't seem to work
+        self._global_this = None
+        return await super().execute_raw_script(script=script, *args, await_res=await_res, serialization=serialization,
+                                                max_depth=max_depth, timeout=timeout, obj_id=obj_id, warn=warn)
+
     def __getattribute__(self, item):
         item = super().__getattribute__(item)
         if item is None:
