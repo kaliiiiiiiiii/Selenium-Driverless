@@ -52,6 +52,7 @@ from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
 from selenium_driverless.types.webelement import WebElement, RemoteObject
 from selenium_driverless.sync.webelement import WebElement as SyncWebElement
+from selenium_driverless.input.pointer import Pointer
 
 from cdp_socket.socket import CDPSocket, SingleCDPSocket
 
@@ -82,12 +83,13 @@ class Chrome(BaseWebDriver):
         :Args:
          - options - this takes an instance of ChromeOptions
         """
+        self._pointer = None
         if disconnect_connect:
             warnings.warn("disconnect_connect=True might be buggy")
         self._page_enabled = None
 
-        self._global_this = None
-        self._document_node_id_ = None
+        self._global_this_ = None
+        self._document_elem_ = None
 
         self._loop: asyncio.AbstractEventLoop or None = None
         self._page_load_timeout: int = 30
@@ -203,6 +205,8 @@ class Chrome(BaseWebDriver):
 
         # noinspection PyProtectedMember
         self._is_remote = self._options._is_remote
+        
+        self._pointer = Pointer(driver=self)
 
         if not self._is_remote:
             path = options["binary"]
@@ -236,7 +240,7 @@ class Chrome(BaseWebDriver):
         for target in targets:
             if target["type"] == "page":
                 self._current_target = target["id"]
-        self._global_this = await RemoteObject(driver=self, js="globalThis", check_existence=False)
+        self._global_this_ = await RemoteObject(driver=self, js="globalThis", check_existence=False)
         self.caps = capabilities
 
         if self._loop:
@@ -246,8 +250,8 @@ class Chrome(BaseWebDriver):
 
         # noinspection PyUnusedLocal
         def clear_global_this(data):
-            self._global_this = None
-            self._document_node_id_ = None
+            self._global_this_ = None
+            self._document_elem_ = None
 
         await self.add_cdp_listener("Page.loadEventFired", clear_global_this)
 
@@ -268,6 +272,8 @@ class Chrome(BaseWebDriver):
     async def get(self, url: str, referrer: str = None, wait_load: bool = True,
                   disconnect_connect: bool = None) -> None:
         """Loads a web page in the current browser session."""
+        if url == "about:blank":
+            wait_load = False
         loop = self._loop
         if not loop:
             loop = asyncio.get_running_loop()
@@ -287,8 +293,8 @@ class Chrome(BaseWebDriver):
             except asyncio.TimeoutError:
                 raise TimeoutError(f"page didn't load within timeout of {self._page_load_timeout}")
         await get
-        self._global_this = None
-        self._document_node_id_ = None
+        self._global_this_ = None
+        self._document_elem_ = None
 
     @property
     async def title(self) -> str:
@@ -348,6 +354,16 @@ class Chrome(BaseWebDriver):
                     res["value"] = elems
         return res
 
+    @property
+    async def _global_this(self):
+        if not self._global_this_:
+            self._global_this_ = await RemoteObject(driver=self, js="globalThis", check_existence=False)
+        return self._global_this_
+    
+    @property
+    def pointer(self) -> Pointer:
+        return self._pointer
+
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
                                  max_depth: int = None, timeout: int = 2, obj_id=None, warn: bool = False):
         """
@@ -359,9 +375,8 @@ class Chrome(BaseWebDriver):
         if warn:
             warnings.warn("execute_script might be detected", stacklevel=4)
         if not obj_id:
-            if not self._global_this:
-                self._global_this = await RemoteObject(driver=self, js="globalThis", check_existence=False)
-            obj_id = await self._global_this.obj_id
+            global_this = await self._global_this
+            obj_id = await global_this.obj_id
         if not timeout:
             timeout = self._script_timeout
         if not args:
@@ -441,7 +456,7 @@ class Chrome(BaseWebDriver):
         """
         return await self.execute_script("return document.documentElement.outerHTML")
 
-    async def close(self) -> None:
+    async def close(self, timeout: float = 2) -> None:
         """Closes the current window.
 
         :Usage:
@@ -449,9 +464,15 @@ class Chrome(BaseWebDriver):
 
                 driver.close()
         """
+        from warnings import simplefilter
+        simplefilter("ignore", UserWarning)
         window_handles = await self.window_handles
-        await self.execute_cdp_cmd("Page.close")
+        simplefilter("always", UserWarning)
+        await self.execute_cdp_cmd("Page.close", timeout=timeout)
         await self.switch_to.window(window_handles[0])
+
+    async def focus(self):
+        await self.execute_cdp_cmd("Target.activateTarget", {"targetId": self.current_window_handle})
 
     async def quit(self) -> None:
         """Quits the driver and closes every associated window.
@@ -467,7 +488,6 @@ class Chrome(BaseWebDriver):
             # noinspection PyBroadException,PyUnusedLocal
             try:
                 try:
-                    await self.base.close()
                     # wait for process to be killed
                     while True:
                         try:
@@ -541,17 +561,14 @@ class Chrome(BaseWebDriver):
 
     async def maximize_window(self) -> None:
         """Maximizes the current window that webdriver is using."""
-        await self.normalize_window()
         await self.set_window_state("maximized")
 
     async def fullscreen_window(self) -> None:
         """Invokes the window manager-specific 'full screen' operation."""
-        await self.normalize_window()
         await self.set_window_state("fullscreen")
 
     async def minimize_window(self) -> None:
         """Invokes the window manager-specific 'minimize' operation."""
-        await self.normalize_window()
         await self.set_window_state("maximized")
 
     # noinspection PyUnusedLocal
@@ -762,21 +779,23 @@ class Chrome(BaseWebDriver):
         self._script_timeout = timeouts["script"]
 
     @property
-    async def _document_node_id(self):
-        if not self._document_node_id_:
+    async def _document_elem(self):
+        if not self._document_elem_:
             res = await self.execute_cdp_cmd("DOM.getDocument", {"pierce": True})
-            self._document_node_id_ = res["root"]["nodeId"]
-        return self._document_node_id_
+            node_id = res["root"]["nodeId"]
+            self._document_elem_ = await WebElement(driver=self, node_id=node_id, check_existence=False,
+                                                    loop=self._loop)
+        return self._document_elem_
 
     # noinspection PyUnusedLocal
     async def find_element(self, by: str, value: str, parent=None):
         if not parent:
-            parent = await WebElement(driver=self, node_id=await self._document_node_id, check_existence=False, loop=self._loop)
+            parent = await self._document_elem
         return await parent.find_element(by=by, value=value)
 
     async def find_elements(self, by: str, value: str, parent=None):
         if not parent:
-            parent = await WebElement(driver=self, node_id=await self._document_node_id, check_existence=False, loop=self._loop)
+            parent = await self._document_elem
         return await parent.find_elements(by=by, value=value)
 
     async def search_elements(self, query: str):
@@ -1270,7 +1289,8 @@ class Chrome(BaseWebDriver):
         socket = await self.current_socket
         return socket.method_iterator(method=event)
 
-    async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None, disconnect_connect=None) -> dict:
+    async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None, disconnect_connect=None,
+                              timeout: float or None = 10) -> dict:
         """Execute Chrome Devtools Protocol command and get returned result The
         command and command args should follow chrome devtools protocol
         domains/commands, refer to link
@@ -1292,7 +1312,7 @@ class Chrome(BaseWebDriver):
             disconnect_connect = self._disconnect_connect
 
         socket: SingleCDPSocket = await self.current_socket
-        result = await socket.exec(method=cmd, params=cmd_args, timeout=self._script_timeout)
+        result = await socket.exec(method=cmd, params=cmd_args, timeout=timeout)
         if cmd == "Page.enable":
             self._page_enabled = True
         elif cmd == "Page.disable":

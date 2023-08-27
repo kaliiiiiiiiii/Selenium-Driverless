@@ -1,7 +1,7 @@
 # Selenium-Driverless
 
 * use selenium __without chromedriver__
-* undetected by __cloudfare__, __bet365__ and others
+* currently passes __cloudfare__, __bet365__, [turnstile](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/dev/assets/bypass_turnstile.mp4) and others
 
 ### Feel free to test my code!
 
@@ -19,6 +19,11 @@
 
 
 ### Usage
+
+__Warning__: 
+`elem.click()` and uses by `mousemove` by default, which requires the window to be active.
+
+You can specify `elem.click(move_to=False)`
 
 #### with asyncio
 ```python
@@ -111,15 +116,12 @@ asyncio.run(main())
 ```
 
 ### Pointer Interaction
+see [@master/dev/show_mousemove.py](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/dev/show_mousemove.py) for visualization
 ```python
-from selenium_driverless.input.pointer import
+move_kwargs = {"total_time": 0.7, "accel": 2, "smooth_soft": 20}
 
-await elem.scroll_to()
-x, y = await elem.mid_location()
-
-p = Pointer(driver=driver)
-await p.click(x=x, y=y)
-await p.doubble_click(x=x, y=y)
+await driver.pointer.move_to(100, 500)
+await driver.pointer.click(500, 50, move_kwargs=move_kwargs, move_to=True)
 ```
 
 ## Help
@@ -136,6 +138,7 @@ note: please check the todo's below at first!
       - [ ] [`TouchActions`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
   - [x] `execute_script` and `execute_async_script`
     - [ ] make serialization use `deep`
+  - [ ] [support `options.add_extension()`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/37)
 - protocoll
   - [ ] add cdp event handler
 - [x] sync

@@ -18,11 +18,11 @@
 
 import warnings
 from base64 import b64decode
+from collections import defaultdict
 
 from selenium.webdriver.common.by import By
 
 from selenium_driverless.types import JSEvalException, RemoteObject
-from selenium_driverless.input.pointer import Pointer
 from selenium_driverless.scripts.geometry import gen_heatmap, gen_rand_point, centroid
 
 from cdp_socket.exceptions import CDPError
@@ -156,7 +156,8 @@ class WebElement(RemoteObject):
                                              value, serialization="deep")
         elif by == By.CSS_SELECTOR:
             elems = []
-            res = await self._driver.execute_cdp_cmd("DOM.querySelectorAll", {"nodeId": await self.node_id,
+            node_id = await self.node_id
+            res = await self._driver.execute_cdp_cmd("DOM.querySelectorAll", {"nodeId": node_id,
                                                                               "selector": value})
             node_ids = res["nodeIds"]
             for node_id in node_ids:
@@ -168,7 +169,7 @@ class WebElement(RemoteObject):
                 elems.append(elem)
             return elems
         elif by == By.XPATH:
-            scipt = """return this.evaluate(
+            scipt = """return document.evaluate(
                           arguments[0],
                           this,
                           null,
@@ -194,7 +195,7 @@ class WebElement(RemoteObject):
     async def set_source(self, value: str):
         await self._driver.execute_cdp_cmd("DOM.setOuterHTML", {"nodeId": await self.node_id, "outerHTML": value})
 
-    async def get_property(self, name: str):
+    async def get_property(self, name: str, warn:bool = True) -> str or None:
         """Gets the given property of the element.
 
         :Args:
@@ -205,7 +206,8 @@ class WebElement(RemoteObject):
 
                 text_length = target_element.get_property("text_length")
         """
-        return await self.execute_script(f"return this[arguments[0]]", name, warn=True)
+        warnings.warn("This executes a script and can make you detected. You might use elem.get_dom_attribute instead if the attribute belongs to DOM. \n You can pass warn=False to supress that warning.")
+        return await self.execute_script(f"return this[arguments[0]]", name, warn=False)
 
     @property
     async def tag_name(self) -> str:
@@ -252,25 +254,16 @@ class WebElement(RemoteObject):
     async def focus(self):
         return await self._driver.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
 
-    async def click(self, timeout: float = 0.25, bias: float = 5, resolution: int = 50, debug: bool = False) -> None:
+    async def click(self, timeout: float = 0.25, bias: float = 5, resolution: int = 50, debug: bool = False,
+                    scroll_to=True, move_to:bool = True) -> None:
         """Clicks the element."""
-        await self.scroll_to()
+        if scroll_to:
+            await self.scroll_to()
 
         while True:
             try:
                 x, y = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
-
-                res = await self._driver.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
-                                                                                    "includeUserAgentShadowDOM": True})
-                node_id_at = res["nodeId"]
-                res = await self._driver.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
-                obj_id_at = res["object"]["objectId"]
-                this_obj_id = await self.obj_id
-
-                if obj_id_at.split(".")[0] != this_obj_id.split(".")[0]:
-                    raise ElementNotInteractable(x, y)
-                p = Pointer(driver=self._driver)
-                await p.click(x=x, y=y, timeout=timeout)
+                await self._driver.pointer.click(x, y=y, click_kwargs={"timeout": timeout}, move_to=move_to)
                 break
             except CDPError as e:
                 # element partially within viewport, point outside viewport
@@ -325,7 +318,22 @@ class WebElement(RemoteObject):
         else:
             point = centroid(vertices)
 
-        return [int(point[0]), int(point[1])]
+        x = int(point[0])
+        y = int(point[1])
+
+        # ensure element is at location
+        res = await self._driver.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
+                                                                            "includeUserAgentShadowDOM": True,
+                                                                            "ignorePointerEventsNone": False})
+        node_id_at = res["nodeId"]
+        res = await self._driver.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
+        obj_id_at = res["object"]["objectId"]
+        this_obj_id = await self.obj_id
+
+        if obj_id_at.split(".")[0] != this_obj_id.split(".")[0]:
+            raise ElementNotInteractable(x, y)
+
+        return [x, y]
 
     async def submit(self):
         """Submits a form."""
@@ -342,7 +350,19 @@ class WebElement(RemoteObject):
         )
         return await self.execute_script(script, warn=True)
 
-    async def get_dom_attribute(self, name: str) -> str:
+    @property
+    async def dom_attributes(self):
+        res = await self._driver.execute_cdp_cmd("DOM.getAttributes", {"nodeId": await self.node_id})
+        attr_list = res["attributes"]
+        attributes_dict = defaultdict(lambda: None)
+
+        for i in range(0, len(attr_list), 2):
+            key = attr_list[i]
+            value = attr_list[i + 1]
+            attributes_dict[key] = value
+        return attributes_dict
+
+    async def get_dom_attribute(self, name: str) -> str or None:
         """Gets the given attribute of the element. Unlike
         :func:`~selenium.webdriver.remote.BaseWebElement.get_attribute`, this
         method only returns attributes declared in the element's HTML markup.
@@ -355,11 +375,8 @@ class WebElement(RemoteObject):
 
                 text_length = target_element.get_dom_attribute("class")
         """
-        attr_str: list = await self._driver.execute_cdp_cmd("DOM.getAttributes", {"nodeId": await self.node_id})
-        for attr in attr_str:
-            key, value = attr.split("=")
-            if key == name:
-                return value[1:-1]
+        attrs = await self.dom_attributes
+        return attrs[name]
 
     async def set_dom_attribute(self, name: str, value: str):
         self._driver.execute_cdp_cmd("DOM.setAttributeValue", {"nodeId": await self.node_id,
@@ -470,7 +487,8 @@ class WebElement(RemoteObject):
 
     @property
     async def box_model(self):
-        res = await self._driver.execute_cdp_cmd("DOM.getBoxModel", {"nodeId": await self.node_id})
+        node_id = await self.node_id
+        res = await self._driver.execute_cdp_cmd("DOM.getBoxModel", {"nodeId": node_id})
         model = res['model']
         keys = ['content', 'padding', 'border', 'margin']
         for key in keys:

@@ -19,7 +19,6 @@
 
 from typing import Optional
 from typing import Union
-import warnings
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchFrameException
@@ -46,6 +45,7 @@ class SwitchTo:
         def set_alert(alert):
             self._alert = alert
 
+        # noinspection PyUnusedLocal
         def remove_alert(alert):
             self._alert = None
 
@@ -118,18 +118,19 @@ class SwitchTo:
 
         raise NotImplementedError('You might use driver.switch_to.target(driver.targets[0]["targetId"])')
 
-    async def target(self, target_id):
-        from selenium_driverless.types import RemoteObject
+    async def target(self, target_id: str, activate: bool = True):
         from cdp_socket.socket import SingleCDPSocket
 
         socket: SingleCDPSocket = await self._driver.base.get_socket(sock_id=target_id)
         self._driver._current_target = socket.id
-        self._driver._global_this = await RemoteObject(driver=self._driver, js="globalThis", check_existence=False)
-        await self._driver.execute_cdp_cmd("Target.activateTarget",
-                                           {"targetId": self._driver.current_window_handle})
+        self._driver._global_this_ = None
+        self._driver._document_elem_ = None
+        if activate:
+            await self._driver.execute_cdp_cmd("Target.activateTarget",
+                                               {"targetId": self._driver.current_window_handle})
         return target_id
 
-    async def new_window(self, type_hint: Optional[str] = "tab", url="") -> None:
+    async def new_window(self, type_hint: Optional[str] = "tab", url="", activate: bool = True) -> None:
         """Switches to a new top-level browsing context.
 
         The type hint can be one of "tab" or "window". If not specified the
@@ -150,7 +151,7 @@ class SwitchTo:
         args = {"url": url, "newWindow": new_tab, "forTab": new_tab}
         target = await self._driver.execute_cdp_cmd("Target.createTarget", args)
         target_id = target["targetId"]
-        await self.target(target_id)
+        await self.target(target_id, activate=activate)
         return target_id
 
     async def parent_frame(self) -> None:
@@ -164,7 +165,7 @@ class SwitchTo:
         """
         await self._driver.execute(Command.SWITCH_TO_PARENT_FRAME)
 
-    async def window(self, window_name) -> None:
+    async def window(self, window_name, activate: bool = True) -> None:
         """Switches focus to the specified window.
 
         :Args:
@@ -175,4 +176,4 @@ class SwitchTo:
 
                 driver.switch_to.window('main')
         """
-        await self.target(window_name)
+        await self.target(window_name, activate=activate)

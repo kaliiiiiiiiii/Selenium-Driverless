@@ -56,6 +56,7 @@ async def prompt():
     await driver.get("chrome://version")
     keys = "Hello!"
     script = loop.create_task(driver.execute_script("return prompt('hello?')", timeout=100))
+    await asyncio.sleep(0.5)
     alert = await driver.switch_to.alert
     await alert.send_keys(keys)
     res = await script
