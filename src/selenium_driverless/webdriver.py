@@ -212,6 +212,8 @@ class Chrome(BaseWebDriver):
             path = options["binary"]
             args = options["args"]
             cmds = [path, *args]
+            if IS_POSIX:
+                cmds = [" ".join(cmds)]
             browser = subprocess.Popen(
                 cmds,
                 stdin=subprocess.PIPE,
