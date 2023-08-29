@@ -103,11 +103,11 @@ class Chrome(BaseWebDriver):
             options = ChromeOptions()
         if not options.binary_location:
             from selenium_driverless.utils.utils import find_chrome_executable
-            options.binary_location = find_chrome_executable()
+            options.binary_location = f'"find_chrome_executable()"'
         if not options.user_data_dir:
             from selenium_driverless.utils.utils import sel_driverless_path
             import uuid
-            options.add_argument("--user-data-dir=" + sel_driverless_path() + "/files/tmp/" + uuid.uuid4().hex)
+            options.add_argument("--user-data-dir=" + sel_driverless_path() + "files/tmp/" + uuid.uuid4().hex)
 
         try:
             self._options = options
