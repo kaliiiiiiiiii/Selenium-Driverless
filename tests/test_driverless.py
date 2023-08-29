@@ -17,7 +17,7 @@ async def make_driver():
 
 async def nowsecure():
     global driver
-    await driver.get("https://nowsecure.nl#relax", wait_load=False)
+    await driver.get("https://nowsecure.nl#relax", wait_load=True)
     await driver.wait_for_cdp("Page.domContentEventFired")
     await asyncio.sleep(0.5)
     elem = await driver.find_element(By.XPATH, "/html/body/div[2]/div/main/p[2]/a")
