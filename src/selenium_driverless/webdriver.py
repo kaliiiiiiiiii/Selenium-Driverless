@@ -103,7 +103,8 @@ class Chrome(BaseWebDriver):
             options = ChromeOptions()
         if not options.binary_location:
             from selenium_driverless.utils.utils import find_chrome_executable
-            options.binary_location = f'"{find_chrome_executable()}"'
+            options.binary_location = find_chrome_executable()
+            # options.binary_location = f'"{find_chrome_executable()}"'
         if not options.user_data_dir:
             from selenium_driverless.utils.utils import sel_driverless_path
             import uuid
@@ -212,15 +213,15 @@ class Chrome(BaseWebDriver):
             path = options["binary"]
             args = options["args"]
             cmds = [path, *args]
-            if IS_POSIX:
-                cmds = [" ".join(cmds)]
+            # if IS_POSIX:
+            #     cmds = [" ".join(cmds)]
             browser = subprocess.Popen(
                 cmds,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 close_fds=IS_POSIX,
-                shell=IS_POSIX
+                shell=False  # shell = IS_POISIX
             )
 
             host, port = self._options.debugger_address.split(":")
