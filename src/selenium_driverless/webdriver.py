@@ -625,6 +625,7 @@ class Chrome(BaseWebDriver):
                 driver.back()
         """
         await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": await self._current_history_idx - 1})
+        self._document_elem_ = None
 
     async def forward(self) -> None:
         """Goes one step forward in the browser history.
@@ -635,6 +636,7 @@ class Chrome(BaseWebDriver):
                 driver.forward()
         """
         await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": await self._current_history_idx + 1})
+        self._document_elem_ = None
 
     async def refresh(self) -> None:
         """Refreshes the current page.
@@ -645,6 +647,7 @@ class Chrome(BaseWebDriver):
                 driver.refresh()
         """
         await self.execute_cdp_cmd("Page.reload")
+        self._document_elem_ = None
 
     # Options
     async def get_cookies(self) -> List[dict]:
