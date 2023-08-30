@@ -87,6 +87,7 @@ class Chrome(BaseWebDriver):
         if disconnect_connect:
             warnings.warn("disconnect_connect=True might be buggy")
         self._page_enabled = None
+        self._dom_enabled = None
 
         self._global_this_ = None
         self._document_elem_ = None
@@ -805,14 +806,23 @@ class Chrome(BaseWebDriver):
         """
         query:str | Plain text or query selector or XPath search query.
         """
+        # ensure DOM is enabled
+        if not self._dom_enabled:
+            await self.execute_cdp_cmd("DOM.enable")
+
+        # ensure DOM.getDocument got called
+        await self._document_elem
+
         elems = []
         res = await self.execute_cdp_cmd("DOM.performSearch",
                                          {"includeUserAgentShadowDOM": True, "query": query})
         search_id = res["searchId"]
         elem_count = res["resultCount"]
+        if elem_count <= 0:
+            return []
 
         res = await self.execute_cdp_cmd("DOM.getSearchResults",
-                                         {"searchId": search_id, "fromIndex": 0, "toIndex": elem_count - 1})
+                                         {"searchId": search_id, "fromIndex": 0, "toIndex": elem_count})
         for node_id in res["nodeIds"]:
             if self._loop:
                 elem = await SyncWebElement(driver=self, check_existence=False, node_id=node_id, loop=self._loop)
@@ -1320,6 +1330,12 @@ class Chrome(BaseWebDriver):
             self._page_enabled = True
         elif cmd == "Page.disable":
             self._page_enabled = False
+
+        elif cmd == "DOM.enable":
+            self._dom_enabled = True
+        elif cmd == "DOM.disable":
+            self._dom_enabled = False
+
         if disconnect_connect:
             await socket.close()
             self._page_enabled = False
