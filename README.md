@@ -138,6 +138,7 @@ note: please check the todo's below at first!
       - [ ] [`TouchActions`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
   - [x] `execute_script` and `execute_async_script`
     - [ ] make serialization use `deep`
+    - [ ] add `Page.createIsolatedWorld` support with `DOM` access
   - [ ] [support `options.add_extension()`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/37)
 - protocoll
   - [ ] add cdp event handler
