@@ -49,9 +49,18 @@ class Options(metaclass=ABCMeta):
         self.user_data_dir = None
         self._arguments = []
         self._ignore_local_proxy = False
+
         self.add_argument("--no-first-run")
         if IS_POSIX:
             self.add_argument("--password-store=basic")
+
+        # to support multiple instances
+        self.add_argument('--disable-backgrounding-occluded-windows')
+        self.add_argument('--disable-renderer-backgrounding')
+
+        self.add_argument("--no-default-browser-check")
+        self.add_argument('--disable-component-update')
+
         self._is_remote = True
 
     @property

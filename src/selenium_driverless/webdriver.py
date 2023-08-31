@@ -203,6 +203,7 @@ class Chrome(BaseWebDriver):
             port = random_port()
             self._options._debugger_address = f"127.0.0.1:{port}"
             self._options.add_argument(f"--remote-debugging-port={port}")
+        self._options.add_argument("about:blank")
         options = capabilities["goog:chromeOptions"]
 
         # noinspection PyProtectedMember

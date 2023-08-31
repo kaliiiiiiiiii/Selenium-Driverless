@@ -20,11 +20,6 @@
 
 ### Usage
 
-__Warning__: 
-`elem.click()` and uses by `mousemove` by default, which requires the window to be active.
-
-You can specify `elem.click(move_to=False)`
-
 #### with asyncio
 ```python
 from selenium_driverless import webdriver
