@@ -195,7 +195,7 @@ class WebElement(RemoteObject):
     async def set_source(self, value: str):
         await self._driver.execute_cdp_cmd("DOM.setOuterHTML", {"nodeId": await self.node_id, "outerHTML": value})
 
-    async def get_property(self, name: str, warn:bool = True) -> str or None:
+    async def get_property(self, name: str, warn: bool = True) -> str or None:
         """Gets the given property of the element.
 
         :Args:
@@ -206,7 +206,8 @@ class WebElement(RemoteObject):
 
                 text_length = target_element.get_property("text_length")
         """
-        warnings.warn("This executes a script and can make you detected. You might use elem.get_dom_attribute instead if the attribute belongs to DOM. \n You can pass warn=False to supress that warning.")
+        warnings.warn(
+            "This executes a script and can make you detected. You might use elem.get_dom_attribute instead if the attribute belongs to DOM. \n You can pass warn=False to supress that warning.")
         return await self.execute_script(f"return this[arguments[0]]", name, warn=False)
 
     @property
@@ -255,7 +256,7 @@ class WebElement(RemoteObject):
         return await self._driver.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
 
     async def click(self, timeout: float = 0.25, bias: float = 5, resolution: int = 50, debug: bool = False,
-                    scroll_to=True, move_to:bool = True) -> None:
+                    scroll_to=True, move_to: bool = True) -> None:
         """Clicks the element."""
         if scroll_to:
             await self.scroll_to()
@@ -460,7 +461,12 @@ class WebElement(RemoteObject):
         args = {"objectId": await self.obj_id}
         if rect:
             args["rect"] = rect
-        await self._driver.execute_cdp_cmd("DOM.scrollIntoViewIfNeeded", args)
+        try:
+            await self._driver.execute_cdp_cmd("DOM.scrollIntoViewIfNeeded", args)
+            return True
+        except CDPError as e:
+            if e.code == -32000 and e.message == 'Node is detached from document':
+                return False
 
     @property
     async def size(self) -> dict:

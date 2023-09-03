@@ -20,11 +20,6 @@
 
 ### Usage
 
-__Warning__: 
-`elem.click()` and uses by `mousemove` by default, which requires the window to be active.
-
-You can specify `elem.click(move_to=False)`
-
 #### with asyncio
 ```python
 from selenium_driverless import webdriver
@@ -138,6 +133,9 @@ note: please check the todo's below at first!
       - [ ] [`TouchActions`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
   - [x] `execute_script` and `execute_async_script`
     - [ ] make serialization use `deep`
+      - [ ] add `Page.createIsolatedWorld` support with `DOM` access
+        - [ ] make `element.rect` use this
+        - [ ] make `elem.box_model use this`
   - [ ] [support `options.add_extension()`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/37)
 - protocoll
   - [ ] add cdp event handler

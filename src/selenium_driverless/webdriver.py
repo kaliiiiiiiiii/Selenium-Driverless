@@ -87,6 +87,7 @@ class Chrome(BaseWebDriver):
         if disconnect_connect:
             warnings.warn("disconnect_connect=True might be buggy")
         self._page_enabled = None
+        self._dom_enabled = None
 
         self._global_this_ = None
         self._document_elem_ = None
@@ -104,10 +105,11 @@ class Chrome(BaseWebDriver):
         if not options.binary_location:
             from selenium_driverless.utils.utils import find_chrome_executable
             options.binary_location = find_chrome_executable()
+            # options.binary_location = f'"{find_chrome_executable()}"'
         if not options.user_data_dir:
             from selenium_driverless.utils.utils import sel_driverless_path
             import uuid
-            options.add_argument("--user-data-dir=" + sel_driverless_path() + "/files/tmp/" + uuid.uuid4().hex)
+            options.add_argument("--user-data-dir=" + sel_driverless_path() + "files/tmp/" + uuid.uuid4().hex)
 
         try:
             self._options = options
@@ -201,24 +203,27 @@ class Chrome(BaseWebDriver):
             port = random_port()
             self._options._debugger_address = f"127.0.0.1:{port}"
             self._options.add_argument(f"--remote-debugging-port={port}")
+        self._options.add_argument("about:blank")
         options = capabilities["goog:chromeOptions"]
 
         # noinspection PyProtectedMember
         self._is_remote = self._options._is_remote
-        
+
         self._pointer = Pointer(driver=self)
 
         if not self._is_remote:
             path = options["binary"]
             args = options["args"]
             cmds = [path, *args]
+            # if IS_POSIX:
+            #     cmds = [" ".join(cmds)]
             browser = subprocess.Popen(
                 cmds,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 close_fds=IS_POSIX,
-                shell=IS_POSIX
+                shell=False  # shell = IS_POISIX
             )
 
             host, port = self._options.debugger_address.split(":")
@@ -359,7 +364,7 @@ class Chrome(BaseWebDriver):
         if not self._global_this_:
             self._global_this_ = await RemoteObject(driver=self, js="globalThis", check_existence=False)
         return self._global_this_
-    
+
     @property
     def pointer(self) -> Pointer:
         return self._pointer
@@ -621,6 +626,7 @@ class Chrome(BaseWebDriver):
                 driver.back()
         """
         await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": await self._current_history_idx - 1})
+        self._document_elem_ = None
 
     async def forward(self) -> None:
         """Goes one step forward in the browser history.
@@ -631,6 +637,7 @@ class Chrome(BaseWebDriver):
                 driver.forward()
         """
         await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": await self._current_history_idx + 1})
+        self._document_elem_ = None
 
     async def refresh(self) -> None:
         """Refreshes the current page.
@@ -641,6 +648,7 @@ class Chrome(BaseWebDriver):
                 driver.refresh()
         """
         await self.execute_cdp_cmd("Page.reload")
+        self._document_elem_ = None
 
     # Options
     async def get_cookies(self) -> List[dict]:
@@ -802,14 +810,23 @@ class Chrome(BaseWebDriver):
         """
         query:str | Plain text or query selector or XPath search query.
         """
+        # ensure DOM is enabled
+        if not self._dom_enabled:
+            await self.execute_cdp_cmd("DOM.enable")
+
+        # ensure DOM.getDocument got called
+        await self._document_elem
+
         elems = []
         res = await self.execute_cdp_cmd("DOM.performSearch",
                                          {"includeUserAgentShadowDOM": True, "query": query})
         search_id = res["searchId"]
         elem_count = res["resultCount"]
+        if elem_count <= 0:
+            return []
 
         res = await self.execute_cdp_cmd("DOM.getSearchResults",
-                                         {"searchId": search_id, "fromIndex": 0, "toIndex": elem_count - 1})
+                                         {"searchId": search_id, "fromIndex": 0, "toIndex": elem_count})
         for node_id in res["nodeIds"]:
             if self._loop:
                 elem = await SyncWebElement(driver=self, check_existence=False, node_id=node_id, loop=self._loop)
@@ -1317,6 +1334,12 @@ class Chrome(BaseWebDriver):
             self._page_enabled = True
         elif cmd == "Page.disable":
             self._page_enabled = False
+
+        elif cmd == "DOM.enable":
+            self._dom_enabled = True
+        elif cmd == "DOM.disable":
+            self._dom_enabled = False
+
         if disconnect_connect:
             await socket.close()
             self._page_enabled = False
