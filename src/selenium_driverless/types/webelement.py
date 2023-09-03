@@ -466,7 +466,6 @@ class WebElement(RemoteObject):
             return True
         except CDPError as e:
             if e.code == -32000 and e.message == 'Node is detached from document':
-                breakpoint()
                 return False
 
     @property
