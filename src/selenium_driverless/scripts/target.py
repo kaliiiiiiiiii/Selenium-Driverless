@@ -74,7 +74,8 @@ class Chrome(BaseWebDriver):
 
     def __init__(
             self,
-            options: ChromeOptions = None
+            options: ChromeOptions = None,
+            disconnect_connect=False
     ) -> None:
         """Creates a new instance of the chrome driver. Starts the service and
         then creates new instance of chrome driver.
@@ -83,6 +84,8 @@ class Chrome(BaseWebDriver):
          - options - this takes an instance of ChromeOptions
         """
         self._pointer = None
+        if disconnect_connect:
+            warnings.warn("disconnect_connect=True might be buggy")
         self._page_enabled = None
         self._dom_enabled = None
 
@@ -96,6 +99,7 @@ class Chrome(BaseWebDriver):
         self.browser_pid: int or None = None
         self._targets: list = []
         self._current_target: str or None = None
+        self._disconnect_connect: bool = disconnect_connect
         if not options:
             options = ChromeOptions()
         if not options.binary_location:
@@ -270,7 +274,8 @@ class Chrome(BaseWebDriver):
         raise NotImplementedError("chrome not started with chromedriver")
 
     # noinspection PyUnboundLocalVariable
-    async def get(self, url: str, referrer: str = None, wait_load: bool = True) -> None:
+    async def get(self, url: str, referrer: str = None, wait_load: bool = True,
+                  disconnect_connect: bool = None) -> None:
         """Loads a web page in the current browser session."""
         if url == "about:blank":
             wait_load = False
@@ -278,12 +283,15 @@ class Chrome(BaseWebDriver):
         if not loop:
             loop = asyncio.get_running_loop()
         if wait_load:
-            await self.execute_cdp_cmd("Page.enable")
+            await self.execute_cdp_cmd("Page.enable", disconnect_connect=False)
             wait = loop.create_task(self.wait_for_cdp("Page.loadEventFired", timeout=self._page_load_timeout))
         args = {"url": url, "transitionType": "link"}
         if referrer:
             args["referrer"] = referrer
-        get = loop.create_task(self.execute_cdp_cmd("Page.navigate", args))
+        _disconnect = None
+        if disconnect_connect is False:
+            _disconnect = False
+        get = loop.create_task(self.execute_cdp_cmd("Page.navigate", args, disconnect_connect=_disconnect))
         if wait_load:
             try:
                 await wait
@@ -1298,7 +1306,7 @@ class Chrome(BaseWebDriver):
         socket = await self.current_socket
         return socket.method_iterator(method=event)
 
-    async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None,
+    async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None, disconnect_connect=None,
                               timeout: float or None = 10) -> dict:
         """Execute Chrome Devtools Protocol command and get returned result The
         command and command args should follow chrome devtools protocol
@@ -1317,6 +1325,8 @@ class Chrome(BaseWebDriver):
             For example to getResponseBody:
             {'base64Encoded': False, 'body': 'response body string'}
         """
+        if not disconnect_connect:
+            disconnect_connect = self._disconnect_connect
 
         socket: SingleCDPSocket = await self.current_socket
         result = await socket.exec(method=cmd, params=cmd_args, timeout=timeout)
@@ -1329,6 +1339,10 @@ class Chrome(BaseWebDriver):
             self._dom_enabled = True
         elif cmd == "DOM.disable":
             self._dom_enabled = False
+
+        if disconnect_connect:
+            await socket.close()
+            self._page_enabled = False
         return result
 
     # noinspection PyTypeChecker
