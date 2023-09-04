@@ -19,6 +19,7 @@
 
 import base64
 import os
+import platform
 import warnings
 from abc import ABCMeta
 from typing import Union, Optional, List, BinaryIO
@@ -55,7 +56,8 @@ class Options(metaclass=ABCMeta):
             self.add_argument("--password-store=basic")
 
         # to support multiple instances
-        self.add_argument('--disable-backgrounding-occluded-windows')
+        if platform.system() == 'Windows':
+            self.add_argument('--disable-backgrounding-occluded-windows')
         self.add_argument('--disable-renderer-backgrounding')
 
         self.add_argument("--no-default-browser-check")

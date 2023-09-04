@@ -191,7 +191,7 @@ class Chrome:
         return target["title"]
 
     @property
-    async def pointer(self) -> Pointer:
+    async def current_pointer(self) -> Pointer:
         target = await self.current_target
         return target.pointer
 
