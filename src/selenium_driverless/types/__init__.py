@@ -1,6 +1,3 @@
-import warnings
-
-
 class JSEvalException(Exception):
     def __init__(self, exception_details):
         super().__init__()
@@ -20,8 +17,10 @@ class JSEvalException(Exception):
 
 
 class RemoteObject:
+    # noinspection PyTypeChecker
     def __init__(self, target, js: str = None, obj_id: str = None, check_existence=True) -> None:
-        self._target = target
+        from selenium_driverless.types.target import Target
+        self._target: Target = target
         self._js = js
         self._check_exist = check_existence
         self._obj_id = obj_id

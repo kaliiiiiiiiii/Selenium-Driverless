@@ -19,7 +19,6 @@
 
 import base64
 import os
-import platform
 import warnings
 from abc import ABCMeta
 from typing import Union, Optional, List, BinaryIO
@@ -52,16 +51,24 @@ class Options(metaclass=ABCMeta):
         self._ignore_local_proxy = False
 
         self.add_argument("--no-first-run")
+        self.add_argument('--disable-component-update')
+        self.add_argument('--no-service-autorun')
         if IS_POSIX:
             self.add_argument("--password-store=basic")
 
         # to support multiple instances
-        if platform.system() == 'Windows':
-            self.add_argument('--disable-backgrounding-occluded-windows')
+        self.add_argument('--disable-backgrounding-occluded-windows')
         self.add_argument('--disable-renderer-backgrounding')
 
+        self.add_argument('--disable-background-timer-throttling')
+        self.add_argument('--disable-renderer-backgrounding')
+        self.add_argument('--disable-background-networking')
+        self.add_argument('--no-pings')
+
+        self.add_argument('--disable-infobars')
+        self.add_argument('--disable-breakpad')
         self.add_argument("--no-default-browser-check")
-        self.add_argument('--disable-component-update')
+        self.add_argument('--homepage=about:blank')
 
         self._is_remote = True
 

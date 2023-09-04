@@ -234,6 +234,8 @@ class WebElement(RemoteObject):
         await self._target.execute_cdp_cmd("DOM.removeNode", {"nodeId": await self.node_id})
 
     async def highlight(self, highlight=True):
+        if not self._target._dom_enabled:
+            await self._target.execute_cdp_cmd("DOM.enable")
         if highlight:
             await self._target.execute_cdp_cmd("Overlay.enable")
             await self._target.execute_cdp_cmd("Overlay.highlightNode", {"nodeId": await self.node_id,

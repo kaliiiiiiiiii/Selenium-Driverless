@@ -30,7 +30,6 @@ from typing import List
 from typing import Optional
 
 import websockets.exceptions
-from cdp_socket.socket import CDPSocket
 from selenium.common.exceptions import InvalidArgumentException
 from selenium.webdriver.common.print_page_options import PrintOptions
 from selenium.webdriver.remote.bidi_connection import BidiConnection
@@ -40,6 +39,7 @@ from selenium_driverless.types.options import Options as ChromeOptions
 from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
 from selenium_driverless.types.target import Target
+from cdp_socket.utils.conn import get_json
 
 
 class Chrome:
@@ -47,7 +47,8 @@ class Chrome:
 
     def __init__(
             self,
-            options: ChromeOptions = None
+            options: ChromeOptions = None,
+            timeout: float = 30
     ) -> None:
         """Creates a new instance of the chrome target. Starts the service and
         then creates new instance of chrome target.
@@ -55,11 +56,12 @@ class Chrome:
         :Args:
          - options - this takes an instance of ChromeOptions
         """
+        self._current_target = None
+        self._host = None
+        self._timeout = timeout
         self._loop: asyncio.AbstractEventLoop or None = None
-        self._base = None
         self.browser_pid: int or None = None
         self._targets: typing.Dict[str, Target] = {}
-        self._current_target_id: str or None = None
         if not options:
             options = ChromeOptions()
         if not options.binary_location:
@@ -136,15 +138,17 @@ class Chrome:
 
         host, port = self._options.debugger_address.split(":")
         port = int(port)
-        self._base = await CDPSocket(port=port, host=host, loop=self._loop, timeout=30)
+        self._host = f"{host}:{port}"
+
         if not self._is_remote:
             # noinspection PyUnboundLocalVariable
             self.browser_pid = browser.pid
-        targets = await self._base.targets
+        targets = await get_json(self._host, timeout=self._timeout)
         for target in targets:
             if target["type"] == "page":
-                self._current_target_id = target["id"]
-
+                target_id = target["id"]
+                self._current_target = await self.get_target(target_id=target_id)
+                break
         if self._loop:
             self._switch_to = SyncSwitchTo(driver=self, loop=self._loop)
         else:
@@ -159,13 +163,13 @@ class Chrome:
             await self.get_target(target_id)
         return self._targets
 
-    async def get_target(self, target_id: str = None):
+    async def get_target(self, target_id: str = None, timeout: float = 2):
         if not target_id:
-            target_id = self._current_target_id
+            return self._current_target
         target: Target = self._targets.get(target_id)
         if not target:
-            socket = await self.base.get_socket(sock_id=target_id)
-            target: Target = await Target(socket=socket, is_remote=self._is_remote, loop=self._loop, base=self.base)
+            target: Target = await Target(host=self._host, target_id=target_id,
+                                          is_remote=self._is_remote, loop=self._loop, timeout=timeout)
             self._targets[target_id] = target
 
             # noinspection PyUnusedLocal
@@ -176,12 +180,12 @@ class Chrome:
         return target
 
     @property
-    async def current_target(self) -> Target:
-        return await self.get_target()
+    def current_target(self) -> Target:
+        return self._current_target
 
     async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
         """Loads a web page in the current browser session."""
-        target = await self.current_target
+        target = self.current_target
         await target.get(url=url, referrer=referrer, wait_load=wait_load, timeout=timeout)
 
     @property
@@ -192,7 +196,7 @@ class Chrome:
 
     @property
     async def current_pointer(self) -> Pointer:
-        target = await self.current_target
+        target = self.current_target
         return target.pointer
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
@@ -235,7 +239,7 @@ class Chrome:
 
                 target.current_url
         """
-        target = await self.current_target
+        target = self.current_target
         return await target.url
 
     @property
@@ -247,7 +251,7 @@ class Chrome:
 
                 target.page_source
         """
-        target = await self.current_target
+        target = self.current_target
         return await target.page_source
 
     async def close(self, timeout: float = 2, target_id: str = None) -> None:
@@ -312,14 +316,14 @@ class Chrome:
 
     @property
     async def current_target_info(self):
-        target = await self.current_target
+        target = self.current_target
         return await target.info
 
     @property
     def current_window_handle(self) -> str:
         """Returns the current target_id
         """
-        return self._current_target_id
+        return self.current_target.id
 
     @property
     async def current_window_id(self):
@@ -372,7 +376,7 @@ class Chrome:
         The target makes the best effort to return a PDF based on the
         provided parameters.
         """
-        target = await self.current_target
+        target = self.current_target
         return await target.print_page(print_options=print_options)
 
     @property
@@ -765,10 +769,6 @@ class Chrome:
         """
         target = await self.get_target(target_id=target_id)
         await target.set_permissions(name=name, value=value, origin=origin)
-
-    @property
-    def base(self) -> CDPSocket:
-        return self._base
 
     async def wait_for_cdp(self, event: str, timeout: float or None = None, target_id: str = None):
         target = await self.get_target(target_id=target_id)

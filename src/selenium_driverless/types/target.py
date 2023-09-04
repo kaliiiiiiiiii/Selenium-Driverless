@@ -6,7 +6,6 @@ from typing import List
 from typing import Optional
 import websockets
 
-from cdp_socket.socket import SingleCDPSocket
 from cdp_socket.exceptions import CDPError
 from selenium.webdriver.common.print_page_options import PrintOptions
 
@@ -15,14 +14,14 @@ from selenium_driverless.sync.webelement import WebElement as SyncWebElement
 from selenium_driverless.types.webelement import WebElement, RemoteObject
 from selenium_driverless.types.alert import Alert
 from selenium_driverless.sync.alert import Alert as SyncAlert
-from cdp_socket.socket import CDPSocket
+from cdp_socket.socket import SingleCDPSocket
 
 
 class Target:
     """Allows you to drive the browser without chromedriver."""
 
-    def __init__(self, socket: SingleCDPSocket, is_remote: bool = False,
-                 loop: asyncio.AbstractEventLoop or None = None, base: CDPSocket = None) -> None:
+    def __init__(self, host: str, target_id: str, is_remote: bool = False,
+                 loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30) -> None:
         """Creates a new instance of the chrome target. Starts the service and
         then creates new instance of chrome target.
 
@@ -38,28 +37,26 @@ class Target:
         self._document_elem_ = None
         self._alert = None
 
-        self._base = base
         self._targets: list = []
+        self._socket = None
 
         self._is_remote = is_remote
-        self._socket = socket
+        self._host = host
+        self._id = target_id
+        self._timeout = timeout
 
         self._loop = loop
 
     def __repr__(self):
-        return f'<{type(self).__module__}.{type(self).__name__} (target_id="{self.id}", ws_url="{self.socket.ws_url}")>'
+        return f'<{type(self).__module__}.{type(self).__name__} (target_id="{self.id}", host="{self._host}")>'
 
     @property
     def id(self):
-        return self._socket.id
+        return self._id
 
     @property
     def socket(self) -> SingleCDPSocket:
         return self._socket
-
-    @property
-    def base(self):
-        return self._base
 
     async def __aenter__(self):
         await self._init()
@@ -78,6 +75,8 @@ class Target:
         return self._init().__await__()
 
     async def _init(self):
+        self._socket = await SingleCDPSocket(websock_url=f'ws://{self._host}/devtools/page/{self._id}',
+                                             timeout=self._timeout, loop=self._loop)
         self._global_this_ = await RemoteObject(target=self, js="globalThis", check_existence=False)
         self._pointer = Pointer(target=self)
 
@@ -98,7 +97,7 @@ class Target:
         await self.add_cdp_listener("Page.loadEventFired", clear_global_this)
         return self
 
-    async def get_alert(self, timeout:float=5):
+    async def get_alert(self, timeout: float = 5):
         if not self._page_enabled:
             await self.execute_cdp_cmd("Page.enable", timeout=timeout)
         if self._loop:
@@ -270,7 +269,6 @@ class Target:
                 pass
             else:
                 raise e
-
 
     async def focus(self):
         await self.execute_cdp_cmd("Target.activateTarget", {"targetId": self.id})

@@ -111,8 +111,7 @@ class SwitchTo:
         raise NotImplementedError('You might use target.switch_to.target(target.targets[0]["targetId"])')
 
     async def target(self, target_id: str, activate: bool = True):
-        await self._driver.get_target(target_id=target_id)
-        self._driver._current_target_id = target_id
+        self._driver._current_target = await self._driver.get_target(target_id)
         if activate:
             await self._driver.execute_cdp_cmd("Target.activateTarget",
                                                {"targetId": self._driver.current_window_handle})

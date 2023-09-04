@@ -206,7 +206,7 @@ class Pointer:
             await self.move_to(x, y=y, **move_kwargs)
         await self.base.click(x, y, **click_kwargs)
 
-    async def move_to(self, x_or_elem: int, y: int or None = None, total_time: float = 1, accel: float = 2,
+    async def move_to(self, x_or_elem: int, y: int or None = None, total_time: float = 0.5, accel: float = 2,
                       mid_time: float = None, smooth_soft=20, **kwargs):
         if isinstance(x_or_elem, WebElement):
             x, y = await x_or_elem.mid_location()
