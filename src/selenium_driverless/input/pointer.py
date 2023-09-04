@@ -185,10 +185,10 @@ class BasePointer:
 
 
 class Pointer:
-    def __init__(self, driver, pointer_type: str = PointerType.MOUSE):
+    def __init__(self, target, pointer_type: str = PointerType.MOUSE):
         self.pointer_type = pointer_type
-        self._driver = driver
-        self.base = BasePointer(driver=driver, pointer_type=pointer_type)
+        self._target = target
+        self.base = BasePointer(driver=target, pointer_type=pointer_type)
         self.location = [100, 0]
 
     async def click(self, x_or_elem: float, y: float or None = None, move_to:bool=True,

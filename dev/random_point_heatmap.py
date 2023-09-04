@@ -12,12 +12,7 @@ def gen_rand_points(polygon_vertices: np.array, heatmap_grid: np.array, n_points
     return np.array(points)
 
 
-elem = np.array([
-    [59.13952637, -55.31472397],
-    [140.13952637, 84.98139191],
-    [126.86047363, 92.64805603],
-    [45.86047363, -47.64805603]
-])
+elem = np.array([[54.66666794, 17.66666794], [54.66666794, 17.66666794], [54.66666794, 17.66666794], [54.66666794, 17.66666794]])
 
 start = time.process_time()
 heatmap = gen_heatmap(elem, num_points=50)

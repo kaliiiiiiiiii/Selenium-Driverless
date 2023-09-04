@@ -113,10 +113,11 @@ asyncio.run(main())
 ### Pointer Interaction
 see [@master/dev/show_mousemove.py](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/dev/show_mousemove.py) for visualization
 ```python
+pointer = await driver.pointer
 move_kwargs = {"total_time": 0.7, "accel": 2, "smooth_soft": 20}
 
-await driver.pointer.move_to(100, 500)
-await driver.pointer.click(500, 50, move_kwargs=move_kwargs, move_to=True)
+await pointer.move_to(100, 500)
+await pointer.click(500, 50, move_kwargs=move_kwargs, move_to=True)
 ```
 
 ## Help

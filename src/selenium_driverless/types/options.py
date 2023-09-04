@@ -151,7 +151,7 @@ class Options(metaclass=ABCMeta):
 
     @unhandled_prompt_behavior.setter
     def unhandled_prompt_behavior(self, behavior: str) -> None:
-        """How the driver should respond when an alert is present and the
+        """How the target should respond when an alert is present and the
         command sent is not handling the alert:
         https://w3c.github.io/webdriver/#dfn-table-of-page-load-strategies.
 
@@ -176,7 +176,7 @@ class Options(metaclass=ABCMeta):
 
     @timeouts.setter
     def timeouts(self, timeouts: dict) -> None:
-        """How long the driver should wait for actions to complete before
+        """How long the target should wait for actions to complete before
         returning an error https://w3c.github.io/webdriver/#timeouts.
 
         :param timeouts: values in milliseconds for implicit wait, page load and script timeout

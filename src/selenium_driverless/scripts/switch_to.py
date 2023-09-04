@@ -22,13 +22,10 @@ from typing import Union
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchFrameException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
+from selenium_driverless.types.by import By
+from selenium_driverless.types.webelement import WebElement
 
-from selenium.webdriver.remote.command import Command
-
-from selenium_driverless.scripts.alert import Alert
-from selenium_driverless.sync.alert import Alert as SyncAlert
+from selenium_driverless.types.alert import Alert
 
 
 class SwitchTo:
@@ -42,15 +39,6 @@ class SwitchTo:
         return self._init().__await__()
 
     async def _init(self):
-        def set_alert(alert):
-            self._alert = alert
-
-        # noinspection PyUnusedLocal
-        def remove_alert(alert):
-            self._alert = None
-
-        await self._driver.add_cdp_listener("Page.javascriptDialogOpening", set_alert)
-        await self._driver.add_cdp_listener("Page.javascriptDialogClosed", remove_alert)
         return self
 
     @property
@@ -60,9 +48,9 @@ class SwitchTo:
         :Usage:
             ::
 
-                element = driver.switch_to.active_element
+                element = target.switch_to.active_element
         """
-        raise NotImplementedError('You might use driver.switch_to.target(driver.targets[0]["targetId"])')
+        raise NotImplementedError('You might use target.switch_to.target(target.target_infos[0]["targetId"])')
 
     @property
     async def alert(self) -> Alert:
@@ -71,16 +59,20 @@ class SwitchTo:
         :Usage:
             ::
 
-                alert = driver.switch_to.alert
+                alert = target.switch_to.alert
         """
-        if self._loop:
-            alert = SyncAlert(self._driver, loop=self._loop)
-        else:
-            alert = await Alert(self._driver)
-        # noinspection PyProtectedMember
-        if not self._driver._page_enabled:
-            await self._driver.execute_cdp_cmd("Page.enable", disconnect_connect=False)
-        return alert
+        return await self.get_alert()
+
+    async def get_alert(self, target_id: str = None, timeout: float = 5) -> Alert:
+        """Switches focus to an alert on the page.
+
+        :Usage:
+            ::
+
+                alert = target.switch_to.alert
+        """
+        target = await self._driver.get_target(target_id=target_id)
+        return await target.get_alert(timeout=timeout)
 
     async def default_content(self) -> None:
         """Switch focus to the default frame.
@@ -88,9 +80,9 @@ class SwitchTo:
         :Usage:
             ::
 
-                driver.switch_to.default_content()
+                target.switch_to.default_content()
         """
-        raise NotImplementedError('You might use driver.switch_to.target(driver.targets[0]["targetId"])')
+        raise NotImplementedError('You might use target.switch_to.target(target.targets[0]["targetId"])')
 
     async def frame(self, frame_reference: Union[str, int, WebElement]) -> None:
         """Switches focus to the specified frame, by index, name, or
@@ -103,9 +95,9 @@ class SwitchTo:
         :Usage:
             ::
 
-                driver.switch_to.frame('frame_name')
-                driver.switch_to.frame(1)
-                driver.switch_to.frame(driver.find_elements(By.TAG_NAME, "iframe")[0])
+                target.switch_to.frame('frame_name')
+                target.switch_to.frame(1)
+                target.switch_to.frame(target.find_elements(By.TAG_NAME, "iframe")[0])
         """
         if isinstance(frame_reference, str):
             try:
@@ -116,15 +108,11 @@ class SwitchTo:
                 except NoSuchElementException:
                     raise NoSuchFrameException(frame_reference)
 
-        raise NotImplementedError('You might use driver.switch_to.target(driver.targets[0]["targetId"])')
+        raise NotImplementedError('You might use target.switch_to.target(target.targets[0]["targetId"])')
 
     async def target(self, target_id: str, activate: bool = True):
-        from cdp_socket.socket import SingleCDPSocket
-
-        socket: SingleCDPSocket = await self._driver.base.get_socket(sock_id=target_id)
-        self._driver._current_target = socket.id
-        self._driver._global_this_ = None
-        self._driver._document_elem_ = None
+        await self._driver.get_target(target_id=target_id)
+        self._driver._current_target_id = target_id
         if activate:
             await self._driver.execute_cdp_cmd("Target.activateTarget",
                                                {"targetId": self._driver.current_window_handle})
@@ -139,7 +127,7 @@ class SwitchTo:
         :Usage:
             ::
 
-                driver.switch_to.new_window('tab')
+                target.switch_to.new_window('tab')
         """
         new_tab = False
         if type_hint == "window":
@@ -161,9 +149,9 @@ class SwitchTo:
         :Usage:
             ::
 
-                driver.switch_to.parent_frame()
+                target.switch_to.parent_frame()
         """
-        await self._driver.execute(Command.SWITCH_TO_PARENT_FRAME)
+        raise NotImplementedError()
 
     async def window(self, window_name, activate: bool = True) -> None:
         """Switches focus to the specified window.
@@ -174,6 +162,6 @@ class SwitchTo:
         :Usage:
             ::
 
-                driver.switch_to.window('main')
+                target.switch_to.window('main')
         """
         await self.target(window_name, activate=activate)

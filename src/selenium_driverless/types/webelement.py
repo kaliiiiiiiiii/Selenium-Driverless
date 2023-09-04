@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 # edited by kaliiiiiiiiiii
-
+import traceback
 import warnings
 from base64 import b64decode
 from collections import defaultdict
@@ -61,12 +61,12 @@ class WebElement(RemoteObject):
     instance will fail.
     """
 
-    def __init__(self, driver, js: str = None, obj_id=None, node_id=None, check_existence=True, loop=None) -> None:
+    def __init__(self, target, js: str = None, obj_id=None, node_id=None, check_existence=True, loop=None) -> None:
         self._loop = loop
         if not (obj_id or node_id or js):
             raise ValueError("either js, obj_id or node_id need to be specified")
         self._node_id = node_id
-        super().__init__(driver=driver, js=js, obj_id=obj_id, check_existence=check_existence)
+        super().__init__(target=target, js=js, obj_id=obj_id, check_existence=check_existence)
 
     def __await__(self):
         return super().__await__()
@@ -81,7 +81,7 @@ class WebElement(RemoteObject):
                 await self.obj_id
             self._node_id = None
 
-        await self._driver.add_cdp_listener("Page.loadEventFired", clear_node_id)
+        await self._target.add_cdp_listener("Page.loadEventFired", clear_node_id)
 
         return self
 
@@ -89,7 +89,7 @@ class WebElement(RemoteObject):
     async def obj_id(self):
         if not self._obj_id:
             if self._js:
-                res = await self._driver.execute_cdp_cmd("Runtime.evaluate",
+                res = await self._target.execute_cdp_cmd("Runtime.evaluate",
                                                          {"expression": self._js,
                                                           "serializationOptions": {
                                                               "serialization": "idOnly"}})
@@ -100,14 +100,14 @@ class WebElement(RemoteObject):
                 if res["subtype"] != "node":
                     raise ValueError("object isn't a node")
             else:
-                res = await self._driver.execute_cdp_cmd("DOM.resolveNode", {"nodeId": self._node_id})
+                res = await self._target.execute_cdp_cmd("DOM.resolveNode", {"nodeId": self._node_id})
                 self._obj_id = res["object"]["objectId"]
         return self._obj_id
 
     @property
     async def node_id(self):
         if not self._node_id:
-            node = await self._driver.execute_cdp_cmd("DOM.requestNode", {"objectId": await self.obj_id})
+            node = await self._target.execute_cdp_cmd("DOM.requestNode", {"objectId": await self.obj_id})
             self._node_id = node["nodeId"]
         return self._node_id
 
@@ -151,21 +151,21 @@ class WebElement(RemoteObject):
         if by == By.TAG_NAME:
             if warn:
                 warnings.warn(
-                    f'By.TAG_NAME might be detectable, you might use driver.search_elements("{value}") or By.CSS_SELECTOR instead')
+                    f'By.TAG_NAME might be detectable, you might use target.search_elements("{value}") or By.CSS_SELECTOR instead')
             return await self.execute_script("return this.getElementsByTagName(arguments[0])",
                                              value, serialization="deep")
         elif by == By.CSS_SELECTOR:
             elems = []
             node_id = await self.node_id
-            res = await self._driver.execute_cdp_cmd("DOM.querySelectorAll", {"nodeId": node_id,
+            res = await self._target.execute_cdp_cmd("DOM.querySelectorAll", {"nodeId": node_id,
                                                                               "selector": value})
             node_ids = res["nodeIds"]
             for node_id in node_ids:
                 if self._loop:
                     from selenium_driverless.sync.webelement import WebElement as SyncWebElement
-                    elem = SyncWebElement(node_id=node_id, driver=self._driver, check_existence=False, loop=self._loop)
+                    elem = SyncWebElement(node_id=node_id, target=self._target, check_existence=False, loop=self._loop)
                 else:
-                    elem = await WebElement(node_id=node_id, driver=self._driver, check_existence=False)
+                    elem = await WebElement(node_id=node_id, target=self._target, check_existence=False)
                 elems.append(elem)
             return elems
         elif by == By.XPATH:
@@ -178,22 +178,22 @@ class WebElement(RemoteObject):
                         );"""
             if warn:
                 warnings.warn(
-                    f'By.XPATH might be detectable, you might use driver.search_elements("{value}") or By.CSS_SELECTOR instead')
+                    f'By.XPATH might be detectable, you might use target.search_elements("{value}") or By.CSS_SELECTOR instead')
             return await self.execute_script(scipt, value, serialization="deep")
         else:
             return ValueError("unexpected by")
 
     async def _describe(self):
-        res = await self._driver.execute_cdp_cmd("DOM.describeNode", {"objectId": await self.obj_id, "pierce": True})
+        res = await self._target.execute_cdp_cmd("DOM.describeNode", {"objectId": await self.obj_id, "pierce": True})
         return res["node"]
 
     @property
     async def source(self):
-        res = await self._driver.execute_cdp_cmd("DOM.getOuterHTML", {"nodeId": await self.node_id})
+        res = await self._target.execute_cdp_cmd("DOM.getOuterHTML", {"nodeId": await self.node_id})
         return res["outerHTML"]
 
     async def set_source(self, value: str):
-        await self._driver.execute_cdp_cmd("DOM.setOuterHTML", {"nodeId": await self.node_id, "outerHTML": value})
+        await self._target.execute_cdp_cmd("DOM.setOuterHTML", {"nodeId": await self.node_id, "outerHTML": value})
 
     async def get_property(self, name: str, warn: bool = True) -> str or None:
         """Gets the given property of the element.
@@ -231,12 +231,12 @@ class WebElement(RemoteObject):
         await self.execute_script("this.value = ''", warn=True)
 
     async def remove(self):
-        await self._driver.execute_cdp_cmd("DOM.removeNode", {"nodeId": await self.node_id})
+        await self._target.execute_cdp_cmd("DOM.removeNode", {"nodeId": await self.node_id})
 
     async def highlight(self, highlight=True):
         if highlight:
-            await self._driver.execute_cdp_cmd("Overlay.enable")
-            await self._driver.execute_cdp_cmd("Overlay.highlightNode", {"nodeId": await self.node_id,
+            await self._target.execute_cdp_cmd("Overlay.enable")
+            await self._target.execute_cdp_cmd("Overlay.highlightNode", {"nodeId": await self.node_id,
                                                                          "highlightConfig": {
                                                                              "showInfo": True,
                                                                              "borderColor": {
@@ -250,10 +250,10 @@ class WebElement(RemoteObject):
                                                                              }
                                                                          }})
         else:
-            await self._driver.execute_cdp_cmd("Overlay.disable")
+            await self._target.execute_cdp_cmd("Overlay.disable")
 
     async def focus(self):
-        return await self._driver.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
+        return await self._target.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
 
     async def click(self, timeout: float = 0.25, bias: float = 5, resolution: int = 50, debug: bool = False,
                     scroll_to=True, move_to: bool = True) -> None:
@@ -264,7 +264,7 @@ class WebElement(RemoteObject):
         while True:
             try:
                 x, y = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
-                await self._driver.pointer.click(x, y=y, click_kwargs={"timeout": timeout}, move_to=move_to)
+                await self._target.pointer.click(x, y=y, click_kwargs={"timeout": timeout}, move_to=move_to)
                 break
             except CDPError as e:
                 # element partially within viewport, point outside viewport
@@ -274,7 +274,7 @@ class WebElement(RemoteObject):
 
     async def write(self, text: str):
         await self.focus()
-        await self._driver.execute_cdp_cmd("Input.insertText", {"text": text})
+        await self._target.execute_cdp_cmd("Input.insertText", {"text": text})
 
     async def send_keys(self, value: str) -> None:
         # noinspection GrazieInspection
@@ -286,20 +286,20 @@ class WebElement(RemoteObject):
 
                 Use this to send simple key events or to fill out form fields::
 
-                    form_textfield = driver.find_element(By.NAME, 'username')
+                    form_textfield = target.find_element(By.NAME, 'username')
                     form_textfield.send_keys("admin")
 
                 This can also be used to set file inputs.
 
                 ::
 
-                    file_input = driver.find_element(By.NAME, 'profilePic')
+                    file_input = target.find_element(By.NAME, 'profilePic')
                     file_input.send_keys("path/to/profilepic.gif")
                     # Generally it's better to wrap the file path in one of the methods
                     # in os.path to return the actual path to support cross OS testing.
                     # file_input.send_keys(os.path.abspath("path/to/profilepic.gif"))
                 """
-        # transfer file to another machine only if remote driver is used
+        # transfer file to another machine only if remote target is used
         # the same behaviour as for java binding
         raise NotImplementedError("you might use elem.write() for inputs instead")
 
@@ -312,10 +312,20 @@ class WebElement(RemoteObject):
         vertices = box["content"]
         if bias and resolution:
             heatmap = gen_heatmap(vertices, num_points=resolution)
-            point = gen_rand_point(vertices, heatmap, bias_value=bias)
+            exc = None
+            try:
+                point = gen_rand_point(vertices, heatmap, bias_value=bias)
+                points = np.array([point])
+            except Exception as e:
+                points = np.array([[100, 100]])
+                exc = e
             if debug:
                 from selenium_driverless.scripts.geometry import visualize
-                visualize(np.array([point]), heatmap, vertices)
+                visualize(points, heatmap, vertices)
+            if exc:
+                traceback.print_exc()
+                warnings.warn("couldn't get random point based on heatmap")
+                point = centroid(vertices)
         else:
             point = centroid(vertices)
 
@@ -323,11 +333,11 @@ class WebElement(RemoteObject):
         y = int(point[1])
 
         # ensure element is at location
-        res = await self._driver.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
+        res = await self._target.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
                                                                             "includeUserAgentShadowDOM": True,
                                                                             "ignorePointerEventsNone": False})
         node_id_at = res["nodeId"]
-        res = await self._driver.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
+        res = await self._target.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
         obj_id_at = res["object"]["objectId"]
         this_obj_id = await self.obj_id
 
@@ -353,7 +363,7 @@ class WebElement(RemoteObject):
 
     @property
     async def dom_attributes(self):
-        res = await self._driver.execute_cdp_cmd("DOM.getAttributes", {"nodeId": await self.node_id})
+        res = await self._target.execute_cdp_cmd("DOM.getAttributes", {"nodeId": await self.node_id})
         attr_list = res["attributes"]
         attributes_dict = defaultdict(lambda: None)
 
@@ -380,7 +390,7 @@ class WebElement(RemoteObject):
         return attrs[name]
 
     async def set_dom_attribute(self, name: str, value: str):
-        self._driver.execute_cdp_cmd("DOM.setAttributeValue", {"nodeId": await self.node_id,
+        self._target.execute_cdp_cmd("DOM.setAttributeValue", {"nodeId": await self.node_id,
                                                                "name": name, "value": value})
 
     async def get_attribute(self, name):
@@ -462,7 +472,7 @@ class WebElement(RemoteObject):
         if rect:
             args["rect"] = rect
         try:
-            await self._driver.execute_cdp_cmd("DOM.scrollIntoViewIfNeeded", args)
+            await self._target.execute_cdp_cmd("DOM.scrollIntoViewIfNeeded", args)
             return True
         except CDPError as e:
             if e.code == -32000 and e.message == 'Node is detached from document':
@@ -471,8 +481,8 @@ class WebElement(RemoteObject):
     @property
     async def size(self) -> dict:
         """The size of the element."""
-        size = await self.rect
-        return {"height": size["height"], "width": size["width"]}
+        box_model = await self.box_model
+        return {"height": box_model["height"], "width": box_model["width"]}
 
     async def value_of_css_property(self, property_name) -> str:
         """The value of a CSS property."""
@@ -494,7 +504,7 @@ class WebElement(RemoteObject):
     @property
     async def box_model(self):
         node_id = await self.node_id
-        res = await self._driver.execute_cdp_cmd("DOM.getBoxModel", {"nodeId": node_id})
+        res = await self._target.execute_cdp_cmd("DOM.getBoxModel", {"nodeId": node_id})
         model = res['model']
         keys = ['content', 'padding', 'border', 'margin']
         for key in keys:
@@ -578,7 +588,7 @@ class WebElement(RemoteObject):
         node: dict = await self._describe()
         node_id = node.get("parentId", None)
         if node_id:
-            return WebElement(node_id=node_id, check_existence=False, driver=self._driver)
+            return WebElement(node_id=node_id, check_existence=False, target=self._target)
 
     @property
     def children(self):

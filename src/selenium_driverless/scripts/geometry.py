@@ -1,4 +1,5 @@
 import numpy as np
+import random
 from matplotlib.patches import Polygon
 from scipy.interpolate import splprep, splev
 
@@ -44,7 +45,13 @@ def gen_rand_point(polygon_vertices: np.array, heatmap_grid: np.array, bias_valu
     heatmap_probs = heatmap_grid.flatten() ** bias_value
     heatmap_probs /= np.sum(heatmap_probs)
 
-    sampled_index = np.random.choice(num_points ** 2, p=heatmap_probs)
+    try:
+        sampled_index = np.random.choice(num_points ** 2, p=heatmap_probs)
+    except ValueError as e:
+        if e.args[0] == 'probabilities contain NaN':
+            raise ValueError("Can't generate point from heatmap with 0-values only")
+        else:
+            raise e
 
     row = sampled_index // num_points
     col = sampled_index % num_points
@@ -65,21 +72,16 @@ def get_bounds(vertices: np.array):
 
 
 def centroid(vertices):
-    x, y = 0, 0
-    n = len(vertices)
-    signed_area = 0
-    for i in range(len(vertices)):
-        x0, y0 = vertices[i]
-        x1, y1 = vertices[(i + 1) % n]
-        # shoelace formula
-        area = (x0 * y1) - (x1 * y0)
-        signed_area += area
-        x += (x0 + x1) * area
-        y += (y0 + y1) * area
-    signed_area *= 0.5
-    x /= 6 * signed_area
-    y /= 6 * signed_area
-    return x, y
+    polygon2 = np.roll(vertices, -1, axis=0)
+
+    # Compute signed area of each triangle
+    signed_areas = 0.5 * np.cross(vertices, polygon2)
+
+    # Compute centroid of each triangle
+    centroids = (vertices + polygon2) / 3.0
+
+    # Get average of those centroids, weighted by the signed areas.
+    return np.average(centroids, axis=0, weights=signed_areas)
 
 
 def visualize(rand_points: np.array, heatmap_grid: np.array, polygon_vertices: np.array):
@@ -97,9 +99,6 @@ def visualize(rand_points: np.array, heatmap_grid: np.array, polygon_vertices: n
 
     plt.tight_layout()
     plt.show(block=True)
-
-
-import random
 
 
 def bias_0_dot_5(strength: float, max_offset: float):

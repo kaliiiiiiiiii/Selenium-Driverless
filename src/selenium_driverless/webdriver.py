@@ -19,115 +19,60 @@
 
 """The WebDriver implementation."""
 import asyncio
+import concurrent.futures
 import os.path
 import subprocess
 import typing
 import warnings
-from abc import ABCMeta
-from base64 import b64decode
-from base64 import urlsafe_b64encode
 from contextlib import asynccontextmanager
 from importlib import import_module
 from typing import List
 from typing import Optional
-from typing import Union
 
+import websockets.exceptions
+from cdp_socket.socket import CDPSocket
 from selenium.common.exceptions import InvalidArgumentException
-from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.print_page_options import PrintOptions
-from selenium.webdriver.common.virtual_authenticator import Credential
-from selenium.webdriver.common.virtual_authenticator import VirtualAuthenticatorOptions
-from selenium.webdriver.common.virtual_authenticator import (
-    required_virtual_authenticator,
-)
 from selenium.webdriver.remote.bidi_connection import BidiConnection
-from selenium.webdriver.remote.file_detector import FileDetector
-from selenium.webdriver.remote.file_detector import LocalFileDetector
-from selenium.webdriver.remote.mobile import Mobile
-from selenium.webdriver.remote.script_key import ScriptKey
-from selenium.webdriver.remote.webdriver import create_matches
 
-from selenium_driverless.scripts.options import Options as ChromeOptions
+from selenium_driverless.input.pointer import Pointer
+from selenium_driverless.types.options import Options as ChromeOptions
 from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
-from selenium_driverless.types.webelement import WebElement, RemoteObject
-from selenium_driverless.sync.webelement import WebElement as SyncWebElement
-from selenium_driverless.input.pointer import Pointer
-
-from cdp_socket.socket import CDPSocket, SingleCDPSocket
+from selenium_driverless.types.target import Target
 
 
-def import_cdp():
-    return import_module("selenium.webdriver.common.bidi.cdp")
-
-
-class BaseWebDriver(metaclass=ABCMeta):
-    """Abstract Base Class for all Webdriver subtypes.
-
-    ABC's allow custom implementations of Webdriver to be registered so
-    that isinstance type checks will succeed.
-    """
-
-
-class Chrome(BaseWebDriver):
+class Chrome:
     """Allows you to drive the browser without chromedriver."""
 
     def __init__(
             self,
             options: ChromeOptions = None
     ) -> None:
-        """Creates a new instance of the chrome driver. Starts the service and
-        then creates new instance of chrome driver.
+        """Creates a new instance of the chrome target. Starts the service and
+        then creates new instance of chrome target.
 
         :Args:
          - options - this takes an instance of ChromeOptions
         """
-        self._pointer = None
-        self._page_enabled = None
-        self._dom_enabled = None
-
-        self._global_this_ = None
-        self._document_elem_ = None
-
         self._loop: asyncio.AbstractEventLoop or None = None
-        self._page_load_timeout: int = 30
-        self._script_timeout: int = 30
         self._base = None
         self.browser_pid: int or None = None
-        self._targets: list = []
-        self._current_target: str or None = None
+        self._targets: typing.Dict[str, Target] = {}
+        self._current_target_id: str or None = None
         if not options:
             options = ChromeOptions()
         if not options.binary_location:
             from selenium_driverless.utils.utils import find_chrome_executable
             options.binary_location = find_chrome_executable()
-            # options.binary_location = f'"{find_chrome_executable()}"'
         if not options.user_data_dir:
             from selenium_driverless.utils.utils import sel_driverless_path
             import uuid
             options.add_argument("--user-data-dir=" + sel_driverless_path() + "files/tmp/" + uuid.uuid4().hex)
 
-        try:
-            self._options = options
-
-            vendor_prefix = "goog"
-            self.vendor_prefix = vendor_prefix
-
-            if isinstance(options, list):
-                self._capabilities = create_matches(options)
-            else:
-                self._capabilities = options.to_capabilities()
-            self._is_remote = True
-            self.caps = {}
-            self.pinned_scripts = {}
-            self._switch_to = None
-            self._mobile = Mobile(self)
-            self.file_detector = LocalFileDetector()
-            self._authenticator_id = None
-
-        except Exception:
-            self.quit()
-            raise
+        self._options = options
+        self._is_remote = True
+        self._switch_to = None
         self._is_remote = False
 
     def __repr__(self):
@@ -149,49 +94,12 @@ class Chrome(BaseWebDriver):
     def __await__(self):
         return self.start_session().__await__()
 
-    @property
-    def mobile(self) -> Mobile:
-        raise NotImplementedError()
-        # return self._mobile
-
-    @property
-    def name(self) -> str:
-        """Returns the name of the underlying browser for this instance.
-
-        :Usage:
-            ::
-
-                name = driver.name
-        """
-        if "browserName" in self.caps:
-            return self.caps["browserName"]
-        raise KeyError("browserName not specified in session capabilities")
-
-    async def start_client(self):
-        """Called before starting a new session.
-
-        This method may be overridden to define custom startup behavior.
-        """
-        pass
-
-    async def stop_client(self):
-        """Called after executing a quit command.
-
-        This method may be overridden to define custom shutdown
-        behavior.
-        """
-        pass
-
-    async def start_session(self, capabilities: dict or None = None):
+    async def start_session(self):
         """Creates a new session with the desired capabilities.
 
         :Args:
          - capabilities - a capabilities dict to start the session with.
         """
-        await self.start_client()
-        if not capabilities:
-            capabilities = self._capabilities
-        del self._capabilities
         from selenium_driverless.utils.utils import IS_POSIX, read
 
         if not self._options.debugger_address:
@@ -200,26 +108,21 @@ class Chrome(BaseWebDriver):
             self._options._debugger_address = f"127.0.0.1:{port}"
             self._options.add_argument(f"--remote-debugging-port={port}")
         self._options.add_argument("about:blank")
-        options = capabilities["goog:chromeOptions"]
+        options = self._options
 
         # noinspection PyProtectedMember
         self._is_remote = self._options._is_remote
 
-        self._pointer = Pointer(driver=self)
-
         if not self._is_remote:
-            path = options["binary"]
-            args = options["args"]
-            cmds = [path, *args]
-            # if IS_POSIX:
-            #     cmds = [" ".join(cmds)]
+            path = options.binary_location
+            args = options.arguments
             browser = subprocess.Popen(
-                cmds,
+                [path, *args],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 close_fds=IS_POSIX,
-                shell=False  # shell = IS_POISIX
+                shell=False
             )
 
             host, port = self._options.debugger_address.split(":")
@@ -227,7 +130,7 @@ class Chrome(BaseWebDriver):
             if port == 0:
                 path = self._options.user_data_dir + "/DevToolsActivePort"
                 while not os.path.isfile(path):
-                    await self.implicitly_wait(0.1)
+                    await asyncio.sleep(0.1)
                 port = int(read(path, sel_root=False).split("\n")[0])
                 self._options.debugger_address = f"127.0.0.1:{port}"
 
@@ -240,195 +143,88 @@ class Chrome(BaseWebDriver):
         targets = await self._base.targets
         for target in targets:
             if target["type"] == "page":
-                self._current_target = target["id"]
-        self._global_this_ = await RemoteObject(driver=self, js="globalThis", check_existence=False)
-        self.caps = capabilities
+                self._current_target_id = target["id"]
 
         if self._loop:
             self._switch_to = SyncSwitchTo(driver=self, loop=self._loop)
         else:
             self._switch_to = await SwitchTo(driver=self)
-
-        # noinspection PyUnusedLocal
-        def clear_global_this(data):
-            self._global_this_ = None
-            self._document_elem_ = None
-
-        await self.add_cdp_listener("Page.loadEventFired", clear_global_this)
-
         return self
 
-    async def create_web_element(self, element_id: str) -> WebElement:
-        """Creates a web element with the specified `element_id`."""
-        raise NotImplementedError()
+    @property
+    async def targets(self) -> typing.Dict[str, Target]:
+        target_infos = await self.target_infos
+        for target in target_infos:
+            target_id = target['targetId']
+            await self.get_target(target_id)
+        return self._targets
 
-    async def execute(self, driver_command: str = None, params: dict = None):
-        """
-        executes on current pycdp.cdp cmd on current session
-        driver_command and params aren't used
-        """
-        raise NotImplementedError("chrome not started with chromedriver")
+    async def get_target(self, target_id: str = None):
+        if not target_id:
+            target_id = self._current_target_id
+        target: Target = self._targets.get(target_id)
+        if not target:
+            socket = await self.base.get_socket(sock_id=target_id)
+            target: Target = await Target(socket=socket, is_remote=self._is_remote, loop=self._loop, base=self.base)
+            self._targets[target_id] = target
 
-    # noinspection PyUnboundLocalVariable
-    async def get(self, url: str, referrer: str = None, wait_load: bool = True) -> None:
+            # noinspection PyUnusedLocal
+            def remove_target(code: str, reason: str):
+                del self._targets[target_id]
+
+            target.socket.on_closed.append(remove_target)
+        return target
+
+    @property
+    async def current_target(self) -> Target:
+        return await self.get_target()
+
+    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
         """Loads a web page in the current browser session."""
-        if url == "about:blank":
-            wait_load = False
-        loop = self._loop
-        if not loop:
-            loop = asyncio.get_running_loop()
-        if wait_load:
-            await self.execute_cdp_cmd("Page.enable")
-            wait = loop.create_task(self.wait_for_cdp("Page.loadEventFired", timeout=self._page_load_timeout))
-        args = {"url": url, "transitionType": "link"}
-        if referrer:
-            args["referrer"] = referrer
-        get = loop.create_task(self.execute_cdp_cmd("Page.navigate", args))
-        if wait_load:
-            try:
-                await wait
-            except asyncio.TimeoutError:
-                raise TimeoutError(f"page didn't load within timeout of {self._page_load_timeout}")
-        await get
-        self._global_this_ = None
-        self._document_elem_ = None
+        target = await self.current_target
+        await target.get(url=url, referrer=referrer, wait_load=wait_load, timeout=timeout)
 
     @property
     async def title(self) -> str:
-        # noinspection GrazieInspection
-        """Returns the title of the current page.
-
-                :Usage:
-                    ::
-
-                        title = driver.title
-                """
-        target = await self.current_target
+        """Returns the title of the current target"""
+        target = await self.current_target_info
         return target["title"]
 
-    def pin_script(self, script: str, script_key=None) -> ScriptKey:
-        """Store common javascript scripts to be executed later by a unique
-        hashable ID."""
-        script_key_instance = ScriptKey(script_key)
-        self.pinned_scripts[script_key_instance.id] = script
-        return script_key_instance
-
-    def unpin(self, script_key: ScriptKey) -> None:
-        """Remove a pinned script from storage."""
-        try:
-            self.pinned_scripts.pop(script_key.id)
-        except KeyError:
-            raise KeyError(f"No script with key: {script_key} existed in {self.pinned_scripts}") from None
-
-    def get_pinned_scripts(self) -> List[str]:
-        return list(self.pinned_scripts)
-
-    async def _parse_res(self, res):
-        if "subtype" in res.keys():
-            if res["subtype"] == 'node':
-                if self._loop:
-                    res["value"] = await SyncWebElement(driver=self, loop=self._loop,
-                                                        obj_id=res["objectId"],
-                                                        check_existence=False)
-                else:
-                    res["value"] = await WebElement(driver=self, obj_id=res["objectId"],
-                                                    check_existence=False)
-        if 'className' in res.keys():
-            class_name = res['className']
-            if class_name in ['NodeList', 'HTMLCollection']:
-                elems = []
-                obj = await RemoteObject(driver=self, obj_id=res["objectId"], check_existence=False)
-                for idx in range(int(res['description'][-2])):
-                    elems.append(await obj.execute_script("return this[arguments[0]]", idx, serialization="deep"))
-                res["value"] = elems
-            elif class_name == 'XPathResult':
-                elems = []
-                obj = await RemoteObject(driver=self, obj_id=res["objectId"], check_existence=False)
-                if await obj.execute_script("return [7].includes(this.resultType)", serialization="json"):
-                    for idx in range(await obj.execute_script("return this.snapshotLength", serialization="json")):
-                        elems.append(await obj.execute_script("return this.snapshotItem(arguments[0])", idx,
-                                                              serialization="deep"))
-                    res["value"] = elems
-        return res
-
     @property
-    async def _global_this(self):
-        if not self._global_this_:
-            self._global_this_ = await RemoteObject(driver=self, js="globalThis", check_existence=False)
-        return self._global_this_
-
-    @property
-    def pointer(self) -> Pointer:
-        return self._pointer
+    async def pointer(self) -> Pointer:
+        target = await self.current_target
+        return target.pointer
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                                 max_depth: int = None, timeout: int = 2, obj_id=None, warn: bool = False):
+                                 max_depth: int = None, timeout: int = 2, obj_id=None, warn: bool = False,
+                                 target_id: str = None):
         """
         example:
         script= "function(...arguments){this.click()}"
         "this" will be the element object
         """
-        from selenium_driverless.types import RemoteObject, JSEvalException
-        if warn:
-            warnings.warn("execute_script might be detected", stacklevel=4)
-        if not obj_id:
-            global_this = await self._global_this
-            obj_id = await global_this.obj_id
-        if not timeout:
-            timeout = self._script_timeout
-        if not args:
-            args = []
-        if not serialization:
-            serialization = "deep"
-        _args = []
-        for arg in args:
-            if isinstance(arg, RemoteObject):
-                _args.append({"objectId": await arg.obj_id})
-            else:
-                _args.append({"value": arg})
-
-        ser_opts = {"serialization": serialization, "maxDepth": max_depth,
-                    "additionalParameters": {"includeShadowTree": "all", "maxNodeDepth": max_depth}}
-        args = {"functionDeclaration": script, "objectId": obj_id,
-                "arguments": _args, "userGesture": True, "awaitPromise": await_res, "serializationOptions": ser_opts}
-        res = await asyncio.wait_for(self.execute_cdp_cmd("Runtime.callFunctionOn", args), timeout=timeout)
-        if "exceptionDetails" in res.keys():
-            raise JSEvalException(res["exceptionDetails"])
-        res = res["result"]
-        res = await self._parse_res(res)
-        return res
+        target = await self.get_target(target_id)
+        return await target.execute_raw_script(script, *args, await_res=await_res,
+                                               serialization=serialization, max_depth=max_depth,
+                                               timeout=timeout, obj_id=obj_id, warn=warn)
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: int = None,
-                             only_value=True, obj_id=None, warn: bool = False):
+                             timeout: int = None, only_value=True, obj_id=None, warn: bool = False,
+                             target_id: str = None):
         """
         exaple: script = "return elem.click()"
         """
-        script = f"(function(...arguments){{{script}}})"
-        res = await self.execute_raw_script(script, *args, max_depth=max_depth,
-                                            serialization=serialization, timeout=timeout,
-                                            await_res=False, obj_id=obj_id, warn=warn)
-        if only_value:
-            if "value" in res.keys():
-                return res["value"]
-        else:
-            return res
+        target = await self.get_target(target_id)
+        return await target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
+                                           timeout=timeout, only_value=only_value, obj_id=obj_id, warn=warn)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
                                    serialization: str = None, timeout: int = 2,
-                                   only_value=True, obj_id=None, warn: bool = False):
-        script = """(function(...arguments){
-                       const promise = new Promise((resolve, reject) => {
-                              arguments.push(resolve)
-                        });""" + script + ";return promise})"
-        res = await self.execute_raw_script(script, *args, max_depth=max_depth,
-                                            serialization=serialization, timeout=timeout,
-                                            await_res=True, obj_id=obj_id, warn=warn)
-        if only_value:
-            if "value" in res.keys():
-                return res["value"]
-        else:
-            return res
+                                   only_value=True, obj_id=None, warn: bool = False,
+                                   target_id: str = None):
+        target = await self.get_target(target_id)
+        return await target.execute_async_script(script, *args, max_depth=max_depth, serialization=serialization,
+                                                 timeout=timeout, only_value=only_value, obj_id=obj_id, warn=warn)
 
     @property
     async def current_url(self) -> str:
@@ -437,10 +233,10 @@ class Chrome(BaseWebDriver):
         :Usage:
             ::
 
-                driver.current_url
+                target.current_url
         """
         target = await self.current_target
-        return target["url"]
+        return await target.url
 
     @property
     async def page_source(self) -> str:
@@ -449,80 +245,81 @@ class Chrome(BaseWebDriver):
         :Usage:
             ::
 
-                driver.page_source
+                target.page_source
         """
-        return await self.execute_script("return document.documentElement.outerHTML")
+        target = await self.current_target
+        return await target.page_source
 
-    async def close(self, timeout: float = 2) -> None:
+    async def close(self, timeout: float = 2, target_id: str = None) -> None:
         """Closes the current window.
 
         :Usage:
             ::
 
-                driver.close()
+                target.close()
         """
-        from warnings import simplefilter
-        simplefilter("ignore", UserWarning)
-        window_handles = await self.window_handles
-        simplefilter("always", UserWarning)
-        await self.execute_cdp_cmd("Page.close", timeout=timeout)
-        await self.switch_to.window(window_handles[0])
+        if not target_id:
+            target_id = self.current_window_handle
+        target = await self.get_target(target_id)
+        await target.close(timeout=timeout)
 
-    async def focus(self):
-        await self.execute_cdp_cmd("Target.activateTarget", {"targetId": self.current_window_handle})
+    async def focus(self, target_id: str = None):
+        target = await self.get_target(target_id)
+        await target.focus()
 
     async def quit(self) -> None:
-        """Quits the driver and closes every associated window.
+        """Quits the target and closes every associated window.
 
         :Usage:
             ::
 
-                driver.quit()
+                target.quit()
         """
+        try:
+            targets = await self.targets
+            for target in list(targets.values()):
+                await target.close(timeout=2)
+        except TimeoutError:
+            pass
+        except concurrent.futures.TimeoutError:
+            pass
+        except websockets.exceptions.ConnectionClosedError:
+            pass
         if not self._is_remote:
             import os
             import shutil
             # noinspection PyBroadException,PyUnusedLocal
             try:
-                try:
-                    # wait for process to be killed
-                    while True:
-                        try:
-                            os.kill(self.browser_pid, 15)
-                        except OSError:
-                            break
-                        await self.implicitly_wait(0.1)
+                # wait for process to be killed
+                while True:
+                    try:
+                        os.kill(self.browser_pid, 15)
+                    except OSError:
+                        break
+                    await asyncio.sleep(0.1)
 
-                    shutil.rmtree(self._options.user_data_dir, ignore_errors=True)
-                finally:
-                    await self.stop_client()
+                shutil.rmtree(self._options.user_data_dir, ignore_errors=True)
             except Exception as e:
                 # We don't care about the message because something probably has gone wrong
                 pass
             finally:
-                pass  # self.service.stop()
+                pass
 
     @property
-    async def targets(self) -> dict:
+    async def target_infos(self) -> dict:
         res = await self.execute_cdp_cmd("Target.getTargets")
         return res["targetInfos"]
 
     @property
-    async def current_target(self):
-        res = await self.execute_cdp_cmd("Target.getTargetInfo", {"targetId": self.current_window_handle})
-        return res["targetInfo"]
+    async def current_target_info(self):
+        target = await self.current_target
+        return await target.info
 
     @property
     def current_window_handle(self) -> str:
-        """Returns the handle of the current window.
-
-        :Usage:
-            ::
-
-                driver.current_window_handle
+        """Returns the current target_id
         """
-        # noinspection PyProtectedMember
-        return self._current_target
+        return self._current_target_id
 
     @property
     async def current_window_id(self):
@@ -536,11 +333,11 @@ class Chrome(BaseWebDriver):
         :Usage:
             ::
 
-                driver.window_handles
+                target.window_handles
         """
         warnings.warn("window_handles aren't ordered")
         tabs = []
-        for target in await self.targets:
+        for target in await self.target_infos:
             if target["type"] == "page":
                 tabs.append(target['targetId'])
         return tabs
@@ -572,16 +369,11 @@ class Chrome(BaseWebDriver):
     async def print_page(self, print_options: Optional[PrintOptions] = None) -> str:
         """Takes PDF of the current page.
 
-        The driver makes the best effort to return a PDF based on the
+        The target makes the best effort to return a PDF based on the
         provided parameters.
         """
-        options = {}
-        if print_options:
-            options = print_options.to_dict()
-            raise NotImplementedError()
-
-        page = await self.execute_cdp_cmd("Page.printToPDF")
-        return page["data"]
+        target = await self.current_target
+        return await target.print_page(print_options=print_options)
 
     @property
     def switch_to(self) -> SwitchTo:
@@ -592,112 +384,91 @@ class Chrome(BaseWebDriver):
         :Usage:
             ::
 
-                element = driver.switch_to.active_element
-                alert = driver.switch_to.alert
-                driver.switch_to.default_content()
-                driver.switch_to.frame('frame_name')
-                driver.switch_to.frame(1)
-                driver.switch_to.frame(driver.find_elements(By.TAG_NAME, "iframe")[0])
-                driver.switch_to.parent_frame()
-                driver.switch_to.window('main')
+                element = target.switch_to.active_element
+                alert = target.switch_to.alert
+                target.switch_to.default_content()
+                target.switch_to.frame('frame_name')
+                target.switch_to.frame(1)
+                target.switch_to.frame(target.find_elements(By.TAG_NAME, "iframe")[0])
+                target.switch_to.parent_frame()
+                target.switch_to.window('main')
         """
         return self._switch_to
 
-    @property
-    async def _current_history_idx(self):
-        res = await self.execute_cdp_cmd("Page.getNavigationHistory")
-        return res["currentIndex"]
-
     # Navigation
-    async def back(self) -> None:
+    async def back(self, target_id: str = None) -> None:
         """Goes one step backward in the browser history.
 
         :Usage:
             ::
 
-                driver.back()
+                target.back()
         """
-        await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": await self._current_history_idx - 1})
-        self._document_elem_ = None
+        target = await self.get_target(target_id=target_id)
+        await target.back()
 
-    async def forward(self) -> None:
+    async def forward(self, target_id: str = None) -> None:
         """Goes one step forward in the browser history.
 
         :Usage:
             ::
 
-                driver.forward()
+                target.forward()
         """
-        await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": await self._current_history_idx + 1})
-        self._document_elem_ = None
+        target = await self.get_target(target_id=target_id)
+        await target.forward()
 
-    async def refresh(self) -> None:
+    async def refresh(self, target_id: str = None) -> None:
         """Refreshes the current page.
 
         :Usage:
             ::
 
-                driver.refresh()
+                target.refresh()
         """
-        await self.execute_cdp_cmd("Page.reload")
-        self._document_elem_ = None
+        target = await self.get_target(target_id=target_id)
+        await target.refresh()
 
     # Options
-    async def get_cookies(self) -> List[dict]:
+    async def get_cookies(self, target_id: str = None) -> List[dict]:
         """Returns a set of dictionaries, corresponding to cookies visible in
-        the current session.
-
-        :Usage:
-            ::
-
-                driver.get_cookies()
+        the current target.
         """
-        cookies = await self.execute_cdp_cmd("Page.getCookies")
-        return cookies["cookies"]
+        target = await self.get_target(target_id=target_id)
+        return await target.get_cookies()
 
-    async def get_cookie(self, name) -> typing.Optional[typing.Dict]:
+    async def get_cookie(self, name, target_id: str = None) -> typing.Optional[typing.Dict]:
         """Get a single cookie by name. Returns the cookie if found, None if
         not.
 
         :Usage:
             ::
 
-                driver.get_cookie('my_cookie')
+                target.get_cookie('my_cookie')
         """
-        for cookie in await self.get_cookies():
-            if cookie["name"] == name:
-                return cookie
-        return None
+        target = await self.get_target(target_id=target_id)
+        return await target.get_cookie(name=name)
 
-    async def delete_cookie(self, name: str, url: str = None, domain: str = None, path: str = None) -> None:
+    async def delete_cookie(self, name: str, url: str = None, domain: str = None,
+                            path: str = None, target_id: str = None) -> None:
         """Deletes a single cookie with the given name.
-
-        :Usage:
-            ::
-
-                driver.delete_cookie('my_cookie')
         """
-        args = {"name": name}
-        if url:
-            args["url"] = url
-        if domain:
-            args["domain"] = domain
-        if path:
-            args["path"] = path
-        await self.execute_cdp_cmd("Network.deleteCookies", args)
+        target = await self.get_target(target_id=target_id)
+        return await target.delete_cookie(name=name, url=url, domain=domain, path=path)
 
-    async def delete_all_cookies(self) -> None:
+    async def delete_all_cookies(self, target_id: str = None) -> None:
         """Delete all cookies in the scope of the session.
 
         :Usage:
             ::
 
-                driver.delete_all_cookies()
+                target.delete_all_cookies()
         """
-        await self.execute_cdp_cmd("Network.clearBrowserCookies")
+        target = await self.get_target(target_id=target_id)
+        await target.delete_all_cookies()
 
     # noinspection GrazieInspection
-    async def add_cookie(self, cookie_dict) -> None:
+    async def add_cookie(self, cookie_dict: dict, target_id: str = None) -> None:
         """Adds a cookie to your current session.
 
         :Args:
@@ -707,132 +478,35 @@ class Chrome(BaseWebDriver):
         :Usage:
             ::
 
-                driver.add_cookie({'name' : 'foo', 'value' : 'bar'})
-                driver.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/'})
-                driver.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/', 'secure' : True})
-                driver.add_cookie({'name' : 'foo', 'value' : 'bar', 'sameSite' : 'Strict'})
+                target.add_cookie({'name' : 'foo', 'value' : 'bar'})
+                target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/'})
+                target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/', 'secure' : True})
+                target.add_cookie({'name' : 'foo', 'value' : 'bar', 'sameSite' : 'Strict'})
         """
-        if "sameSite" in cookie_dict:
-            assert cookie_dict["sameSite"] in ["Strict", "Lax", "None"]
-        await self.execute_cdp_cmd("Network.setCookie", cookie_dict)
+        target = await self.get_target(target_id=target_id)
+        await target.add_cookie(cookie_dict=cookie_dict)
 
     # Timeouts
-    async def implicitly_wait(self, time_to_wait: float) -> None:
-        """Sets a sticky timeout to implicitly wait for an element to be found,
-        or a command to complete. This method only needs to be called one time
-        per session. To set the timeout for calls to execute_async_script, see
-        set_script_timeout.
-
-        :Args:
-         - time_to_wait: Amount of time to wait (in seconds)
-
-        :Usage:
-            ::
-
-                driver.implicitly_wait(30)
-        """
+    async def sleep(self, time_to_wait: float) -> None:
         await asyncio.sleep(time_to_wait)
 
-    def set_script_timeout(self, time_to_wait: float) -> None:
-        """Set the amount of time that the script should wait during an
-        execute_async_script call before throwing an error.
-
-        :Args:
-         - time_to_wait: The amount of time to wait (in seconds)
-
-        :Usage:
-            ::
-
-                driver.set_script_timeout(30)
-        """
-        self._script_timeout = time_to_wait
-
-    def set_page_load_timeout(self, time_to_wait: float) -> None:
-        """Set the amount of time to wait for a page load to complete before
-        throwing an error.
-
-        :Args:
-         - time_to_wait: The amount of time to wait
-
-        :Usage:
-            ::
-
-                driver.set_page_load_timeout(30)
-        """
-        self._page_load_timeout = time_to_wait
-
-    @property
-    def timeouts(self) -> dict:
-        """Get all the timeouts that have been set on the current session.
-
-        :Usage:
-            ::
-
-                driver.timeouts
-        :rtype: Timeout
-        """
-        return {"page_load": self._page_load_timeout, "script": self._script_timeout}
-
-    @timeouts.setter
-    def timeouts(self, timeouts):
-        self._page_load_timeout = timeouts["page_load"]
-        self._script_timeout = timeouts["script"]
-
-    @property
-    async def _document_elem(self):
-        if not self._document_elem_:
-            res = await self.execute_cdp_cmd("DOM.getDocument", {"pierce": True})
-            node_id = res["root"]["nodeId"]
-            self._document_elem_ = await WebElement(driver=self, node_id=node_id, check_existence=False,
-                                                    loop=self._loop)
-        return self._document_elem_
-
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, parent=None):
-        if not parent:
-            parent = await self._document_elem
-        return await parent.find_element(by=by, value=value)
+    async def find_element(self, by: str, value: str, parent=None, target_id: str = None):
+        target = await self.get_target(target_id=target_id)
+        return await target.find_element(by=by, value=value, parent=parent)
 
-    async def find_elements(self, by: str, value: str, parent=None):
-        if not parent:
-            parent = await self._document_elem
-        return await parent.find_elements(by=by, value=value)
+    async def find_elements(self, by: str, value: str, parent=None, target_id: str = None):
+        target = await self.get_target(target_id=target_id)
+        return await target.find_elements(by=by, value=value, parent=parent)
 
-    async def search_elements(self, query: str):
+    async def search_elements(self, query: str, target_id: str = None):
         """
         query:str | Plain text or query selector or XPath search query.
         """
-        # ensure DOM is enabled
-        if not self._dom_enabled:
-            await self.execute_cdp_cmd("DOM.enable")
+        target = await self.get_target(target_id=target_id)
+        return await target.search_elements(query=query)
 
-        # ensure DOM.getDocument got called
-        await self._document_elem
-
-        elems = []
-        res = await self.execute_cdp_cmd("DOM.performSearch",
-                                         {"includeUserAgentShadowDOM": True, "query": query})
-        search_id = res["searchId"]
-        elem_count = res["resultCount"]
-        if elem_count <= 0:
-            return []
-
-        res = await self.execute_cdp_cmd("DOM.getSearchResults",
-                                         {"searchId": search_id, "fromIndex": 0, "toIndex": elem_count})
-        for node_id in res["nodeIds"]:
-            if self._loop:
-                elem = await SyncWebElement(driver=self, check_existence=False, node_id=node_id, loop=self._loop)
-            else:
-                elem = await WebElement(driver=self, check_existence=False, node_id=node_id, loop=self._loop)
-            elems.append(elem)
-        return elems
-
-    @property
-    def capabilities(self) -> dict:
-        """returns the drivers current capabilities being used."""
-        return self.caps
-
-    async def get_screenshot_as_file(self, filename) -> bool:
+    async def get_screenshot_as_file(self, filename: str, target_id: str = None) -> bool:
         # noinspection GrazieInspection
         """Saves a screenshot of the current window to a PNG image file.
                 Returns False if there is any IOError, else returns True. Use full
@@ -845,24 +519,12 @@ class Chrome(BaseWebDriver):
                 :Usage:
                     ::
 
-                        driver.get_screenshot_as_file('/Screenshots/foo.png')
+                        target.get_screenshot_as_file('/Screenshots/foo.png')
                 """
-        if not str(filename).lower().endswith(".png"):
-            warnings.warn(
-                "name used for saved screenshot does not match file " "type. It should end with a `.png` extension",
-                UserWarning,
-            )
-        png = await self.get_screenshot_as_png()
-        try:
-            with open(filename, "wb") as f:
-                f.write(png)
-        except OSError:
-            return False
-        finally:
-            del png
-        return True
+        target = await self.get_target(target_id=target_id)
+        return await target.get_screenshot_as_file(filename=filename)
 
-    async def save_screenshot(self, filename) -> bool:
+    async def save_screenshot(self, filename, target_id: str = None) -> bool:
         # noinspection GrazieInspection
         """Saves a screenshot of the current window to a PNG image file.
                 Returns False if there is any IOError, else returns True. Use full
@@ -875,32 +537,33 @@ class Chrome(BaseWebDriver):
                 :Usage:
                     ::
 
-                        driver.save_screenshot('/Screenshots/foo.png')
+                        target.save_screenshot('/Screenshots/foo.png')
                 """
-        return await self.get_screenshot_as_file(filename)
+        target = await self.get_target(target_id=target_id)
+        return await target.save_screenshot(filename=filename)
 
-    async def get_screenshot_as_png(self) -> bytes:
+    async def get_screenshot_as_png(self, target_id: str = None) -> bytes:
         """Gets the screenshot of the current window as a binary data.
 
         :Usage:
             ::
 
-                driver.get_screenshot_as_png()
+                target.get_screenshot_as_png()
         """
-        base_64 = await self.get_screenshot_as_base64()
-        return b64decode(base_64.encode("ascii"))
+        target = await self.get_target(target_id=target_id)
+        return await target.get_screenshot_as_png()
 
-    async def get_screenshot_as_base64(self) -> str:
+    async def get_screenshot_as_base64(self, target_id: str = None) -> str:
         """Gets the screenshot of the current window as a base64 encoded string
         which is useful in embedded images in HTML.
 
         :Usage:
             ::
 
-                driver.get_screenshot_as_base64()
+                target.get_screenshot_as_base64()
         """
-        res = await self.execute_cdp_cmd("Page.captureScreenshot", {"format": "png"})
-        return res["data"]
+        target = await self.get_target(target_id=target_id)
+        return await target.get_screenshot_as_base64()
 
     # noinspection PyPep8Naming
     async def set_window_size(self, width, height, windowHandle: str = "current") -> None:
@@ -913,7 +576,7 @@ class Chrome(BaseWebDriver):
         :Usage:
             ::
 
-                driver.set_window_size(800,600)
+                target.set_window_size(800,600)
         """
         if windowHandle != "current":
             warnings.warn("Only 'current' window is supported for W3C compatible browsers.")
@@ -926,7 +589,7 @@ class Chrome(BaseWebDriver):
         :Usage:
             ::
 
-                driver.get_window_size()
+                target.get_window_size()
         """
 
         if windowHandle != "current":
@@ -949,7 +612,7 @@ class Chrome(BaseWebDriver):
         :Usage:
             ::
 
-                driver.set_window_position(0,0)
+                target.set_window_position(0,0)
         """
         if windowHandle != "current":
             warnings.warn("Only 'current' window is supported for W3C compatible browsers.")
@@ -962,7 +625,7 @@ class Chrome(BaseWebDriver):
         :Usage:
             ::
 
-                driver.get_window_position()
+                target.get_window_position()
         """
 
         if windowHandle != "current":
@@ -978,7 +641,7 @@ class Chrome(BaseWebDriver):
         :Usage:
             ::
 
-                driver.get_window_rect()
+                target.get_window_rect()
         """
         json = await self.execute_cdp_cmd("Browser.getWindowBounds", {"windowId": await self.current_window_id})
         json = json["bounds"]
@@ -997,9 +660,9 @@ class Chrome(BaseWebDriver):
         :Usage:
             ::
 
-                driver.set_window_rect(x=10, y=10)
-                driver.set_window_rect(width=100, height=200)
-                driver.set_window_rect(x=10, y=10, width=100, height=200)
+                target.set_window_rect(x=10, y=10)
+                target.set_window_rect(width=100, height=200)
+                target.set_window_rect(x=10, y=10, width=100, height=200)
         """
 
         if (x is None and y is None) and (not height and not width):
@@ -1015,97 +678,12 @@ class Chrome(BaseWebDriver):
 
         return bounds
 
-    @property
-    def file_detector(self) -> FileDetector:
-        return self._file_detector
-
-    @file_detector.setter
-    def file_detector(self, detector) -> None:
-        """Set the file detector to be used when sending keyboard input. By
-        default, this is set to a file detector that does nothing.
-
-        see FileDetector
-        see LocalFileDetector
-        see UselessFileDetector
-
-        :Args:
-         - detector: The detector to use. Must not be None.
-        """
-        if not detector:
-            raise WebDriverException("You may not set a file detector that is null")
-        if not isinstance(detector, FileDetector):
-            raise WebDriverException("Detector has to be instance of FileDetector")
-        self._file_detector = detector
-
-    @property
-    def orientation(self):
-        # noinspection GrazieInspection
-        """Gets the current orientation of the device.
-
-                :Usage:
-                    ::
-
-                        orientation = driver.orientation
-                """
-        raise NotImplementedError()
-
-    @orientation.setter
-    def orientation(self, value) -> None:
-        """Sets the current orientation of the device.
-
-        :Args:
-         - value: orientation to set it to.
-
-        :Usage:
-            ::
-
-                driver.orientation = 'landscape'
-        """
-        allowed_values = ["LANDSCAPE", "PORTRAIT"]
-        if value.upper() in allowed_values:
-            raise NotImplementedError()
-        else:
-            raise WebDriverException("You can only set the orientation to 'LANDSCAPE' and 'PORTRAIT'")
-
-    @property
-    def log_types(self):
-        """Gets a list of the available log types. This only works with w3c
-        compliant browsers.
-
-        :Usage:
-            ::
-
-                driver.log_types
-        """
-        raise NotImplementedError("not started with chromedriver")
-
-    def get_log(self, log_type):
-        """Gets the log for a given log type.
-
-        :Args:
-         - log_type: type of log that which will be returned
-
-        :Usage:
-            ::
-
-                driver.get_log('browser')
-                driver.get_log('driver')
-                driver.get_log('client')
-                driver.get_log('server')
-        """
-        raise NotImplementedError("not started with chromedriver")
-
     @asynccontextmanager
     async def bidi_connection(self):
-        cdp = import_cdp()
-        if self.caps.get("se:cdp"):
-            ws_url = self.caps.get("se:cdp")
-            version = self.caps.get("se:cdpVersion").split(".")[0]
-        else:
-            version, ws_url = self._get_cdp_details()
+        warnings.warn("bidi connection for driverless is deprecated, use the direct API's instead", DeprecationWarning)
+        cdp = import_module("selenium.webdriver.common.bidi.cdp")
 
-        if not ws_url:
-            raise WebDriverException("Unable to find url to connect to from capabilities")
+        version, ws_url = self._get_cdp_details()
 
         devtools = cdp.import_devtools(version)
         async with cdp.open_cdp(ws_url) as conn:
@@ -1120,7 +698,7 @@ class Chrome(BaseWebDriver):
         import urllib3
 
         http = urllib3.PoolManager()
-        debugger_address = self.caps.get("goog:chromeOptions").get("debuggerAddress")
+        debugger_address = self.base.host
         res = http.request("GET", f"http://{debugger_address}/json/version")
         data = json.loads(res.data)
 
@@ -1133,74 +711,7 @@ class Chrome(BaseWebDriver):
 
         return version, websocket_url
 
-    # Virtual Authenticator Methods
-    def add_virtual_authenticator(self, options: VirtualAuthenticatorOptions) -> None:
-        """Adds a virtual authenticator with the given options."""
-        # self._authenticator_id = self.execute(Command.ADD_VIRTUAL_AUTHENTICATOR, options.to_dict())["value"]
-        raise NotImplementedError("not started with chromedriver")
-
-    @property
-    def virtual_authenticator_id(self) -> str:
-        """Returns the id of the virtual authenticator."""
-        raise NotImplementedError("not started with chromedriver")
-        # return self._authenticator_id
-
-    @required_virtual_authenticator
-    def remove_virtual_authenticator(self) -> None:
-        """Removes a previously added virtual authenticator.
-
-        The authenticator is no longer valid after removal, so no
-        methods may be called.
-        """
-        raise NotImplementedError("not started with chromedriver")
-        # self._authenticator_id = None
-
-    @required_virtual_authenticator
-    def add_credential(self, credential: Credential) -> None:
-        """Injects a credential into the authenticator."""
-        raise NotImplementedError("not started with chromedriver")
-
-    # noinspection PyTypeChecker
-    @required_virtual_authenticator
-    def get_credentials(self) -> List[Credential]:
-        """Returns the list of credentials owned by the authenticator."""
-        # credential_data = self.execute(Command.GET_CREDENTIALS, {"authenticatorId": self._authenticator_id})
-        raise NotImplementedError("not started with chromedriver")
-
-    @required_virtual_authenticator
-    def remove_credential(self, credential_id: Union[str, bytearray]) -> None:
-        """Removes a credential from the authenticator."""
-        # Check if the credential is bytearray converted to b64 string
-        if isinstance(credential_id, bytearray):
-            # noinspection PyUnusedLocal
-            credential_id = urlsafe_b64encode(credential_id).decode()
-
-        raise NotImplementedError("not started with chromedriver")
-
-    @required_virtual_authenticator
-    def remove_all_credentials(self) -> None:
-        """Removes all credentials from the authenticator."""
-        raise NotImplementedError("not started with chromedriver")
-
-    @required_virtual_authenticator
-    def set_user_verified(self, verified: bool) -> None:
-        """Sets whether the authenticator will simulate success or fail on user
-        verification.
-
-        verified: True if the authenticator will pass user verification, False otherwise.
-        """
-        raise NotImplementedError("not started with chromedriver")
-
-    #
-    # selenium.webdriver.chrome.WebDriver props from here on
-    #
-
-    # noinspection PyShadowingBuiltins
-    def launch_app(self, id):
-        """Launches Chromium app specified by id."""
-        raise NotImplementedError("not started with chromedriver")
-
-    async def get_network_conditions(self):
+    async def get_network_conditions(self, target_id: str = None):
         """Gets Chromium network emulation settings.
 
         :Returns:
@@ -1208,10 +719,11 @@ class Chrome(BaseWebDriver):
             {'latency': 4, 'download_throughput': 2, 'upload_throughput': 2,
             'offline': False}
         """
-        raise NotImplementedError("not started with chromedriver")
+        target = await self.get_target(target_id=target_id)
+        return await target.get_network_conditions()
 
     async def set_network_conditions(self, offline: bool, latency: int, download_throughput: int,
-                                     upload_throughput: int, connection_type: None) -> None:
+                                     upload_throughput: int, connection_type: None, target_id: str = None) -> None:
         """Sets Chromium network emulation settings.
 
         :Args:
@@ -1220,7 +732,7 @@ class Chrome(BaseWebDriver):
         :Usage:
             ::
 
-                driver.set_network_conditions(
+                target.set_network_conditions(
                     offline=False,
                     latency=5,  # additional latency (ms)
                     download_throughput=500 * 1024,  # maximal throughput
@@ -1229,24 +741,17 @@ class Chrome(BaseWebDriver):
 
             Note: 'throughput' can be used to set both (for download and upload).
         """
-        args = {"offline": offline, "latency": latency,
-                "downloadThroughput": download_throughput,
-                "uploadThroughput": upload_throughput}
+        target = await self.get_target(target_id=target_id)
+        return await target.set_network_conditions(offline=offline, latency=latency,
+                                                   download_throughput=download_throughput,
+                                                   upload_throughput=upload_throughput, connection_type=connection_type)
 
-        conn_types = ["none", "cellular2g", "cellular3g", "cellular4g", "bluetooth", "ethernet", "wifi", "wimax",
-                      "other"]
-        if connection_type:
-            if connection_type not in conn_types:
-                raise ValueError(f"expected {conn_types} for connection_type,  but got {connection_type}")
-            args["connectionType"] = connection_type
-
-        await self.execute_cdp_cmd("Network.emulateNetworkConditions", args)
-
-    def delete_network_conditions(self) -> None:
+    async def delete_network_conditions(self, target_id: str = None) -> None:
         """Resets Chromium network emulation settings."""
-        raise NotImplementedError("not started with chromedriver")
+        target = await self.get_target(target_id=target_id)
+        await target.delete_network_conditions()
 
-    async def set_permissions(self, name: str, value: str, origin: str = None) -> None:
+    async def set_permissions(self, name: str, value: str, origin: str = None, target_id: str = None) -> None:
         """Sets Applicable Permission.
 
         :Args:
@@ -1256,50 +761,33 @@ class Chrome(BaseWebDriver):
         :Usage:
             ::
 
-                driver.set_permissions('clipboard-read', 'denied')
+                target.set_permissions('clipboard-read', 'denied')
         """
-        settings = ["granted", "denied", "prompt"]
-        if value not in settings:
-            raise ValueError(f"value needs to be within {settings}, but got {value}")
-        args = {"permission": {"name": name}, "setting": value}
-        if origin:
-            args["origin"] = origin
-        await self.execute_cdp_cmd("Browser.setPermission", args)
+        target = await self.get_target(target_id=target_id)
+        await target.set_permissions(name=name, value=value, origin=origin)
 
     @property
-    def base(self):
+    def base(self) -> CDPSocket:
         return self._base
 
-    @property
-    def sockets(self):
-        return self.base.sockets
+    async def wait_for_cdp(self, event: str, timeout: float or None = None, target_id: str = None):
+        target = await self.get_target(target_id=target_id)
+        return await target.wait_for_cdp(event=event, timeout=timeout)
 
-    @property
-    async def current_socket(self) -> SingleCDPSocket:
-        sock_id = self.current_window_handle
-        socket = self.sockets[sock_id]
-        if not socket:
-            socket = await self.base.get_socket(sock_id=sock_id)
-        return socket
+    async def add_cdp_listener(self, event: str, callback: callable, target_id: str = None):
+        target = await self.get_target(target_id=target_id)
+        return await target.add_cdp_listener(event=event, callback=callback)
 
-    async def wait_for_cdp(self, event: str, timeout: float or None = None):
-        socket = await self.current_socket
-        return await socket.wait_for(event, timeout=timeout)
+    async def remove_cdp_listener(self, event: str, callback: callable, target_id: str = None):
+        target = await self.get_target(target_id=target_id)
+        return await target.remove_cdp_listener(event=event, callback=callback)
 
-    async def add_cdp_listener(self, event: str, callback: callable):
-        socket = await self.current_socket
-        socket.add_listener(method=event, callback=callback)
-
-    async def remove_cdp_listener(self, event: str, callback: callable):
-        socket = await self.current_socket
-        socket.remove_listener(method=event, callback=callback)
-
-    async def get_cdp_event_iter(self, event: str):
-        socket = await self.current_socket
-        return socket.method_iterator(method=event)
+    async def get_cdp_event_iter(self, event: str, target_id: str = None):
+        target = await self.get_target(target_id=target_id)
+        return await target.get_cdp_event_iter(event=event)
 
     async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None,
-                              timeout: float or None = 10) -> dict:
+                              timeout: float or None = 10, target_id: str = None) -> dict:
         """Execute Chrome Devtools Protocol command and get returned result The
         command and command args should follow chrome devtools protocol
         domains/commands, refer to link
@@ -1311,69 +799,64 @@ class Chrome(BaseWebDriver):
         :Usage:
             ::
 
-                driver.execute_cdp_cmd('Network.getResponseBody', {'requestId': requestId})
+                target.execute_cdp_cmd('Network.getResponseBody', {'requestId': requestId})
         :Returns:
             A dict, empty dict {} if there is no result to return.
             For example to getResponseBody:
             {'base64Encoded': False, 'body': 'response body string'}
         """
 
-        socket: SingleCDPSocket = await self.current_socket
-        result = await socket.exec(method=cmd, params=cmd_args, timeout=timeout)
-        if cmd == "Page.enable":
-            self._page_enabled = True
-        elif cmd == "Page.disable":
-            self._page_enabled = False
-
-        elif cmd == "DOM.enable":
-            self._dom_enabled = True
-        elif cmd == "DOM.disable":
-            self._dom_enabled = False
-        return result
+        target = await self.get_target(target_id=target_id)
+        return await target.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout)
 
     # noinspection PyTypeChecker
-    async def get_sinks(self) -> list:
+    async def get_sinks(self, target_id: str = None) -> list:
         """
         :Returns: A list of sinks available for Cast.
         """
-        await self.execute_cdp_cmd("Cast.enable")
-        raise NotImplementedError("not started with chromedriver")
+        target = await self.get_target(target_id=target_id)
+        return await target.get_sinks()
 
-    async def get_issue_message(self):
+    async def get_issue_message(self, target_id: str = None):
         """
         :Returns: An error message when there is any issue in a Cast session.
         """
-        raise NotImplementedError("not started with chromedriver")
+        target = await self.get_target(target_id=target_id)
+        return await target.get_issue_message()
 
-    async def set_sink_to_use(self, sink_name: str) -> dict:
+    async def set_sink_to_use(self, sink_name: str, target_id: str = None) -> dict:
         """Sets a specific sink, using its name, as a Cast session receiver
         target.
 
         :Args:
          - sink_name: Name of the sink to use as the target.
         """
-        return await self.execute_cdp_cmd("Cast.setSinkToUse", {"sinkName": sink_name})
+        target = await self.get_target(target_id=target_id)
+        return await target.set_sink_to_use(sink_name=sink_name)
 
-    async def start_desktop_mirroring(self, sink_name: str) -> dict:
+    async def start_desktop_mirroring(self, sink_name: str, target_id: str = None) -> dict:
         """Starts a desktop mirroring session on a specific receiver target.
 
         :Args:
          - sink_name: Name of the sink to use as the target.
         """
-        return await self.execute_cdp_cmd("Cast.startDesktopMirrorin", {"sinkName": sink_name})
+        target = await self.get_target(target_id=target_id)
+        return await target.start_desktop_mirroring(sink_name=sink_name)
 
-    async def start_tab_mirroring(self, sink_name: str) -> dict:
+    async def start_tab_mirroring(self, sink_name: str, target_id: str = None) -> dict:
         """Starts a tab mirroring session on a specific receiver target.
 
         :Args:
          - sink_name: Name of the sink to use as the target.
         """
-        return await self.execute_cdp_cmd("Cast.startTabMirroring", {"sinkName": sink_name})
+        target = await self.get_target(target_id=target_id)
+        return await target.start_tab_mirroring(sink_name=sink_name)
 
-    async def stop_casting(self, sink_name: str) -> dict:
+    async def stop_casting(self, sink_name: str, target_id: str = None) -> dict:
         """Stops the existing Cast session on a specific receiver target.
 
         :Args:
          - sink_name: Name of the sink to stop the Cast session.
         """
-        return await self.execute_cdp_cmd("Cast.stopCasting", {"sinkName": sink_name})
+        target = await self.get_target(target_id=target_id)
+        return await target.stop_casting(sink_name=sink_name)

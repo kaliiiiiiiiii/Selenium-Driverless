@@ -1,14 +1,14 @@
-from selenium_driverless.scripts.alert import Alert as AsyncAlert
+from selenium_driverless.types.alert import Alert as AsyncAlert
 import asyncio
 import inspect
 
 
 class Alert(AsyncAlert):
-    def __init__(self, driver, loop):
-        super().__init__(driver=driver)
+    def __init__(self, target, loop, timeout: float = 5):
         if not loop:
             loop = asyncio.new_event_loop()
         self._loop = loop
+        super().__init__(target=target, timeout=timeout)
         self._init()
 
     def __enter__(self):
@@ -27,6 +27,7 @@ class Alert(AsyncAlert):
             if inspect.iscoroutinefunction(item):
                 def syncified(*args, **kwargs):
                     return self._loop.run_until_complete(item(*args, **kwargs))
+
                 return syncified
             if inspect.isawaitable(item):
                 return self._loop.run_until_complete(item)

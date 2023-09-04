@@ -20,8 +20,8 @@ class JSEvalException(Exception):
 
 
 class RemoteObject:
-    def __init__(self, driver, js: str = None, obj_id: str = None, check_existence=True) -> None:
-        self._driver = driver
+    def __init__(self, target, js: str = None, obj_id: str = None, check_existence=True) -> None:
+        self._target = target
         self._js = js
         self._check_exist = check_existence
         self._obj_id = obj_id
@@ -37,7 +37,7 @@ class RemoteObject:
     @property
     async def obj_id(self):
         if not self._obj_id:
-            res = await self._driver.execute_cdp_cmd("Runtime.evaluate",
+            res = await self._target.execute_cdp_cmd("Runtime.evaluate",
                                                      {"expression": self._js,
                                                       "serializationOptions": {
                                                           "serialization": "idOnly"}})
@@ -54,7 +54,7 @@ class RemoteObject:
         "this" will be the element object
         """
         obj_id = await self.obj_id
-        return await self._driver.execute_raw_script(script, *args, await_res=await_res, serialization=serialization,
+        return await self._target.execute_raw_script(script, *args, await_res=await_res, serialization=serialization,
                                                      max_depth=max_depth, timeout=timeout, obj_id=obj_id, warn=warn)
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None, timeout: int = 2,
@@ -63,7 +63,7 @@ class RemoteObject:
         exaple: script = "return this.click()"
         """
         obj_id = await self.obj_id
-        return await self._driver.execute_script(script, *args, serialization=serialization,
+        return await self._target.execute_script(script, *args, serialization=serialization,
                                                  max_depth=max_depth, timeout=timeout, obj_id=obj_id,
                                                  only_value=only_value, warn=warn)
 
@@ -71,7 +71,7 @@ class RemoteObject:
                                    timeout: int = 2,
                                    only_value=True, warn=False):
         obj_id = await self.obj_id
-        return await self._driver.execute_async_script(script, *args, serialization=serialization,
+        return await self._target.execute_async_script(script, *args, serialization=serialization,
                                                        max_depth=max_depth, timeout=timeout, obj_id=obj_id,
                                                        only_value=only_value, warn=warn)
 
@@ -80,7 +80,7 @@ class RemoteObject:
         args = {"objectId": await self.obj_id, "ownProperties": own_properties_only,
                 "accessorPropertiesOnly": accessor_props_only,
                 "nonIndexedPropertiesOnly": non_indexed_props_only}
-        res = await self._driver.execute_cdp_cmd("Runtime.getProperties", args)
+        res = await self._target.execute_cdp_cmd("Runtime.getProperties", args)
         return res
 
     def __eq__(self, other):
