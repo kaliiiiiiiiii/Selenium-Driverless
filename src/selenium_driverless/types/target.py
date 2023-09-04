@@ -17,11 +17,78 @@ from selenium_driverless.sync.alert import Alert as SyncAlert
 from cdp_socket.socket import SingleCDPSocket
 
 
+class TargetInfo:
+    def __init__(self, target_info: dict, target):
+        self._id = target_info.get('targetId')
+        self._type = target_info.get("type")
+        self._title = target_info.get("title")
+        self._url = target_info.get("url")
+        self._attached = target_info.get("attached")
+        self._opener_id = target_info.get("openerId")
+        self._can_access_opener = target_info.get('canAccessOpener')
+        self._opener_frame_id = target_info.get("openerFrameId")
+        self._browser_context_id = target_info.get('browserContextId')
+        self._subtype = target_info.get("subtype")
+
+        self._target = target
+
+    def __await__(self):
+        return self._init().__await__()
+
+    async def _init(self):
+        return self
+
+    @property
+    def Target(self):
+        return self._target
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def type(self):
+        return self._type
+
+    @property
+    def title(self):
+        return self._title
+
+    @property
+    def url(self):
+        return self._url
+
+    @property
+    def attached(self):
+        return self._attached
+
+    @property
+    def opener_id(self):
+        return self._opener_id
+
+    @property
+    def can_access_opener(self):
+        return self._can_access_opener
+
+    @property
+    def opener_frame_id(self):
+        return self._opener_frame_id
+
+    @property
+    def browser_context_id(self):
+        return self._browser_context_id
+
+    @property
+    def subtype(self):
+        return self._subtype
+
+
 class Target:
     """Allows you to drive the browser without chromedriver."""
 
     def __init__(self, host: str, target_id: str, is_remote: bool = False,
-                 loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30) -> None:
+                 loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
+                 type:str=None) -> None:
         """Creates a new instance of the chrome target. Starts the service and
         then creates new instance of chrome target.
 
@@ -43,6 +110,7 @@ class Target:
         self._is_remote = is_remote
         self._host = host
         self._id = target_id
+        self._type = type
         self._timeout = timeout
 
         self._loop = loop
@@ -237,7 +305,7 @@ class Target:
                 target.current_url
         """
         target = await self.info
-        return target["url"]
+        return target.url
 
     @property
     async def page_source(self) -> str:
@@ -274,21 +342,33 @@ class Target:
         await self.execute_cdp_cmd("Target.activateTarget", {"targetId": self.id})
 
     @property
-    async def info(self) -> dict:
+    async def info(self) -> TargetInfo:
         res = await self.execute_cdp_cmd("Target.getTargetInfo", {"targetId": self.id})
-        return res["targetInfo"]
+        return await TargetInfo(res["targetInfo"], self)
+
+    @property
+    async def frame_tree(self):
+        res = await self.execute_cdp_cmd("Page.getFrameTree")
+        return res["frameTree"]
+
+    @property
+    async def type(self):
+        if not self._type:
+            info = await self.info
+            self._type = info.type
+        return self._type
 
     @property
     async def title(self) -> str:
         # noinspection GrazieInspection
         """Returns the title of the target"""
         target = await self.info
-        return target["title"]
+        return target.title
 
     @property
     async def url(self) -> str:
         info = await self.info
-        return info["url"]
+        return info.url
 
     @property
     async def window_id(self):

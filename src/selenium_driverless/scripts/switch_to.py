@@ -27,6 +27,8 @@ from selenium_driverless.types.webelement import WebElement
 
 from selenium_driverless.types.alert import Alert
 
+from selenium_driverless.types.target import TargetInfo
+
 
 class SwitchTo:
     def __init__(self, driver) -> None:
@@ -110,11 +112,15 @@ class SwitchTo:
 
         raise NotImplementedError('You might use target.switch_to.target(target.targets[0]["targetId"])')
 
-    async def target(self, target_id: str, activate: bool = True):
-        self._driver._current_target = await self._driver.get_target(target_id)
+    async def target(self, target_id: str or TargetInfo, activate: bool = True):
+        if isinstance(target_id, TargetInfo):
+            self._driver._current_target = target_id.Target
+        else:
+            self._driver._current_target = await self._driver.get_target(target_id)
         if activate:
             await self._driver.execute_cdp_cmd("Target.activateTarget",
                                                {"targetId": self._driver.current_window_handle})
+            await self._driver.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
         return target_id
 
     async def new_window(self, type_hint: Optional[str] = "tab", url="", activate: bool = True) -> None:
@@ -152,7 +158,7 @@ class SwitchTo:
         """
         raise NotImplementedError()
 
-    async def window(self, window_name, activate: bool = True) -> None:
+    async def window(self, window_id:str or TargetInfo, activate: bool = True) -> None:
         """Switches focus to the specified window.
 
         :Args:
@@ -163,4 +169,4 @@ class SwitchTo:
 
                 target.switch_to.window('main')
         """
-        await self.target(window_name, activate=activate)
+        await self.target(window_id, activate=activate)

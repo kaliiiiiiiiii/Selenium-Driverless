@@ -38,7 +38,7 @@ from selenium_driverless.input.pointer import Pointer
 from selenium_driverless.types.options import Options as ChromeOptions
 from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
-from selenium_driverless.types.target import Target
+from selenium_driverless.types.target import Target, TargetInfo
 from cdp_socket.utils.conn import get_json
 
 
@@ -153,15 +153,26 @@ class Chrome:
             self._switch_to = SyncSwitchTo(driver=self, loop=self._loop)
         else:
             self._switch_to = await SwitchTo(driver=self)
+        await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
         return self
 
     @property
-    async def targets(self) -> typing.Dict[str, Target]:
-        target_infos = await self.target_infos
-        for target in target_infos:
-            target_id = target['targetId']
-            await self.get_target(target_id)
-        return self._targets
+    async def frame_tree(self):
+        return await self.current_target.frame_tree
+
+    @property
+    async def targets(self) -> typing.Dict[str, TargetInfo]:
+        res = await self.execute_cdp_cmd("Target.getTargets")
+        _infos = res["targetInfos"]
+        infos = {}
+        for info in _infos:
+            _id = info["targetId"]
+            infos[_id] = await TargetInfo(info, await self.get_target(_id))
+        return infos
+
+    @property
+    def current_target(self) -> Target:
+        return self._current_target
 
     async def get_target(self, target_id: str = None, timeout: float = 2):
         if not target_id:
@@ -179,10 +190,6 @@ class Chrome:
             target.socket.on_closed.append(remove_target)
         return target
 
-    @property
-    def current_target(self) -> Target:
-        return self._current_target
-
     async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
         """Loads a web page in the current browser session."""
         target = self.current_target
@@ -192,7 +199,7 @@ class Chrome:
     async def title(self) -> str:
         """Returns the title of the current target"""
         target = await self.current_target_info
-        return target["title"]
+        return target.title
 
     @property
     async def current_pointer(self) -> Pointer:
@@ -282,7 +289,7 @@ class Chrome:
         try:
             targets = await self.targets
             for target in list(targets.values()):
-                await target.close(timeout=2)
+                await target.Target.close(timeout=2)
         except TimeoutError:
             pass
         except concurrent.futures.TimeoutError:
@@ -310,11 +317,6 @@ class Chrome:
                 pass
 
     @property
-    async def target_infos(self) -> dict:
-        res = await self.execute_cdp_cmd("Target.getTargets")
-        return res["targetInfos"]
-
-    @property
     async def current_target_info(self):
         target = self.current_target
         return await target.info
@@ -331,7 +333,7 @@ class Chrome:
         return result["windowId"]
 
     @property
-    async def window_handles(self) -> List[str]:
+    async def window_handles(self) -> List[TargetInfo]:
         """Returns the handles of all windows within the current session.
 
         :Usage:
@@ -341,9 +343,10 @@ class Chrome:
         """
         warnings.warn("window_handles aren't ordered")
         tabs = []
-        for target in await self.target_infos:
-            if target["type"] == "page":
-                tabs.append(target['targetId'])
+        targets = await self.targets
+        for info in list(targets.values()):
+            if info.type == "page":
+                tabs.append(info)
         return tabs
 
     async def set_window_state(self, state):
@@ -691,7 +694,7 @@ class Chrome:
 
         devtools = cdp.import_devtools(version)
         async with cdp.open_cdp(ws_url) as conn:
-            targets = await conn.execute(devtools.target.get_targets())
+            targets = await conn.execute(devtools.Target.get_targets())
             target_id = targets[0].target_id
             async with conn.open_session(target_id) as session:
                 yield BidiConnection(session, cdp, devtools)
@@ -702,7 +705,7 @@ class Chrome:
         import urllib3
 
         http = urllib3.PoolManager()
-        debugger_address = self.base.host
+        debugger_address = self._host
         res = http.request("GET", f"http://{debugger_address}/json/version")
         data = json.loads(res.data)
 
