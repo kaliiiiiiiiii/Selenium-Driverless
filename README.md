@@ -129,7 +129,7 @@ async def target_1_handler(target):
 async def target_2_handler(target):
     await target.get("about:blank")
     await target.execute_script(script=read("/files/js/show_mousemove.js"))
-    await target.pointer.move_to(200, 200, total_time=3)
+    await target.pointer.move_to(500, 500, total_time=2)
 
 
 async def main():
@@ -141,6 +141,7 @@ async def main():
             target_1_handler(target_1),
             target_2_handler(target_2)
         )
+        await target_1.focus()
         input("press ENTER to exit")
 
 
