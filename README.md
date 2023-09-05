@@ -136,12 +136,11 @@ async def main():
     options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
         target_1 = await driver.current_target
-        target_2 = await driver.switch_to.new_window("tab")
+        target_2 = await driver.switch_to.new_window("tab", activate=False)
         await asyncio.gather(
             target_1_handler(target_1),
             target_2_handler(target_2)
         )
-        await target_1.focus()
         input("press ENTER to exit")
 
 
