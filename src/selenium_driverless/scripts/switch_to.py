@@ -27,7 +27,7 @@ from selenium_driverless.types.webelement import WebElement
 
 from selenium_driverless.types.alert import Alert
 
-from selenium_driverless.types.target import TargetInfo
+from selenium_driverless.types.target import TargetInfo,Target
 
 
 class SwitchTo:
@@ -36,11 +36,14 @@ class SwitchTo:
         self._loop = None
         self._driver: Chrome = driver
         self._alert = None
+        self._started = False
 
     def __await__(self):
         return self._init().__await__()
 
     async def _init(self):
+        if not self._started:
+            self._started = True
         return self
 
     @property
@@ -112,7 +115,7 @@ class SwitchTo:
 
         raise NotImplementedError('You might use target.switch_to.target(target.targets[0]["targetId"])')
 
-    async def target(self, target_id: str or TargetInfo, activate: bool = True):
+    async def target(self, target_id: str or TargetInfo, activate: bool = True) -> Target:
         if isinstance(target_id, TargetInfo):
             self._driver._current_target = target_id.Target
         else:
@@ -121,9 +124,9 @@ class SwitchTo:
             await self._driver.execute_cdp_cmd("Target.activateTarget",
                                                {"targetId": self._driver.current_window_handle})
             await self._driver.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
-        return target_id
+        return self._driver.current_target
 
-    async def new_window(self, type_hint: Optional[str] = "tab", url="", activate: bool = True) -> None:
+    async def new_window(self, type_hint: Optional[str] = "tab", url="", activate: bool = True) -> Target:
         """Switches to a new top-level browsing context.
 
         The type hint can be one of "tab" or "window". If not specified the
@@ -144,8 +147,7 @@ class SwitchTo:
         args = {"url": url, "newWindow": new_tab, "forTab": new_tab}
         target = await self._driver.execute_cdp_cmd("Target.createTarget", args)
         target_id = target["targetId"]
-        await self.target(target_id, activate=activate)
-        return target_id
+        return await self.target(target_id, activate=activate)
 
     async def parent_frame(self) -> None:
         """Switches focus to the parent context. If the current context is the

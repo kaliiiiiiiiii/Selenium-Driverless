@@ -56,16 +56,19 @@ class Alert:
         from selenium_driverless.types.target import Target
         self.target: Target = target
         self._timeout = timeout
+        self._started = False
 
     def __await__(self):
         return self._init().__await__()
 
     async def _init(self):
-        if not self.target._alert:
-            try:
-                await self.target.wait_for_cdp("Page.javascriptDialogOpening", self._timeout)
-            except asyncio.TimeoutError:
-                self._warn_not_detected()
+        if not self._started:
+            if not self.target._alert:
+                try:
+                    await self.target.wait_for_cdp("Page.javascriptDialogOpening", self._timeout)
+                except asyncio.TimeoutError:
+                    self._warn_not_detected()
+            self._started = True
         return self
 
     def _warn_not_detected(self):

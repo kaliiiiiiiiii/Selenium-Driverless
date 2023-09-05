@@ -38,6 +38,7 @@ from selenium_driverless.input.pointer import Pointer
 from selenium_driverless.types.options import Options as ChromeOptions
 from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
+from selenium_driverless.sync.target import Target as SyncTarget
 from selenium_driverless.types.target import Target, TargetInfo
 from cdp_socket.utils.conn import get_json
 
@@ -179,8 +180,13 @@ class Chrome:
             return self._current_target
         target: Target = self._targets.get(target_id)
         if not target:
-            target: Target = await Target(host=self._host, target_id=target_id,
-                                          is_remote=self._is_remote, loop=self._loop, timeout=timeout)
+            if self._loop:
+                target: Target = await SyncTarget(host=self._host, target_id=target_id,
+                                                  is_remote=self._is_remote, loop=self._loop,
+                                                  timeout=timeout)
+            else:
+                target: Target = await Target(host=self._host, target_id=target_id,
+                                              is_remote=self._is_remote, loop=self._loop, timeout=timeout)
             self._targets[target_id] = target
 
             # noinspection PyUnusedLocal

@@ -11,6 +11,14 @@ class WebElement(AsyncWebElement):
         super().__init__(target=target, js=js, obj_id=obj_id, node_id=node_id, check_existence=check_existence, loop=self._loop)
         self._loop.create_task(self.__aenter__())
 
+    @property
+    async def node_id(self):
+        if not self._obj_id:
+            await self.obj_id
+            return self._node_id
+        self._node_id = None
+        return await super().node_id
+
     def __enter__(self):
         return self
 

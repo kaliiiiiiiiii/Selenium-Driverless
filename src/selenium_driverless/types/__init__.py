@@ -24,13 +24,16 @@ class RemoteObject:
         self._js = js
         self._check_exist = check_existence
         self._obj_id = obj_id
+        self._started = False
 
     def __await__(self):
         return self.__aenter__().__await__()
 
     async def __aenter__(self):
-        if self._check_exist:
-            await self.obj_id
+        if not self._started:
+            if self._check_exist:
+                await self.obj_id
+            self._started = True
         return self
 
     @property

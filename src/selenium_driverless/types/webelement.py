@@ -189,7 +189,8 @@ class WebElement(RemoteObject):
 
     @property
     async def source(self):
-        res = await self._target.execute_cdp_cmd("DOM.getOuterHTML", {"nodeId": await self.node_id})
+        obj_id = await self.obj_id
+        res = await self._target.execute_cdp_cmd("DOM.getOuterHTML", {"objectId": obj_id})
         return res["outerHTML"]
 
     async def set_source(self, value: str):
@@ -238,7 +239,7 @@ class WebElement(RemoteObject):
             await self._target.execute_cdp_cmd("DOM.enable")
         if highlight:
             await self._target.execute_cdp_cmd("Overlay.enable")
-            await self._target.execute_cdp_cmd("Overlay.highlightNode", {"nodeId": await self.node_id,
+            await self._target.execute_cdp_cmd("Overlay.highlightNode", {"objectId": await self.obj_id,
                                                                          "highlightConfig": {
                                                                              "showInfo": True,
                                                                              "borderColor": {
@@ -505,8 +506,7 @@ class WebElement(RemoteObject):
 
     @property
     async def box_model(self):
-        node_id = await self.node_id
-        res = await self._target.execute_cdp_cmd("DOM.getBoxModel", {"nodeId": node_id})
+        res = await self._target.execute_cdp_cmd("DOM.getBoxModel", {"objectId": await self.obj_id})
         model = res['model']
         keys = ['content', 'padding', 'border', 'margin']
         for key in keys:

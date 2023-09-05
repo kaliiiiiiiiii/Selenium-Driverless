@@ -31,11 +31,14 @@ class TargetInfo:
         self._subtype = target_info.get("subtype")
 
         self._target = target
+        self._started = False
 
     def __await__(self):
         return self._init().__await__()
 
     async def _init(self):
+        if not self._started:
+            self._started = True
         return self
 
     @property
@@ -114,6 +117,7 @@ class Target:
         self._timeout = timeout
 
         self._loop = loop
+        self._started = False
 
     def __repr__(self):
         return f'<{type(self).__module__}.{type(self).__name__} (target_id="{self.id}", host="{self._host}")>'
@@ -143,26 +147,28 @@ class Target:
         return self._init().__await__()
 
     async def _init(self):
-        self._socket = await SingleCDPSocket(websock_url=f'ws://{self._host}/devtools/page/{self._id}',
-                                             timeout=self._timeout, loop=self._loop)
-        self._global_this_ = await RemoteObject(target=self, js="globalThis", check_existence=False)
-        self._pointer = Pointer(target=self)
+        if not self._started:
+            self._socket = await SingleCDPSocket(websock_url=f'ws://{self._host}/devtools/page/{self._id}',
+                                                 timeout=self._timeout, loop=self._loop)
+            self._global_this_ = await RemoteObject(target=self, js="globalThis", check_existence=False)
+            self._pointer = Pointer(target=self)
 
-        # noinspection PyUnusedLocal
-        def clear_global_this(data):
-            self._global_this_ = None
-            self._document_elem_ = None
+            # noinspection PyUnusedLocal
+            def clear_global_this(data):
+                self._global_this_ = None
+                self._document_elem_ = None
 
-        def set_alert(alert):
-            self._alert = alert
+            def set_alert(alert):
+                self._alert = alert
 
-        # noinspection PyUnusedLocal
-        def remove_alert(alert):
-            self._alert = None
+            # noinspection PyUnusedLocal
+            def remove_alert(alert):
+                self._alert = None
 
-        await self.add_cdp_listener("Page.javascriptDialogOpening", set_alert)
-        await self.add_cdp_listener("Page.javascriptDialogClosed", remove_alert)
-        await self.add_cdp_listener("Page.loadEventFired", clear_global_this)
+            await self.add_cdp_listener("Page.javascriptDialogOpening", set_alert)
+            await self.add_cdp_listener("Page.javascriptDialogClosed", remove_alert)
+            await self.add_cdp_listener("Page.loadEventFired", clear_global_this)
+            self._started = True
         return self
 
     async def get_alert(self, timeout: float = 5):
@@ -350,6 +356,11 @@ class Target:
     async def frame_tree(self):
         res = await self.execute_cdp_cmd("Page.getFrameTree")
         return res["frameTree"]
+
+    @property
+    async def base_frame(self):
+        res = await self.frame_tree
+        return res["frame"]
 
     @property
     async def type(self):

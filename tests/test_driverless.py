@@ -2,6 +2,7 @@ import unittest
 
 from selenium_driverless import webdriver
 from selenium_driverless.types.by import By
+from selenium_driverless.types.webelement import NoSuchElementException
 
 import asyncio
 
@@ -16,11 +17,17 @@ async def make_driver():
 
 
 async def nowsecure():
+    async def get_elem():
+        return await driver.find_element(By.XPATH, "/html/body/div[2]/div/main/p[2]/a")
+
     global driver
-    await driver.get("https://nowsecure.nl#relax", wait_load=False)
-    await driver.wait_for_cdp("Page.domContentEventFired")
+    await driver.get("https://nowsecure.nl#relax", wait_load=True)
+    try:
+        await get_elem()
+    except NoSuchElementException:
+        await driver.wait_for_cdp("Page.domContentEventFired")
+    await get_elem()
     await asyncio.sleep(0.5)
-    elem = await driver.find_element(By.XPATH, "/html/body/div[2]/div/main/p[2]/a")
 
 
 async def bet365():
