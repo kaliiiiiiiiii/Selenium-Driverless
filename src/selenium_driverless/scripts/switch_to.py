@@ -20,14 +20,15 @@
 from typing import Optional
 from typing import Union
 
-from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import NoSuchFrameException
+from selenium.common.exceptions import NoSuchElementException, NoSuchFrameException
 from selenium_driverless.types.by import By
 from selenium_driverless.types.webelement import WebElement
 
 from selenium_driverless.types.alert import Alert
 
-from selenium_driverless.types.target import TargetInfo,Target
+from selenium_driverless.types.target import TargetInfo, Target
+
+from cdp_socket.exceptions import CDPError
 
 
 class SwitchTo:
@@ -118,12 +119,18 @@ class SwitchTo:
     async def target(self, target_id: str or TargetInfo, activate: bool = True) -> Target:
         if isinstance(target_id, TargetInfo):
             self._driver._current_target = target_id.Target
+        elif isinstance(target_id, Target):
+            self._driver._current_target = target_id
         else:
             self._driver._current_target = await self._driver.get_target(target_id)
         if activate:
             await self._driver.execute_cdp_cmd("Target.activateTarget",
                                                {"targetId": self._driver.current_window_handle})
-            await self._driver.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
+            try:
+                await self._driver.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
+            except CDPError as e:
+                if not (e.code == -32601 and e.message == "'Emulation.setFocusEmulationEnabled' wasn't found"):
+                    raise e
         return self._driver.current_target
 
     async def new_window(self, type_hint: Optional[str] = "tab", url="", activate: bool = True) -> Target:

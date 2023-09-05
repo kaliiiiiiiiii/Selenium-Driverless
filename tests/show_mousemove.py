@@ -2,7 +2,6 @@ from selenium_driverless import webdriver
 from selenium_driverless.utils.utils import read
 from selenium_driverless.types.by import By
 import asyncio
-import os
 
 
 async def main():

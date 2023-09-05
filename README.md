@@ -110,6 +110,42 @@ async def main():
 asyncio.run(main())
 ```
 
+### Multiple tabs simultously
+Note: `asyncio` is recommendet, `threading` has been reported not too work
+```python
+from selenium_driverless.sync import webdriver
+from selenium_driverless.utils.utils import read
+from selenium_driverless import webdriver
+import asyncio
+
+
+async def target_1_handler(target):
+    await target.get('https://abrahamjuliot.github.io/creepjs/')
+    print(await target.title)
+
+
+async def target_2_handler(target):
+    await target.get("about:blank")
+    await target.execute_script(script=read("/files/js/show_mousemove.js"))
+    await target.pointer.move_to(200, 200, total_time=3)
+
+
+async def main():
+    options = webdriver.ChromeOptions()
+    async with webdriver.Chrome(options=options) as driver:
+        target_1 = await driver.current_target
+        target_2 = await driver.switch_to.new_window("tab")
+        await asyncio.gather(
+            target_1_handler(target_1),
+            target_2_handler(target_2)
+        )
+        await target_1.focus()
+        input("press ENTER to exit")
+
+
+asyncio.run(main())
+```
+
 ### Pointer Interaction
 see [@master/dev/show_mousemove.py](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/dev/show_mousemove.py) for visualization
 ```python

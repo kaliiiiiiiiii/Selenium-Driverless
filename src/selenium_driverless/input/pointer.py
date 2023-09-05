@@ -190,6 +190,7 @@ class Pointer:
         self._target = target
         self.base = BasePointer(driver=target, pointer_type=pointer_type)
         self.location = [100, 0]
+        self._loop = None
 
     async def click(self, x_or_elem: float, y: float or None = None, move_to:bool=True,
                     move_kwargs: dict or None = None, click_kwargs: dict or None = None):
@@ -208,21 +209,21 @@ class Pointer:
 
     async def move_to(self, x_or_elem: int, y: int or None = None, total_time: float = 0.5, accel: float = 2,
                       mid_time: float = None, smooth_soft=20, **kwargs):
-        if isinstance(x_or_elem, WebElement):
-            x, y = await x_or_elem.mid_location()
-        else:
-            x = x_or_elem
+        if not self.location == [x_or_elem, y]:
+            if isinstance(x_or_elem, WebElement):
+                x, y = await x_or_elem.mid_location()
+            else:
+                x = x_or_elem
 
-        if not mid_time:
-            mid_time = bias_0_dot_5(0.5, max_offset=0.3)
+            if not mid_time:
+                mid_time = bias_0_dot_5(0.5, max_offset=0.3)
 
-        # noinspection PyShadowingNames
-        def pos_from_time_callback(time: float):
-            return pos_at_time(path, total_time, time, accel, mid_time=mid_time)
+            # noinspection PyShadowingNames
+            def pos_from_time_callback(time: float):
+                return pos_at_time(path, total_time, time, accel, mid_time=mid_time)
 
-        points = np.array([self.location, [x, y]])
-        path = gen_combined_path(points, n_points_soft=5, smooth_soft=smooth_soft, n_points_distort=100,
-                                 smooth_distort=0.4)
-        res = await self.base.move_path(total_time=total_time, pos_from_time_callback=pos_from_time_callback, **kwargs)
-        self.location = [x, y]
-        return res
+            points = np.array([self.location, [x, y]])
+            path = gen_combined_path(points, n_points_soft=5, smooth_soft=smooth_soft, n_points_distort=100,
+                                     smooth_distort=0.4)
+            await self.base.move_path(total_time=total_time, pos_from_time_callback=pos_from_time_callback, **kwargs)
+            self.location = [x, y]

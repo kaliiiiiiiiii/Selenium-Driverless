@@ -10,6 +10,8 @@ from cdp_socket.exceptions import CDPError
 from selenium.webdriver.common.print_page_options import PrintOptions
 
 from selenium_driverless.input.pointer import Pointer
+from selenium_driverless.sync.pointer import Pointer as SyncPointer
+
 from selenium_driverless.sync.webelement import WebElement as SyncWebElement
 from selenium_driverless.types.webelement import WebElement, RemoteObject
 from selenium_driverless.types.alert import Alert
@@ -151,7 +153,10 @@ class Target:
             self._socket = await SingleCDPSocket(websock_url=f'ws://{self._host}/devtools/page/{self._id}',
                                                  timeout=self._timeout, loop=self._loop)
             self._global_this_ = await RemoteObject(target=self, js="globalThis", check_existence=False)
-            self._pointer = Pointer(target=self)
+            if self._loop:
+                self._pointer = SyncPointer(target=self, loop=self._loop)
+            else:
+                self._pointer = Pointer(target=self)
 
             # noinspection PyUnusedLocal
             def clear_global_this(data):
@@ -186,7 +191,8 @@ class Target:
         if url == "about:blank":
             wait_load = False
         if wait_load:
-            await self.execute_cdp_cmd("Page.enable")
+            if not self._page_enabled:
+                await self.execute_cdp_cmd("Page.enable")
             wait = asyncio.create_task(self.wait_for_cdp("Page.loadEventFired", timeout=timeout))
         args = {"url": url, "transitionType": "link"}
         if referrer:

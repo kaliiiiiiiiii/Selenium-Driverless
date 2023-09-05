@@ -77,6 +77,7 @@ class Chrome:
         self._is_remote = True
         self._switch_to = None
         self._is_remote = False
+        self._started = False
 
     def __repr__(self):
         return f'<{type(self).__module__}.{type(self).__name__} (session="{self.current_window_handle}")>'
@@ -103,58 +104,61 @@ class Chrome:
         :Args:
          - capabilities - a capabilities dict to start the session with.
         """
-        from selenium_driverless.utils.utils import IS_POSIX, read
+        if not self._started:
+            from selenium_driverless.utils.utils import IS_POSIX, read
 
-        if not self._options.debugger_address:
-            from selenium_driverless.utils.utils import random_port
-            port = random_port()
-            self._options._debugger_address = f"127.0.0.1:{port}"
-            self._options.add_argument(f"--remote-debugging-port={port}")
-        self._options.add_argument("about:blank")
-        options = self._options
+            if not self._options.debugger_address:
+                from selenium_driverless.utils.utils import random_port
+                port = random_port()
+                self._options._debugger_address = f"127.0.0.1:{port}"
+                self._options.add_argument(f"--remote-debugging-port={port}")
+            self._options.add_argument("about:blank")
+            options = self._options
 
-        # noinspection PyProtectedMember
-        self._is_remote = self._options._is_remote
+            # noinspection PyProtectedMember
+            self._is_remote = self._options._is_remote
 
-        if not self._is_remote:
-            path = options.binary_location
-            args = options.arguments
-            browser = subprocess.Popen(
-                [path, *args],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                close_fds=IS_POSIX,
-                shell=False
-            )
+            if not self._is_remote:
+                path = options.binary_location
+                args = options.arguments
+                browser = subprocess.Popen(
+                    [path, *args],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    close_fds=IS_POSIX,
+                    shell=False
+                )
+
+                host, port = self._options.debugger_address.split(":")
+                port = int(port)
+                if port == 0:
+                    path = self._options.user_data_dir + "/DevToolsActivePort"
+                    while not os.path.isfile(path):
+                        await asyncio.sleep(0.1)
+                    port = int(read(path, sel_root=False).split("\n")[0])
+                    self._options.debugger_address = f"127.0.0.1:{port}"
 
             host, port = self._options.debugger_address.split(":")
             port = int(port)
-            if port == 0:
-                path = self._options.user_data_dir + "/DevToolsActivePort"
-                while not os.path.isfile(path):
-                    await asyncio.sleep(0.1)
-                port = int(read(path, sel_root=False).split("\n")[0])
-                self._options.debugger_address = f"127.0.0.1:{port}"
+            self._host = f"{host}:{port}"
 
-        host, port = self._options.debugger_address.split(":")
-        port = int(port)
-        self._host = f"{host}:{port}"
+            if not self._is_remote:
+                # noinspection PyUnboundLocalVariable
+                self.browser_pid = browser.pid
+            targets = await get_json(self._host, timeout=self._timeout)
+            for target in targets:
+                if target["type"] == "page":
+                    target_id = target["id"]
+                    self._current_target = await self.get_target(target_id=target_id)
+                    break
+            if self._loop:
+                self._switch_to = SyncSwitchTo(driver=self, loop=self._loop)
+            else:
+                self._switch_to = await SwitchTo(driver=self)
+            await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
 
-        if not self._is_remote:
-            # noinspection PyUnboundLocalVariable
-            self.browser_pid = browser.pid
-        targets = await get_json(self._host, timeout=self._timeout)
-        for target in targets:
-            if target["type"] == "page":
-                target_id = target["id"]
-                self._current_target = await self.get_target(target_id=target_id)
-                break
-        if self._loop:
-            self._switch_to = SyncSwitchTo(driver=self, loop=self._loop)
-        else:
-            self._switch_to = await SwitchTo(driver=self)
-        await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
+            self._started = True
         return self
 
     @property
