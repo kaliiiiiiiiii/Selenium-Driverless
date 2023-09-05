@@ -24,6 +24,7 @@ import os.path
 import subprocess
 import typing
 import warnings
+import tempfile
 from contextlib import asynccontextmanager
 from importlib import import_module
 from typing import List
@@ -69,9 +70,7 @@ class Chrome:
             from selenium_driverless.utils.utils import find_chrome_executable
             options.binary_location = find_chrome_executable()
         if not options.user_data_dir:
-            from selenium_driverless.utils.utils import sel_driverless_path
-            import uuid
-            options.add_argument("--user-data-dir=" + sel_driverless_path() + "files/tmp/" + uuid.uuid4().hex)
+            options.add_argument("--user-data-dir=" + tempfile.TemporaryDirectory(prefix="selenium_driverless_").name + "/data_dir")
 
         self._options = options
         self._is_remote = True
