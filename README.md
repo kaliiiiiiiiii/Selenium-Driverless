@@ -4,6 +4,8 @@
 * currently passes __cloudfare__, __bet365__, [turnstile](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/master/dev#bypass-turnstile) and others
 
 ### Feel free to test my code!
+See [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/dev) for the latest implementations.
+Installation with `pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/heads/dev.zip`
 
 ## Getting Started
 
