@@ -39,8 +39,8 @@ from selenium_driverless.input.pointer import Pointer
 from selenium_driverless.types.options import Options as ChromeOptions
 from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
-from selenium_driverless.sync.target import Target as SyncTarget
 from selenium_driverless.types.target import Target, TargetInfo
+from selenium_driverless.types.webelement import WebElement
 from cdp_socket.utils.conn import get_json
 
 
@@ -166,10 +166,10 @@ class Chrome:
         return await self.current_target.frame_tree
 
     @property
-    async def targets(self) -> typing.Dict[str, TargetInfo]:
+    async def targets(self):
         res = await self.execute_cdp_cmd("Target.getTargets")
         _infos = res["targetInfos"]
-        infos = {}
+        infos: typing.Dict[str, TargetInfo] = {}
         for info in _infos:
             _id = info["targetId"]
             infos[_id] = await TargetInfo(info, await self.get_target(_id))
@@ -184,12 +184,13 @@ class Chrome:
         # noinspection PyProtectedMember
         return await self.current_target._isolated_context_id
 
-    async def get_target(self, target_id: str = None, timeout: float = 2):
+    async def get_target(self, target_id: str=None, timeout: float = 2):
         if not target_id:
             return self._current_target
         target: Target = self._targets.get(target_id)
         if not target:
             if self._loop:
+                from selenium_driverless.sync.target import Target as SyncTarget
                 target: Target = await SyncTarget(host=self._host, target_id=target_id,
                                                   is_remote=self._is_remote, loop=self._loop,
                                                   timeout=timeout)
@@ -204,6 +205,9 @@ class Chrome:
 
             target.socket.on_closed.append(remove_target)
         return target
+
+    async def get_target_for_iframe(self, iframe: WebElement):
+        return await self.current_target.get_target_for_iframe(iframe=iframe)
 
     async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
         """Loads a web page in the current browser session."""

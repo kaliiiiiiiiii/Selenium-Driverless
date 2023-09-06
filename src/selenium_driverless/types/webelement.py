@@ -163,12 +163,12 @@ class WebElement(RemoteObject):
         if by == By.TAG_NAME:
             return await self.execute_script("return obj.getElementsByTagName(arguments[0])",
                                              value, serialization="deep", unique_context=True,
-                                             execution_context_id=self.context_id)
+                                             execution_context_id=self.context_id, timeout=10)
         elif by == By.CSS_SELECTOR:
             elems = []
             node_id = await self.node_id
             res = await self._target.execute_cdp_cmd("DOM.querySelectorAll", {"nodeId": node_id,
-                                                                              "selector": value})
+                                                                              "selector": value}, timeout=2)
             node_ids = res["nodeIds"]
             for node_id in node_ids:
                 if self._loop:
@@ -186,7 +186,7 @@ class WebElement(RemoteObject):
                           XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
                           null,
                         );"""
-            return await self.execute_script(scipt, value, serialization="deep", unique_context=True)
+            return await self.execute_script(scipt, value, serialization="deep", unique_context=True, timeout=10)
         else:
             return ValueError("unexpected by")
 

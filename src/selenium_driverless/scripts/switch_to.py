@@ -28,8 +28,6 @@ from selenium_driverless.types.alert import Alert
 
 from selenium_driverless.types.target import TargetInfo, Target
 
-from cdp_socket.exceptions import CDPError
-
 
 class SwitchTo:
     def __init__(self, driver) -> None:
@@ -90,7 +88,7 @@ class SwitchTo:
         """
         raise NotImplementedError('You might use target.switch_to.target(target.targets[0]["targetId"])')
 
-    async def frame(self, frame_reference: Union[str, int, WebElement]) -> None:
+    async def frame(self, frame_reference: Union[str, int, WebElement], activate: bool = False) -> None:
         """Switches focus to the specified frame, by index, name, or
         webelement.
 
@@ -113,24 +111,23 @@ class SwitchTo:
                     frame_reference = await self._driver.find_element(By.NAME, frame_reference)
                 except NoSuchElementException:
                     raise NoSuchFrameException(frame_reference)
+        target = await self._driver.current_target.get_target_for_iframe(frame_reference)
+        if activate:
+            await target.focus()
+        return target
 
-        raise NotImplementedError('You might use target.switch_to.target(target.targets[0]["targetId"])')
-
-    async def target(self, target_id: str or TargetInfo, activate: bool = True) -> Target:
+    async def target(self, target_id: str or TargetInfo or WebElement, activate: bool = True) -> Target:
         if isinstance(target_id, TargetInfo):
             self._driver._current_target = target_id.Target
         elif isinstance(target_id, Target):
             self._driver._current_target = target_id
+        elif isinstance(target_id, WebElement):
+            self._driver._current_target = self.frame(target_id, activate=False)
         else:
             self._driver._current_target = await self._driver.get_target(target_id)
+
         if activate:
-            await self._driver.execute_cdp_cmd("Target.activateTarget",
-                                               {"targetId": self._driver.current_window_handle})
-            try:
-                await self._driver.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
-            except CDPError as e:
-                if not (e.code == -32601 and e.message == "'Emulation.setFocusEmulationEnabled' wasn't found"):
-                    raise e
+            await self._driver.current_target.focus()
         return self._driver.current_target
 
     async def new_window(self, type_hint: Optional[str] = "tab", url="", activate: bool = True) -> Target:

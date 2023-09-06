@@ -19,6 +19,16 @@ from selenium_driverless.sync.alert import Alert as SyncAlert
 from cdp_socket.socket import SingleCDPSocket
 
 
+class NoSuchIframe(Exception):
+    def __init__(self, elem: WebElement, message: str):
+        self._elem = elem
+        super().__init__(message)
+
+    @property
+    def elem(self):
+        return self._elem
+
+
 class Target:
     """Allows you to drive the browser without chromedriver."""
 
@@ -45,6 +55,7 @@ class Target:
         self._socket = None
         self._isolated_context_id_ = None
         self._context_id = None
+        self._targets: typing.Dict[str, Target] = {}
 
         self._is_remote = is_remote
         self._host = host
@@ -112,6 +123,36 @@ class Target:
         if clear_context_id:
             self._isolated_context_id_ = None
 
+    async def get_target(self, target_id: str, timeout: float = 2):
+        target: Target = self._targets.get(target_id)
+        if not target:
+            if self._loop:
+                from selenium_driverless.sync.target import Target as SyncTarget
+                target: Target = await SyncTarget(host=self._host, target_id=target_id,
+                                                  is_remote=self._is_remote, loop=self._loop,
+                                                  timeout=timeout)
+            else:
+                target: Target = await Target(host=self._host, target_id=target_id,
+                                              is_remote=self._is_remote, loop=self._loop, timeout=timeout)
+            self._targets[target_id] = target
+
+            # noinspection PyUnusedLocal
+            def remove_target(code: str, reason: str):
+                del self._targets[target_id]
+
+            target.socket.on_closed.append(remove_target)
+        return target
+
+    @property
+    async def targets(self):
+        res = await self.execute_cdp_cmd("Target.getTargets")
+        _infos = res["targetInfos"]
+        infos: typing.Dict[str, TargetInfo] = {}
+        for info in _infos:
+            _id = info["targetId"]
+            infos[_id] = await TargetInfo(info, await self.get_target(_id))
+        return infos
+
     async def get_alert(self, timeout: float = 5):
         if not self._page_enabled:
             await self.execute_cdp_cmd("Page.enable", timeout=timeout)
@@ -120,6 +161,37 @@ class Target:
         else:
             alert = await Alert(self, timeout=timeout)
         return alert
+
+    async def get_elem_for_frame(self, frame_id, frame_target, context_id: str = None,
+                                 unique_context: bool = True):
+        await frame_target.execute_cdp_cmd("DOM.enable")
+        # noinspection PyProtectedMember
+        await frame_target._document_elem
+        res = await frame_target.execute_cdp_cmd("DOM.getFrameOwner",
+                                                 {"frameId": frame_id})
+        return await WebElement(self, node_id=res['nodeId'],
+                                context_id=context_id, unique_context=unique_context)
+
+    async def get_target_for_iframe(self, iframe: WebElement):
+        tag_name = await iframe.tag_name
+        if tag_name.upper() != "IFRAME":
+            raise NoSuchIframe(iframe, "element isn't a iframe")
+        context_id = iframe.context_id
+        # noinspection PyProtectedMember
+        unique_context = iframe._unique_context
+        targets = await self.targets
+        target = None
+        for targetinfo in list(targets.values()):
+            if targetinfo.type == "iframe":
+                base_frame = await targetinfo.Target.base_frame
+                elem = await self.get_elem_for_frame(frame_id=base_frame["id"], frame_target=self,
+                                                     context_id=context_id, unique_context=unique_context)
+                if elem == iframe:
+                    target = targetinfo.Target
+                    break
+        if not target:
+            return NoSuchIframe(iframe, "No target for iframe found")
+        return target
 
     # noinspection PyUnboundLocalVariable
     async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
@@ -361,7 +433,13 @@ class Target:
                 raise e
 
     async def focus(self):
-        await self.execute_cdp_cmd("Target.activateTarget", {"targetId": self.id})
+        await self.execute_cdp_cmd("Target.activateTarget",
+                                   {"targetId": self.id})
+        try:
+            await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
+        except CDPError as e:
+            if not (e.code == -32601 and e.message == "'Emulation.setFocusEmulationEnabled' wasn't found"):
+                raise e
 
     @property
     async def info(self):
