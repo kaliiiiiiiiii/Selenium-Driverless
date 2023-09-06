@@ -11,15 +11,25 @@ async def main():
 
         # wait for iframe and switch to
         page = driver.current_window_handle
-        iframes = []
-        while len(iframes) != 2:
+        iframe = None
+        while not iframe:
             targets = await driver.targets
             for target in list(targets.values()):
                 if target.type == "iframe":
                     if target.url[:93] == 'https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/if/ov2/av0/rcv0/0/':
-                        frame = await target.Target.base_frame
-                        info = await target.Target.info
-                        iframes.append(target)
+                        target = await target.Target
+
+                        # ensure we've got the correct iframe
+                        text = None
+                        try:
+                            elem = await target.find_element(By.CSS_SELECTOR, "body > div")
+                            text = await elem.text
+                        except NoSuchElementException:
+                            pass
+                        finally:
+                            if text:  # 'Only a rest.' text
+                                iframe = target
+                                break
 
         await asyncio.sleep(0.5)
 
@@ -32,7 +42,7 @@ async def main():
         await pointer.move_to(500, 200, smooth_soft=60, total_time=1)
 
         # switch and click on checkbox
-        target = iframes[0].Target
+        target = iframe
         while True:
             # noinspection PyProtectedMember
             elem = await target._document_elem

@@ -26,7 +26,6 @@ async def nowsecure(driver):
     await get_elem()
 
 
-
 async def unique_execution_context(driver):
     await driver.get('chrome://version')
     script = """
@@ -61,7 +60,6 @@ async def bet365(driver):
 async def selenium_detector(driver):
     await driver.get('https://hmaker.github.io/selenium-detector/')
     elem = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-token")
-    sr = await elem.source
     await elem.write(await driver.execute_script('return window.token'))
     elem2 = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-asynctoken")
     async_token = await driver.execute_async_script('window.getAsyncToken().then(arguments[0])')
