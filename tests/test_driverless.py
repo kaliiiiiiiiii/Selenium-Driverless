@@ -53,6 +53,7 @@ async def bet365(driver):
     async def click_login():
         login_button = await driver.find_element(By.XPATH, value='//div[contains(@class, "ovm-ParticipantOddsOnly")]')
         await login_button.click()
+
     await driver.get('https://www.365365824.com/#/IP/B16', wait_load=True)
     try:
         await click_login()
@@ -87,6 +88,13 @@ async def prompt(driver):
     assert res == keys
 
 
+async def create_tabs(n_tabs: int, driver):
+    targets = [driver.current_target]
+    for _ in range(n_tabs - 1):
+        targets.append(await driver.switch_to.new_window("tab"))
+    return targets
+
+
 class Driver(unittest.TestCase):
     def test_all(self):
         global loop
@@ -94,19 +102,22 @@ class Driver(unittest.TestCase):
         self.assertEqual(True, True)
 
     async def _test_all(self):
-        driver = await make_driver()
-        n_tabs = 5
-        targets = [driver.current_target]
-        for _ in range(n_tabs - 1):
-            targets.append(await driver.switch_to.new_window("tab"))
+        tests = [
+            unique_execution_context,
+            nowsecure,
+            bet365,
+            selenium_detector,
+            prompt
+        ]
 
-        await asyncio.gather(
-            unique_execution_context(targets[0]),
-            nowsecure(targets[1]),
-            bet365(targets[2]),
-            selenium_detector(targets[3]),
-            prompt(targets[4])
-        )
+        driver = await make_driver()
+        tabs = await create_tabs(len(tests), driver)
+
+        coros = []
+        for test, target in zip(tests, tabs):
+            coros.append(test(target))
+
+        await asyncio.gather(*coros)
         await driver.quit()
 
 
