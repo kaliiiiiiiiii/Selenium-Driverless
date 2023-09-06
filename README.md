@@ -202,14 +202,14 @@ note: please check the todo's below at first!
 - implementations
   - [ ] [`WebDriverWait`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7)
   - [ ] [`EC`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7) (expected-conditions)
-  - [ ] [`driver.switch_to.frame`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7) [workaround](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/9#issuecomment-1663436234)
+  - [x] [`driver.switch_to.frame`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7) [workaround](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/9#issuecomment-1663436234)
   - [ ] [`ActionChains`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
       - [ ] [`TouchActions`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
   - [x] `execute_script` and `execute_async_script`
     - [ ] make serialization use `deep`
-      - [ ] add `Page.createIsolatedWorld` support with `DOM` access
-        - [ ] make `element.rect` use this
-        - [ ] make `elem.box_model use this`
+    - [x] add `Page.createIsolatedWorld` support with `DOM` access
+      - [x] make `element.rect` use this
+      - [ ] make `elem.box_model use this`
   - [ ] [support `options.add_extension()`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/37)
 - protocoll
   - [ ] add cdp event handler
