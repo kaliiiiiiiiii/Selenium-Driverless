@@ -167,7 +167,7 @@ class SwitchTo:
         """
         raise NotImplementedError()
 
-    async def window(self, window_id:str or TargetInfo, activate: bool = True) -> None:
+    async def window(self, window_id: str or TargetInfo, activate: bool = True) -> None:
         """Switches focus to the specified window.
 
         :Args:

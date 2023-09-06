@@ -4,6 +4,7 @@ import inspect
 
 
 class Target(AsyncTarget):
+    # noinspection PyShadowingBuiltins
     def __init__(self, host: str, target_id: str, is_remote: bool = False,
                  loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
                  type: str = None) -> None:

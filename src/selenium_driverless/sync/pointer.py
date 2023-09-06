@@ -4,7 +4,7 @@ import inspect
 
 
 class Pointer(AsyncPointer):
-    def __init__(self, target, pointer_type: str = PointerType.MOUSE,loop:asyncio.AbstractEventLoop=None):
+    def __init__(self, target, pointer_type: str = PointerType.MOUSE, loop: asyncio.AbstractEventLoop = None):
         super().__init__(target=target, pointer_type=pointer_type)
         if not loop:
             loop = asyncio.new_event_loop()
@@ -23,6 +23,7 @@ class Pointer(AsyncPointer):
             if inspect.iscoroutinefunction(item):
                 def syncified(*args, **kwargs):
                     return self._loop.run_until_complete(item(*args, **kwargs))
+
                 return syncified
             if inspect.isawaitable(item):
                 return self._loop.run_until_complete(item)

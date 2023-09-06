@@ -6,7 +6,6 @@ import typing
 import json
 import os
 import selenium
-from matplotlib.patches import Polygon
 
 import selenium_driverless
 import socket
@@ -18,7 +17,7 @@ T_JSON_DICT = typing.Dict[str, typing.Any]
 
 def find_chrome_executable():
     """
-    Finds the chrome, chrome beta, chrome canary, chromium executable
+    Finds the Chrome, Chrome beta, Chrome canary, Chromium executable
 
     Returns
     -------

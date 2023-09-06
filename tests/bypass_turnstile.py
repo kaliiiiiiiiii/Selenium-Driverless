@@ -17,6 +17,8 @@ async def main():
             for target in list(targets.values()):
                 if target.type == "iframe":
                     if target.url[:93] == 'https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/if/ov2/av0/rcv0/0/':
+                        frame = await target.Target.base_frame
+                        info = await target.Target.info
                         iframes.append(target)
 
         await asyncio.sleep(0.5)
@@ -30,13 +32,13 @@ async def main():
         await pointer.move_to(500, 200, smooth_soft=60, total_time=1)
 
         # switch and click on checkbox
-        await driver.switch_to.target(iframes[0], activate=False)
+        target = iframes[0].Target
         while True:
             # noinspection PyProtectedMember
-            elem = await driver.current_target._document_elem
+            elem = await target._document_elem
             await elem.highlight()
             try:
-                checkbox = await driver.find_element(By.CSS_SELECTOR, "#challenge-stage > div > label > map > img")
+                checkbox = await target.find_element(By.CSS_SELECTOR, "#challenge-stage > div > label > map > img")
                 break
             except NoSuchElementException:
                 pass

@@ -19,75 +19,6 @@ from selenium_driverless.sync.alert import Alert as SyncAlert
 from cdp_socket.socket import SingleCDPSocket
 
 
-class TargetInfo:
-    def __init__(self, target_info: dict, target):
-        self._id = target_info.get('targetId')
-        self._type = target_info.get("type")
-        self._title = target_info.get("title")
-        self._url = target_info.get("url")
-        self._attached = target_info.get("attached")
-        self._opener_id = target_info.get("openerId")
-        self._can_access_opener = target_info.get('canAccessOpener')
-        self._opener_frame_id = target_info.get("openerFrameId")
-        self._browser_context_id = target_info.get('browserContextId')
-        self._subtype = target_info.get("subtype")
-
-        self._target = target
-        self._started = False
-
-    def __await__(self):
-        return self._init().__await__()
-
-    async def _init(self):
-        if not self._started:
-            self._started = True
-        return self
-
-    @property
-    def Target(self):
-        return self._target
-
-    @property
-    def id(self):
-        return self._id
-
-    @property
-    def type(self):
-        return self._type
-
-    @property
-    def title(self):
-        return self._title
-
-    @property
-    def url(self):
-        return self._url
-
-    @property
-    def attached(self):
-        return self._attached
-
-    @property
-    def opener_id(self):
-        return self._opener_id
-
-    @property
-    def can_access_opener(self):
-        return self._can_access_opener
-
-    @property
-    def opener_frame_id(self):
-        return self._opener_frame_id
-
-    @property
-    def browser_context_id(self):
-        return self._browser_context_id
-
-    @property
-    def subtype(self):
-        return self._subtype
-
-
 class Target:
     """Allows you to drive the browser without chromedriver."""
 
@@ -265,7 +196,6 @@ class Target:
         """
         from selenium_driverless.types import RemoteObject, JSEvalException
 
-
         if not args:
             args = []
         if not serialization:
@@ -434,7 +364,7 @@ class Target:
         await self.execute_cdp_cmd("Target.activateTarget", {"targetId": self.id})
 
     @property
-    async def info(self) -> TargetInfo:
+    async def info(self):
         res = await self.execute_cdp_cmd("Target.getTargetInfo", {"targetId": self.id})
         return await TargetInfo(res["targetInfo"], self)
 
@@ -876,3 +806,72 @@ class Target:
          - sink_name: Name of the sink to stop the Cast session.
         """
         return await self.execute_cdp_cmd("Cast.stopCasting", {"sinkName": sink_name})
+
+
+class TargetInfo:
+    def __init__(self, target_info: dict, target):
+        self._id = target_info.get('targetId')
+        self._type = target_info.get("type")
+        self._title = target_info.get("title")
+        self._url = target_info.get("url")
+        self._attached = target_info.get("attached")
+        self._opener_id = target_info.get("openerId")
+        self._can_access_opener = target_info.get('canAccessOpener')
+        self._opener_frame_id = target_info.get("openerFrameId")
+        self._browser_context_id = target_info.get('browserContextId')
+        self._subtype = target_info.get("subtype")
+
+        self._target = target
+        self._started = False
+
+    def __await__(self):
+        return self._init().__await__()
+
+    async def _init(self):
+        if not self._started:
+            self._started = True
+        return self
+
+    @property
+    def Target(self) -> Target:
+        return self._target
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def type(self):
+        return self._type
+
+    @property
+    def title(self):
+        return self._title
+
+    @property
+    def url(self):
+        return self._url
+
+    @property
+    def attached(self):
+        return self._attached
+
+    @property
+    def opener_id(self):
+        return self._opener_id
+
+    @property
+    def can_access_opener(self):
+        return self._can_access_opener
+
+    @property
+    def opener_frame_id(self):
+        return self._opener_frame_id
+
+    @property
+    def browser_context_id(self):
+        return self._browser_context_id
+
+    @property
+    def subtype(self):
+        return self._subtype

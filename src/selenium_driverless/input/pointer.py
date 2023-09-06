@@ -47,6 +47,7 @@ class EventType:
 
 
 class PointerEvent:
+    # noinspection GrazieInspection
     def __init__(self, type_: str, x: int, y: int,
                  modifiers: int = Modifiers.NONE,
                  timestamp: float = None, button: str = MouseButton.LEFT, buttons: int = Buttons.DEFAULT,
@@ -192,7 +193,7 @@ class Pointer:
         self.location = [100, 0]
         self._loop = None
 
-    async def click(self, x_or_elem: float, y: float or None = None, move_to:bool=True,
+    async def click(self, x_or_elem: float, y: float or None = None, move_to: bool = True,
                     move_kwargs: dict or None = None, click_kwargs: dict or None = None):
         if click_kwargs is None:
             click_kwargs = dict()

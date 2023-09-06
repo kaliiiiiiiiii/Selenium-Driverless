@@ -28,7 +28,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.proxy import Proxy
 
 
-# noinspection PyUnreachableCode
+# noinspection PyUnreachableCode,PyUnusedLocal
 class Options(metaclass=ABCMeta):
     KEY = "goog:chromeOptions"
 
@@ -262,12 +262,13 @@ class Options(metaclass=ABCMeta):
 
     @set_window_rect.setter
     def set_window_rect(self, value: bool) -> None:
+        # noinspection GrazieInspection
         """Whether the remote end supports all of the resizing and positioning
-        commands. The default is false. https://w3c.github.io/webdriver/#dfn-
-        strict-file-interactability.
+                commands. The default is false. https://w3c.github.io/webdriver/#dfn-
+                strict-file-interactability.
 
-        :param value: whether remote end must support setting window resizing and repositioning
-        """
+                :param value: whether remote end must support setting window resizing and repositioning
+                """
         pass
 
     @property

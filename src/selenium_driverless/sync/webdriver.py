@@ -2,7 +2,6 @@ from selenium_driverless.types.options import Options as ChromeOptions
 import asyncio
 from selenium_driverless.webdriver import Chrome as AsyncDriver
 import inspect
-from selenium_driverless.types.webelement import RemoteObject, WebElement
 
 
 class Chrome(AsyncDriver):

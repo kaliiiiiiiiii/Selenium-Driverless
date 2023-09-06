@@ -44,7 +44,6 @@ class RemoteObject:
                     self._context_id = await self._target._isolated_context_id
         return self
 
-
     @property
     def context_id(self) -> int or None:
         return self._context_id
@@ -81,7 +80,8 @@ class RemoteObject:
                                                      execution_context_id=execution_context_id,
                                                      unique_context=unique_context)
 
-    async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None, timeout: float = 2,
+    async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
+                             timeout: float = 2,
                              only_value=True, execution_context_id: str = None, unique_context: bool = False):
         """
         exaple: script = "return obj.click()"
