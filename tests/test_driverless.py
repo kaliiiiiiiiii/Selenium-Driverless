@@ -50,11 +50,16 @@ async def unique_execution_context(driver):
 
 
 async def bet365(driver):
+    async def click_login():
+        login_button = await driver.find_element(By.XPATH, value='//div[contains(@class, "ovm-ParticipantOddsOnly")]')
+        await login_button.click()
     await driver.get('https://www.365365824.com/#/IP/B16', wait_load=True)
-    await driver.wait_for_cdp("Page.frameStoppedLoading", timeout=15)
-    await asyncio.sleep(2)
-    login_button = await driver.find_element(By.XPATH, value='//div[contains(@class, "ovm-ParticipantOddsOnly")]')
-    await login_button.click()
+    try:
+        await click_login()
+    except NoSuchElementException:
+        await driver.wait_for_cdp("Page.frameStoppedLoading", timeout=15)
+        await asyncio.sleep(2)
+        await click_login()
 
 
 async def selenium_detector(driver):
