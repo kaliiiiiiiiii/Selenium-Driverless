@@ -104,11 +104,11 @@ class Driver(unittest.TestCase):
 
     async def _test_all(self):
         tests = [
+            prompt,
             unique_execution_context,
             nowsecure,
             bet365,
-            selenium_detector,
-            prompt
+            selenium_detector
         ]
 
         driver = await make_driver()
