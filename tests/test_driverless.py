@@ -55,6 +55,7 @@ async def bet365(driver):
         await login_button.click()
 
     await driver.get('https://www.365365824.com/#/IP/B16', wait_load=True)
+    await asyncio.sleep(0.5)
     try:
         await click_login()
     except NoSuchElementException:
