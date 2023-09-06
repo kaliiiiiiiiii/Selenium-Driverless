@@ -226,8 +226,9 @@ class Chrome:
                                  target_id: str = None, execution_context_id: str = None, unique_context: bool = False):
         """
         example:
-        script= "function(...arguments){this.click()}"
-        "this" will be the element object
+        script= "function(...arguments){obj.click()}"
+        "const obj" will be the Object according to obj_id
+        this is by default globalThis (=> window)
         """
         target = await self.get_target(target_id)
         return await target.execute_raw_script(script, *args, await_res=await_res,
@@ -241,7 +242,7 @@ class Chrome:
                              target_id: str = None, execution_context_id: str = None,
                              unique_context: bool = False):
         """
-        exaple: script = "return elem.click()"
+        exaple: script = "return obj.click()"
         """
         target = await self.get_target(target_id)
         return await target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,

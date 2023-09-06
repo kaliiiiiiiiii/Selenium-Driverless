@@ -91,6 +91,7 @@ class TargetInfo:
 class Target:
     """Allows you to drive the browser without chromedriver."""
 
+    # noinspection PyShadowingBuiltins
     def __init__(self, host: str, target_id: str, is_remote: bool = False,
                  loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
                  type: str = None) -> None:
@@ -112,6 +113,7 @@ class Target:
         self._targets: list = []
         self._socket = None
         self._isolated_context_id_ = None
+        self._context_id = None
 
         self._is_remote = is_remote
         self._host = host
@@ -159,11 +161,6 @@ class Target:
             else:
                 self._pointer = Pointer(target=self)
 
-            # noinspection PyUnusedLocal
-            def clear_global_this(data):
-                self._global_this_ = None
-                self._document_elem_ = None
-
             def set_alert(alert):
                 self._alert = alert
 
@@ -173,9 +170,16 @@ class Target:
 
             await self.add_cdp_listener("Page.javascriptDialogOpening", set_alert)
             await self.add_cdp_listener("Page.javascriptDialogClosed", remove_alert)
-            await self.add_cdp_listener("Page.loadEventFired", clear_global_this)
+            await self.add_cdp_listener("Page.loadEventFired", self._on_loaded)
             self._started = True
         return self
+
+    # noinspection PyUnusedLocal
+    async def _on_loaded(self, *args, clear_context_id=False, **kwargs):
+        self._global_this_ = None
+        self._document_elem_ = None
+        if clear_context_id:
+            self._isolated_context_id_ = None
 
     async def get_alert(self, timeout: float = 5):
         if not self._page_enabled:
@@ -205,8 +209,7 @@ class Target:
             except asyncio.TimeoutError:
                 raise TimeoutError(f"page didn't load within timeout of {timeout}")
         await get
-        self._global_this_ = None
-        self._document_elem_ = None
+        await self._on_loaded()
 
     async def _parse_res(self, res):
         if "subtype" in res.keys():
@@ -224,9 +227,9 @@ class Target:
             elif class_name == 'XPathResult':
                 elems = []
                 obj = await RemoteObject(target=self, obj_id=res["objectId"], check_existence=False)
-                if await obj.execute_script("return [7].includes(this.resultType)", serialization="json"):
-                    for idx in range(await obj.execute_script("return this.snapshotLength", serialization="json")):
-                        elems.append(await obj.execute_script("return this.snapshotItem(arguments[0])", idx,
+                if await obj.execute_script("return [7].includes(obj.resultType)", serialization="json"):
+                    for idx in range(await obj.execute_script("return obj.snapshotLength", serialization="json")):
+                        elems.append(await obj.execute_script("return obj.snapshotItem(arguments[0])", idx,
                                                               serialization="deep"))
                     res["value"] = elems
         return res
@@ -238,13 +241,14 @@ class Target:
         return self._global_this_
 
     @property
-    async def _isolated_context_id(self):
-        if not self._isolated_context_id_:
+    async def _isolated_context_id(self) -> int:
+        if (not self._isolated_context_id_) or self._loop:
             frame = await self.base_frame
             res = await self.execute_cdp_cmd("Page.createIsolatedWorld",
                                              {"frameId": frame["id"], "grantUniveralAccess": True,
                                               "worldName": "You got here hehe:)"})
-            return res["executionContextId"]
+            self._isolated_context_id_ = res["executionContextId"]
+        return self._isolated_context_id_
 
     @property
     def pointer(self) -> Pointer:
@@ -255,16 +259,12 @@ class Target:
                                  execution_context_id: str = None, unique_context: bool = False):
         """
         example:
-        script= "function(...arguments){this.click()}"
-        "this" will be the element object
+        script= "function(...arguments){obj.click()}"
+        "const obj" will be the Object according to obj_id
+        this is by default globalThis (=> window)
         """
         from selenium_driverless.types import RemoteObject, JSEvalException
-        if not (obj_id or execution_context_id):
-            if unique_context:
-                execution_context_id = await self._isolated_context_id
-            else:
-                global_this = await self._global_this
-                obj_id = await global_this.obj_id
+
 
         if not args:
             args = []
@@ -272,11 +272,29 @@ class Target:
             serialization = "deep"
 
         _args = []
+        base_id = None
         for arg in args:
             if isinstance(arg, RemoteObject):
                 _args.append({"objectId": await arg.obj_id})
+                exec_id = arg.context_id
+                if not exec_id:
+                    # noinspection PyProtectedMember
+                    base_id = arg._base_obj
+                if execution_context_id and exec_id != execution_context_id:
+                    raise ValueError("got multiple arguments with different execution-context-id's")
+                execution_context_id = exec_id
             else:
                 _args.append({"value": arg})
+
+        if not (obj_id or execution_context_id):
+            if unique_context:
+                execution_context_id = await self._isolated_context_id
+            else:
+                if base_id:
+                    obj_id = base_id
+                else:
+                    global_this = await self._global_this
+                    obj_id = await global_this.obj_id
 
         ser_opts = {"serialization": serialization, "maxDepth": max_depth,
                     "additionalParameters": {"includeShadowTree": "all", "maxNodeDepth": max_depth}}
@@ -298,12 +316,31 @@ class Target:
         return res
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: int = None, only_value=True, obj_id=None, execution_context_id: str = None,
+                             timeout: float = None, only_value=True, obj_id=None, execution_context_id: str = None,
                              unique_context: bool = None):
         """
         exaple: script = "return elem.click()"
         """
-        script = f"(function(...arguments){{{script}}})"
+        from selenium_driverless.types import RemoteObject
+        for arg in args:
+            if isinstance(arg, RemoteObject):
+                execution_context_id = arg.context_id
+
+        if execution_context_id and obj_id:
+            obj = RemoteObject(obj_id=obj_id, target=self, check_existence=False,
+                               context_id=execution_context_id, unique_context=unique_context)
+            args = [obj, *args]
+            obj_id = None
+            script = """
+                (function(...arguments){
+                    const obj = arguments[0]
+                    arguments = arguments[1:]
+                    """ + script + "})"
+        else:
+            script = """
+                        (function(...arguments){
+                            const obj = this   
+                            """ + script + "})"
         res = await self.execute_raw_script(script, *args, max_depth=max_depth,
                                             serialization=serialization, timeout=timeout,
                                             await_res=False, obj_id=obj_id, unique_context=unique_context,
@@ -315,13 +352,31 @@ class Target:
             return res
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
-                                   serialization: str = None, timeout: int = 2,
+                                   serialization: str = None, timeout: float = 2,
                                    only_value=True, obj_id=None, execution_context_id: str = None,
                                    unique_context: bool = False):
-        script = """(function(...arguments){
-                       const promise = new Promise((resolve, reject) => {
-                              arguments.push(resolve)
+        from selenium_driverless.types import RemoteObject
+        for arg in args:
+            if isinstance(arg, RemoteObject):
+                execution_context_id = arg.context_id
+        if execution_context_id and obj_id:
+            obj = RemoteObject(obj_id=obj_id, target=self, check_existence=False,
+                               context_id=execution_context_id, unique_context=unique_context)
+            args = [obj, *args]
+            obj_id = None
+            script = """
+                (function(...arguments){
+                    const obj = arguments[0]
+                    arguments = arguments[1:]
+                    const promise = new Promise((resolve, reject) => {
+                                          arguments.push(resolve)
                         });""" + script + ";return promise})"
+        else:
+            script = """(function(...arguments){
+                                   const obj = this
+                                   const promise = new Promise((resolve, reject) => {
+                                          arguments.push(resolve)
+                                    });""" + script + ";return promise})"
         res = await self.execute_raw_script(script, *args, max_depth=max_depth,
                                             serialization=serialization, timeout=timeout,
                                             await_res=True, obj_id=obj_id,
@@ -449,8 +504,7 @@ class Target:
                 target.back()
         """
         await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": await self._current_history_idx - 1})
-        self._document_elem_ = None
-        self._global_this_ = None
+        await self._on_loaded()
 
     async def forward(self) -> None:
         """Goes one step forward in the browser history.
@@ -461,8 +515,7 @@ class Target:
                 target.forward()
         """
         await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": await self._current_history_idx + 1})
-        self._document_elem_ = None
-        self._global_this_ = None
+        await self._on_loaded()
 
     async def refresh(self) -> None:
         """Refreshes the current page.
@@ -473,8 +526,7 @@ class Target:
                 target.refresh()
         """
         await self.execute_cdp_cmd("Page.reload")
-        self._document_elem_ = None
-        self._global_this_ = None
+        await self._on_loaded()
 
     # Options
     async def get_cookies(self) -> List[dict]:
@@ -556,7 +608,7 @@ class Target:
             res = await self.execute_cdp_cmd("DOM.getDocument", {"pierce": True})
             node_id = res["root"]["nodeId"]
             self._document_elem_ = await WebElement(target=self, node_id=node_id, check_existence=False,
-                                                    loop=self._loop)
+                                                    loop=self._loop, unique_context=True)
         return self._document_elem_
 
     # noinspection PyUnusedLocal

@@ -4,12 +4,15 @@ import inspect
 
 
 class WebElement(AsyncWebElement):
-    def __init__(self, target, loop=None, js: str = None, obj_id=None, node_id=None, check_existence=True):
+    def __init__(self, target, loop=None, js: str = None, obj_id=None, node_id=None, check_existence=True,
+                 context_id: int = None, unique_context: bool = True):
         if not loop:
             loop = asyncio.new_event_loop()
         self._loop = loop
-        super().__init__(target=target, js=js, obj_id=obj_id, node_id=node_id, check_existence=check_existence, loop=self._loop)
-        self._loop.create_task(self.__aenter__())
+        super().__init__(target=target, js=js, obj_id=obj_id, node_id=node_id,
+                         check_existence=check_existence, loop=self._loop, context_id=context_id,
+                         unique_context=unique_context)
+        self.__enter__()
 
     @property
     async def node_id(self):
@@ -20,7 +23,7 @@ class WebElement(AsyncWebElement):
         return await super().node_id
 
     def __enter__(self):
-        return self
+        return self.__aenter__
 
     def __exit__(self, *args, **kwargs):
         self.__aexit__(*args, **kwargs)

@@ -61,38 +61,47 @@ class WebElement(RemoteObject):
     instance will fail.
     """
 
-    def __init__(self, target, js: str = None, obj_id=None, node_id=None, check_existence=True, loop=None) -> None:
+    def __init__(self, target, js: str = None, obj_id=None,
+                 node_id=None, check_existence=True,
+                 loop=None, context_id: int = None,
+                 unique_context: bool = True) -> None:
         self._loop = loop
         if not (obj_id or node_id or js):
             raise ValueError("either js, obj_id or node_id need to be specified")
         self._node_id = node_id
-        super().__init__(target=target, js=js, obj_id=obj_id, check_existence=check_existence)
+        super().__init__(target=target, js=js, obj_id=obj_id, check_existence=check_existence, context_id=context_id,
+                         unique_context=unique_context)
 
     def __await__(self):
         return super().__await__()
 
     async def __aenter__(self):
-        if self._check_exist:
-            await self.obj_id
-
-        # noinspection PyUnusedLocal
-        async def clear_node_id(data):
-            if not self._obj_id:
+        if not self._started:
+            if self._check_exist:
                 await self.obj_id
-            self._node_id = None
 
-        await self._target.add_cdp_listener("Page.loadEventFired", clear_node_id)
+            # noinspection PyUnusedLocal
+            async def clear_node_id(data):
+                if not self._obj_id:
+                    await self.obj_id
+                self._node_id = None
+
+            await self._target.add_cdp_listener("Page.loadEventFired", clear_node_id)
+            self._started = True
 
         return self
 
     @property
     async def obj_id(self):
         if not self._obj_id:
+            context_id = self.context_id
             if self._js:
-                res = await self._target.execute_cdp_cmd("Runtime.evaluate",
-                                                         {"expression": self._js,
-                                                          "serializationOptions": {
-                                                              "serialization": "idOnly"}})
+                args = {"expression": self._js,
+                        "serializationOptions": {
+                            "serialization": "idOnly"}}
+                if context_id:
+                    args["contextId"] = context_id
+                res = await self._target.execute_cdp_cmd("Runtime.evaluate", args)
                 if "exceptionDetails" in res.keys():
                     raise JSEvalException(res["exceptionDetails"])
                 res = res["result"]
@@ -100,7 +109,10 @@ class WebElement(RemoteObject):
                 if res["subtype"] != "node":
                     raise ValueError("object isn't a node")
             else:
-                res = await self._target.execute_cdp_cmd("DOM.resolveNode", {"nodeId": self._node_id})
+                args = {"nodeId": self._node_id}
+                if context_id:
+                    args["contextId"] = context_id
+                res = await self._target.execute_cdp_cmd("DOM.resolveNode", args)
                 self._obj_id = res["object"]["objectId"]
         return self._obj_id
 
@@ -149,8 +161,9 @@ class WebElement(RemoteObject):
             value = f'//*[@name="{value}"]'
 
         if by == By.TAG_NAME:
-            return await self.execute_script("return this.getElementsByTagName(arguments[0])",
-                                             value, serialization="deep", unique_context=True)
+            return await self.execute_script("return obj.getElementsByTagName(arguments[0])",
+                                             value, serialization="deep", unique_context=True,
+                                             execution_context_id=self.context_id)
         elif by == By.CSS_SELECTOR:
             elems = []
             node_id = await self.node_id
@@ -221,7 +234,7 @@ class WebElement(RemoteObject):
 
     async def clear(self) -> None:
         """Clears the text if it's a text entry element."""
-        await self.execute_script("this.value = ''", unique_context=True)
+        await self.execute_script("obj.value = ''", unique_context=True)
 
     async def remove(self):
         await self._target.execute_cdp_cmd("DOM.removeNode", {"nodeId": await self.node_id})
@@ -493,7 +506,8 @@ class WebElement(RemoteObject):
     async def rect(self) -> dict:
         """A dictionary with the size and location of the element."""
         # todo: calculate form DOM.getBoxModel
-        result = await self.execute_script("return this.getBoundingClientRect().toJSON()", serialization="json", unique_context=True)
+        result = await self.execute_script("return obj.getClientRects()[0].toJSON()", serialization="json",
+                                           unique_context=True)
         return result
 
     @property
@@ -587,3 +601,47 @@ class WebElement(RemoteObject):
     @property
     def children(self):
         return self.find_elements(By.CSS_SELECTOR, "*")
+
+    async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
+                                 max_depth: int = 2, timeout: float = 2, execution_context_id: str = None,
+                                 unique_context: bool = True):
+        exec_id = self.context_id
+        if exec_id:
+            execution_context_id = exec_id
+        else:
+            for arg in args:
+                if isinstance(arg, RemoteObject):
+                    execution_context_id = arg.context_id
+        return await super().execute_raw_script(script, *args, await_res=await_res, serialization=serialization,
+                                                max_depth=max_depth, timeout=timeout,
+                                                execution_context_id=execution_context_id,
+                                                unique_context=unique_context)
+
+    async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
+                             timeout: float = 2,
+                             only_value=True, execution_context_id: str = None, unique_context: bool = True):
+        exec_id = self.context_id
+        if exec_id:
+            execution_context_id = exec_id
+        else:
+            for arg in args:
+                if isinstance(arg, RemoteObject):
+                    execution_context_id = arg.context_id
+        return await super().execute_script(script, *args, max_depth=max_depth, serialization=serialization,
+                                            timeout=timeout, only_value=only_value,
+                                            execution_context_id=execution_context_id,
+                                            unique_context=unique_context)
+
+    async def execute_async_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
+                                   timeout: float = 2,
+                                   only_value=True, execution_context_id: str = None, unique_context: bool = False):
+        exec_id = self.context_id
+        if exec_id:
+            execution_context_id = exec_id
+        else:
+            for arg in args:
+                if isinstance(arg, RemoteObject):
+                    execution_context_id = arg.context_id
+        return await super().execute_async_script(script, *args, max_depth=max_depth, serialization=serialization,
+                                                  timeout=timeout, execution_context_id=execution_context_id,
+                                                  unique_context=unique_context)
