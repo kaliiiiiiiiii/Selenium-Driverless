@@ -49,7 +49,7 @@ class RemoteObject:
         return self._obj_id
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                                 max_depth: int = 2, timeout: int = 2, warn=False):
+                                 max_depth: int = 2, timeout: int = 2, execution_context_id: str = None, unique_context: bool = False):
         """
         example:
         script= "function(...arguments){this.click()}"
@@ -57,25 +57,27 @@ class RemoteObject:
         """
         obj_id = await self.obj_id
         return await self._target.execute_raw_script(script, *args, await_res=await_res, serialization=serialization,
-                                                     max_depth=max_depth, timeout=timeout, obj_id=obj_id, warn=warn)
+                                                     max_depth=max_depth, timeout=timeout, obj_id=obj_id,
+                                                     execution_context_id=execution_context_id, unique_context=unique_context)
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None, timeout: int = 2,
-                             only_value=True, warn=False):
+                             only_value=True, execution_context_id: str = None, unique_context: bool = False):
         """
         exaple: script = "return this.click()"
         """
         obj_id = await self.obj_id
         return await self._target.execute_script(script, *args, serialization=serialization,
                                                  max_depth=max_depth, timeout=timeout, obj_id=obj_id,
-                                                 only_value=only_value, warn=warn)
+                                                 only_value=only_value, execution_context_id=execution_context_id, unique_context=unique_context)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                                    timeout: int = 2,
-                                   only_value=True, warn=False):
+                                   only_value=True, execution_context_id: str = None, unique_context: bool = False):
         obj_id = await self.obj_id
         return await self._target.execute_async_script(script, *args, serialization=serialization,
                                                        max_depth=max_depth, timeout=timeout, obj_id=obj_id,
-                                                       only_value=only_value, warn=warn)
+                                                       only_value=only_value,
+                                                       execution_context_id=execution_context_id, unique_context=unique_context)
 
     async def get_props(self, own_properties_only=False,
                         accessor_props_only=False, non_indexed_props_only=False):

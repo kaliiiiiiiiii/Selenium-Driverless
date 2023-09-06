@@ -148,6 +148,41 @@ async def main():
 asyncio.run(main())
 ```
 
+#### Unique execution contexts
+```python
+from selenium_driverless.sync import webdriver
+from selenium_driverless import webdriver
+import asyncio
+
+
+async def main():
+    options = webdriver.ChromeOptions()
+    async with webdriver.Chrome(options=options) as driver:
+        await driver.get('chrome://version')
+        script = """
+        const proxy = new Proxy(document.documentElement, {
+          get(target, prop, receiver) {
+            if(prop === "outerHTML"){
+                console.log('detected access on "'+prop+'"', receiver)
+                return "mocked value:)"
+            }
+            else{return Reflect.get(...arguments)}
+          },
+        });
+        Object.defineProperty(document, "documentElement", {
+          value: proxy
+        })
+        """
+        await driver.execute_script(script)
+        src = await driver.execute_script("return document.documentElement.outerHTML", unique_context=True)
+        mocked = await driver.execute_script("return document.documentElement.outerHTML", unique_context=False)
+        print(src, mocked)
+
+
+asyncio.run(main())
+
+```
+
 ### Pointer Interaction
 see [@master/dev/show_mousemove.py](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/dev/show_mousemove.py) for visualization
 ```python

@@ -70,7 +70,8 @@ class Chrome:
             from selenium_driverless.utils.utils import find_chrome_executable
             options.binary_location = find_chrome_executable()
         if not options.user_data_dir:
-            options.add_argument("--user-data-dir=" + tempfile.TemporaryDirectory(prefix="selenium_driverless_").name + "/data_dir")
+            options.add_argument(
+                "--user-data-dir=" + tempfile.TemporaryDirectory(prefix="selenium_driverless_").name + "/data_dir")
 
         self._options = options
         self._is_remote = True
@@ -178,6 +179,11 @@ class Chrome:
     def current_target(self) -> Target:
         return self._current_target
 
+    @property
+    async def _isolated_context_id(self):
+        # noinspection PyProtectedMember
+        return await self.current_target._isolated_context_id
+
     async def get_target(self, target_id: str = None, timeout: float = 2):
         if not target_id:
             return self._current_target
@@ -216,8 +222,8 @@ class Chrome:
         return target.pointer
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                                 max_depth: int = None, timeout: int = 2, obj_id=None, warn: bool = False,
-                                 target_id: str = None):
+                                 max_depth: int = None, timeout: int = 2, obj_id=None,
+                                 target_id: str = None, execution_context_id: str = None, unique_context: bool = False):
         """
         example:
         script= "function(...arguments){this.click()}"
@@ -226,25 +232,33 @@ class Chrome:
         target = await self.get_target(target_id)
         return await target.execute_raw_script(script, *args, await_res=await_res,
                                                serialization=serialization, max_depth=max_depth,
-                                               timeout=timeout, obj_id=obj_id, warn=warn)
+                                               timeout=timeout, obj_id=obj_id,
+                                               execution_context_id=execution_context_id,
+                                               unique_context=unique_context)
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: int = None, only_value=True, obj_id=None, warn: bool = False,
-                             target_id: str = None):
+                             timeout: int = None, only_value=True, obj_id=None,
+                             target_id: str = None, execution_context_id: str = None,
+                             unique_context: bool = False):
         """
         exaple: script = "return elem.click()"
         """
         target = await self.get_target(target_id)
         return await target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
-                                           timeout=timeout, only_value=only_value, obj_id=obj_id, warn=warn)
+                                           timeout=timeout, only_value=only_value, obj_id=obj_id,
+                                           execution_context_id=execution_context_id,
+                                           unique_context=unique_context)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
                                    serialization: str = None, timeout: int = 2,
-                                   only_value=True, obj_id=None, warn: bool = False,
-                                   target_id: str = None):
+                                   only_value=True, obj_id=None,
+                                   target_id: str = None, execution_context_id: str = None,
+                                   unique_context: bool = False):
         target = await self.get_target(target_id)
         return await target.execute_async_script(script, *args, max_depth=max_depth, serialization=serialization,
-                                                 timeout=timeout, only_value=only_value, obj_id=obj_id, warn=warn)
+                                                 timeout=timeout, only_value=only_value, obj_id=obj_id,
+                                                 execution_context_id=execution_context_id,
+                                                 unique_context=unique_context)
 
     @property
     async def current_url(self) -> str:

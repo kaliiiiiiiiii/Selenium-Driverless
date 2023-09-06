@@ -93,7 +93,7 @@ class Target:
 
     def __init__(self, host: str, target_id: str, is_remote: bool = False,
                  loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
-                 type:str=None) -> None:
+                 type: str = None) -> None:
         """Creates a new instance of the chrome target. Starts the service and
         then creates new instance of chrome target.
 
@@ -111,6 +111,7 @@ class Target:
 
         self._targets: list = []
         self._socket = None
+        self._isolated_context_id_ = None
 
         self._is_remote = is_remote
         self._host = host
@@ -237,26 +238,39 @@ class Target:
         return self._global_this_
 
     @property
+    async def _isolated_context_id(self):
+        if not self._isolated_context_id_:
+            frame = await self.base_frame
+            res = await self.execute_cdp_cmd("Page.createIsolatedWorld",
+                                             {"frameId": frame["id"], "grantUniveralAccess": True,
+                                              "worldName": "You got here hehe:)"})
+            return res["executionContextId"]
+
+    @property
     def pointer(self) -> Pointer:
         return self._pointer
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                                 max_depth: int = None, timeout: int = 2, obj_id=None, warn: bool = False):
+                                 max_depth: int = None, timeout: float = 2, obj_id: str = None,
+                                 execution_context_id: str = None, unique_context: bool = False):
         """
         example:
         script= "function(...arguments){this.click()}"
         "this" will be the element object
         """
         from selenium_driverless.types import RemoteObject, JSEvalException
-        if warn:
-            warnings.warn("execute_script might be detected", stacklevel=4)
-        if not obj_id:
-            global_this = await self._global_this
-            obj_id = await global_this.obj_id
+        if not (obj_id or execution_context_id):
+            if unique_context:
+                execution_context_id = await self._isolated_context_id
+            else:
+                global_this = await self._global_this
+                obj_id = await global_this.obj_id
+
         if not args:
             args = []
         if not serialization:
             serialization = "deep"
+
         _args = []
         for arg in args:
             if isinstance(arg, RemoteObject):
@@ -266,8 +280,16 @@ class Target:
 
         ser_opts = {"serialization": serialization, "maxDepth": max_depth,
                     "additionalParameters": {"includeShadowTree": "all", "maxNodeDepth": max_depth}}
-        args = {"functionDeclaration": script, "objectId": obj_id,
+        args = {"functionDeclaration": script,
                 "arguments": _args, "userGesture": True, "awaitPromise": await_res, "serializationOptions": ser_opts}
+
+        if execution_context_id and obj_id:
+            raise ValueError("execution_context_id and obj_id can't be specified at the same time")
+        if obj_id:
+            args["objectId"] = obj_id
+        if execution_context_id:
+            args["executionContextId"] = execution_context_id
+
         res = await self.execute_cdp_cmd("Runtime.callFunctionOn", args, timeout=timeout)
         if "exceptionDetails" in res.keys():
             raise JSEvalException(res["exceptionDetails"])
@@ -276,15 +298,16 @@ class Target:
         return res
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: int = None,
-                             only_value=True, obj_id=None, warn: bool = False):
+                             timeout: int = None, only_value=True, obj_id=None, execution_context_id: str = None,
+                             unique_context: bool = None):
         """
         exaple: script = "return elem.click()"
         """
         script = f"(function(...arguments){{{script}}})"
         res = await self.execute_raw_script(script, *args, max_depth=max_depth,
                                             serialization=serialization, timeout=timeout,
-                                            await_res=False, obj_id=obj_id, warn=warn)
+                                            await_res=False, obj_id=obj_id, unique_context=unique_context,
+                                            execution_context_id=execution_context_id)
         if only_value:
             if "value" in res.keys():
                 return res["value"]
@@ -293,14 +316,16 @@ class Target:
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
                                    serialization: str = None, timeout: int = 2,
-                                   only_value=True, obj_id=None, warn: bool = False):
+                                   only_value=True, obj_id=None, execution_context_id: str = None,
+                                   unique_context: bool = False):
         script = """(function(...arguments){
                        const promise = new Promise((resolve, reject) => {
                               arguments.push(resolve)
                         });""" + script + ";return promise})"
         res = await self.execute_raw_script(script, *args, max_depth=max_depth,
                                             serialization=serialization, timeout=timeout,
-                                            await_res=True, obj_id=obj_id, warn=warn)
+                                            await_res=True, obj_id=obj_id,
+                                            execution_context_id=execution_context_id, unique_context=unique_context)
         if only_value:
             if "value" in res.keys():
                 return res["value"]

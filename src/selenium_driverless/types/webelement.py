@@ -126,7 +126,7 @@ class WebElement(RemoteObject):
             raise NoSuchElementException()
         return elems[idx]
 
-    async def find_elements(self, by: str = By.ID, value: str or None = None, warn: bool = True):
+    async def find_elements(self, by: str = By.ID, value: str or None = None):
         """Find elements given a By strategy and locator.
 
         :Usage:
@@ -149,11 +149,8 @@ class WebElement(RemoteObject):
             value = f'//*[@name="{value}"]'
 
         if by == By.TAG_NAME:
-            if warn:
-                warnings.warn(
-                    f'By.TAG_NAME might be detectable, you might use target.search_elements("{value}") or By.CSS_SELECTOR instead')
             return await self.execute_script("return this.getElementsByTagName(arguments[0])",
-                                             value, serialization="deep")
+                                             value, serialization="deep", unique_context=True)
         elif by == By.CSS_SELECTOR:
             elems = []
             node_id = await self.node_id
@@ -176,10 +173,7 @@ class WebElement(RemoteObject):
                           XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
                           null,
                         );"""
-            if warn:
-                warnings.warn(
-                    f'By.XPATH might be detectable, you might use target.search_elements("{value}") or By.CSS_SELECTOR instead')
-            return await self.execute_script(scipt, value, serialization="deep")
+            return await self.execute_script(scipt, value, serialization="deep", unique_context=True)
         else:
             return ValueError("unexpected by")
 
@@ -196,7 +190,7 @@ class WebElement(RemoteObject):
     async def set_source(self, value: str):
         await self._target.execute_cdp_cmd("DOM.setOuterHTML", {"nodeId": await self.node_id, "outerHTML": value})
 
-    async def get_property(self, name: str, warn: bool = True) -> str or None:
+    async def get_property(self, name: str) -> str or None:
         """Gets the given property of the element.
 
         :Args:
@@ -207,9 +201,7 @@ class WebElement(RemoteObject):
 
                 text_length = target_element.get_property("text_length")
         """
-        warnings.warn(
-            "This executes a script and can make you detected. You might use elem.get_dom_attribute instead if the attribute belongs to DOM. \n You can pass warn=False to supress that warning.")
-        return await self.execute_script(f"return this[arguments[0]]", name, warn=False)
+        return await self.execute_script(f"return this[arguments[0]]", name, unique_context=True)
 
     @property
     async def tag_name(self) -> str:
@@ -229,7 +221,7 @@ class WebElement(RemoteObject):
 
     async def clear(self) -> None:
         """Clears the text if it's a text entry element."""
-        await self.execute_script("this.value = ''", warn=True)
+        await self.execute_script("this.value = ''", unique_context=True)
 
     async def remove(self):
         await self._target.execute_cdp_cmd("DOM.removeNode", {"nodeId": await self.node_id})
@@ -362,7 +354,7 @@ class WebElement(RemoteObject):
             "e.initEvent('submit', true, true);\n"
             "if (form.dispatchEvent(e)) { HTMLFormElement.prototype.submit.call(form) }\n"
         )
-        return await self.execute_script(script, warn=True)
+        return await self.execute_script(script, unique_context=True)
 
     @property
     async def dom_attributes(self):
@@ -501,7 +493,7 @@ class WebElement(RemoteObject):
     async def rect(self) -> dict:
         """A dictionary with the size and location of the element."""
         # todo: calculate form DOM.getBoxModel
-        result = await self.execute_script("return this.getBoundingClientRect().toJSON()", serialization="json")
+        result = await self.execute_script("return this.getBoundingClientRect().toJSON()", serialization="json", unique_context=True)
         return result
 
     @property
