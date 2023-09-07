@@ -21,7 +21,7 @@ async def main():
 
         iframes = await driver.find_elements(By.TAG_NAME, "iframe")
         await asyncio.sleep(0.5)
-        targets = [await driver.get_target_for_iframe(iframes[0]), await driver.get_target_for_iframe(iframes[1])]
+        targets = await driver.get_targets_for_iframes(iframes)
         for target in targets:
             # filter out correct iframe target
             text = None
