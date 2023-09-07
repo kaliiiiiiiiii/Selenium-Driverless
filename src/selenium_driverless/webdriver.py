@@ -20,31 +20,32 @@
 """The WebDriver implementation."""
 import asyncio
 import concurrent.futures
-import os.path
+import os
+import shutil
 import subprocess
+import tempfile
+import traceback
 import typing
 import warnings
-import tempfile
+import time
 from contextlib import asynccontextmanager
 from importlib import import_module
 from typing import List
 from typing import Optional
 
 import websockets.exceptions
+from cdp_socket.utils.conn import get_json
 from selenium.common.exceptions import InvalidArgumentException
 from selenium.webdriver.common.print_page_options import PrintOptions
 from selenium.webdriver.remote.bidi_connection import BidiConnection
 
 from selenium_driverless.input.pointer import Pointer
-from selenium_driverless.types.options import Options as ChromeOptions
-
+from selenium_driverless.scripts.driver_utils import get_target
 from selenium_driverless.scripts.switch_to import SwitchTo
-from selenium_driverless.scripts.driver_utils import get_target, get_targets
-
+from selenium_driverless.types.context import Context
+from selenium_driverless.types.options import Options as ChromeOptions
 from selenium_driverless.types.target import Target, TargetInfo
 from selenium_driverless.types.webelement import WebElement
-from selenium_driverless.types.context import Context
-from cdp_socket.utils.conn import get_json
 
 
 class Chrome:
@@ -70,6 +71,7 @@ class Chrome:
         # noinspection PyTypeChecker
         self._current_context: Context = None
         self._contexts: typing.Dict[str, Context] = {}
+        self._temp_dir = tempfile.TemporaryDirectory(prefix="selenium_driverless_").name
 
         if not options:
             options = ChromeOptions()
@@ -78,7 +80,7 @@ class Chrome:
             options.binary_location = find_chrome_executable()
         if not options.user_data_dir:
             options.add_argument(
-                "--user-data-dir=" + tempfile.TemporaryDirectory(prefix="selenium_driverless_").name + "/data_dir")
+                "--user-data-dir=" + self._temp_dir + "/data_dir")
 
         self._options = options
         self._is_remote = True
@@ -156,7 +158,8 @@ class Chrome:
             for target in targets:
                 if target["type"] == "page":
                     target_id = target["id"]
-                    self._current_target = await self.get_target(target_id=target_id)
+                    self._current_target = await get_target(target_id=target_id, host=self._host,
+                                                            loop=self._loop, is_remote=self._is_remote, timeout=2)
                     self._current_context = await Context(base_target=self._current_target, loop=self._loop)
                     break
             await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
@@ -175,13 +178,15 @@ class Chrome:
     @property
     async def contexts(self):
         targets = await self.get_targets(context_id=None)
+        contexts = {}
         for info in targets.values():
             _id = info.browser_context_id
             if _id:
                 context = self._contexts.get(_id)
                 if not context:
                     context = await Context(base_target=self.current_target, context_id=_id, loop=self._loop)
-                self._contexts[_id] = context
+                contexts[_id] = context
+        self._contexts = contexts
         return self._contexts
 
     async def new_context(self, activate=True, proxy_bypass_list: typing.List[str] = None, proxy_server: str = None):
@@ -206,9 +211,7 @@ class Chrome:
         return context
 
     async def get_targets(self, _type: str = None, context_id: str or None = "self") -> typing.Dict[str, TargetInfo]:
-        if context_id == "self":
-            context_id = self.current_context.context_id
-        return await get_targets(self.current_target, self, _type=_type, context_id=context_id)
+        return await self.current_context.get_targets(_type=_type, context_id=context_id)
 
     @property
     def current_target(self) -> Target:
@@ -228,10 +231,13 @@ class Chrome:
     async def get_target(self, target_id: str = None, timeout: float = 2) -> Target:
         if not target_id:
             return self.current_target
-        return await get_target(base_target=self.current_target, target_id=target_id, timeout=timeout, driver=self)
+        return await self.current_context.get_target(target_id=target_id, timeout=timeout)
 
     async def get_target_for_iframe(self, iframe: WebElement):
         return await self.current_target.get_target_for_iframe(iframe=iframe)
+
+    async def get_targets_for_iframes(self, iframes: typing.List[WebElement]):
+        return await self.current_target.get_targets_for_iframes(iframes=iframes)
 
     async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
         """Loads a web page in the current browser session."""
@@ -329,7 +335,7 @@ class Chrome:
         target = await self.get_target(target_id)
         await target.focus()
 
-    async def quit(self) -> None:
+    async def quit(self, timeout: float = 30) -> None:
         """Quits the target and closes every associated window.
 
         :Usage:
@@ -337,14 +343,28 @@ class Chrome:
 
                 target.quit()
         """
+
+        def clean_dirs(dirs:typing.List[str]):
+            for _dir in dirs:
+                while os.path.isdir(_dir):
+                    shutil.rmtree(_dir, ignore_errors=True)
+
+        def check_timeout():
+            if (time.monotonic() - start) > timeout:
+                raise TimeoutError(f"driver.quit took longer than timeout: {timeout}")
+
+        start = time.monotonic()
         try:
             targets = await self.targets
             for target in list(targets.values()):
                 try:
                     target = await target.Target
                     await target.close(timeout=2)
+                    check_timeout()
                 except websockets.exceptions.InvalidStatusCode:
                     # allread closed
+                    pass
+                except ConnectionAbortedError:
                     pass
         except TimeoutError:
             pass
@@ -353,8 +373,6 @@ class Chrome:
         except websockets.exceptions.ConnectionClosedError:
             pass
         if not self._is_remote:
-            import os
-            import shutil
             # noinspection PyBroadException,PyUnusedLocal
             try:
                 # wait for process to be killed
@@ -364,11 +382,15 @@ class Chrome:
                     except OSError:
                         break
                     await asyncio.sleep(0.1)
-
-                shutil.rmtree(self._options.user_data_dir, ignore_errors=True)
+                    check_timeout()
+                loop = asyncio.get_running_loop()
+                await asyncio.wait_for(
+                    # wait for
+                    loop.run_in_executor(None,
+                                         lambda: clean_dirs([self._temp_dir, self._options.user_data_dir])),
+                    timeout=timeout-(time.monotonic()-start))
             except Exception as e:
-                # We don't care about the message because something probably has gone wrong
-                pass
+                traceback.print_exc()
             finally:
                 pass
 

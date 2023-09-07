@@ -32,7 +32,7 @@ from selenium.webdriver.common.print_page_options import PrintOptions
 from selenium.webdriver.remote.bidi_connection import BidiConnection
 
 from selenium_driverless.input.pointer import Pointer
-from selenium_driverless.scripts.driver_utils import get_target, get_targets
+from selenium_driverless.scripts.driver_utils import get_targets, get_target
 from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
 from selenium_driverless.types.target import Target, TargetInfo
@@ -42,25 +42,26 @@ from selenium_driverless.types.webelement import WebElement
 class Context:
     """Allows you to drive the browser without chromedriver."""
 
-    def __init__(self, base_target: Target, context_id: str = None, loop:asyncio.AbstractEventLoop=None) -> None:
+    # noinspection PyProtectedMember
+    def __init__(self, base_target: Target, context_id: str = None, loop: asyncio.AbstractEventLoop = None) -> None:
         """Creates a new instance of the chrome target. Starts the service and
         then creates new instance of chrome target.
 
         :Args:
          - options - this takes an instance of ChromeOptions
         """
-        self._current_target = None
-        self._host = None
         self._loop: asyncio.AbstractEventLoop or None = None
         self.browser_pid: int or None = None
         self._targets: typing.Dict[str, Target] = {}
-        self._is_remote = True
+
         self._switch_to = None
-        self._is_remote = False
         self._started = False
         self._loop = loop
 
         self._current_target = base_target
+        self._host = base_target._host
+        self._is_remote = base_target._is_remote
+
         self._context_id = context_id
         self._closed_callbacks: typing.List[callable] = []
 
@@ -92,11 +93,13 @@ class Context:
         if not self._started:
             if not self.context_id:
                 self._context_id = await self._current_target.browser_context_id
-            targets = await self.targets
-            for info in list(targets.values()):
-                if info.type == "page":
-                    self._current_target = await info.Target
-                    break
+            _type = await self.current_target.type
+            if not _type == "page:":
+                targets = await self.targets
+                for info in list(targets.values()):
+                    if info.type == "page":
+                        self._current_target = await info.Target
+                        break
             if self._loop:
                 self._switch_to = await SyncSwitchTo(context=self, loop=self._loop, context_id=self._context_id)
             else:
@@ -117,7 +120,8 @@ class Context:
     async def get_targets(self, _type: str = None, context_id="self") -> typing.Dict[str, TargetInfo]:
         if context_id == "self":
             context_id = self._context_id
-        return await get_targets(self.current_target, self, _type=_type, context_id=context_id)
+        return await get_targets(cdp_exec=self.execute_cdp_cmd, target_getter=self.get_target, _type=_type,
+                                 context_id=context_id)
 
     @property
     def current_target(self) -> Target:
@@ -131,7 +135,19 @@ class Context:
     async def get_target(self, target_id: str = None, timeout: float = 2) -> Target:
         if not target_id:
             return self._current_target
-        return await get_target(base_target=self.current_target, target_id=target_id, timeout=timeout, driver=self)
+        target: Target = self._targets.get(target_id)
+        if not target:
+            target: Target = await get_target(target_id=target_id, host=self._host,
+                                              loop=self._loop, is_remote=self._is_remote, timeout=timeout)
+            self._targets[target_id] = target
+
+            # noinspection PyUnusedLocal
+            def remove_target(code: str, reason: str):
+                if target_id in self._targets:
+                    del self._targets[target_id]
+
+            target.socket.on_closed.append(remove_target)
+        return target
 
     async def get_target_for_iframe(self, iframe: WebElement):
         return await self.current_target.get_target_for_iframe(iframe=iframe)

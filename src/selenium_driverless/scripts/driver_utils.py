@@ -1,63 +1,36 @@
+import asyncio
 import typing
 
 
-async def get_targets(target=None, driver=None, _type: str = None, context_id: str = None):
-    if not (target or driver):
-        raise ValueError("either base_target or driver need to be specified")
-    from selenium_driverless.types.target import Target, TargetInfo
-    target: Target
-    res = await target.execute_cdp_cmd("Target.getTargets")
+async def get_targets(cdp_exec: callable, target_getter: callable, _type: str = None, context_id: str = None):
+    from selenium_driverless.types.target import TargetInfo
+    res = await cdp_exec("Target.getTargets")
     _infos = res["targetInfos"]
     infos: typing.Dict[str, TargetInfo] = {}
     for info in _infos:
         _id = info["targetId"]
 
         async def getter():
-            return await get_target(_id, base_target=target, driver=driver)
+            return await target_getter(target_id=_id)
 
         info = await TargetInfo(info, getter)
-        if ((not _type) or info.type == _type) and ((not context_id) or context_id == info.browser_context_id):
+        if (_type is None or info.type == _type) and (context_id is None or context_id == info.browser_context_id):
             infos[_id] = info
     return infos
 
 
 # noinspection PyProtectedMember
-async def get_target(target_id: str, base_target=None, driver=None, timeout: float = 2):
-    if not (base_target or driver):
-        raise ValueError("either base_target or driver need to be specified")
-
+async def get_target(target_id: str, host: str, loop: asyncio.AbstractEventLoop or None, is_remote: bool = False,
+                     timeout: float = 2):
     from selenium_driverless.types.target import Target
-    from selenium_driverless.webdriver import Chrome
-    # noinspection PyTypeChecker
-    target: Target = None
-    if not base_target:
-        base_target = driver
-    context = None
-    if driver:
-        if isinstance(driver, Chrome):
-            context = driver.current_context
-        else:
-            context = driver
-        if context:
-            target: Target = context._targets.get(target_id)
-    if not target:
-        if base_target and base_target._loop:
-            from selenium_driverless.sync.target import Target as SyncTarget
-            target: Target = await SyncTarget(host=base_target._host, target_id=target_id,
-                                              is_remote=base_target._is_remote, loop=base_target._loop,
-                                              timeout=timeout)
-        else:
-            target: Target = await Target(host=base_target._host, target_id=target_id,
-                                          is_remote=base_target._is_remote, loop=base_target._loop, timeout=timeout)
-        if context:
-            context._targets[target_id] = target
-
-            # noinspection PyUnusedLocal,PyProtectedMember
-            def remove_target(code: str, reason: str):
-                if target_id in driver._targets:
-                    del context._targets[target_id]
-
-            target.socket.on_closed.append(remove_target)
+    from selenium_driverless.sync.target import Target as SyncTarget
+    if loop:
+        target: Target = await SyncTarget(host=host, target_id=target_id,
+                                          is_remote=is_remote, loop=loop,
+                                          timeout=timeout)
+    else:
+        target: Target = await Target(host=host, target_id=target_id,
+                                      is_remote=is_remote, loop=loop, timeout=timeout)
     return target
 
 

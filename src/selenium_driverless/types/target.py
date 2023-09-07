@@ -18,7 +18,7 @@ from selenium_driverless.types.webelement import WebElement, RemoteObject
 from selenium_driverless.types.alert import Alert
 from selenium_driverless.sync.alert import Alert as SyncAlert
 from cdp_socket.socket import SingleCDPSocket
-from selenium_driverless.scripts.driver_utils import get_targets, get_cookies, get_cookie, delete_cookie, \
+from selenium_driverless.scripts.driver_utils import get_targets, get_target, get_cookies, get_cookie, delete_cookie, \
     delete_all_cookies, add_cookie
 
 
@@ -158,30 +158,44 @@ class Target:
         return await WebElement(self, node_id=res['nodeId'],
                                 context_id=context_id, unique_context=unique_context)
 
-    async def get_target_for_iframe(self, iframe: WebElement):
-        tag_name = await iframe.tag_name
-        if tag_name.upper() != "IFRAME":
-            raise NoSuchIframe(iframe, "element isn't a iframe")
-        context_id = iframe.context_id
+    async def get_targets_for_iframes(self, iframes: typing.List[WebElement]):
+        async def target_getter(target_id: str, timeout: float = 2):
+            return await get_target(target_id=target_id, host=self._host, loop=self._loop, is_remote=self._is_remote,
+                                    timeout=timeout)
+
+        _targets = await get_targets(cdp_exec=self.execute_cdp_cmd, target_getter=target_getter,
+                                     _type="iframe", context_id=self._context_id)
+
+        context_id = iframes[0].context_id
         # noinspection PyProtectedMember
-        unique_context = iframe._unique_context
-        targets = await get_targets(self)
-        target = None
-        for targetinfo in list(targets.values()):
-            if targetinfo.type == "iframe":
-                target = await targetinfo.Target
-                base_frame = await target.base_frame
-                elem = await self.get_elem_for_frame(frame_id=base_frame["id"], frame_target=self,
-                                                     context_id=context_id, unique_context=unique_context)
+        unique_context = iframes[0]._unique_context
+        targets = []
+
+        for targetinfo in list(_targets.values()):
+            # iterate over iframes
+            target = await targetinfo.Target
+            base_frame = await target.base_frame
+            elem = await self.get_elem_for_frame(frame_id=base_frame["id"], frame_target=self,
+                                                 context_id=context_id, unique_context=unique_context)
+
+            #  check if iframe element is within iframes to search
+            for iframe in iframes:
+                tag_name = await iframe.tag_name
+                if tag_name.upper() != "IFRAME":
+                    raise NoSuchIframe(iframe, "element isn't a iframe")
                 if elem == iframe:
                     if await self.type == "iframe":
                         target._parent_target = self
                     else:
                         target._base_target = self
-                    break
-        if not target:
-            return NoSuchIframe(iframe, "No target for iframe found")
-        return target
+                    targets.append(target)
+        return targets
+
+    async def get_target_for_iframe(self, iframe: WebElement):
+        targets = await self.get_targets_for_iframes([iframe])
+        if not targets:
+            raise NoSuchIframe(iframe, "no target for iframe found")
+        return targets[0]
 
     # noinspection PyUnboundLocalVariable
     async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
@@ -731,6 +745,7 @@ class Target:
     async def delete_network_conditions(self) -> None:
         """Resets Chromium network emulation settings."""
         raise NotImplementedError("not started with chromedriver")
+
     async def wait_for_cdp(self, event: str, timeout: float or None = None):
         return await self.socket.wait_for(event, timeout=timeout)
 
