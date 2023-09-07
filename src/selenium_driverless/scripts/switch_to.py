@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
+import asyncio
 # modified by kaliiiiiiiiii | Aurin Aegerter
 
 from typing import Optional
@@ -30,12 +30,14 @@ from selenium_driverless.types.target import TargetInfo, Target
 
 
 class SwitchTo:
-    def __init__(self, driver) -> None:
+    def __init__(self, context, context_id: str = None, loop: asyncio.AbstractEventLoop = None) -> None:
         from selenium_driverless.webdriver import Chrome
         self._loop = None
-        self._driver: Chrome = driver
+        self._context: Chrome = context
         self._alert = None
         self._started = False
+        self._context_id = context_id
+        self._loop = loop
 
     def __await__(self):
         return self._init().__await__()
@@ -54,7 +56,7 @@ class SwitchTo:
 
                 element = target.switch_to.active_element
         """
-        raise NotImplementedError('You might use target.switch_to.target(target.target_infos[0]["targetId"])')
+        raise NotImplementedError()
 
     @property
     async def alert(self) -> Alert:
@@ -75,10 +77,10 @@ class SwitchTo:
 
                 alert = target.switch_to.alert
         """
-        target = await self._driver.get_target(target_id=target_id)
+        target = await self._context.get_target(target_id=target_id)
         return await target.get_alert(timeout=timeout)
 
-    async def default_content(self) -> None:
+    async def default_content(self, activate: bool = False) -> Target:
         """Switch focus to the default frame.
 
         :Usage:
@@ -86,7 +88,9 @@ class SwitchTo:
 
                 target.switch_to.default_content()
         """
-        raise NotImplementedError('You might use target.switch_to.target(target.targets[0]["targetId"])')
+        base_target = self._context.current_target.base_target
+        if base_target:
+            return await self.target(target_id=base_target, activate=activate)
 
     async def frame(self, frame_reference: Union[str, int, WebElement], activate: bool = False) -> None:
         """Switches focus to the specified frame, by index, name, or
@@ -105,30 +109,30 @@ class SwitchTo:
         """
         if isinstance(frame_reference, str):
             try:
-                frame_reference = await self._driver.find_element(By.ID, frame_reference)
+                frame_reference = await self._context.find_element(By.ID, frame_reference)
             except NoSuchElementException:
                 try:
-                    frame_reference = await self._driver.find_element(By.NAME, frame_reference)
+                    frame_reference = await self._context.find_element(By.NAME, frame_reference)
                 except NoSuchElementException:
                     raise NoSuchFrameException(frame_reference)
-        target = await self._driver.current_target.get_target_for_iframe(frame_reference)
+        target = await self._context.current_target.get_target_for_iframe(frame_reference)
         if activate:
             await target.focus()
         return target
 
     async def target(self, target_id: str or TargetInfo or WebElement, activate: bool = True) -> Target:
         if isinstance(target_id, TargetInfo):
-            self._driver._current_target = target_id.Target
+            self._context._current_target = await target_id.Target
         elif isinstance(target_id, Target):
-            self._driver._current_target = target_id
+            self._context._current_target = target_id
         elif isinstance(target_id, WebElement):
-            self._driver._current_target = self.frame(target_id, activate=False)
+            self._context._current_target = self.frame(target_id, activate=False)
         else:
-            self._driver._current_target = await self._driver.get_target(target_id)
+            self._context._current_target = await self._context.get_target(target_id)
 
         if activate:
-            await self._driver.current_target.focus()
-        return self._driver.current_target
+            await self._context.current_target.focus()
+        return self._context.current_target
 
     async def new_window(self, type_hint: Optional[str] = "tab", url="", activate: bool = True) -> Target:
         """Switches to a new top-level browsing context.
@@ -149,11 +153,15 @@ class SwitchTo:
         else:
             raise ValueError("type hint needs to be 'window' or 'tab'")
         args = {"url": url, "newWindow": new_tab, "forTab": new_tab}
-        target = await self._driver.execute_cdp_cmd("Target.createTarget", args)
+        if self._context_id and (not new_tab):
+            # args["browserContextId"] = self._context_id
+            # todo: Fix context not found
+            pass
+        target = await self._context.execute_cdp_cmd("Target.createTarget", args)
         target_id = target["targetId"]
         return await self.target(target_id, activate=activate)
 
-    async def parent_frame(self) -> None:
+    async def parent_frame(self, activate: bool = False) -> None:
         """Switches focus to the parent context. If the current context is the
         top level browsing context, the context remains unchanged.
 
@@ -162,7 +170,10 @@ class SwitchTo:
 
                 target.switch_to.parent_frame()
         """
-        raise NotImplementedError()
+        # noinspection PyProtectedMember
+        parent = self._context.current_target._parent_target
+        if parent:
+            await self.target(target_id=parent, activate=activate)
 
     async def window(self, window_id: str or TargetInfo, activate: bool = True) -> None:
         """Switches focus to the specified window.

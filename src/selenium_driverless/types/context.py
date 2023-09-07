@@ -19,71 +19,50 @@
 
 """The WebDriver implementation."""
 import asyncio
-import concurrent.futures
-import os.path
-import subprocess
+import inspect
 import typing
 import warnings
-import tempfile
 from contextlib import asynccontextmanager
 from importlib import import_module
 from typing import List
 from typing import Optional
 
-import websockets.exceptions
 from selenium.common.exceptions import InvalidArgumentException
 from selenium.webdriver.common.print_page_options import PrintOptions
 from selenium.webdriver.remote.bidi_connection import BidiConnection
 
 from selenium_driverless.input.pointer import Pointer
-from selenium_driverless.types.options import Options as ChromeOptions
-
-from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.scripts.driver_utils import get_target, get_targets
-
+from selenium_driverless.scripts.switch_to import SwitchTo
+from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
 from selenium_driverless.types.target import Target, TargetInfo
 from selenium_driverless.types.webelement import WebElement
-from selenium_driverless.types.context import Context
-from cdp_socket.utils.conn import get_json
 
 
-class Chrome:
+class Context:
     """Allows you to drive the browser without chromedriver."""
 
-    def __init__(
-            self,
-            options: ChromeOptions = None,
-            timeout: float = 30
-    ) -> None:
+    def __init__(self, base_target: Target, context_id: str = None, loop:asyncio.AbstractEventLoop=None) -> None:
         """Creates a new instance of the chrome target. Starts the service and
         then creates new instance of chrome target.
 
         :Args:
          - options - this takes an instance of ChromeOptions
         """
-
         self._current_target = None
         self._host = None
-        self._timeout = timeout
         self._loop: asyncio.AbstractEventLoop or None = None
         self.browser_pid: int or None = None
-        # noinspection PyTypeChecker
-        self._current_context: Context = None
-        self._contexts: typing.Dict[str, Context] = {}
-
-        if not options:
-            options = ChromeOptions()
-        if not options.binary_location:
-            from selenium_driverless.utils.utils import find_chrome_executable
-            options.binary_location = find_chrome_executable()
-        if not options.user_data_dir:
-            options.add_argument(
-                "--user-data-dir=" + tempfile.TemporaryDirectory(prefix="selenium_driverless_").name + "/data_dir")
-
-        self._options = options
+        self._targets: typing.Dict[str, Target] = {}
         self._is_remote = True
+        self._switch_to = None
         self._is_remote = False
         self._started = False
+        self._loop = loop
+
+        self._current_target = base_target
+        self._context_id = context_id
+        self._closed_callbacks: typing.List[callable] = []
 
     def __repr__(self):
         return f'<{type(self).__module__}.{type(self).__name__} (session="{self.current_window_handle}")>'
@@ -111,54 +90,17 @@ class Chrome:
          - capabilities - a capabilities dict to start the session with.
         """
         if not self._started:
-            from selenium_driverless.utils.utils import IS_POSIX, read
-
-            if not self._options.debugger_address:
-                from selenium_driverless.utils.utils import random_port
-                port = random_port()
-                self._options._debugger_address = f"127.0.0.1:{port}"
-                self._options.add_argument(f"--remote-debugging-port={port}")
-            self._options.add_argument("about:blank")
-            options = self._options
-
-            # noinspection PyProtectedMember
-            self._is_remote = self._options._is_remote
-
-            if not self._is_remote:
-                path = options.binary_location
-                args = options.arguments
-                browser = subprocess.Popen(
-                    [path, *args],
-                    stdin=subprocess.PIPE,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    close_fds=IS_POSIX,
-                    shell=False
-                )
-
-                host, port = self._options.debugger_address.split(":")
-                port = int(port)
-                if port == 0:
-                    path = self._options.user_data_dir + "/DevToolsActivePort"
-                    while not os.path.isfile(path):
-                        await asyncio.sleep(0.1)
-                    port = int(read(path, sel_root=False).split("\n")[0])
-                    self._options.debugger_address = f"127.0.0.1:{port}"
-
-            host, port = self._options.debugger_address.split(":")
-            port = int(port)
-            self._host = f"{host}:{port}"
-
-            if not self._is_remote:
-                # noinspection PyUnboundLocalVariable
-                self.browser_pid = browser.pid
-            targets = await get_json(self._host, timeout=self._timeout)
-            for target in targets:
-                if target["type"] == "page":
-                    target_id = target["id"]
-                    self._current_target = await self.get_target(target_id=target_id)
-                    self._current_context = await Context(base_target=self._current_target, loop=self._loop)
+            if not self.context_id:
+                self._context_id = await self._current_target.browser_context_id
+            targets = await self.targets
+            for info in list(targets.values()):
+                if info.type == "page":
+                    self._current_target = await info.Target
                     break
+            if self._loop:
+                self._switch_to = await SyncSwitchTo(context=self, loop=self._loop, context_id=self._context_id)
+            else:
+                self._switch_to = await SwitchTo(context=self, loop=self._loop, context_id=self._context_id)
             await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
 
             self._started = True
@@ -166,68 +108,29 @@ class Chrome:
 
     @property
     async def frame_tree(self):
-        return await self.current_context.frame_tree
+        return await self.current_target.frame_tree
 
     @property
     async def targets(self):
-        return await self.current_context.targets
+        return await self.get_targets()
 
-    @property
-    async def contexts(self):
-        targets = await self.get_targets(context_id=None)
-        for info in targets.values():
-            _id = info.browser_context_id
-            if _id:
-                context = self._contexts.get(_id)
-                if not context:
-                    context = await Context(base_target=self.current_target, context_id=_id, loop=self._loop)
-                self._contexts[_id] = context
-        return self._contexts
-
-    async def new_context(self, activate=True, proxy_bypass_list: typing.List[str] = None, proxy_server: str = None):
-        args = {}
-        if proxy_bypass_list:
-            args["proxyBypassList"] = ",".join(proxy_bypass_list)
-        if proxy_server:
-            args["proxyServer"] = proxy_server
-        res = await self.execute_cdp_cmd("Target.createBrowserContext", args)
-        _id = res["browserContextId"]
-        context = await Context(base_target=self.current_target, context_id=_id, loop=self._loop)
-        self._contexts[_id] = context
-
-        def remove_context():
-            if _id in self._contexts:
-                del self._contexts[_id]
-
-        # noinspection PyProtectedMember
-        context._closed_callbacks.append(remove_context)
-        if activate:
-            await context.current_target.focus()
-        return context
-
-    async def get_targets(self, _type: str = None, context_id: str or None = "self") -> typing.Dict[str, TargetInfo]:
+    async def get_targets(self, _type: str = None, context_id="self") -> typing.Dict[str, TargetInfo]:
         if context_id == "self":
-            context_id = self.current_context.context_id
+            context_id = self._context_id
         return await get_targets(self.current_target, self, _type=_type, context_id=context_id)
 
     @property
     def current_target(self) -> Target:
-        if self.current_context:
-            return self.current_context.current_target
         return self._current_target
-
-    @property
-    def current_context(self) -> Context:
-        return self._current_context
 
     @property
     async def _isolated_context_id(self):
         # noinspection PyProtectedMember
-        return await self.current_context._isolated_context_id
+        return await self.current_target._isolated_context_id
 
     async def get_target(self, target_id: str = None, timeout: float = 2) -> Target:
         if not target_id:
-            return self.current_target
+            return self._current_target
         return await get_target(base_target=self.current_target, target_id=target_id, timeout=timeout, driver=self)
 
     async def get_target_for_iframe(self, iframe: WebElement):
@@ -235,7 +138,8 @@ class Chrome:
 
     async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
         """Loads a web page in the current browser session."""
-        await self.current_target.get(url=url, referrer=referrer, wait_load=wait_load, timeout=timeout)
+        target = self.current_target
+        await target.get(url=url, referrer=referrer, wait_load=wait_load, timeout=timeout)
 
     @property
     async def title(self) -> str:
@@ -337,40 +241,19 @@ class Chrome:
 
                 target.quit()
         """
+        # noinspection PyBroadException
         try:
             targets = await self.targets
             for target in list(targets.values()):
-                try:
-                    target = await target.Target
-                    await target.close(timeout=2)
-                except websockets.exceptions.InvalidStatusCode:
-                    # allread closed
-                    pass
-        except TimeoutError:
+                target = await target.Target
+                await target.close(timeout=2)
+            for callback in self._closed_callbacks:
+                res = callback()
+                if inspect.isawaitable(res):
+                    await res
+        except Exception:
+            # we don't care about those exceptions:)
             pass
-        except concurrent.futures.TimeoutError:
-            pass
-        except websockets.exceptions.ConnectionClosedError:
-            pass
-        if not self._is_remote:
-            import os
-            import shutil
-            # noinspection PyBroadException,PyUnusedLocal
-            try:
-                # wait for process to be killed
-                while True:
-                    try:
-                        os.kill(self.browser_pid, 15)
-                    except OSError:
-                        break
-                    await asyncio.sleep(0.1)
-
-                shutil.rmtree(self._options.user_data_dir, ignore_errors=True)
-            except Exception as e:
-                # We don't care about the message because something probably has gone wrong
-                pass
-            finally:
-                pass
 
     @property
     async def current_target_info(self):
@@ -381,13 +264,16 @@ class Chrome:
     def current_window_handle(self) -> str:
         """Returns the current target_id
         """
-        if self.current_target:
-            return self.current_target.id
+        return self.current_target.id
 
     @property
     async def current_window_id(self):
         result = await self.execute_cdp_cmd("Browser.getWindowForTarget", {"targetId": self.current_window_handle})
         return result["windowId"]
+
+    @property
+    def context_id(self):
+        return self._context_id
 
     @property
     async def window_handles(self) -> List[TargetInfo]:
@@ -457,7 +343,7 @@ class Chrome:
                 target.switch_to.parent_frame()
                 target.switch_to.window('main')
         """
-        return self.current_context.switch_to
+        return self._switch_to
 
     # Navigation
     async def back(self, target_id: str = None) -> None:
@@ -831,6 +717,8 @@ class Chrome:
         if value not in settings:
             raise ValueError(f"value needs to be within {settings}, but got {value}")
         args = {"permission": {"name": name}, "setting": value}
+        if self.context_id:
+            args["browserContextId"] = self.context_id
         if origin:
             args["origin"] = origin
         await self.execute_cdp_cmd("Browser.setPermission", args)

@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import typing
 import warnings
 from base64 import b64decode
@@ -17,6 +18,8 @@ from selenium_driverless.types.webelement import WebElement, RemoteObject
 from selenium_driverless.types.alert import Alert
 from selenium_driverless.sync.alert import Alert as SyncAlert
 from cdp_socket.socket import SingleCDPSocket
+from selenium_driverless.scripts.driver_utils import get_targets, get_cookies, get_cookie, delete_cookie, \
+    delete_all_cookies, add_cookie
 
 
 class NoSuchIframe(Exception):
@@ -42,6 +45,8 @@ class Target:
         :Args:
          - options - this takes an instance of ChromeOptions
         """
+        self._base_target = None
+        self._parent_target = None
         self._window_id = None
         self._pointer = None
         self._page_enabled = None
@@ -54,12 +59,12 @@ class Target:
         self._targets: list = []
         self._socket = None
         self._isolated_context_id_ = None
-        self._context_id = None
         self._targets: typing.Dict[str, Target] = {}
 
         self._is_remote = is_remote
         self._host = host
         self._id = target_id
+        self._context_id = None
         self._type = type
         self._timeout = timeout
 
@@ -72,6 +77,17 @@ class Target:
     @property
     def id(self):
         return self._id
+
+    @property
+    async def browser_context_id(self):
+        if not self._context_id:
+            info = await self.info
+            return info.browser_context_id
+        return self._context_id
+
+    @property
+    def base_target(self):
+        return self._base_target
 
     @property
     def socket(self) -> SingleCDPSocket:
@@ -123,36 +139,6 @@ class Target:
         if clear_context_id:
             self._isolated_context_id_ = None
 
-    async def get_target(self, target_id: str, timeout: float = 2):
-        target: Target = self._targets.get(target_id)
-        if not target:
-            if self._loop:
-                from selenium_driverless.sync.target import Target as SyncTarget
-                target: Target = await SyncTarget(host=self._host, target_id=target_id,
-                                                  is_remote=self._is_remote, loop=self._loop,
-                                                  timeout=timeout)
-            else:
-                target: Target = await Target(host=self._host, target_id=target_id,
-                                              is_remote=self._is_remote, loop=self._loop, timeout=timeout)
-            self._targets[target_id] = target
-
-            # noinspection PyUnusedLocal
-            def remove_target(code: str, reason: str):
-                del self._targets[target_id]
-
-            target.socket.on_closed.append(remove_target)
-        return target
-
-    @property
-    async def targets(self):
-        res = await self.execute_cdp_cmd("Target.getTargets")
-        _infos = res["targetInfos"]
-        infos: typing.Dict[str, TargetInfo] = {}
-        for info in _infos:
-            _id = info["targetId"]
-            infos[_id] = await TargetInfo(info, await self.get_target(_id))
-        return infos
-
     async def get_alert(self, timeout: float = 5):
         if not self._page_enabled:
             await self.execute_cdp_cmd("Page.enable", timeout=timeout)
@@ -179,15 +165,19 @@ class Target:
         context_id = iframe.context_id
         # noinspection PyProtectedMember
         unique_context = iframe._unique_context
-        targets = await self.targets
+        targets = await get_targets(self)
         target = None
         for targetinfo in list(targets.values()):
             if targetinfo.type == "iframe":
-                base_frame = await targetinfo.Target.base_frame
+                target = await targetinfo.Target
+                base_frame = await target.base_frame
                 elem = await self.get_elem_for_frame(frame_id=base_frame["id"], frame_target=self,
                                                      context_id=context_id, unique_context=unique_context)
                 if elem == iframe:
-                    target = targetinfo.Target
+                    if await self.type == "iframe":
+                        target._parent_target = self
+                    else:
+                        target._base_target = self
                     break
         if not target:
             return NoSuchIframe(iframe, "No target for iframe found")
@@ -539,56 +529,25 @@ class Target:
     # Options
     async def get_cookies(self) -> List[dict]:
         """Returns a set of dictionaries, corresponding to cookies visible in
-        the current session.
-
-        :Usage:
-            ::
-
-                target.get_cookies()
+        the current context.
         """
-        cookies = await self.execute_cdp_cmd("Page.getCookies")
-        return cookies["cookies"]
+        return await get_cookies(self)
 
     async def get_cookie(self, name) -> typing.Optional[typing.Dict]:
         """Get a single cookie by name. Returns the cookie if found, None if
         not.
-
-        :Usage:
-            ::
-
-                target.get_cookie('my_cookie')
         """
-        for cookie in await self.get_cookies():
-            if cookie["name"] == name:
-                return cookie
-        return None
+        return await get_cookie(target=self, name=name)
 
     async def delete_cookie(self, name: str, url: str = None, domain: str = None, path: str = None) -> None:
         """Deletes a single cookie with the given name.
-
-        :Usage:
-            ::
-
-                target.delete_cookie('my_cookie')
         """
-        args = {"name": name}
-        if url:
-            args["url"] = url
-        if domain:
-            args["domain"] = domain
-        if path:
-            args["path"] = path
-        await self.execute_cdp_cmd("Network.deleteCookies", args)
+        return await delete_cookie(target=self, url=url, name=name, domain=domain, path=path)
 
     async def delete_all_cookies(self) -> None:
-        """Delete all cookies in the scope of the session.
-
-        :Usage:
-            ::
-
-                target.delete_all_cookies()
+        """Delete all cookies in the scope of the context.
         """
-        await self.execute_cdp_cmd("Network.clearBrowserCookies")
+        return await delete_all_cookies(self)
 
     # noinspection GrazieInspection
     async def add_cookie(self, cookie_dict) -> None:
@@ -606,9 +565,7 @@ class Target:
                 target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/', 'secure' : True})
                 target.add_cookie({'name' : 'foo', 'value' : 'bar', 'sameSite' : 'Strict'})
         """
-        if "sameSite" in cookie_dict:
-            assert cookie_dict["sameSite"] in ["Strict", "Lax", "None"]
-        await self.execute_cdp_cmd("Network.setCookie", cookie_dict)
+        return await add_cookie(target=self, cookie_dict=cookie_dict, context_id=await self.browser_context_id)
 
     @property
     async def _document_elem(self) -> WebElement:
@@ -774,27 +731,6 @@ class Target:
     async def delete_network_conditions(self) -> None:
         """Resets Chromium network emulation settings."""
         raise NotImplementedError("not started with chromedriver")
-
-    async def set_permissions(self, name: str, value: str, origin: str = None) -> None:
-        """Sets Applicable Permission.
-
-        :Args:
-         - name: The item to set the permission on.
-         - value: The value to set on the item
-
-        :Usage:
-            ::
-
-                target.set_permissions('clipboard-read', 'denied')
-        """
-        settings = ["granted", "denied", "prompt"]
-        if value not in settings:
-            raise ValueError(f"value needs to be within {settings}, but got {value}")
-        args = {"permission": {"name": name}, "setting": value}
-        if origin:
-            args["origin"] = origin
-        await self.execute_cdp_cmd("Browser.setPermission", args)
-
     async def wait_for_cdp(self, event: str, timeout: float or None = None):
         return await self.socket.wait_for(event, timeout=timeout)
 
@@ -887,7 +823,7 @@ class Target:
 
 
 class TargetInfo:
-    def __init__(self, target_info: dict, target):
+    def __init__(self, target_info: dict, target_getter: asyncio.Future or Target):
         self._id = target_info.get('targetId')
         self._type = target_info.get("type")
         self._title = target_info.get("title")
@@ -899,7 +835,7 @@ class TargetInfo:
         self._browser_context_id = target_info.get('browserContextId')
         self._subtype = target_info.get("subtype")
 
-        self._target = target
+        self._target = target_getter
         self._started = False
 
     def __await__(self):
@@ -911,8 +847,13 @@ class TargetInfo:
         return self
 
     @property
-    def Target(self) -> Target:
-        return self._target
+    async def Target(self) -> Target:
+        target = self._target
+        if inspect.iscoroutinefunction(target):
+            target = await target()
+        elif inspect.isawaitable(target):
+            target = await target
+        return target
 
     @property
     def id(self):
