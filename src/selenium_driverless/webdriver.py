@@ -173,7 +173,7 @@ class Chrome:
                             del self._contexts[_id]
 
                     # noinspection PyProtectedMember
-                    self.current_context._closed_callbacks.append(remove_context)
+                    context._closed_callbacks.append(remove_context)
                     self._current_context = context
                     self._contexts[_id] = context
 
