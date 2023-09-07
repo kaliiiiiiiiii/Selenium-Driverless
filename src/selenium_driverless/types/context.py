@@ -20,8 +20,11 @@
 """The WebDriver implementation."""
 import asyncio
 import inspect
+import traceback
 import typing
 import warnings
+import time
+import websockets
 from contextlib import asynccontextmanager
 from importlib import import_module
 from typing import List
@@ -37,6 +40,7 @@ from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
 from selenium_driverless.types.target import Target, TargetInfo
 from selenium_driverless.types.webelement import WebElement
+from selenium_driverless.utils.utils import check_timeout
 
 
 class Context:
@@ -249,7 +253,7 @@ class Context:
         target = await self.get_target(target_id)
         await target.focus()
 
-    async def quit(self) -> None:
+    async def quit(self, timeout: float = 30, start_monotonic: float = None) -> None:
         """Quits the target and closes every associated window.
 
         :Usage:
@@ -257,19 +261,28 @@ class Context:
 
                 target.quit()
         """
+        if not start_monotonic:
+            start_monotonic = time.monotonic()
         # noinspection PyBroadException
         try:
             targets = await self.targets
             for target in list(targets.values()):
-                target = await target.Target
-                await target.close(timeout=2)
+                # noinspection PyUnresolvedReferences
+                try:
+                    target = await target.Target
+                    await target.close(timeout=2)
+                    check_timeout(start_monotonic, timeout)
+                except websockets.exceptions.InvalidStatusCode:
+                    # allread closed
+                    pass
+                except ConnectionAbortedError:
+                    pass
             for callback in self._closed_callbacks:
                 res = callback()
                 if inspect.isawaitable(res):
                     await res
         except Exception:
-            # we don't care about those exceptions:)
-            pass
+            traceback.print_exc()
 
     @property
     async def current_target_info(self):

@@ -337,13 +337,14 @@ class WebElement(RemoteObject):
         else:
             point = centroid(vertices)
 
+        # noinspection PyUnboundLocalVariable
         x = int(point[0])
         y = int(point[1])
 
         # ensure element is at location
         res = await self._target.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
                                                                             "includeUserAgentShadowDOM": True,
-                                                                            "ignorePointerEventsNone": False})
+                                                                            "ignorePointerEventsNone": True})
         node_id_at = res["nodeId"]
         res = await self._target.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
         obj_id_at = res["object"]["objectId"]

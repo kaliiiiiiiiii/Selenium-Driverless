@@ -1,15 +1,14 @@
-from selenium_driverless.types.options import Options as ChromeOptions
 import asyncio
-from selenium_driverless.webdriver import Chrome as AsyncDriver
+from selenium_driverless.types.context import Context as AsyncContext
+from selenium_driverless.types.target import Target
 import inspect
 
 
-class Chrome(AsyncDriver):
-    def __init__(self, options: ChromeOptions = None, loop: asyncio.AbstractEventLoop = None):
-        super().__init__(options=options)
+class Context(AsyncContext):
+    def __init__(self, base_target: Target, context_id: str = None, loop: asyncio.AbstractEventLoop = None) -> None:
         if not loop:
             loop = asyncio.new_event_loop()
-        self._loop = loop
+        super().__init__(base_target=base_target, context_id=context_id, loop=loop)
         self.start_session()
 
     def __enter__(self):
@@ -17,13 +16,6 @@ class Chrome(AsyncDriver):
 
     def __exit__(self, *args, **kwargs):
         self.__aexit__(*args, **kwargs)
-
-    def quit(self, timeout: float = 30):
-        try:
-            asyncio.get_running_loop()
-            return super().quit()
-        except RuntimeError:
-            return self._loop.run_until_complete(super().quit(timeout=timeout))
 
     def __getattribute__(self, item):
         item = super().__getattribute__(item)

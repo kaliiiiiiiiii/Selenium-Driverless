@@ -19,21 +19,19 @@
 
 """The WebDriver implementation."""
 import asyncio
-import concurrent.futures
 import os
 import shutil
 import subprocess
 import tempfile
+import time
 import traceback
 import typing
 import warnings
-import time
 from contextlib import asynccontextmanager
 from importlib import import_module
 from typing import List
 from typing import Optional
 
-import websockets.exceptions
 from cdp_socket.utils.conn import get_json
 from selenium.common.exceptions import InvalidArgumentException
 from selenium.webdriver.common.print_page_options import PrintOptions
@@ -46,6 +44,7 @@ from selenium_driverless.types.context import Context
 from selenium_driverless.types.options import Options as ChromeOptions
 from selenium_driverless.types.target import Target, TargetInfo
 from selenium_driverless.types.webelement import WebElement
+from selenium_driverless.utils.utils import check_timeout
 
 
 class Chrome:
@@ -176,7 +175,7 @@ class Chrome:
         return await self.current_context.targets
 
     @property
-    async def contexts(self):
+    async def contexts(self) -> typing.Dict[str, Context]:
         targets = await self.get_targets(context_id=None)
         contexts = {}
         for info in targets.values():
@@ -344,34 +343,16 @@ class Chrome:
                 target.quit()
         """
 
-        def clean_dirs(dirs:typing.List[str]):
+        def clean_dirs(dirs: typing.List[str]):
             for _dir in dirs:
                 while os.path.isdir(_dir):
                     shutil.rmtree(_dir, ignore_errors=True)
 
-        def check_timeout():
-            if (time.monotonic() - start) > timeout:
-                raise TimeoutError(f"driver.quit took longer than timeout: {timeout}")
-
         start = time.monotonic()
-        try:
-            targets = await self.targets
-            for target in list(targets.values()):
-                try:
-                    target = await target.Target
-                    await target.close(timeout=2)
-                    check_timeout()
-                except websockets.exceptions.InvalidStatusCode:
-                    # allread closed
-                    pass
-                except ConnectionAbortedError:
-                    pass
-        except TimeoutError:
-            pass
-        except concurrent.futures.TimeoutError:
-            pass
-        except websockets.exceptions.ConnectionClosedError:
-            pass
+        contexts = await self.contexts
+        for context in list(contexts.values()):
+            await context.quit()
+            check_timeout(start, timeout)
         if not self._is_remote:
             # noinspection PyBroadException,PyUnusedLocal
             try:
@@ -382,13 +363,13 @@ class Chrome:
                     except OSError:
                         break
                     await asyncio.sleep(0.1)
-                    check_timeout()
+                    check_timeout(start, timeout)
                 loop = asyncio.get_running_loop()
                 await asyncio.wait_for(
                     # wait for
                     loop.run_in_executor(None,
                                          lambda: clean_dirs([self._temp_dir, self._options.user_data_dir])),
-                    timeout=timeout-(time.monotonic()-start))
+                    timeout=timeout - (time.monotonic() - start))
             except Exception as e:
                 traceback.print_exc()
             finally:

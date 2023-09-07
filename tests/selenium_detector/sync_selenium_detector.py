@@ -1,7 +1,6 @@
-import asyncio
-
 from selenium_driverless.sync import webdriver
 from selenium_driverless.types.by import By
+
 
 options = webdriver.ChromeOptions()
 with webdriver.Chrome(options=options) as driver:
