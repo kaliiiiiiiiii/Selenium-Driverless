@@ -41,6 +41,7 @@ from selenium_driverless.input.pointer import Pointer
 from selenium_driverless.scripts.driver_utils import get_target
 from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.types.context import Context
+from selenium_driverless.sync.context import Context as SyncContext
 from selenium_driverless.types.options import Options as ChromeOptions
 from selenium_driverless.types.target import Target, TargetInfo
 from selenium_driverless.types.webelement import WebElement
@@ -159,7 +160,23 @@ class Chrome:
                     target_id = target["id"]
                     self._current_target = await get_target(target_id=target_id, host=self._host,
                                                             loop=self._loop, is_remote=self._is_remote, timeout=2)
-                    self._current_context = await Context(base_target=self._current_target, loop=self._loop)
+
+                    # handle the context
+                    if self._loop:
+                        context = await SyncContext(base_target=self._current_target, loop=self._loop)
+                    else:
+                        context = await Context(base_target=self._current_target, loop=self._loop)
+                    _id = context.context_id
+
+                    def remove_context():
+                        if _id in self._contexts:
+                            del self._contexts[_id]
+
+                    # noinspection PyProtectedMember
+                    self.current_context._closed_callbacks.append(remove_context)
+                    self._current_context = context
+                    self._contexts[_id] = context
+
                     break
             await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
 
@@ -183,7 +200,12 @@ class Chrome:
             if _id:
                 context = self._contexts.get(_id)
                 if not context:
-                    context = await Context(base_target=self.current_target, context_id=_id, loop=self._loop)
+                    if self._loop:
+                        context = await SyncContext(base_target=self._current_target, context_id=_id,
+                                                    loop=self._loop)
+                    else:
+                        context = await Context(base_target=self._current_target, context_id=_id,
+                                                loop=self._loop)
                 contexts[_id] = context
         self._contexts = contexts
         return self._contexts
@@ -196,7 +218,10 @@ class Chrome:
             args["proxyServer"] = proxy_server
         res = await self.execute_cdp_cmd("Target.createBrowserContext", args)
         _id = res["browserContextId"]
-        context = await Context(base_target=self.current_target, context_id=_id, loop=self._loop)
+        if self._loop:
+            context = await SyncContext(base_target=self._current_target, context_id=_id, loop=self._loop)
+        else:
+            context = await Context(base_target=self._current_target, context_id=_id, loop=self._loop)
         self._contexts[_id] = context
 
         def remove_context():
@@ -220,6 +245,9 @@ class Chrome:
 
     @property
     def current_context(self) -> Context:
+        if not self._current_context:
+            if self._contexts:
+                return list(self._contexts.values())[0]
         return self._current_context
 
     @property

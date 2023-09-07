@@ -9,7 +9,6 @@ class Context(AsyncContext):
         if not loop:
             loop = asyncio.new_event_loop()
         super().__init__(base_target=base_target, context_id=context_id, loop=loop)
-        self.start_session()
 
     def __enter__(self):
         return self
