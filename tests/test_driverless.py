@@ -1,10 +1,9 @@
 import unittest
+import asyncio
 
 from selenium_driverless import webdriver
 from selenium_driverless.types.by import By
 from selenium_driverless.types.webelement import NoSuchElementException
-
-import asyncio
 
 loop = asyncio.get_event_loop()
 
@@ -66,6 +65,7 @@ async def bet365(driver):
 
 async def selenium_detector(driver):
     await driver.get('https://hmaker.github.io/selenium-detector/')
+    await asyncio.sleep(1)
     elem = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-token")
     await elem.write(await driver.execute_script('return window.token'))
     elem2 = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-asynctoken")
@@ -113,16 +113,17 @@ class Driver(unittest.TestCase):
             nowsecure,
             selenium_detector
         ]
-
         driver = await make_driver()
-        tabs = await create_tabs(len(tests), driver)
+        try:
+            tabs = await create_tabs(len(tests), driver)
 
-        coros = []
-        for test, target in zip(tests, tabs):
-            coros.append(test(target))
+            coros = []
+            for test, target in zip(tests, tabs):
+                coros.append(test(target))
 
-        await asyncio.gather(*coros)
-        await driver.quit()
+            await asyncio.gather(*coros)
+        finally:
+            await driver.quit()
 
 
 if __name__ == '__main__':
