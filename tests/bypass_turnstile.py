@@ -8,6 +8,7 @@ async def main():
     options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
         await driver.get("https://nopecha.com/demo/turnstile")
+        context = await driver.new_context()
         await asyncio.sleep(0.5)
 
         # some random mouse-movements over iframes

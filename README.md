@@ -2,9 +2,11 @@
 
 * use selenium __without chromedriver__
 * currently passes __cloudfare__, __bet365__, [turnstile](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/master/dev#bypass-turnstile) and others
+* multiple tabs simultanously
+* multiple Incognito-contexts with individual proxy & cookies
 
 ### Feel free to test my code!
-See [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/dev) for the latest implementations.
+See [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/dev) for the latest implementations. \
 Installation with `pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/heads/dev.zip`
 
 ## Getting Started
@@ -200,6 +202,12 @@ await asyncio.sleep(0.5)
 target = await driver.get_target_for_iframe(iframes[0])
 ```
 
+#### multiple contexts
+- different cookies for each context
+- A context can have multiple windows and tabs within
+- different proxy for each context
+- starts as a incognito window
+
 ## Help
 
 Please feel free to open an issue or fork!
@@ -218,8 +226,6 @@ note: please check the todo's below at first!
       - [x] make `element.rect` use this
       - [ ] make `elem.box_model use this`
   - [ ] [support `options.add_extension()`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/37)
-- protocoll
-  - [ ] add cdp event handler
 - [x] sync
   - [ ] move sync to threaded for allowing event_handlers
   - [ ] support multithreading with sync version

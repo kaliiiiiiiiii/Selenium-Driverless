@@ -31,6 +31,7 @@ from contextlib import asynccontextmanager
 from importlib import import_module
 from typing import List
 from typing import Optional
+import websockets
 
 from cdp_socket.utils.conn import get_json
 from selenium.common.exceptions import InvalidArgumentException
@@ -40,11 +41,11 @@ from selenium.webdriver.remote.bidi_connection import BidiConnection
 from selenium_driverless.input.pointer import Pointer
 from selenium_driverless.scripts.driver_utils import get_target
 from selenium_driverless.scripts.switch_to import SwitchTo
-from selenium_driverless.types.context import Context
 from selenium_driverless.sync.context import Context as SyncContext
+from selenium_driverless.types.base_target import BaseTarget
+from selenium_driverless.types.context import Context
 from selenium_driverless.types.options import Options as ChromeOptions
 from selenium_driverless.types.target import Target, TargetInfo
-from selenium_driverless.types.base_target import BaseTarget
 from selenium_driverless.types.webelement import WebElement
 from selenium_driverless.utils.utils import check_timeout
 
@@ -216,8 +217,11 @@ class Chrome:
         self._contexts.update(contexts)
         return self._contexts
 
-    async def new_context(self, proxy_bypass_list: typing.List[str] = None, proxy_server: str = None,
+    async def new_context(self, proxy_bypass_list=None, proxy_server: str = None,
                           universal_access_origins=None, url: str = "about:blank"):
+        if proxy_bypass_list is None:
+            proxy_bypass_list = ["localhost"]
+
         args = {"disposeOnDetach": False}
         if proxy_bypass_list:
             args["proxyBypassList"] = ",".join(proxy_bypass_list)
@@ -276,10 +280,10 @@ class Chrome:
             return self.current_target
         return await self.current_context.get_target(target_id=target_id, timeout=timeout)
 
-    async def get_target_for_iframe(self, iframe: WebElement):
+    async def get_target_for_iframe(self, iframe: WebElement) -> Target:
         return await self.current_target.get_target_for_iframe(iframe=iframe)
 
-    async def get_targets_for_iframes(self, iframes: typing.List[WebElement]):
+    async def get_targets_for_iframes(self, iframes: typing.List[WebElement]) -> Target:
         return await self.current_target.get_targets_for_iframes(iframes=iframes)
 
     async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
@@ -393,11 +397,16 @@ class Chrome:
                     shutil.rmtree(_dir, ignore_errors=True)
 
         start = time.monotonic()
-        contexts = await self.contexts
-        await self.base_target.close()
-        for context in list(contexts.values()):
-            await context.quit()
-            check_timeout(start, timeout)
+        # noinspection PyUnresolvedReferences,PyBroadException
+        try:
+            await self.base_target.execute_cdp_cmd("Browser.close")
+        except websockets.exceptions.ConnectionClosedError:
+            pass
+        except Exception:
+            import sys
+            print('Ignoring exception at self.base_target.execute_cdp_cmd("Browser.close")', file=sys.stderr)
+            traceback.print_exc()
+
         if not self._is_remote:
             # noinspection PyBroadException,PyUnusedLocal
             try:

@@ -743,15 +743,23 @@ class BaseTarget(Target):
         raise NotImplementedError("not started with chromedriver")
 
     async def wait_for_cdp(self, event: str, timeout: float or None = None):
+        if not self.socket:
+            await self._init()
         return await self.socket.wait_for(event, timeout=timeout)
 
     async def add_cdp_listener(self, event: str, callback: callable):
+        if not self.socket:
+            await self._init()
         self.socket.add_listener(method=event, callback=callback)
 
     async def remove_cdp_listener(self, event: str, callback: callable):
+        if not self.socket:
+            await self._init()
         self.socket.remove_listener(method=event, callback=callback)
 
     async def get_cdp_event_iter(self, event: str):
+        if not self.socket:
+            await self._init()
         return self.socket.method_iterator(method=event)
 
     async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None,
@@ -773,6 +781,8 @@ class BaseTarget(Target):
             For example to getResponseBody:
             {'base64Encoded': False, 'body': 'response body string'}
         """
+        if not self.socket:
+            await self._init()
         result = await self.socket.exec(method=cmd, params=cmd_args, timeout=timeout)
         if cmd == "Page.enable":
             self._page_enabled = True

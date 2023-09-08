@@ -37,7 +37,7 @@ class Target:
     # noinspection PyShadowingBuiltins
     def __init__(self, host: str, target_id: str, is_remote: bool = False,
                  loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
-                 type: str = None) -> None:
+                 type: str = None, start_socket: bool = False) -> None:
         """Creates a new instance of the chrome target. Starts the service and
         then creates new instance of chrome target.
 
@@ -68,7 +68,8 @@ class Target:
         self._timeout = timeout
 
         self._loop = loop
-        self._started = False
+        self._start_socket = start_socket
+        self._on_closed_ = []
 
     def __repr__(self):
         return f'<{type(self).__module__}.{type(self).__name__} (target_id="{self.id}", host="{self._host}")>'
@@ -92,10 +93,6 @@ class Target:
     def socket(self) -> SingleCDPSocket:
         return self._socket
 
-    async def __aenter__(self):
-        await self._init()
-        return self
-
     def __enter__(self):
         return self
 
@@ -105,11 +102,19 @@ class Target:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
+    async def __aenter__(self):
+        # doesn't do anything (start_socket=False)
+        return self
+
     def __await__(self):
-        return self._init().__await__()
+        if self._start_socket:
+            return self._init().__await__()
+        else:
+            # doesn't do anything (start_socket=False)
+            return self.__aenter__().__await__()
 
     async def _init(self):
-        if not self._started:
+        if not self._socket:
             self._socket = await SingleCDPSocket(websock_url=f'ws://{self._host}/devtools/page/{self._id}',
                                                  timeout=self._timeout, loop=self._loop)
             self._global_this_ = await RemoteObject(target=self, js="globalThis", check_existence=False)
@@ -128,10 +133,17 @@ class Target:
             await self.add_cdp_listener("Page.javascriptDialogOpening", set_alert)
             await self.add_cdp_listener("Page.javascriptDialogClosed", remove_alert)
             await self.add_cdp_listener("Page.loadEventFired", self._on_loaded)
-            self._started = True
+            self.socket.on_closed.extend(self._on_closed)
         return self
 
-    # noinspection PyUnusedLocal
+    @property
+    def _on_closed(self):
+        if self.socket:
+            return self.socket.on_closed
+        else:
+            return self._on_closed_
+
+    # noinspection PyUnusedLocals
     async def _on_loaded(self, *args, clear_context_id=False, **kwargs):
         self._global_this_ = None
         self._document_elem_ = None
@@ -746,15 +758,23 @@ class Target:
         raise NotImplementedError("not started with chromedriver")
 
     async def wait_for_cdp(self, event: str, timeout: float or None = None):
+        if not self.socket:
+            await self._init()
         return await self.socket.wait_for(event, timeout=timeout)
 
     async def add_cdp_listener(self, event: str, callback: callable):
+        if not self.socket:
+            await self._init()
         self.socket.add_listener(method=event, callback=callback)
 
     async def remove_cdp_listener(self, event: str, callback: callable):
+        if not self.socket:
+            await self._init()
         self.socket.remove_listener(method=event, callback=callback)
 
     async def get_cdp_event_iter(self, event: str):
+        if not self.socket:
+            await self._init()
         return self.socket.method_iterator(method=event)
 
     async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None,
@@ -776,6 +796,8 @@ class Target:
             For example to getResponseBody:
             {'base64Encoded': False, 'body': 'response body string'}
         """
+        if not self.socket:
+            await self._init()
         result = await self.socket.exec(method=cmd, params=cmd_args, timeout=timeout)
         if cmd == "Page.enable":
             self._page_enabled = True

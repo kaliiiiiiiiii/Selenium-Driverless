@@ -49,7 +49,8 @@ class Context:
 
     # noinspection PyProtectedMember
     def __init__(self, base_target: Target, context_id: str = None,
-                 loop: asyncio.AbstractEventLoop = None, _base_target: BaseTarget or None = None, is_incognito:bool=False) -> None:
+                 loop: asyncio.AbstractEventLoop = None, _base_target: BaseTarget or None = None,
+                 is_incognito: bool = False) -> None:
         self._loop: asyncio.AbstractEventLoop or None = None
         self.browser_pid: int or None = None
         self._targets: typing.Dict[str, Target] = {}
@@ -124,7 +125,7 @@ class Context:
         return await self.current_target.frame_tree
 
     @property
-    async def targets(self):
+    async def targets(self) -> typing.Dict[str, TargetInfo]:
         return await self.get_targets()
 
     async def get_targets(self, _type: str = None, context_id="self") -> typing.Dict[str, TargetInfo]:
@@ -160,7 +161,8 @@ class Context:
                 if target_id in self._targets:
                     del self._targets[target_id]
 
-            target.socket.on_closed.append(remove_target)
+            # noinspection PyProtectedMember
+            target._on_closed.append(remove_target)
         return target
 
     async def get_target_for_iframe(self, iframe: WebElement):
