@@ -6,10 +6,10 @@ import inspect
 
 
 class Context(AsyncContext):
-    def __init__(self, base_target: Target, context_id: str = None, loop: asyncio.AbstractEventLoop = None, _base_target:BaseTarget=None) -> None:
+    def __init__(self, base_target: Target, context_id: str = None, loop: asyncio.AbstractEventLoop = None, _base_target:BaseTarget=None, is_incognito:bool=False) -> None:
         if not loop:
             loop = asyncio.new_event_loop()
-        super().__init__(base_target=base_target, context_id=context_id, loop=loop, _base_target=_base_target)
+        super().__init__(base_target=base_target, context_id=context_id, loop=loop, _base_target=_base_target, is_incognito=is_incognito)
 
     def __enter__(self):
         return self

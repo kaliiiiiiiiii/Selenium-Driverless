@@ -217,7 +217,7 @@ class Chrome:
         return self._contexts
 
     async def new_context(self, proxy_bypass_list: typing.List[str] = None, proxy_server: str = None,
-                          universal_access_origins=None, url:str="about:blank"):
+                          universal_access_origins=None, url: str = "about:blank"):
         args = {"disposeOnDetach": False}
         if proxy_bypass_list:
             args["proxyBypassList"] = ",".join(proxy_bypass_list)
@@ -229,10 +229,10 @@ class Chrome:
         _id = res["browserContextId"]
         if self._loop:
             context = await SyncContext(base_target=self._base_target, context_id=_id, loop=self._loop,
-                                        _base_target=self._base_target)
+                                        _base_target=self._base_target, is_incognito=True)
         else:
             context = await Context(base_target=self._base_target, context_id=_id, loop=self._loop,
-                                    _base_target=self._base_target)
+                                    _base_target=self._base_target, is_incognito=True)
         self._contexts[_id] = context
 
         def remove_context():
@@ -242,7 +242,7 @@ class Chrome:
         # noinspection PyProtectedMember
         context._closed_callbacks.append(remove_context)
         await context.switch_to.new_window("window", activate=False, url=url)
-        tabs = await context.get_targets(_type="page")
+        tabs = await context.get_targets(_type="page", context_id=_id)
         context._current_target = list(tabs.values())[0].Target
         return context
 
