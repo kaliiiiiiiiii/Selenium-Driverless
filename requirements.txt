@@ -5,4 +5,4 @@ numpy
 # dev
 setuptools==68.0.0
 twine
-pytest==7.4.1
+pytest==7.4.2

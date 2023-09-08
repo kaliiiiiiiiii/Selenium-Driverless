@@ -206,8 +206,7 @@ target = await driver.get_target_for_iframe(iframes[0])
 - different cookies for each context
 - A context can have multiple windows and tabs within
 - different proxy for each context
-- starts as a incognito window
-
+- opens as a window as incognito
 ## Help
 
 Please feel free to open an issue or fork!
