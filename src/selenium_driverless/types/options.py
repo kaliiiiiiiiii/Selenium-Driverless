@@ -23,12 +23,12 @@ import warnings
 from abc import ABCMeta
 from typing import Union, Optional, List, BinaryIO
 
-from selenium.common.exceptions import InvalidArgumentException
+# selenium
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.proxy import Proxy
 
 
-# noinspection PyUnreachableCode
+# noinspection PyUnreachableCode,PyUnusedLocal
 class Options(metaclass=ABCMeta):
     KEY = "goog:chromeOptions"
 
@@ -51,6 +51,8 @@ class Options(metaclass=ABCMeta):
         self._ignore_local_proxy = False
 
         self.add_argument("--no-first-run")
+        self.add_argument('--disable-component-update')
+        self.add_argument('--no-service-autorun')
         if IS_POSIX:
             self.add_argument("--password-store=basic")
 
@@ -58,8 +60,15 @@ class Options(metaclass=ABCMeta):
         self.add_argument('--disable-backgrounding-occluded-windows')
         self.add_argument('--disable-renderer-backgrounding')
 
+        self.add_argument('--disable-background-timer-throttling')
+        self.add_argument('--disable-renderer-backgrounding')
+        self.add_argument('--disable-background-networking')
+        self.add_argument('--no-pings')
+
+        self.add_argument('--disable-infobars')
+        self.add_argument('--disable-breakpad')
         self.add_argument("--no-default-browser-check")
-        self.add_argument('--disable-component-update')
+        self.add_argument('--homepage=about:blank')
 
         self._is_remote = True
 
@@ -151,7 +160,7 @@ class Options(metaclass=ABCMeta):
 
     @unhandled_prompt_behavior.setter
     def unhandled_prompt_behavior(self, behavior: str) -> None:
-        """How the driver should respond when an alert is present and the
+        """How the target should respond when an alert is present and the
         command sent is not handling the alert:
         https://w3c.github.io/webdriver/#dfn-table-of-page-load-strategies.
 
@@ -176,7 +185,7 @@ class Options(metaclass=ABCMeta):
 
     @timeouts.setter
     def timeouts(self, timeouts: dict) -> None:
-        """How long the driver should wait for actions to complete before
+        """How long the target should wait for actions to complete before
         returning an error https://w3c.github.io/webdriver/#timeouts.
 
         :param timeouts: values in milliseconds for implicit wait, page load and script timeout
@@ -253,12 +262,13 @@ class Options(metaclass=ABCMeta):
 
     @set_window_rect.setter
     def set_window_rect(self, value: bool) -> None:
+        # noinspection GrazieInspection
         """Whether the remote end supports all of the resizing and positioning
-        commands. The default is false. https://w3c.github.io/webdriver/#dfn-
-        strict-file-interactability.
+                commands. The default is false. https://w3c.github.io/webdriver/#dfn-
+                strict-file-interactability.
 
-        :param value: whether remote end must support setting window resizing and repositioning
-        """
+                :param value: whether remote end must support setting window resizing and repositioning
+                """
         pass
 
     @property

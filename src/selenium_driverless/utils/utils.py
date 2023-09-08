@@ -5,11 +5,11 @@ import sys
 import typing
 import json
 import os
-import selenium
-from matplotlib.patches import Polygon
+import time
 
-import selenium_driverless
 import socket
+import selenium
+import selenium_driverless
 from contextlib import closing
 
 IS_POSIX = sys.platform.startswith(("darwin", "cygwin", "linux", "linux2"))
@@ -18,7 +18,7 @@ T_JSON_DICT = typing.Dict[str, typing.Any]
 
 def find_chrome_executable():
     """
-    Finds the chrome, chrome beta, chrome canary, chromium executable
+    Finds the Chrome, Chrome beta, Chrome canary, Chromium executable
 
     Returns
     -------
@@ -112,3 +112,8 @@ def random_port(host: str = None):
         s.bind((host, 0))
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         return s.getsockname()[1]
+
+
+def check_timeout(start_monotonic: float, timeout: float):
+    if (time.monotonic() - start_monotonic) > timeout:
+        raise TimeoutError(f"driver.quit took longer than timeout: {timeout}")

@@ -21,8 +21,6 @@
 import asyncio
 import warnings
 
-from selenium.webdriver.remote.command import Command
-
 
 # noinspection PyProtectedMember
 class Alert:
@@ -33,42 +31,44 @@ class Alert:
 
     Accepting / Dismissing alert prompts::
 
-        Alert(driver).accept()
-        Alert(driver).dismiss()
+        Alert(target).accept()
+        Alert(target).dismiss()
 
     Inputting a value into an alert prompt::
 
-        name_prompt = Alert(driver)
+        name_prompt = Alert(target)
         name_prompt.send_keys("Willian Shakesphere")
         name_prompt.accept()
 
 
     Reading the text of a prompt for verification::
 
-        alert_text = Alert(driver).text
+        alert_text = Alert(target).text
         self.assertEqual("Do you wish to quit?", alert_text)
     """
 
-    def __init__(self, driver) -> None:
+    def __init__(self, target, timeout: float = 5) -> None:
         """Creates a new Alert.
 
         :Args:
-         - driver: The WebDriver instance which performs user actions.
+         - target: The WebDriver instance which performs user actions.
         """
-        from selenium_driverless.scripts.switch_to import SwitchTo
-        from selenium_driverless.webdriver import Chrome
-        self.driver: Chrome = driver
-        self.switch_to: SwitchTo = driver.switch_to
+        from selenium_driverless.types.target import Target
+        self.target: Target = target
+        self._timeout = timeout
+        self._started = False
 
     def __await__(self):
         return self._init().__await__()
 
     async def _init(self):
-        if not self.switch_to._alert:
-            try:
-                await self.driver.wait_for_cdp("Page.javascriptDialogOpening", 10)
-            except asyncio.TimeoutError:
-                self._warn_not_detected()
+        if not self._started:
+            if not self.target._alert:
+                try:
+                    await self.target.wait_for_cdp("Page.javascriptDialogOpening", self._timeout)
+                except asyncio.TimeoutError:
+                    self._warn_not_detected()
+            self._started = True
         return self
 
     def _warn_not_detected(self):
@@ -77,47 +77,41 @@ class Alert:
     @property
     def text(self) -> str:
         """Gets the text of the Alert."""
-        if self.switch_to._alert:
-            return self.switch_to._alert["message"]
+        if self.target._alert:
+            return self.target._alert["message"]
         self._warn_not_detected()
 
     @property
     def url(self) -> str:
-        if self.switch_to._alert:
-            return self.switch_to._alert["url"]
+        if self.target._alert:
+            return self.target._alert["url"]
         self._warn_not_detected()
 
     @property
     def type(self) -> str:
-        if self.switch_to._alert:
-            return self.switch_to._alert["type"]
+        if self.target._alert:
+            return self.target._alert["type"]
         self._warn_not_detected()
 
     @property
     def has_browser_handler(self) -> bool:
-        if self.switch_to._alert:
-            return self.switch_to._alert["hasBrowserHandler"]
+        if self.target._alert:
+            return self.target._alert["hasBrowserHandler"]
         self._warn_not_detected()
 
     @property
     def default_prompt(self):
-        if self.switch_to._alert:
-            return self.switch_to._alert["defaultPrompt"]
+        if self.target._alert:
+            return self.target._alert["defaultPrompt"]
         self._warn_not_detected()
 
     async def dismiss(self) -> None:
         """Dismisses the alert available."""
-        await self.driver.execute_cdp_cmd("Page.handleJavaScriptDialog", {"accept": False})
+        await self.target.execute_cdp_cmd("Page.handleJavaScriptDialog", {"accept": False})
 
     async def accept(self) -> None:
-        """Accepts the alert available.
-
-        :Usage:
-            ::
-
-                Alert(driver).accept() # Confirm a alert dialog.
-        """
-        await self.driver.execute_cdp_cmd("Page.handleJavaScriptDialog", {"accept": True})
+        """Accepts the alert available."""
+        await self.target.execute_cdp_cmd("Page.handleJavaScriptDialog", {"accept": True})
 
     # noinspection PyPep8Naming
     async def send_keys(self, keysToSend: str) -> None:
@@ -126,4 +120,4 @@ class Alert:
         :Args:
          - keysToSend: The text to be sent to Alert.
         """
-        await self.driver.execute_cdp_cmd("Page.handleJavaScriptDialog", {"accept": True, "promptText": keysToSend})
+        await self.target.execute_cdp_cmd("Page.handleJavaScriptDialog", {"accept": True, "promptText": keysToSend})

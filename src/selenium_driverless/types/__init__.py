@@ -1,6 +1,3 @@
-import warnings
-
-
 class JSEvalException(Exception):
     def __init__(self, exception_details):
         super().__init__()
@@ -20,67 +17,97 @@ class JSEvalException(Exception):
 
 
 class RemoteObject:
-    def __init__(self, driver, js: str = None, obj_id: str = None, check_existence=True) -> None:
-        self._driver = driver
+    # noinspection PyTypeChecker
+    def __init__(self, target, js: str = None, obj_id: str = None, check_existence=True,
+                 context_id: str = None, unique_context: bool = False, base_obj=None) -> None:
+        from selenium_driverless.types.target import Target
+        self._target: Target = target
         self._js = js
         self._check_exist = check_existence
         self._obj_id = obj_id
+        self._started = False
+        self._context_id = context_id
+        self._unique_context = unique_context
+        self._base_obj = base_obj
 
     def __await__(self):
         return self.__aenter__().__await__()
 
     async def __aenter__(self):
-        if self._check_exist:
-            await self.obj_id
+        if not self._started:
+            if self._check_exist:
+                await self.obj_id
+            self._started = True
+            if not self._context_id:
+                if self._unique_context:
+                    # noinspection PyProtectedMember
+                    self._context_id = await self._target._isolated_context_id
         return self
+
+    @property
+    def context_id(self) -> int or None:
+        return self._context_id
 
     @property
     async def obj_id(self):
         if not self._obj_id:
-            res = await self._driver.execute_cdp_cmd("Runtime.evaluate",
-                                                     {"expression": self._js,
-                                                      "serializationOptions": {
-                                                          "serialization": "idOnly"}})
+            args = {"expression": self._js,
+                    "serializationOptions": {
+                        "serialization": "idOnly"}}
+            context_id = self.context_id
+            if context_id:
+                args["contextId"] = context_id
+            res = await self._target.execute_cdp_cmd("Runtime.evaluate", args)
             if "exceptionDetails" in res.keys():
                 raise JSEvalException(res["exceptionDetails"])
             self._obj_id = res["result"]['objectId']
         return self._obj_id
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                                 max_depth: int = 2, timeout: int = 2, warn=False):
+                                 max_depth: int = 2, timeout: float = 2, execution_context_id: str = None,
+                                 unique_context: bool = False):
         """
         example:
-        script= "function(...arguments){this.click()}"
-        "this" will be the element object
+        script= "function(...arguments){obj.click()}"
+        "const obj" will be the Object according to obj_id
+        this is by default globalThis (=> window)
         """
         obj_id = await self.obj_id
-        return await self._driver.execute_raw_script(script, *args, await_res=await_res, serialization=serialization,
-                                                     max_depth=max_depth, timeout=timeout, obj_id=obj_id, warn=warn)
+        if not execution_context_id:
+            execution_context_id = self.context_id
+        return await self._target.execute_raw_script(script, *args, await_res=await_res, serialization=serialization,
+                                                     max_depth=max_depth, timeout=timeout, obj_id=obj_id,
+                                                     execution_context_id=execution_context_id,
+                                                     unique_context=unique_context)
 
-    async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None, timeout: int = 2,
-                             only_value=True, warn=False):
+    async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
+                             timeout: float = 2,
+                             only_value=True, execution_context_id: str = None, unique_context: bool = False):
         """
-        exaple: script = "return this.click()"
+        exaple: script = "return obj.click()"
         """
         obj_id = await self.obj_id
-        return await self._driver.execute_script(script, *args, serialization=serialization,
+        return await self._target.execute_script(script, *args, serialization=serialization,
                                                  max_depth=max_depth, timeout=timeout, obj_id=obj_id,
-                                                 only_value=only_value, warn=warn)
+                                                 only_value=only_value, execution_context_id=execution_context_id,
+                                                 unique_context=unique_context)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                                   timeout: int = 2,
-                                   only_value=True, warn=False):
+                                   timeout: float = 2,
+                                   only_value=True, execution_context_id: str = None, unique_context: bool = False):
         obj_id = await self.obj_id
-        return await self._driver.execute_async_script(script, *args, serialization=serialization,
+        return await self._target.execute_async_script(script, *args, serialization=serialization,
                                                        max_depth=max_depth, timeout=timeout, obj_id=obj_id,
-                                                       only_value=only_value, warn=warn)
+                                                       only_value=only_value,
+                                                       execution_context_id=execution_context_id,
+                                                       unique_context=unique_context)
 
     async def get_props(self, own_properties_only=False,
                         accessor_props_only=False, non_indexed_props_only=False):
         args = {"objectId": await self.obj_id, "ownProperties": own_properties_only,
                 "accessorPropertiesOnly": accessor_props_only,
                 "nonIndexedPropertiesOnly": non_indexed_props_only}
-        res = await self._driver.execute_cdp_cmd("Runtime.getProperties", args)
+        res = await self._target.execute_cdp_cmd("Runtime.getProperties", args)
         return res
 
     def __eq__(self, other):

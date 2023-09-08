@@ -1,15 +1,15 @@
-from selenium_driverless.scripts.switch_to import SwitchTo as AsyncSwitchTo
 import asyncio
 import inspect
 
+from selenium_driverless.scripts.switch_to import SwitchTo as AsyncSwitchTo
+
 
 class SwitchTo(AsyncSwitchTo):
-    def __init__(self, driver, loop):
-        super().__init__(driver=driver)
+    def __init__(self, context, loop, context_id: str = None):
+        super().__init__(context=context, context_id=context_id)
         if not loop:
             loop = asyncio.new_event_loop()
         self._loop = loop
-        self._loop.create_task(self._init())
 
     def __enter__(self):
         return self
