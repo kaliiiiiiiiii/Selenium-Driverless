@@ -1,14 +1,15 @@
 import asyncio
 from selenium_driverless.types.context import Context as AsyncContext
 from selenium_driverless.types.target import Target
+from selenium_driverless.types.base_target import BaseTarget
 import inspect
 
 
 class Context(AsyncContext):
-    def __init__(self, base_target: Target, context_id: str = None, loop: asyncio.AbstractEventLoop = None) -> None:
+    def __init__(self, base_target: Target, context_id: str = None, loop: asyncio.AbstractEventLoop = None, _base_target:BaseTarget=None) -> None:
         if not loop:
             loop = asyncio.new_event_loop()
-        super().__init__(base_target=base_target, context_id=context_id, loop=loop)
+        super().__init__(base_target=base_target, context_id=context_id, loop=loop, _base_target=_base_target)
 
     def __enter__(self):
         return self

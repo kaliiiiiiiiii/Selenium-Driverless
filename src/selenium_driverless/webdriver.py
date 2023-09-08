@@ -44,6 +44,7 @@ from selenium_driverless.types.context import Context
 from selenium_driverless.sync.context import Context as SyncContext
 from selenium_driverless.types.options import Options as ChromeOptions
 from selenium_driverless.types.target import Target, TargetInfo
+from selenium_driverless.types.base_target import BaseTarget
 from selenium_driverless.types.webelement import WebElement
 from selenium_driverless.utils.utils import check_timeout
 
@@ -68,6 +69,7 @@ class Chrome:
         self._timeout = timeout
         self._loop: asyncio.AbstractEventLoop or None = None
         self.browser_pid: int or None = None
+        self._base_target = None
         # noinspection PyTypeChecker
         self._current_context: Context = None
         self._contexts: typing.Dict[str, Context] = {}
@@ -150,6 +152,8 @@ class Chrome:
             host, port = self._options.debugger_address.split(":")
             port = int(port)
             self._host = f"{host}:{port}"
+            self._base_target = await BaseTarget(host=self._host, is_remote=self._is_remote,
+                                                 timeout=self._timeout, loop=self._loop)
 
             if not self._is_remote:
                 # noinspection PyUnboundLocalVariable
@@ -163,9 +167,11 @@ class Chrome:
 
                     # handle the context
                     if self._loop:
-                        context = await SyncContext(base_target=self._current_target, loop=self._loop)
+                        context = await SyncContext(base_target=self._current_target, loop=self._loop,
+                                                    _base_target=self.base_target)
                     else:
-                        context = await Context(base_target=self._current_target, loop=self._loop)
+                        context = await Context(base_target=self._current_target, loop=self._loop,
+                                                _base_target=self.base_target)
                     _id = context.context_id
 
                     def remove_context():
@@ -202,26 +208,31 @@ class Chrome:
                 if not context:
                     if self._loop:
                         context = await SyncContext(base_target=self._current_target, context_id=_id,
-                                                    loop=self._loop)
+                                                    loop=self._loop, _base_target=self._base_target)
                     else:
                         context = await Context(base_target=self._current_target, context_id=_id,
-                                                loop=self._loop)
+                                                loop=self._loop, _base_target=self._base_target)
                 contexts[_id] = context
-        self._contexts = contexts
+        self._contexts.update(contexts)
         return self._contexts
 
-    async def new_context(self, activate=True, proxy_bypass_list: typing.List[str] = None, proxy_server: str = None):
-        args = {}
+    async def new_context(self, proxy_bypass_list: typing.List[str] = None, proxy_server: str = None,
+                          universal_access_origins=None, url:str="about:blank"):
+        args = {"disposeOnDetach": False}
         if proxy_bypass_list:
             args["proxyBypassList"] = ",".join(proxy_bypass_list)
         if proxy_server:
             args["proxyServer"] = proxy_server
-        res = await self.execute_cdp_cmd("Target.createBrowserContext", args)
+        if universal_access_origins:
+            args["originsWithUniversalNetworkAccess"] = universal_access_origins
+        res = await self.base_target.execute_cdp_cmd("Target.createBrowserContext", args)
         _id = res["browserContextId"]
         if self._loop:
-            context = await SyncContext(base_target=self._current_target, context_id=_id, loop=self._loop)
+            context = await SyncContext(base_target=self._base_target, context_id=_id, loop=self._loop,
+                                        _base_target=self._base_target)
         else:
-            context = await Context(base_target=self._current_target, context_id=_id, loop=self._loop)
+            context = await Context(base_target=self._base_target, context_id=_id, loop=self._loop,
+                                    _base_target=self._base_target)
         self._contexts[_id] = context
 
         def remove_context():
@@ -230,8 +241,9 @@ class Chrome:
 
         # noinspection PyProtectedMember
         context._closed_callbacks.append(remove_context)
-        if activate:
-            await context.current_target.focus()
+        await context.switch_to.new_window("window", activate=False, url=url)
+        tabs = await context.get_targets(_type="page")
+        context._current_target = list(tabs.values())[0].Target
         return context
 
     async def get_targets(self, _type: str = None, context_id: str or None = "self") -> typing.Dict[str, TargetInfo]:
@@ -242,6 +254,10 @@ class Chrome:
         if self.current_context:
             return self.current_context.current_target
         return self._current_target
+
+    @property
+    def base_target(self) -> BaseTarget:
+        return self._base_target
 
     @property
     def current_context(self) -> Context:
@@ -378,6 +394,7 @@ class Chrome:
 
         start = time.monotonic()
         contexts = await self.contexts
+        await self.base_target.close()
         for context in list(contexts.values()):
             await context.quit()
             check_timeout(start, timeout)

@@ -32,7 +32,6 @@ from selenium_driverless.types.target import TargetInfo, Target
 class SwitchTo:
     def __init__(self, context, context_id: str = None, loop: asyncio.AbstractEventLoop = None) -> None:
         from selenium_driverless.webdriver import Chrome
-        self._loop = None
         self._context: Chrome = context
         self._alert = None
         self._started = False
@@ -122,7 +121,7 @@ class SwitchTo:
 
     async def target(self, target_id: str or TargetInfo or WebElement, activate: bool = True) -> Target:
         if isinstance(target_id, TargetInfo):
-            self._context._current_target = await target_id.Target
+            self._context._current_target = target_id.Target
         elif isinstance(target_id, Target):
             self._context._current_target = target_id
         elif isinstance(target_id, WebElement):
@@ -153,11 +152,9 @@ class SwitchTo:
         else:
             raise ValueError("type hint needs to be 'window' or 'tab'")
         args = {"url": url, "newWindow": new_tab, "forTab": new_tab}
-        if self._context_id and (not new_tab):
-            # args["browserContextId"] = self._context_id
-            # todo: Fix context not found
-            pass
-        target = await self._context.execute_cdp_cmd("Target.createTarget", args)
+        if self._context_id:
+            args["browserContextId"] = self._context_id
+        target = await self._context.base_target.execute_cdp_cmd("Target.createTarget", args)
         target_id = target["targetId"]
         return await self.target(target_id, activate=activate)
 

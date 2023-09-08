@@ -10,10 +10,9 @@ async def get_targets(cdp_exec: callable, target_getter: callable, _type: str = 
     for info in _infos:
         _id = info["targetId"]
 
-        async def getter():
-            return await target_getter(target_id=_id)
+        target = await target_getter(target_id=_id[:])
 
-        info = await TargetInfo(info, getter)
+        info = await TargetInfo(info, target)
         if (_type is None or info.type == _type) and (context_id is None or context_id == info.browser_context_id):
             infos[_id] = info
     return infos

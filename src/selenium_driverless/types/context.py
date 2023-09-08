@@ -20,16 +20,16 @@
 """The WebDriver implementation."""
 import asyncio
 import inspect
+import time
 import traceback
 import typing
 import warnings
-import time
-import websockets
 from contextlib import asynccontextmanager
 from importlib import import_module
 from typing import List
 from typing import Optional
 
+import websockets
 from selenium.common.exceptions import InvalidArgumentException
 from selenium.webdriver.common.print_page_options import PrintOptions
 from selenium.webdriver.remote.bidi_connection import BidiConnection
@@ -38,6 +38,7 @@ from selenium_driverless.input.pointer import Pointer
 from selenium_driverless.scripts.driver_utils import get_targets, get_target
 from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
+from selenium_driverless.types.base_target import BaseTarget
 from selenium_driverless.types.target import Target, TargetInfo
 from selenium_driverless.types.webelement import WebElement
 from selenium_driverless.utils.utils import check_timeout
@@ -47,13 +48,8 @@ class Context:
     """Allows you to drive the browser without chromedriver."""
 
     # noinspection PyProtectedMember
-    def __init__(self, base_target: Target, context_id: str = None, loop: asyncio.AbstractEventLoop = None) -> None:
-        """Creates a new instance of the chrome target. Starts the service and
-        then creates new instance of chrome target.
-
-        :Args:
-         - options - this takes an instance of ChromeOptions
-        """
+    def __init__(self, base_target: Target, context_id: str = None,
+                 loop: asyncio.AbstractEventLoop = None, _base_target: BaseTarget or None = None) -> None:
         self._loop: asyncio.AbstractEventLoop or None = None
         self.browser_pid: int or None = None
         self._targets: typing.Dict[str, Target] = {}
@@ -68,6 +64,7 @@ class Context:
 
         self._context_id = context_id
         self._closed_callbacks: typing.List[callable] = []
+        self._base_target = None
 
     def __repr__(self):
         return f'<{type(self).__module__}.{type(self).__name__} (session="{self.current_window_handle}")>'
@@ -94,21 +91,29 @@ class Context:
         :Args:
          - capabilities - a capabilities dict to start the session with.
         """
+
         if not self._started:
+            if not self.base_target:
+                self._base_target = await BaseTarget(host=self._host, is_remote=self._is_remote,
+                                                     timeout=15, loop=self._loop)
             if not self.context_id:
                 self._context_id = await self._current_target.browser_context_id
             _type = await self.current_target.type
+            targets = None
             if not _type == "page:":
                 targets = await self.targets
-                for info in list(targets.values()):
+                for _id, info in list(targets.items()):
                     if info.type == "page":
-                        self._current_target = await info.Target
+                        self._current_target = info.Target
                         break
+                    else:
+                        del targets[_id]
             if self._loop:
                 self._switch_to = await SyncSwitchTo(context=self, loop=self._loop, context_id=self._context_id)
             else:
                 self._switch_to = await SwitchTo(context=self, loop=self._loop, context_id=self._context_id)
-            await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
+            if targets:
+                await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
 
             self._started = True
         return self
@@ -123,13 +128,17 @@ class Context:
 
     async def get_targets(self, _type: str = None, context_id="self") -> typing.Dict[str, TargetInfo]:
         if context_id == "self":
-            context_id = self._context_id
-        return await get_targets(cdp_exec=self.execute_cdp_cmd, target_getter=self.get_target, _type=_type,
+            context_id = self.context_id
+        return await get_targets(cdp_exec=self.base_target.execute_cdp_cmd, target_getter=self.get_target, _type=_type,
                                  context_id=context_id)
 
     @property
     def current_target(self) -> Target:
         return self._current_target
+
+    @property
+    def base_target(self) -> BaseTarget:
+        return self._base_target
 
     @property
     async def _isolated_context_id(self):
@@ -269,7 +278,7 @@ class Context:
             for target in list(targets.values()):
                 # noinspection PyUnresolvedReferences
                 try:
-                    target = await target.Target
+                    target = target.Target
                     await target.close(timeout=2)
                     check_timeout(start_monotonic, timeout)
                 except websockets.exceptions.InvalidStatusCode:
