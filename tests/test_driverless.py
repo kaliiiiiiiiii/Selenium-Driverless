@@ -59,6 +59,7 @@ async def bet365(driver):
     try:
         await click_login()
     except NoSuchElementException:
+        print("heeeee")
         await driver.wait_for_cdp("Page.frameStoppedLoading", timeout=15)
         await asyncio.sleep(2)
         await click_login()

@@ -31,12 +31,14 @@ from selenium_driverless.types.target import TargetInfo, Target
 
 class SwitchTo:
     def __init__(self, context, context_id: str = None, loop: asyncio.AbstractEventLoop = None) -> None:
-        from selenium_driverless.webdriver import Chrome
-        self._context: Chrome = context
+        from selenium_driverless.types.context import Context
+        self._context: Context = context
         self._alert = None
         self._started = False
         self._context_id = context_id
         self._loop = loop
+        # noinspection PyProtectedMember
+        self._is_incognito = self._context._is_incognito
 
     def __await__(self):
         return self._init().__await__()
@@ -144,6 +146,8 @@ class SwitchTo:
 
                 target.switch_to.new_window('tab')
         """
+        if self._is_incognito and url in ["chrome://extensions"]:
+            raise ValueError(f"{url} only supported in non-incognito contexts")
         new_tab = False
         if type_hint == "window":
             new_tab = True
@@ -152,7 +156,8 @@ class SwitchTo:
         else:
             raise ValueError("type hint needs to be 'window' or 'tab'")
         args = {"url": url, "newWindow": new_tab, "forTab": new_tab}
-        if self._context_id:
+        # noinspection PyProtectedMember
+        if self._context_id and self._is_incognito:
             args["browserContextId"] = self._context_id
         target = await self._context.base_target.execute_cdp_cmd("Target.createTarget", args)
         target_id = target["targetId"]

@@ -49,7 +49,7 @@ class Context:
 
     # noinspection PyProtectedMember
     def __init__(self, base_target: Target, context_id: str = None,
-                 loop: asyncio.AbstractEventLoop = None, _base_target: BaseTarget or None = None) -> None:
+                 loop: asyncio.AbstractEventLoop = None, _base_target: BaseTarget or None = None, is_incognito:bool=False) -> None:
         self._loop: asyncio.AbstractEventLoop or None = None
         self.browser_pid: int or None = None
         self._targets: typing.Dict[str, Target] = {}
@@ -65,6 +65,7 @@ class Context:
         self._context_id = context_id
         self._closed_callbacks: typing.List[callable] = []
         self._base_target = None
+        self._is_incognito = is_incognito
 
     def __repr__(self):
         return f'<{type(self).__module__}.{type(self).__name__} (session="{self.current_window_handle}")>'
@@ -167,6 +168,8 @@ class Context:
 
     async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
         """Loads a web page in the current browser session."""
+        if self._is_incognito and url in ["chrome://extensions"]:
+            raise ValueError(f"{url} only supported in non-incognito contexts")
         target = self.current_target
         await target.get(url=url, referrer=referrer, wait_load=wait_load, timeout=timeout)
 
