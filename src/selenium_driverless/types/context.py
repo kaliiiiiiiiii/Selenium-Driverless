@@ -43,6 +43,8 @@ from selenium_driverless.types.target import Target, TargetInfo
 from selenium_driverless.types.webelement import WebElement
 from selenium_driverless.utils.utils import check_timeout
 
+from cdp_socket.exceptions import CDPError
+
 
 class Context:
     """Allows you to drive the browser without chromedriver."""
@@ -803,7 +805,11 @@ class Context:
         """
 
         target = await self.get_target(target_id=target_id)
-        return await target.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout)
+        try:
+            return await target.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout)
+        except CDPError as e:
+            if e.code == -32000 and e.message == 'Not allowed':
+                return await self.base_target.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout)
 
     # noinspection PyTypeChecker
     async def get_sinks(self, target_id: str = None) -> list:

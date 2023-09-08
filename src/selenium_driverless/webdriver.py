@@ -927,9 +927,8 @@ class Chrome:
             For example to getResponseBody:
             {'base64Encoded': False, 'body': 'response body string'}
         """
-
-        target = await self.get_target(target_id=target_id)
-        return await target.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout)
+        return await self.current_context.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout,
+                                                          target_id=target_id)
 
     # noinspection PyTypeChecker
     async def get_sinks(self, target_id: str = None) -> list:
