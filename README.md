@@ -4,6 +4,7 @@
 * currently passes __cloudfare__, __bet365__, [turnstile](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/master/dev#bypass-turnstile) and others
 * multiple tabs simultanously
 * multiple Incognito-contexts with individual proxy & cookies
+* async (`asyncio`) and sync (experimantal) support
 
 ### Feel free to test my code!
 See [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/dev) for the latest implementations. \
