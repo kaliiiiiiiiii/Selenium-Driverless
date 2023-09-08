@@ -18,32 +18,38 @@
 # modified by kaliiiiiiiiii | Aurin Aegerter
 
 """The WebDriver implementation."""
-import asyncio
 import inspect
 import time
 import traceback
 import typing
 import warnings
+
 from contextlib import asynccontextmanager
 from importlib import import_module
 from typing import List
 from typing import Optional
 
+# io
+import asyncio
 import websockets
-from selenium.common.exceptions import InvalidArgumentException
+from cdp_socket.exceptions import CDPError
+
+# selenium
 from selenium.webdriver.common.print_page_options import PrintOptions
 from selenium.webdriver.remote.bidi_connection import BidiConnection
-
-from selenium_driverless.input.pointer import Pointer
-from selenium_driverless.scripts.driver_utils import get_targets, get_target
+# SwitchTo
 from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
+
+# targets
 from selenium_driverless.types.base_target import BaseTarget
 from selenium_driverless.types.target import Target, TargetInfo
+from selenium_driverless.scripts.driver_utils import get_targets, get_target
+
+# other
+from selenium_driverless.input.pointer import Pointer
 from selenium_driverless.types.webelement import WebElement
 from selenium_driverless.utils.utils import check_timeout
-
-from cdp_socket.exceptions import CDPError
 
 
 class Context:
@@ -661,7 +667,7 @@ class Context:
         """
 
         if (x is None and y is None) and (not height and not width):
-            raise InvalidArgumentException("x and y or height and width need values")
+            raise ValueError("x and y or height and width need values")
 
         bounds = {"left": x, "top": y, "width": width, 'height': height}
         await self.execute_cdp_cmd("Browser.setWindowBounds",

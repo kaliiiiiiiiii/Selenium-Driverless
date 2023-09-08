@@ -1,6 +1,7 @@
-from selenium_driverless.types.alert import Alert as AsyncAlert
 import asyncio
 import inspect
+
+from selenium_driverless.types.alert import Alert as AsyncAlert
 
 
 class Alert(AsyncAlert):

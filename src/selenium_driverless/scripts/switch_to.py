@@ -14,19 +14,20 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-import asyncio
+
 # modified by kaliiiiiiiiii | Aurin Aegerter
 
+import asyncio
 from typing import Optional
 from typing import Union
 
-from selenium.common.exceptions import NoSuchElementException, NoSuchFrameException
+
 from selenium_driverless.types.by import By
-from selenium_driverless.types.webelement import WebElement
-
 from selenium_driverless.types.alert import Alert
-
 from selenium_driverless.types.target import TargetInfo, Target
+
+from selenium_driverless.types.target import NoSuchIframe
+from selenium_driverless.types.webelement import WebElement, NoSuchElementException
 
 
 class SwitchTo:
@@ -115,7 +116,7 @@ class SwitchTo:
                 try:
                     frame_reference = await self._context.find_element(By.NAME, frame_reference)
                 except NoSuchElementException:
-                    raise NoSuchFrameException(frame_reference)
+                    raise NoSuchIframe(frame_reference, f"couldn't get element by: {frame_reference}")
         target = await self._context.current_target.get_target_for_iframe(frame_reference)
         if activate:
             await target.focus()

@@ -90,8 +90,11 @@ async def prompt(driver):
 
 
 async def create_tabs(n_tabs: int, driver):
-    targets = [driver.current_target]
-    for _ in range(n_tabs - 1):
+    # test contexts
+    context = await driver.new_context()
+
+    targets = [driver.current_target, context.current_target]
+    for _ in range(n_tabs - 2):
         targets.append(await driver.switch_to.new_window("tab"))
     return targets
 
@@ -105,9 +108,9 @@ class Driver(unittest.TestCase):
     async def _test_all(self):
         tests = [
             prompt,
+            bet365,
             unique_execution_context,
             nowsecure,
-            bet365,
             selenium_detector
         ]
 

@@ -1,22 +1,30 @@
-import asyncio
 import typing
 import warnings
 from base64 import b64decode
 from typing import List
 from typing import Optional
-import websockets
 
+# io
+import asyncio
+import websockets
+from cdp_socket.socket import SingleCDPSocket
 from cdp_socket.exceptions import CDPError
+
 from selenium.webdriver.common.print_page_options import PrintOptions
 
+# pointer
 from selenium_driverless.input.pointer import Pointer
 from selenium_driverless.sync.pointer import Pointer as SyncPointer
 
+# WebElement
 from selenium_driverless.sync.webelement import WebElement as SyncWebElement
 from selenium_driverless.types.webelement import WebElement, RemoteObject
+
+# Alert
 from selenium_driverless.types.alert import Alert
 from selenium_driverless.sync.alert import Alert as SyncAlert
-from cdp_socket.socket import SingleCDPSocket
+
+# other
 from selenium_driverless.scripts.driver_utils import get_targets, get_target, get_cookies, get_cookie, delete_cookie, \
     delete_all_cookies, add_cookie
 

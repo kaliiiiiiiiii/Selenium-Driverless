@@ -23,7 +23,7 @@ import warnings
 from abc import ABCMeta
 from typing import Union, Optional, List, BinaryIO
 
-from selenium.common.exceptions import InvalidArgumentException
+# selenium
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.proxy import Proxy
 

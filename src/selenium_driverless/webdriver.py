@@ -18,7 +18,6 @@
 # modified by kaliiiiiiiiii | Aurin Aegerter
 
 """The WebDriver implementation."""
-import asyncio
 import os
 import shutil
 import subprocess
@@ -31,23 +30,34 @@ from contextlib import asynccontextmanager
 from importlib import import_module
 from typing import List
 from typing import Optional
+
+# io
+import asyncio
 import websockets
 
-from cdp_socket.utils.conn import get_json
-from selenium.common.exceptions import InvalidArgumentException
+# selenium
 from selenium.webdriver.common.print_page_options import PrintOptions
 from selenium.webdriver.remote.bidi_connection import BidiConnection
 
+# interactions
 from selenium_driverless.input.pointer import Pointer
-from selenium_driverless.scripts.driver_utils import get_target
-from selenium_driverless.scripts.switch_to import SwitchTo
-from selenium_driverless.sync.context import Context as SyncContext
-from selenium_driverless.types.base_target import BaseTarget
-from selenium_driverless.types.context import Context
-from selenium_driverless.types.options import Options as ChromeOptions
-from selenium_driverless.types.target import Target, TargetInfo
 from selenium_driverless.types.webelement import WebElement
+from selenium_driverless.scripts.switch_to import SwitchTo
+
+# contexts
+from selenium_driverless.sync.context import Context as SyncContext
+from selenium_driverless.types.context import Context
+
+# Targets
+from selenium_driverless.scripts.driver_utils import get_target
+from selenium_driverless.types.target import Target, TargetInfo
+from selenium_driverless.types.base_target import BaseTarget
+from selenium_driverless.sync.base_target import BaseTarget as SyncBaseTarget
+
+# others
+from cdp_socket.utils.conn import get_json
 from selenium_driverless.utils.utils import check_timeout
+from selenium_driverless.types.options import Options as ChromeOptions
 
 
 class Chrome:
@@ -153,8 +163,12 @@ class Chrome:
             host, port = self._options.debugger_address.split(":")
             port = int(port)
             self._host = f"{host}:{port}"
-            self._base_target = await BaseTarget(host=self._host, is_remote=self._is_remote,
-                                                 timeout=self._timeout, loop=self._loop)
+            if self._loop:
+                self._base_target = await SyncBaseTarget(host=self._host, is_remote=self._is_remote,
+                                                         timeout=self._timeout, loop=self._loop)
+            else:
+                self._base_target = await BaseTarget(host=self._host, is_remote=self._is_remote,
+                                                     timeout=self._timeout, loop=self._loop)
 
             if not self._is_remote:
                 # noinspection PyUnboundLocalVariable
@@ -787,7 +801,7 @@ class Chrome:
         """
 
         if (x is None and y is None) and (not height and not width):
-            raise InvalidArgumentException("x and y or height and width need values")
+            raise ValueError("x and y or height and width need values")
 
         bounds = {"left": x, "top": y, "width": width, 'height': height}
         await self.execute_cdp_cmd("Browser.setWindowBounds",

@@ -1,6 +1,7 @@
-from selenium_driverless.input.pointer import Pointer as AsyncPointer, PointerType
 import asyncio
 import inspect
+
+from selenium_driverless.input.pointer import Pointer as AsyncPointer, PointerType
 
 
 class Pointer(AsyncPointer):

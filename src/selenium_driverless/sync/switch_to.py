@@ -1,6 +1,7 @@
-from selenium_driverless.scripts.switch_to import SwitchTo as AsyncSwitchTo
 import asyncio
 import inspect
+
+from selenium_driverless.scripts.switch_to import SwitchTo as AsyncSwitchTo
 
 
 class SwitchTo(AsyncSwitchTo):

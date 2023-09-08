@@ -5,11 +5,11 @@ import sys
 import typing
 import json
 import os
-import selenium
 import time
 
-import selenium_driverless
 import socket
+import selenium
+import selenium_driverless
 from contextlib import closing
 
 IS_POSIX = sys.platform.startswith(("darwin", "cygwin", "linux", "linux2"))

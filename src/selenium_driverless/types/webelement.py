@@ -17,17 +17,16 @@
 # edited by kaliiiiiiiiiii
 import traceback
 import warnings
+import numpy as np
+
 from base64 import b64decode
 from collections import defaultdict
-
-from selenium.webdriver.common.by import By
-
-from selenium_driverless.types import JSEvalException, RemoteObject
-from selenium_driverless.scripts.geometry import gen_heatmap, gen_rand_point, centroid
-
 from cdp_socket.exceptions import CDPError
 
-import numpy as np
+# driverless
+from selenium_driverless.types.by import By
+from selenium_driverless.types import JSEvalException, RemoteObject
+from selenium_driverless.scripts.geometry import gen_heatmap, gen_rand_point, centroid
 
 
 class NoSuchElementException(Exception):

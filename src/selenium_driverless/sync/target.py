@@ -1,6 +1,7 @@
-from selenium_driverless.types.target import Target as AsyncTarget
 import asyncio
 import inspect
+
+from selenium_driverless.types.target import Target as AsyncTarget
 
 
 class Target(AsyncTarget):

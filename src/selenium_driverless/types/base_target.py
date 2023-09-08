@@ -8,6 +8,8 @@ import websockets
 import aiohttp
 
 from cdp_socket.exceptions import CDPError
+from cdp_socket.socket import SingleCDPSocket
+
 from selenium.webdriver.common.print_page_options import PrintOptions
 
 from selenium_driverless.input.pointer import Pointer
@@ -15,9 +17,10 @@ from selenium_driverless.sync.pointer import Pointer as SyncPointer
 
 from selenium_driverless.sync.webelement import WebElement as SyncWebElement
 from selenium_driverless.types.webelement import WebElement, RemoteObject
+
 from selenium_driverless.types.alert import Alert
 from selenium_driverless.sync.alert import Alert as SyncAlert
-from cdp_socket.socket import SingleCDPSocket
+
 from selenium_driverless.scripts.driver_utils import get_targets, get_target, get_cookies, get_cookie, delete_cookie, \
     delete_all_cookies, add_cookie
 from selenium_driverless.types.target import NoSuchIframe, TargetInfo, Target

@@ -1,6 +1,7 @@
-from selenium_driverless.types.webelement import WebElement as AsyncWebElement, RemoteObject
 import asyncio
 import inspect
+
+from selenium_driverless.types.webelement import WebElement as AsyncWebElement, RemoteObject
 
 
 class WebElement(AsyncWebElement):
