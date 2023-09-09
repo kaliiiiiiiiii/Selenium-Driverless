@@ -1,4 +1,4 @@
-# Selenium-Driverless
+# Selenium-Driverless (Non-commercial use only!)
 
 * use selenium __without chromedriver__
 * currently passes __cloudfare__, __bet365__, [turnstile](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/master/dev#bypass-turnstile) and others
@@ -7,27 +7,30 @@
 * async (`asyncio`) and sync (experimantal) support
 
 ### Feel free to test my code!
-See [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/dev) for the latest implementations. \
-Installation with `pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/heads/dev.zip`
+See [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/dev) for the latest implementations.
+<details>
+<summary>dev-installation</summary>
 
-## Getting Started
+`pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/heads/dev.zip`
+</details>
 
 ### Dependencies
 
 * [Python >= 3.7](https://www.python.org/downloads/)
-* [Chrome-Browser](https://www.google.de/chrome/) installed
+* [Google-Chrome](https://www.google.de/chrome/) installed (Chromium not tested)
 
 ### Installing
 
-* Install [Chrome-Browser](https://www.google.de/chrome/)
+* Install [Google-Chrome](https://www.google.de/chrome/)
 * ```pip install selenium-driverless```
 
 
 ### Usage
 
-#### with asyncio
+### with asyncio
 ```python
 from selenium_driverless import webdriver
+from selenium_driverless.types.by import By
 import asyncio
 
 
@@ -35,19 +38,24 @@ async def main():
     options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
         await driver.get('http://nowsecure.nl#relax')
-        await driver.implicitly_wait(0.5)
+        await driver.sleep(0.5)
         await driver.wait_for_cdp("Page.domContentEventFired", timeout=15)
-        
-        title = await driver.title
-        url = await driver.current_url
-        source = await driver.page_source
-        print(title)
+
+        elems = await driver.find_elements(By.XPATH, '/html/body/div[2]/div/main/p[2]/a')
+        await elems[0].click(move_to=True)
+
+        alert = await driver.switch_to.alert
+        print(alert.text)
+        await alert.accept()
+
+        print(await driver.title)
 
 
 asyncio.run(main())
+
 ```
 
-#### synchronous
+### synchronous
 asyncified, might be buggy
 
 ```python
@@ -56,7 +64,7 @@ from selenium_driverless.sync import webdriver
 options = webdriver.ChromeOptions()
 with webdriver.Chrome(options=options) as driver:
     driver.get('http://nowsecure.nl#relax')
-    driver.implicitly_wait(0.5)
+    driver.sleep(0.5)
     driver.wait_for_cdp("Page.domContentEventFired", timeout=15)
 
     title = driver.title
@@ -65,7 +73,7 @@ with webdriver.Chrome(options=options) as driver:
     print(title)
 ```
 
-#### custom debugger address
+### custom debugger address
 ```python
 from selenium_driverless import webdriver
 
@@ -79,8 +87,14 @@ async with webdriver.Chrome(options=options) as driver:
   await driver.get('http://nowsecure.nl#relax', wait_load=True)
 ```
 
-#### use events
-Note: synchronous might not work properly
+### use events
+- use CDP events (see [chrome-developer-protocoll](https://chromedevtools.github.io/devtools-protocol/) for possible events) 
+
+**Note**: synchronous might not work properly
+
+<details>
+<summary>Examle Code (Click to expand)</summary>
+
 ```python
 from selenium_driverless import webdriver
 import asyncio
@@ -114,9 +128,14 @@ async def main():
 
 asyncio.run(main())
 ```
+</details>
 
 ### Multiple tabs simultously
 Note: `asyncio` is recommendet, `threading` has been reported not too work
+
+<details>
+<summary>Examle Code (Click to expand)</summary>
+
 ```python
 from selenium_driverless.sync import webdriver
 from selenium_driverless.utils.utils import read
@@ -151,7 +170,13 @@ async def main():
 asyncio.run(main())
 ```
 
-#### Unique execution contexts
+</details>
+
+### Unique execution contexts
+- execute `javascript` without getting detected
+<details>
+<summary>Examle Code (Click to expand)</summary>
+
 ```python
 from selenium_driverless.sync import webdriver
 from selenium_driverless import webdriver
@@ -183,11 +208,13 @@ async def main():
 
 
 asyncio.run(main())
-
 ```
 
-#### Pointer Interaction
+</details>
+
+### Pointer Interaction
 see [@master/dev/show_mousemove.py](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/dev/show_mousemove.py) for visualization
+
 ```python
 pointer = await driver.current_pointer
 move_kwargs = {"total_time": 0.7, "accel": 2, "smooth_soft": 20}
@@ -195,31 +222,69 @@ move_kwargs = {"total_time": 0.7, "accel": 2, "smooth_soft": 20}
 await pointer.move_to(100, 500)
 await pointer.click(500, 50, move_kwargs=move_kwargs, move_to=True)
 ```
+### Iframes
+- switch and interact with iframes
 
-#### Iframes
 ```python
 iframes = await driver.find_elements(By.TAG_NAME, "iframe")
 await asyncio.sleep(0.5)
 target = await driver.get_target_for_iframe(iframes[0])
 ```
 
-#### multiple contexts
+### Multiple Contexts
 - different cookies for each context
 - A context can have multiple windows and tabs within
 - different proxy for each context
 - opens as a window as incognito
+<details>
+<summary>Examle Code (Click to expand)</summary>
+
+```python
+from selenium_driverless.sync import webdriver
+from selenium_driverless import webdriver
+import asyncio
+
+
+async def main():
+    options = webdriver.ChromeOptions()
+    async with webdriver.Chrome(options=options) as driver:
+        context_1 = driver.current_context
+        context_2 = await driver.new_context(proxy_bypass_list=["localhost"], proxy_server="http://localhost:5000")
+        await context_1.current_target.get("https://examle.com")
+        await context_2.get("https://examle.com")
+        input("press ENTER to exit:)")
+
+
+asyncio.run(main())
+```
+</details>
+
 ## Help
 
-Please feel free to open an issue or fork!
-note: please check the todo's below at first!
+Please feel free to open an issue or fork! \
+Note: **please check the todo's below at first!**
 
-## Todo
+## Todo's
+<details>
+<summary>Click to expand</summary>
 - implementations
-  - [ ] [`WebDriverWait`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7)
-  - [ ] [`EC`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7) (expected-conditions)
-  - [x] [`driver.switch_to.frame`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/7) [workaround](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/9#issuecomment-1663436234)
-  - [ ] [`ActionChains`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
-      - [ ] [`TouchActions`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/5)
+  - [x] `WebElement`s
+    - [ ] improve `mid_location` calculation
+  - [x] `Input`
+      - [x] `Mouse`
+        - [x] `mousemove`
+        - [x] `click`
+        - [] `scroll`
+        - [ ] `drag&drop`
+      - [x] `write`
+      - [ ] `Touch`
+        - [ ] `touchmove`
+        - [ ] `TouchTap`
+        - [ ] `scoll`
+        - [ ] `pinch//zoom`
+      - [ ] `KeyBoard`
+        - [ ] `SendKeys`
+          - [ ] `send files`
   - [x] `execute_script` and `execute_async_script`
     - [ ] make serialization use `deep`
     - [x] add `Page.createIsolatedWorld` support with `DOM` access
@@ -229,15 +294,12 @@ note: please check the todo's below at first!
 - [x] sync
   - [ ] move sync to threaded for allowing event_handlers
   - [ ] support multithreading with sync version
-
-## Deprecated
-
-
-
+</details>
 
 ## Authors
 
-[Aurin Aegerter](mailto:aurinliun@gmx.ch)
+Copyright and Author: \
+[Aurin Aegerter](mailto:aurinliun@gmx.ch) (aka **Steve**)
 
 ## License
 

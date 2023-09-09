@@ -15,6 +15,6 @@ Unless specified differently in a single file, this work is licensed under a
 
 I am not responsible what you use the code for!!! Also no warranty!
 
-## Author
+## Copyright and Author
 
-[Aurin Aegerter](mailto:aurin.aegerter@stud.gymthun.ch)
+[Aurin Aegerter](mailto:aurin.aegerter@stud.gymthun.ch) (aka **Steve**)
