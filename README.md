@@ -9,7 +9,7 @@
 ### Feel free to test my code!
 See [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/dev) for the latest implementations.
 <details>
-<summary>dev-installation</summary>
+<summary>dev-installation (click to expand)</summary>
 
 `pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/heads/dev.zip`
 </details>
