@@ -1,4 +1,9 @@
+import sys
 import setuptools
+
+print('This package has a "Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)" Licence.\n'
+      "therefore, you'll have to ask the developer first, if you want to use this package for your buisiness.\n"
+      "https://github.com/kaliiiiiiiiii/Selenium-Driverless", file=sys.stderr)
 
 requirements = ['selenium~=4.6', "cdp-socket>=1.1", "numpy~=1.21", "matplotlib~=3.5", "scipy~=1.7"]
 
@@ -9,7 +14,7 @@ setuptools.setup(
     name='selenium_driverless',
     author='Aurin Aegerter',
     author_email='aurinliun@gmx.ch',
-    description='Undetected selenium without chromedriver usage',
+    description='Undetected selenium without chromedriver usage (Non-commercial use only!)',
     keywords='Selenium, webautomation',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -47,4 +52,5 @@ setuptools.setup(
         'dev': ['check-manifest'],
         # 'test': ['coverage'],
     },
+    license='CC BY-NC-SA 4.0'
 )

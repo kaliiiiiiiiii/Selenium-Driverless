@@ -626,15 +626,15 @@ class Chrome:
         await asyncio.sleep(time_to_wait)
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, parent=None, target_id: str = None):
+    async def find_element(self, by: str, value: str, parent=None, target_id: str = None) -> WebElement:
         target = await self.get_target(target_id=target_id)
         return await target.find_element(by=by, value=value, parent=parent)
 
-    async def find_elements(self, by: str, value: str, parent=None, target_id: str = None):
+    async def find_elements(self, by: str, value: str, parent=None, target_id: str = None) -> typing.List[WebElement]:
         target = await self.get_target(target_id=target_id)
         return await target.find_elements(by=by, value=value, parent=parent)
 
-    async def search_elements(self, query: str, target_id: str = None):
+    async def search_elements(self, query: str, target_id: str = None) -> typing.List[WebElement]:
         """
         query:str | Plain text or query selector or XPath search query.
         """
