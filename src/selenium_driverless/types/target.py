@@ -610,17 +610,17 @@ class Target:
         return self._document_elem_
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, parent=None) -> WebElement or SyncWebElement:
+    async def find_element(self, by: str, value: str, parent=None) -> WebElement:
         if not parent:
             parent = await self._document_elem
         return await parent.find_element(by=by, value=value)
 
-    async def find_elements(self, by: str, value: str, parent=None) -> typing.List[WebElement or SyncWebElement]:
+    async def find_elements(self, by: str, value: str, parent=None) -> typing.List[WebElement]:
         if not parent:
             parent = await self._document_elem
         return await parent.find_elements(by=by, value=value)
 
-    async def search_elements(self, query: str) -> typing.List[WebElement or SyncWebElement]:
+    async def search_elements(self, query: str) -> typing.List[WebElement]:
         """
         query:str | Plain text or query selector or XPath search query.
         """
