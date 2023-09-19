@@ -34,14 +34,8 @@ async def main():
                 if text:  # 'Only a test.' text
                     break
 
-        while True:
-            # wait for checkbox loaded
-            try:
-                checkbox = await target.find_element(By.CSS_SELECTOR, "#challenge-stage > div > label > map > img")
-                break
-            except NoSuchElementException:
-                await asyncio.sleep(0.1)
-
+        src = await driver.page_source
+        checkbox = await target.find_element(By.CSS_SELECTOR, "#challenge-stage > div > label > input[type=checkbox]", timeout=20)
         await checkbox.click(move_to=True)
         input("press ENTER to exit")
 

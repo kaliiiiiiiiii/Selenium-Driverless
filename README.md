@@ -43,9 +43,10 @@ async def main():
         await driver.get('http://nowsecure.nl#relax')
         await driver.sleep(0.5)
         await driver.wait_for_cdp("Page.domContentEventFired", timeout=15)
-
-        elems = await driver.find_elements(By.XPATH, '/html/body/div[2]/div/main/p[2]/a')
-        await elems[0].click(move_to=True)
+        
+        # wait 10s for elem to exist
+        elem = await driver.find_element(By.XPATH, '/html/body/div[2]/div/main/p[2]/a', timeout=10)
+        await elem.click(move_to=True)
 
         alert = await driver.switch_to.alert
         print(alert.text)
@@ -106,8 +107,7 @@ global driver
 
 
 async def on_request(params):
-    await driver.execute_cdp_cmd("Fetch.continueRequest", {"requestId": params['requestId']},
-                                 disconnect_connect=False)
+    await driver.execute_cdp_cmd("Fetch.continueRequest", {"requestId": params['requestId']})
     print(params["request"]["url"])
 
 
@@ -117,8 +117,8 @@ async def main():
     async with webdriver.Chrome(options=options) as driver:
         await driver.get('http://nowsecure.nl#relax')
 
-        # enable Fetch, we don't want to disconnect after "Fetch.enable"
-        await driver.execute_cdp_cmd("Fetch.enable", disconnect_connect=False)
+        # enable Fetch
+        await driver.execute_cdp_cmd("Fetch.enable")
         await driver.add_cdp_listener("Fetch.requestPaused", on_request)
 
         await driver.wait_for_cdp(event="Page.loadEventFired", timeout=5)
@@ -134,7 +134,7 @@ asyncio.run(main())
 </details>
 
 ### Multiple tabs simultously
-Note: `asyncio` is recommendet, `threading` has been reported not too work
+Note: `asyncio` is recommendet, `threading` only works on independent `webdriver.Chrome` instances.
 
 <details>
 <summary>Examle Code (Click to expand)</summary>
@@ -270,6 +270,7 @@ Note: **please check the todo's below at first!**
 ## Todo's
 <details>
 <summary>Click to expand</summary>
+
 - implementations
   - [x] `WebElement`s
     - [ ] improve `mid_location` calculation
@@ -297,6 +298,8 @@ Note: **please check the todo's below at first!**
 - [x] sync
   - [ ] move sync to threaded for allowing event_handlers
   - [ ] support multithreading with sync version
+    - [x] on independent driver instances
+    - [ ] on same driver instance
 </details>
 
 ## Authors

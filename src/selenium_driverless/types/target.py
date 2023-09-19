@@ -237,11 +237,16 @@ class Target:
         await get
         await self._on_loaded()
 
-    async def _parse_res(self, res):
+    async def _parse_res(self, res, exec_context_id: int = None):
         if "subtype" in res.keys():
             if res["subtype"] == 'node':
-                res["value"] = await WebElement(target=self, obj_id=res["objectId"],
-                                                check_existence=False)
+                if self._loop:
+                    res["value"] = await SyncWebElement(target=self, obj_id=res["objectId"],
+                                                        check_existence=False, context_id=exec_context_id,
+                                                        loop=self._loop)
+                else:
+                    res["value"] = await WebElement(target=self, obj_id=res["objectId"],
+                                                    check_existence=False, context_id=exec_context_id, loop=self._loop)
         if 'className' in res.keys():
             class_name = res['className']
             if class_name in ['NodeList', 'HTMLCollection']:
@@ -337,7 +342,7 @@ class Target:
         if "exceptionDetails" in res.keys():
             raise JSEvalException(res["exceptionDetails"])
         res = res["result"]
-        res = await self._parse_res(res)
+        res = await self._parse_res(res, exec_context_id=execution_context_id)
         return res
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
@@ -605,15 +610,19 @@ class Target:
         if (not self._document_elem_) or self._loop:
             res = await self.execute_cdp_cmd("DOM.getDocument", {"pierce": True})
             node_id = res["root"]["nodeId"]
-            self._document_elem_ = await WebElement(target=self, node_id=node_id, check_existence=False,
-                                                    loop=self._loop, unique_context=True)
+            if self._loop:
+                self._document_elem_ = await SyncWebElement(target=self, node_id=node_id, check_existence=False,
+                                                            loop=self._loop, unique_context=True)
+            else:
+                self._document_elem_ = await WebElement(target=self, node_id=node_id, check_existence=False,
+                                                        loop=self._loop, unique_context=True)
         return self._document_elem_
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, parent=None) -> WebElement:
+    async def find_element(self, by: str, value: str, parent=None, timeout: int or None = None) -> WebElement:
         if not parent:
             parent = await self._document_elem
-        return await parent.find_element(by=by, value=value)
+        return await parent.find_element(by=by, value=value, timeout=timeout)
 
     async def find_elements(self, by: str, value: str, parent=None) -> typing.List[WebElement]:
         if not parent:
