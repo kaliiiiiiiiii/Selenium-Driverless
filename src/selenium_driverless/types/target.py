@@ -237,11 +237,15 @@ class Target:
         await get
         await self._on_loaded()
 
-    async def _parse_res(self, res):
+    async def _parse_res(self, res, exec_context_id:int=None):
         if "subtype" in res.keys():
             if res["subtype"] == 'node':
-                res["value"] = await WebElement(target=self, obj_id=res["objectId"],
-                                                check_existence=False)
+                if self._loop:
+                    res["value"] = await SyncWebElement(target=self, obj_id=res["objectId"],
+                                                        check_existence=False, context_id=exec_context_id, loop=self._loop)
+                else:
+                    res["value"] = await WebElement(target=self, obj_id=res["objectId"],
+                                                    check_existence=False, context_id=exec_context_id, loop=self._loop)
         if 'className' in res.keys():
             class_name = res['className']
             if class_name in ['NodeList', 'HTMLCollection']:
@@ -337,7 +341,7 @@ class Target:
         if "exceptionDetails" in res.keys():
             raise JSEvalException(res["exceptionDetails"])
         res = res["result"]
-        res = await self._parse_res(res)
+        res = await self._parse_res(res, exec_context_id=execution_context_id)
         return res
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,

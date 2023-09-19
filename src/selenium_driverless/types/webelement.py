@@ -180,7 +180,7 @@ class WebElement(RemoteObject):
         elif by == By.XPATH:
             scipt = """return document.evaluate(
                           arguments[0],
-                          this,
+                          obj,
                           null,
                           XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
                           null,
@@ -213,7 +213,7 @@ class WebElement(RemoteObject):
 
                 text_length = target_element.get_property("text_length")
         """
-        return await self.execute_script(f"return this[arguments[0]]", name, unique_context=True)
+        return await self.execute_script(f"return obj[arguments[0]]", name, unique_context=True)
 
     @property
     async def tag_name(self) -> str:
