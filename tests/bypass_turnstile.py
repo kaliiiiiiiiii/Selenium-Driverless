@@ -26,7 +26,7 @@ async def main():
             # filter out correct iframe target
             text = None
             try:
-                elem = await target.find_element(By.CSS_SELECTOR, "body > div", timeout=3)
+                elem = await target.find_element(By.CSS_SELECTOR, "body > div")
                 text = await elem.text
             except NoSuchElementException:
                 pass

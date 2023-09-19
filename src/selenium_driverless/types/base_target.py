@@ -112,7 +112,8 @@ class BaseTarget(Target):
                         _json = await res.json()
                 except aiohttp.ClientError:
                     pass
-            self._socket = await SingleCDPSocket(websock_url=_json["webSocketDebuggerUrl"], timeout=self._timeout, loop=self._loop)
+            self._socket = await SingleCDPSocket(websock_url=_json["webSocketDebuggerUrl"], timeout=self._timeout,
+                                                 loop=self._loop)
             self._global_this_ = await RemoteObject(target=self, js="globalThis", check_existence=False)
             if self._loop:
                 self._pointer = SyncPointer(target=self, loop=self._loop)
@@ -218,7 +219,7 @@ class BaseTarget(Target):
         await get
         await self._on_loaded()
 
-    async def _parse_res(self, res):
+    async def _parse_res(self, res, execution_context_in=None):
         if "subtype" in res.keys():
             if res["subtype"] == 'node':
                 res["value"] = await WebElement(target=self, obj_id=res["objectId"],
@@ -590,10 +591,10 @@ class BaseTarget(Target):
         return self._document_elem_
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, parent=None):
+    async def find_element(self, by: str, value: str, parent=None, timeout: int or None = None):
         if not parent:
             parent = await self._document_elem
-        return await parent.find_element(by=by, value=value)
+        return await parent.find_element(by=by, value=value, timeout=timeout)
 
     async def find_elements(self, by: str, value: str, parent=None):
         if not parent:

@@ -237,12 +237,13 @@ class Target:
         await get
         await self._on_loaded()
 
-    async def _parse_res(self, res, exec_context_id:int=None):
+    async def _parse_res(self, res, exec_context_id: int = None):
         if "subtype" in res.keys():
             if res["subtype"] == 'node':
                 if self._loop:
                     res["value"] = await SyncWebElement(target=self, obj_id=res["objectId"],
-                                                        check_existence=False, context_id=exec_context_id, loop=self._loop)
+                                                        check_existence=False, context_id=exec_context_id,
+                                                        loop=self._loop)
                 else:
                     res["value"] = await WebElement(target=self, obj_id=res["objectId"],
                                                     check_existence=False, context_id=exec_context_id, loop=self._loop)
