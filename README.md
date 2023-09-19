@@ -106,8 +106,7 @@ global driver
 
 
 async def on_request(params):
-    await driver.execute_cdp_cmd("Fetch.continueRequest", {"requestId": params['requestId']},
-                                 disconnect_connect=False)
+    await driver.execute_cdp_cmd("Fetch.continueRequest", {"requestId": params['requestId']})
     print(params["request"]["url"])
 
 
@@ -117,8 +116,8 @@ async def main():
     async with webdriver.Chrome(options=options) as driver:
         await driver.get('http://nowsecure.nl#relax')
 
-        # enable Fetch, we don't want to disconnect after "Fetch.enable"
-        await driver.execute_cdp_cmd("Fetch.enable", disconnect_connect=False)
+        # enable Fetch
+        await driver.execute_cdp_cmd("Fetch.enable")
         await driver.add_cdp_listener("Fetch.requestPaused", on_request)
 
         await driver.wait_for_cdp(event="Page.loadEventFired", timeout=5)
@@ -134,7 +133,7 @@ asyncio.run(main())
 </details>
 
 ### Multiple tabs simultously
-Note: `asyncio` is recommendet, `threading` has been reported not too work
+Note: `asyncio` is recommendet, `threading` only works on independent`webdriver.Chrome` instances
 
 <details>
 <summary>Examle Code (Click to expand)</summary>
