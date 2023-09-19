@@ -618,10 +618,10 @@ class Target:
         return self._document_elem_
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, parent=None) -> WebElement:
+    async def find_element(self, by: str, value: str, parent=None, timeout: int or None = None) -> WebElement:
         if not parent:
             parent = await self._document_elem
-        return await parent.find_element(by=by, value=value)
+        return await parent.find_element(by=by, value=value, timeout=timeout)
 
     async def find_elements(self, by: str, value: str, parent=None) -> typing.List[WebElement]:
         if not parent:

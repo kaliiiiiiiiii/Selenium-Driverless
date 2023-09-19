@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 # edited by kaliiiiiiiiiii
+import time
 import traceback
 import warnings
 import numpy as np
@@ -122,7 +123,7 @@ class WebElement(RemoteObject):
             self._node_id = node["nodeId"]
         return self._node_id
 
-    async def find_element(self, by: str, value: str, idx: int = 0):
+    async def find_element(self, by: str, value: str, idx: int = 0, timeout: int or None = None):
         """Find an element given a By strategy and locator.
 
         :Usage:
@@ -132,7 +133,12 @@ class WebElement(RemoteObject):
 
         :rtype: WebElement
         """
-        elems = await self.find_elements(by=by, value=value)
+        elems = []
+        start = time.monotonic()
+        while not elems:
+            elems = await self.find_elements(by=by, value=value)
+            if (not timeout) or (time.monotonic() - start) > timeout:
+                break
         if not elems:
             raise NoSuchElementException()
         return elems[idx]

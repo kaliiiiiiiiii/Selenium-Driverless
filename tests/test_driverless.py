@@ -50,7 +50,7 @@ async def unique_execution_context(driver):
 
 async def bet365(driver):
     async def click_login():
-        login_button = await driver.find_element(By.XPATH, value='//div[contains(@class, "ovm-ParticipantOddsOnly")]')
+        login_button = await driver.find_element(By.XPATH, value='//div[contains(@class, "ovm-ParticipantOddsOnly")]', timeout=2)
         await login_button.click()
 
     await driver.get('https://www.365365824.com/#/IP/B16', wait_load=True)

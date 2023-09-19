@@ -504,9 +504,9 @@ class Context:
         await asyncio.sleep(time_to_wait)
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, parent=None, target_id: str = None) -> WebElement:
+    async def find_element(self, by: str, value: str, parent=None, target_id: str = None, timeout: int or None = None) -> WebElement:
         target = await self.get_target(target_id=target_id)
-        return await target.find_element(by=by, value=value, parent=parent)
+        return await target.find_element(by=by, value=value, parent=parent, timeout=timeout)
 
     async def find_elements(self, by: str, value: str, parent=None, target_id: str = None) -> typing.List[WebElement]:
         target = await self.get_target(target_id=target_id)

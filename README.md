@@ -43,9 +43,10 @@ async def main():
         await driver.get('http://nowsecure.nl#relax')
         await driver.sleep(0.5)
         await driver.wait_for_cdp("Page.domContentEventFired", timeout=15)
-
-        elems = await driver.find_elements(By.XPATH, '/html/body/div[2]/div/main/p[2]/a')
-        await elems[0].click(move_to=True)
+        
+        # wait 10s for elem to exist
+        elem = await driver.find_element(By.XPATH, '/html/body/div[2]/div/main/p[2]/a', timeout=10)
+        await elem.click(move_to=True)
 
         alert = await driver.switch_to.alert
         print(alert.text)
@@ -269,6 +270,7 @@ Note: **please check the todo's below at first!**
 ## Todo's
 <details>
 <summary>Click to expand</summary>
+
 - implementations
   - [x] `WebElement`s
     - [ ] improve `mid_location` calculation
@@ -296,6 +298,8 @@ Note: **please check the todo's below at first!**
 - [x] sync
   - [ ] move sync to threaded for allowing event_handlers
   - [ ] support multithreading with sync version
+    - [x] on independent driver instances
+    - [ ] on same driver instance
 </details>
 
 ## Authors
