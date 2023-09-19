@@ -607,10 +607,10 @@ class Target:
             node_id = res["root"]["nodeId"]
             if self._loop:
                 self._document_elem_ = await SyncWebElement(target=self, node_id=node_id, check_existence=False,
-                                                            loop=self._loop, unique_context=True)
+                                                            loop=self._loop, context_id=await self._isolated_context_id, unique_context=True)
             else:
                 self._document_elem_ = await WebElement(target=self, node_id=node_id, check_existence=False,
-                                                        loop=self._loop, unique_context=True)
+                                                        loop=self._loop, context_id=await self._isolated_context_id, unique_context=True)
         return self._document_elem_
 
     # noinspection PyUnusedLocal
