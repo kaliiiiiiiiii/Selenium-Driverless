@@ -9,6 +9,7 @@ class WebElement(AsyncWebElement):
                  context_id: int = None, unique_context: bool = True):
         if not loop:
             loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
         self._loop = loop
         super().__init__(target=target, js=js, obj_id=obj_id, node_id=node_id,
                          check_existence=check_existence, loop=self._loop, context_id=context_id,
@@ -36,17 +37,16 @@ class WebElement(AsyncWebElement):
         return False
 
     def __getattribute__(self, item):
-        item = super().__getattribute__(item)
-        if item is None:
-            return item
-        try:
-            asyncio.get_running_loop()
-        except RuntimeError:
-            if inspect.iscoroutinefunction(item):
+        res = super().__getattribute__(item)
+        if res is None or item == "_loop":
+            return res
+        loop = self._loop
+        if loop and (not loop.is_running()):
+            if inspect.iscoroutinefunction(res):
                 def syncified(*args, **kwargs):
-                    return self._loop.run_until_complete(item(*args, **kwargs))
+                    return self._loop.run_until_complete(res(*args, **kwargs))
 
                 return syncified
-            if inspect.isawaitable(item):
-                return self._loop.run_until_complete(item)
-        return item
+            if inspect.isawaitable(res):
+                return self._loop.run_until_complete(res)
+        return res

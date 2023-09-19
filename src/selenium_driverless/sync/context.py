@@ -11,6 +11,7 @@ class Context(AsyncContext):
                  _base_target: BaseTarget = None, is_incognito: bool = False) -> None:
         if not loop:
             loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
         super().__init__(base_target=base_target, context_id=context_id, loop=loop, _base_target=_base_target,
                          is_incognito=is_incognito)
 
@@ -21,17 +22,16 @@ class Context(AsyncContext):
         self.__aexit__(*args, **kwargs)
 
     def __getattribute__(self, item):
-        item = super().__getattribute__(item)
-        if item is None:
-            return item
-        try:
-            asyncio.get_running_loop()
-        except RuntimeError:
-            if inspect.iscoroutinefunction(item):
+        res = super().__getattribute__(item)
+        if res is None or item == "_loop":
+            return res
+        loop = self._loop
+        if loop and (not loop.is_running()):
+            if inspect.iscoroutinefunction(res):
                 def syncified(*args, **kwargs):
-                    return self._loop.run_until_complete(item(*args, **kwargs))
+                    return self._loop.run_until_complete(res(*args, **kwargs))
 
                 return syncified
-            if inspect.isawaitable(item):
-                return self._loop.run_until_complete(item)
-        return item
+            if inspect.isawaitable(res):
+                return self._loop.run_until_complete(res)
+        return res
