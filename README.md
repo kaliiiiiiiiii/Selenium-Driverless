@@ -133,7 +133,7 @@ asyncio.run(main())
 </details>
 
 ### Multiple tabs simultously
-Note: `asyncio` is recommendet, `threading` only works on independent`webdriver.Chrome` instances
+Note: `asyncio` is recommendet, `threading` only works on independent `webdriver.Chrome` instances.
 
 <details>
 <summary>Examle Code (Click to expand)</summary>
