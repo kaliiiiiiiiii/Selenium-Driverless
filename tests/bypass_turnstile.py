@@ -1,9 +1,8 @@
-import time
+import asyncio
 
 from selenium_driverless import webdriver
 from selenium_driverless.types.by import By
 from selenium_driverless.types.webelement import NoSuchElementException
-import asyncio
 
 
 async def main():
