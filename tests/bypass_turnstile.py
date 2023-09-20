@@ -1,3 +1,5 @@
+import time
+
 from selenium_driverless import webdriver
 from selenium_driverless.types.by import By
 from selenium_driverless.types.webelement import NoSuchElementException
@@ -6,6 +8,7 @@ import asyncio
 
 async def main():
     options = webdriver.ChromeOptions()
+    options.add_argument("--headless=new")
     async with webdriver.Chrome(options=options) as driver:
         await driver.get("https://nopecha.com/demo/turnstile")
         await asyncio.sleep(0.5)
@@ -37,7 +40,8 @@ async def main():
         src = await driver.page_source
         checkbox = await target.find_element(By.CSS_SELECTOR, "#challenge-stage > div > label > input[type=checkbox]", timeout=20)
         await checkbox.click(move_to=True)
-        input("press ENTER to exit")
+        await asyncio.sleep(10)
+        await driver.save_screenshot("turstile_captcha.png")
 
 
 asyncio.run(main())
