@@ -290,7 +290,7 @@ Note: **please check the todo's below at first!**
         - [ ] `SendKeys`
           - [ ] `send files`
   - [x] `execute_script` and `execute_async_script`
-    - [ ] make serialization use `deep`
+    - [x] make serialization use `deep`
     - [x] add `Page.createIsolatedWorld` support with `DOM` access
       - [x] make `element.rect` use this
       - [ ] make `elem.box_model use this`

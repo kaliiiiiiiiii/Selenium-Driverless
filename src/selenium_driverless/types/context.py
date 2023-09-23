@@ -211,7 +211,7 @@ class Context:
                                                unique_context=unique_context)
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: int = None, only_value=True, obj_id=None,
+                             timeout: int = None, obj_id=None,
                              target_id: str = None, execution_context_id: str = None,
                              unique_context: bool = False):
         """
@@ -219,18 +219,17 @@ class Context:
         """
         target = await self.get_target(target_id)
         return await target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
-                                           timeout=timeout, only_value=only_value, obj_id=obj_id,
+                                           timeout=timeout, obj_id=obj_id,
                                            execution_context_id=execution_context_id,
                                            unique_context=unique_context)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
-                                   serialization: str = None, timeout: int = 2,
-                                   only_value=True, obj_id=None,
+                                   serialization: str = None, timeout: int = 2, obj_id=None,
                                    target_id: str = None, execution_context_id: str = None,
                                    unique_context: bool = False):
         target = await self.get_target(target_id)
         return await target.execute_async_script(script, *args, max_depth=max_depth, serialization=serialization,
-                                                 timeout=timeout, only_value=only_value, obj_id=obj_id,
+                                                 timeout=timeout, obj_id=obj_id,
                                                  execution_context_id=execution_context_id,
                                                  unique_context=unique_context)
 

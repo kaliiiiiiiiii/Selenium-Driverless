@@ -62,13 +62,15 @@ class WebElement(RemoteObject):
     """
 
     def __init__(self, target, js: str = None, obj_id=None,
-                 node_id=None, check_existence=True,
+                 node_id=None, backend_node_id: str = None, check_existence=True,
                  loop=None, context_id: int = None,
-                 unique_context: bool = True) -> None:
+                 unique_context: bool = True, class_name: str = None) -> None:
         self._loop = loop
-        if not (obj_id or node_id or js):
+        if not (obj_id or node_id or js or backend_node_id):
             raise ValueError("either js, obj_id or node_id need to be specified")
         self._node_id = node_id
+        self._backend_node_id = backend_node_id
+        self._class_name = class_name
         super().__init__(target=target, js=js, obj_id=obj_id, check_existence=check_existence, context_id=context_id,
                          unique_context=unique_context)
 
@@ -85,6 +87,7 @@ class WebElement(RemoteObject):
                 if not self._obj_id:
                     await self.obj_id
                 self._node_id = None
+                self._backend_node_id = None
 
             await self._target.add_cdp_listener("Page.loadEventFired", clear_node_id)
             self._started = True
@@ -93,6 +96,7 @@ class WebElement(RemoteObject):
 
     @property
     async def obj_id(self):
+        await self.__aenter__()
         if not self._obj_id:
             context_id = self.context_id
             if self._js:
@@ -109,9 +113,13 @@ class WebElement(RemoteObject):
                 if res["subtype"] != "node":
                     raise ValueError("object isn't a node")
             else:
-                args = {"nodeId": self._node_id}
+                args = {}
+                if self._node_id:
+                    args["nodeId"] = self._node_id
+                elif self._backend_node_id:
+                    args["backendNodeId"] = self._backend_node_id
                 if context_id:
-                    args["contextId"] = context_id
+                    args["executionContextId"] = context_id
                 res = await self._target.execute_cdp_cmd("DOM.resolveNode", args)
                 self._obj_id = res["object"]["objectId"]
         return self._obj_id
@@ -122,6 +130,10 @@ class WebElement(RemoteObject):
             node = await self._target.execute_cdp_cmd("DOM.requestNode", {"objectId": await self.obj_id})
             self._node_id = node["nodeId"]
         return self._node_id
+
+    @property
+    def class_name(self):
+        return self._class_name
 
     async def find_element(self, by: str, value: str, idx: int = 0, timeout: int or None = None):
         """Find an element given a By strategy and locator.
@@ -191,7 +203,7 @@ class WebElement(RemoteObject):
                           XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
                           null,
                         );"""
-            return await self.execute_script(scipt, value, serialization="deep", unique_context=True, timeout=10)
+            return await self.execute_script(scipt, value, serialization="deep", unique_context=True, execution_context_id=self.context_id, timeout=10)
         else:
             return ValueError("unexpected by")
 
@@ -651,3 +663,6 @@ class WebElement(RemoteObject):
         return await super().execute_async_script(script, *args, max_depth=max_depth, serialization=serialization,
                                                   timeout=timeout, execution_context_id=execution_context_id,
                                                   unique_context=unique_context)
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}("{self.class_name}", obj_id="{self._obj_id}", node_id="{self._node_id}", backend_node_id={self._backend_node_id}, context_id={self.context_id})'

@@ -16,9 +16,7 @@ from selenium.webdriver.common.print_page_options import PrintOptions
 from selenium_driverless.input.pointer import Pointer
 from selenium_driverless.sync.pointer import Pointer as SyncPointer
 
-# WebElement
-from selenium_driverless.sync.webelement import WebElement as SyncWebElement
-from selenium_driverless.types.webelement import WebElement, RemoteObject
+from selenium_driverless.types.deserialize import JSRemoteObj, WebElement, SyncWebElement, RemoteObject, parse_deep
 
 # Alert
 from selenium_driverless.types.alert import Alert
@@ -237,34 +235,6 @@ class Target:
         await get
         await self._on_loaded()
 
-    async def _parse_res(self, res, exec_context_id: int = None):
-        if "subtype" in res.keys():
-            if res["subtype"] == 'node':
-                if self._loop:
-                    res["value"] = await SyncWebElement(target=self, obj_id=res["objectId"],
-                                                        check_existence=False, context_id=exec_context_id,
-                                                        loop=self._loop)
-                else:
-                    res["value"] = await WebElement(target=self, obj_id=res["objectId"],
-                                                    check_existence=False, context_id=exec_context_id, loop=self._loop)
-        if 'className' in res.keys():
-            class_name = res['className']
-            if class_name in ['NodeList', 'HTMLCollection']:
-                elems = []
-                obj = await RemoteObject(target=self, obj_id=res["objectId"], check_existence=False)
-                for idx in range(int(res['description'][-2])):
-                    elems.append(await obj.execute_script("return this[arguments[0]]", idx, serialization="deep"))
-                res["value"] = elems
-            elif class_name == 'XPathResult':
-                elems = []
-                obj = await RemoteObject(target=self, obj_id=res["objectId"], check_existence=False)
-                if await obj.execute_script("return [7].includes(obj.resultType)", serialization="json"):
-                    for idx in range(await obj.execute_script("return obj.snapshotLength", serialization="json")):
-                        elems.append(await obj.execute_script("return obj.snapshotItem(arguments[0])", idx,
-                                                              serialization="deep"))
-                    res["value"] = elems
-        return res
-
     @property
     async def _global_this(self):
         if (not self._global_this_) or self._loop:
@@ -304,18 +274,31 @@ class Target:
         _args = []
         base_id = None
         for arg in args:
+            # noinspection PyUnresolvedReferences
             if isinstance(arg, RemoteObject):
-                _args.append({"objectId": await arg.obj_id})
+
                 exec_id = arg.context_id
                 if not exec_id:
                     # noinspection PyProtectedMember
                     base_id = arg._base_obj
                 if execution_context_id and exec_id != execution_context_id:
+                    if isinstance(arg, WebElement):
+                        # patch context_id
+                        # noinspection PyProtectedMember
+                        await arg._node_id
+                        arg._context_id = execution_context_id
                     raise ValueError("got multiple arguments with different execution-context-id's")
                 execution_context_id = exec_id
+                _args.append({"objectId": await arg.obj_id})
+            elif isinstance(arg, JSRemoteObj):
+                # noinspection PyUnresolvedReferences
+                obj_id = arg.__obj_id__
+                if obj_id:
+                    _args.append({"objectId": obj_id})
+                else:
+                    raise ValueError(f"Got non.serializable JSRemoteObject:{arg}")
             else:
                 _args.append({"value": arg})
-
         if not (obj_id or execution_context_id):
             if unique_context:
                 execution_context_id = await self._isolated_context_id
@@ -332,7 +315,7 @@ class Target:
                 "arguments": _args, "userGesture": True, "awaitPromise": await_res, "serializationOptions": ser_opts}
 
         if execution_context_id and obj_id:
-            raise ValueError("execution_context_id and obj_id can't be specified at the same time")
+            execution_context_id = None
         if obj_id:
             args["objectId"] = obj_id
         if execution_context_id:
@@ -342,11 +325,14 @@ class Target:
         if "exceptionDetails" in res.keys():
             raise JSEvalException(res["exceptionDetails"])
         res = res["result"]
-        res = await self._parse_res(res, exec_context_id=execution_context_id)
+        res = await parse_deep(deep=res.get('deepSerializedValue'), subtype=res.get('subtype'),
+                               class_name=res.get('className'), value=res.get("value"),
+                               description=res.get("description"), target=self,
+                               obj_id=res.get("objectId"), context_id=execution_context_id)
         return res
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: float = None, only_value=True, obj_id=None, execution_context_id: str = None,
+                             timeout: float = None, obj_id=None, execution_context_id: str = None,
                              unique_context: bool = None):
         """
         exaple: script = "return elem.click()"
@@ -354,7 +340,17 @@ class Target:
         from selenium_driverless.types import RemoteObject
         for arg in args:
             if isinstance(arg, RemoteObject):
-                execution_context_id = arg.context_id
+                if not isinstance(arg, WebElement):
+                    if arg.context_id:
+                        execution_context_id = arg.context_id
+            if isinstance(arg, JSRemoteObj):
+                # noinspection PyUnresolvedReferences
+                if arg.__context_id__:
+                    # noinspection PyUnresolvedReferences
+                    execution_context_id = arg.__context_id__
+
+        if unique_context and (not execution_context_id):
+            execution_context_id = await self._isolated_context_id
 
         if execution_context_id and obj_id:
             obj = RemoteObject(obj_id=obj_id, target=self, check_existence=False,
@@ -363,8 +359,7 @@ class Target:
             obj_id = None
             script = """
                 (function(...arguments){
-                    const obj = arguments[0]
-                    arguments = arguments[1:]
+                    const obj = arguments.shift()
                     """ + script + "})"
         else:
             script = """
@@ -375,15 +370,11 @@ class Target:
                                             serialization=serialization, timeout=timeout,
                                             await_res=False, obj_id=obj_id, unique_context=unique_context,
                                             execution_context_id=execution_context_id)
-        if only_value:
-            if "value" in res.keys():
-                return res["value"]
-        else:
-            return res
+        return res
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
                                    serialization: str = None, timeout: float = 2,
-                                   only_value=True, obj_id=None, execution_context_id: str = None,
+                                   obj_id=None, execution_context_id: str = None,
                                    unique_context: bool = False):
         from selenium_driverless.types import RemoteObject
         for arg in args:
@@ -396,8 +387,7 @@ class Target:
             obj_id = None
             script = """
                 (function(...arguments){
-                    const obj = arguments[0]
-                    arguments = arguments[1:]
+                    const obj = arguments.shift()
                     const promise = new Promise((resolve, reject) => {
                                           arguments.push(resolve)
                         });""" + script + ";return promise})"
@@ -411,11 +401,7 @@ class Target:
                                             serialization=serialization, timeout=timeout,
                                             await_res=True, obj_id=obj_id,
                                             execution_context_id=execution_context_id, unique_context=unique_context)
-        if only_value:
-            if "value" in res.keys():
-                return res["value"]
-        else:
-            return res
+        return res
 
     @property
     async def current_url(self) -> str:
@@ -612,10 +598,10 @@ class Target:
             node_id = res["root"]["nodeId"]
             if self._loop:
                 self._document_elem_ = await SyncWebElement(target=self, node_id=node_id, check_existence=False,
-                                                            loop=self._loop, unique_context=True)
+                                                            loop=self._loop, context_id=await self._isolated_context_id)
             else:
                 self._document_elem_ = await WebElement(target=self, node_id=node_id, check_existence=False,
-                                                        loop=self._loop, unique_context=True)
+                                                        loop=self._loop, context_id=await self._isolated_context_id)
         return self._document_elem_
 
     # noinspection PyUnusedLocal
