@@ -42,6 +42,7 @@ class JSRemoteObj:
         if self.__obj_id__:
             obj_id: list = self.__obj_id__.split(".")
             obj_id[1] = str(context_id)
+            obj_id[2] = "1"  # first item seems to be most reliable
             return ".".join(obj_id)
 
     async def __exec_raw__(self, script: str, *args, await_res: bool = False, serialization: str = None,
