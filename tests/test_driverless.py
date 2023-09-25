@@ -20,10 +20,7 @@ async def nowsecure(driver):
 
     await driver.get("https://nowsecure.nl#relax", wait_load=True)
     await asyncio.sleep(0.5)
-    try:
-        await get_elem()
-    except NoSuchElementException:
-        await driver.wait_for_cdp("Page.domContentEventFired")
+    await driver.wait_for_cdp("Page.domContentEventFired")
     await get_elem()
 
 

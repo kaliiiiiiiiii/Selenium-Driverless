@@ -1,23 +1,16 @@
 import asyncio
-
-from selenium_driverless.types.webelement import WebElement
-from selenium_driverless.sync.webelement import WebElement as SyncWebElement
-from selenium_driverless.types import RemoteObject
+import warnings
 
 
 class JSRemoteObj:
-    def __init__(self, obj_id: str, target, context_id: str):
+    def __init__(self, obj_id: str, target):
         super().__init__()
-        remote_obj = None
-        if obj_id:
-            remote_obj = RemoteObject(obj_id=obj_id, target=target, context_id=context_id)
-        super().__setattr__("__remote_obj__", remote_obj)
-        super().__setattr__("__context_id__", context_id)
-        super().__setattr__("__obj_id__", obj_id)
+        super().__setattr__("___obj_id__", obj_id)
+        super().__setattr__("___target__", target)
 
     def __repr__(self):
         # noinspection PyUnresolvedReferences
-        return f'{self.__class__.__name__}(obj_id={self.__obj_id__}, context_id="{self.__context_id__}")'
+        return f'{self.__class__.__name__}(obj_id={self.__obj_id__}, context_id={self.__context_id__})'
 
     # noinspection PyUnresolvedReferences
     def __eq__(self, other):
@@ -32,11 +25,184 @@ class JSRemoteObj:
         # noinspection PyUnresolvedReferences
         return hash(f"{self.__obj_id__}{self.__class__}")
 
+    @property
+    def __target__(self):
+        return self.___target__
+
+    @property
+    def __obj_id__(self):
+        return self.___obj_id__
+
+    @property
+    def __context_id__(self):
+        if self.__obj_id__:
+            return int(self.__obj_id__.split(".")[1])
+
+    def __obj_id_for_context__(self, context_id: int):
+        if self.__obj_id__:
+            obj_id: list = self.__obj_id__.split(".")
+            obj_id[1] = str(context_id)
+            return ".".join(obj_id)
+
+    async def __exec_raw__(self, script: str, *args, await_res: bool = False, serialization: str = None,
+                           max_depth: int = None, timeout: float = 2, execution_context_id: str = None,
+                           unique_context: bool = False):
+        """
+        example:
+        script= "function(...arguments){obj.click()}"
+        "const obj" will be the Object according to obj_id
+        this is by default globalThis (=> window)
+        """
+        from selenium_driverless.types import JSEvalException
+        from selenium_driverless.types.webelement import WebElement
+
+        if not args:
+            args = []
+        if not serialization:
+            serialization = "deep"
+
+        target = self.__target__
+
+        exec_context = self.__context_id__
+        base_obj_id = self.__obj_id__
+
+        if execution_context_id and unique_context:
+            warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
+        if execution_context_id:
+            exec_context = execution_context_id
+            base_obj_id = None  # enforce execution context id
+        elif unique_context:
+            # noinspection PyProtectedMember
+            exec_context = await target._isolated_context_id
+            base_obj_id = None  # enforce execution context id
+
+        _args = []
+        for arg in args:
+
+            if isinstance(arg, JSRemoteObj):
+                if isinstance(arg, WebElement):
+                    await arg.obj_id  # resolve webelement
+                    obj_id = await arg.__obj_id_for_context__(exec_context)
+                else:
+                    obj_id = arg.__obj_id_for_context__(exec_context)
+
+                if obj_id:
+                    _args.append({"objectId": obj_id})
+                else:
+                    raise ValueError(f"Got non.serializable JSRemoteObject:{arg}")
+
+            else:
+                _args.append({"value": arg})
+
+        ser_opts = {"serialization": serialization, "maxDepth": max_depth,
+                    "additionalParameters": {"includeShadowTree": "all", "maxNodeDepth": max_depth}}
+        args = {"functionDeclaration": script,
+                "arguments": _args, "userGesture": True, "awaitPromise": await_res, "serializationOptions": ser_opts,
+                "generatePreview": True}
+        if base_obj_id:
+            args["objectId"] = base_obj_id
+        else:
+            args["executionContextId"] = exec_context
+        try:
+            res = await self.__target__.execute_cdp_cmd("Runtime.callFunctionOn", args, timeout=timeout)
+        except Exception as e:
+            raise e
+        if "exceptionDetails" in res.keys():
+            raise JSEvalException(res["exceptionDetails"])
+        res = res["result"]
+        # noinspection PyProtectedMember
+        res = await parse_deep(deep=res.get('deepSerializedValue'), subtype=res.get('subtype'),
+                               class_name=res.get('className'), value=res.get("value"),
+                               description=res.get("description"), target=target,
+                               obj_id=res.get("objectId"), context_id=exec_context, loop=self.__target__._loop)
+        return res
+
+    async def __exec__(self, script: str, *args, max_depth: int = 2, serialization: str = None,
+                       timeout: float = 2, execution_context_id: str = None,
+                       unique_context: bool = None):
+        """
+        exaple: script = "return elem.click()"
+        """
+        from selenium_driverless.types.webelement import WebElement
+
+        target = self.__target__
+        exec_context = self.__context_id__
+        base_obj_id = self.__obj_id__
+
+        if execution_context_id and unique_context:
+            warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
+        if execution_context_id:
+            exec_context = execution_context_id
+        elif unique_context:
+            # noinspection PyProtectedMember
+            exec_context = await target._isolated_context_id
+
+        if isinstance(self, WebElement):
+            base_obj_id = await self.__obj_id_for_context__(exec_context)
+
+        if exec_context and base_obj_id:
+            obj = JSRemoteObj(obj_id=base_obj_id, target=self)
+            args = [obj, *args]
+            script = """
+                (function(...arguments){
+                    const obj = arguments.shift()
+                    """ + script + "})"
+        else:
+            script = """
+                        (function(...arguments){
+                            const obj = this   
+                            """ + script + "})"
+        res = await self.__exec_raw__(script, *args, max_depth=max_depth,
+                                      serialization=serialization, timeout=timeout,
+                                      await_res=False, execution_context_id=exec_context)
+        return res
+
+    async def __exec_async__(self, script: str, *args, max_depth: int = 2,
+                             serialization: str = None, timeout: float = 2,
+                             obj_id=None, execution_context_id: str = None,
+                             unique_context: bool = False):
+        from selenium_driverless.types.webelement import WebElement
+
+        target = self.__target__
+        exec_context = self.__context_id__
+
+        if execution_context_id and unique_context:
+            warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
+        if execution_context_id:
+            exec_context = execution_context_id
+        elif unique_context:
+            # noinspection PyProtectedMember
+            exec_context = await target._isolated_context_id
+
+        if isinstance(self, WebElement):
+            obj_id = await self.__obj_id_for_context__(exec_context)
+
+        if exec_context and obj_id:
+            obj = JSRemoteObj(obj_id=obj_id, target=self)
+            args = [obj, *args]
+            script = """
+                (function(...arguments){
+                    const obj = arguments.shift()
+                    const promise = new Promise((resolve, reject) => {
+                                          arguments.push(resolve)
+                        });""" + script + ";return promise})"
+        else:
+            script = """(function(...arguments){
+                                   const obj = this
+                                   const promise = new Promise((resolve, reject) => {
+                                          arguments.push(resolve)
+                                    });""" + script + ";return promise})"
+        res = await self.__exec_raw__(script, *args, max_depth=max_depth,
+                                      serialization=serialization, timeout=timeout,
+                                      await_res=True,
+                                      execution_context_id=exec_context)
+        return res
+
 
 class JSObject(JSRemoteObj, dict):
-    def __init__(self, obj_id: str, context_id: str, target, description: str = None, class_name: str = None,
+    def __init__(self, obj_id: str, target, description: str = None, class_name: str = None,
                  sub_type: str = None):
-        JSRemoteObj.__init__(self, obj_id, target, context_id)
+        JSRemoteObj.__init__(self, obj_id, target)
         dict.__init__(self)
         super().__setattr__("__description__", description)
         super().__setattr__("__class_name__", class_name)
@@ -57,12 +223,12 @@ class JSObject(JSRemoteObj, dict):
 
     def __hash__(self):
         # noinspection PyUnresolvedReferences
-        return hash(f"{self.__obj_id__}{self.__class__}")
+        return hash(f"{self.__obj_id__}{self.__class__}{self.__context_id__}")
 
 
 class JSArray(list, JSRemoteObj):
-    def __init__(self, obj_id: str, target, context_id: str):
-        JSRemoteObj.__init__(self, obj_id, target, context_id)
+    def __init__(self, obj_id: str, target):
+        JSRemoteObj.__init__(self, obj_id, target)
 
     def __hash__(self):
         # noinspection PyUnresolvedReferences
@@ -70,9 +236,9 @@ class JSArray(list, JSRemoteObj):
 
 
 class JSWindow(JSRemoteObj):
-    def __init__(self, context: str, obj_id: str, target, context_id: str):
+    def __init__(self, context: str, obj_id: str, target):
         self.__context__ = context
-        JSRemoteObj.__init__(self, obj_id, target, context_id)
+        JSRemoteObj.__init__(self, obj_id, target)
 
 
 class JSBigInt(int):
@@ -88,14 +254,14 @@ class JSDate(str):
 
 
 class JSSymbol(JSRemoteObj):
-    def __init__(self, obj_id: str, target, context_id: str):
-        JSRemoteObj.__init__(self, obj_id, target, context_id)
+    def __init__(self, obj_id: str, target):
+        JSRemoteObj.__init__(self, obj_id, target)
 
 
 class JSFunction(JSRemoteObj):
-    def __init__(self, obj_id: str, target, context_id: str, description: str):
+    def __init__(self, obj_id: str, target, description: str):
         self.__description__ = description
-        super().__init__(obj_id, target, context_id)
+        super().__init__(obj_id, target)
 
     async def __call__(self, *args, **kwargs):
         # noinspection PyUnresolvedReferences
@@ -212,49 +378,49 @@ class JSMap(dict, JSRemoteObj):
 
 
 class JSWeakMap(JSRemoteObj):
-    def __init__(self, obj_id: str, target, context_id: str):
-        JSRemoteObj.__init__(self, obj_id, target, context_id)
+    def __init__(self, obj_id: str, target):
+        JSRemoteObj.__init__(self, obj_id, target)
 
 
 class JSSet(JSRemoteObj, set):
-    def __init__(self, obj_id: str, target, context_id: str):
+    def __init__(self, obj_id: str, target):
         set.__init__(self)
-        JSRemoteObj.__init__(self, obj_id, target, context_id)
+        JSRemoteObj.__init__(self, obj_id, target)
 
 
 class JSError(JSRemoteObj):
-    def __init__(self, obj_id: str, target, context_id: str):
-        JSRemoteObj.__init__(self, obj_id, target, context_id)
+    def __init__(self, obj_id: str, target):
+        JSRemoteObj.__init__(self, obj_id, target)
 
 
 class JSProxy(JSRemoteObj):
-    def __init__(self, obj_id: str, target, context_id: str):
-        JSRemoteObj.__init__(self, obj_id, target, context_id)
+    def __init__(self, obj_id: str, target):
+        JSRemoteObj.__init__(self, obj_id, target)
 
 
 class JSPromise(JSRemoteObj):
-    def __init__(self, obj_id: str, target, context_id: str):
-        JSRemoteObj.__init__(self, obj_id, target, context_id)
+    def __init__(self, obj_id: str, target):
+        JSRemoteObj.__init__(self, obj_id, target)
 
 
 class JSTypedArray(JSRemoteObj):
-    def __init__(self, obj_id: str, target, context_id: str):
-        JSRemoteObj.__init__(self, obj_id, target, context_id)
+    def __init__(self, obj_id: str, target):
+        JSRemoteObj.__init__(self, obj_id, target)
 
 
 class JSArrayBuffer(JSRemoteObj):
-    def __init__(self, obj_id: str, target, context_id: str):
-        JSRemoteObj.__init__(self, obj_id, target, context_id)
+    def __init__(self, obj_id: str, target):
+        JSRemoteObj.__init__(self, obj_id, target)
 
 
 class JSIterator(JSFunction):
-    def __init__(self, obj_id: str, target, context_id: str, description: str):
-        super().__init__(obj_id, target, context_id=context_id, description=description)
+    def __init__(self, obj_id: str, target, description: str):
+        super().__init__(obj_id, target, description=description)
 
 
 class JSNodeList(JSArray):
-    def __init__(self, obj_id: str, target, class_name: str, context_id: str):
-        super().__init__(obj_id, target, context_id)
+    def __init__(self, obj_id: str, target, class_name: str):
+        super().__init__(obj_id, target)
         super().__setattr__("__class_name__", class_name)
 
     def __repr__(self):
@@ -263,10 +429,10 @@ class JSNodeList(JSArray):
 
 
 class JSUnserializable(JSRemoteObj):
-    def __init__(self, _type, value, context_id: str, target, obj_id: str = None, description: str = None,
+    def __init__(self, _type, value, target, obj_id: str = None, description: str = None,
                  sub_type: str = None,
                  class_name: str = None):
-        super().__init__(obj_id=obj_id, target=target, context_id=context_id)
+        super().__init__(obj_id=obj_id, target=target)
         self._value = value
         self._type = _type
         self._description = description
@@ -295,43 +461,49 @@ class JSUnserializable(JSRemoteObj):
 
     def __repr__(self):
         # noinspection PyUnresolvedReferences
-        return f'{self.__class__.__name__}(type="{self.type}",description="{self.description}", sub_type="{self.sub_type}", class_name="{self.class_name}", value={self.value}, obj_id="{self.__obj_id__}")'
+        return f'{self.__class__.__name__}(type="{self.type}",description="{self.description}", sub_type="{self.sub_type}", class_name="{self.class_name}", value={self.value}, obj_id="{self.__obj_id__}", context_id={self.__context_id__})'
 
 
 async def parse_deep(deep: dict, target, subtype: str = None, class_name: str = None, description: str = None,
                      value=None, obj_id: str = None, loop: asyncio.AbstractEventLoop = None, context_id: str = None):
+    from selenium_driverless.types.webelement import WebElement
+    from selenium_driverless.sync.webelement import WebElement as SyncWebElement
+
     if not deep:
-        if value:
+        if value is not None:
             return value
         else:
-            return JSUnserializable("IdOnly", None, target=target, obj_id=obj_id, context_id=context_id)
+            return JSUnserializable("IdOnly", None, target=target, obj_id=obj_id)
 
     # special types
     if class_name == 'XPathResult':
-        elems = JSNodeList(obj_id=obj_id, target=target, class_name=class_name, context_id=context_id)
-        obj = await RemoteObject(target=target, obj_id=obj_id, check_existence=False)
-        if await obj.execute_script("return [7].includes(obj.resultType)", serialization="json", execution_context_id=context_id):
-            for idx in range(await obj.execute_script("return obj.snapshotLength", serialization="json", execution_context_id=context_id)):
-                elems.append(await obj.execute_script("return obj.snapshotItem(arguments[0])", idx,
-                                                      serialization="deep", execution_context_id=context_id))
+        elems = JSNodeList(obj_id=obj_id, target=target, class_name=class_name)
+        obj = JSRemoteObj(target=target, obj_id=obj_id)
+        res = await obj.__exec__("console.log(obj);return obj.resultType == 7", serialization="json")
+        if res:
+            _len = await obj.__exec__("return obj.snapshotLength", serialization="json")
+            for idx in range(_len):
+                elems.append(await obj.__exec__("return obj.snapshotItem(arguments[0])", idx,
+                                                serialization="deep"))
             return elems
-    if class_name in ['NodeList', 'HTMLCollection']:
+    if class_name in ['NodeList']:
         elems = []
-        obj = await RemoteObject(target=target, obj_id=obj_id, check_existence=False)
+        obj = JSRemoteObj(target=target, obj_id=obj_id)
         for idx in range(int(description[-2])):
-            elems.append(await obj.execute_script("return this[arguments[0]]", idx, serialization="deep", execution_context_id=context_id))
+            elems.append(await obj.__exec__("return obj[arguments[0]]", idx, serialization="deep",
+                                            execution_context_id=context_id))
         return elems
 
     # structures
     _type = deep.get("type")
     _value = deep.get("value")
     if _type == "array":
-        _res = JSArray(obj_id=obj_id, target=target, context_id=context_id)
+        _res = JSArray(obj_id=obj_id, target=target)
         for idx, _deep in enumerate(_value):
             _res.append(await parse_deep(_deep, target))
         return _res
     elif _type == "object":
-        _res = JSObject(obj_id=obj_id, target=target, description=description, sub_type=subtype, class_name=class_name, context_id=context_id)
+        _res = JSObject(obj_id=obj_id, target=target, description=description, sub_type=subtype, class_name=class_name)
         for key, value in _value:
             _res.__setattr__(key, await parse_deep(value, target))
         return _res
@@ -344,9 +516,9 @@ async def parse_deep(deep: dict, target, subtype: str = None, class_name: str = 
     elif _type == "date":
         return JSDate(_value)
     elif _type == "symbol":
-        return JSSymbol(obj_id=obj_id, target=target, context_id=context_id)
+        return JSSymbol(obj_id=obj_id, target=target)
     elif _type == "function":
-        return JSFunction(obj_id=obj_id, target=target, description=description, context_id=context_id)
+        return JSFunction(obj_id=obj_id, target=target, description=description)
     elif _type == "map":
         _map = JSMap()
         for key, value in _value:
@@ -354,34 +526,40 @@ async def parse_deep(deep: dict, target, subtype: str = None, class_name: str = 
             _map.set(key, await parse_deep(value, target))
         return _map
     elif _type == "set":
-        _set = JSSet(obj_id=obj_id, target=target, context_id=context_id)
+        _set = JSSet(obj_id=obj_id, target=target)
         for value in _value:
             value = await parse_deep(value, target)
             _set.add(value)
         return _set
     elif _type == "weakmap":
-        return JSWeakMap(obj_id=obj_id, target=target, context_id=context_id)
+        return JSWeakMap(obj_id=obj_id, target=target)
     elif _type == "error":
-        return JSError(obj_id=obj_id, target=target, context_id=context_id)
+        return JSError(obj_id=obj_id, target=target)
     elif _type == "proxy":
-        return JSProxy(obj_id, target=target, context_id=context_id)
+        return JSProxy(obj_id, target=target)
     elif _type == "promise":
-        return JSPromise(obj_id, target=target, context_id=context_id)
+        return JSPromise(obj_id, target=target)
     elif _type == "typedarray":
-        return JSTypedArray(obj_id, target=target, context_id=context_id)
+        return JSTypedArray(obj_id, target=target)
     elif _type == "arraybuffer":
-        return JSArrayBuffer(obj_id, target=target, context_id=context_id)
+        return JSArrayBuffer(obj_id, target=target)
     elif _type == "node":
         if loop:
             return await SyncWebElement(backend_node_id=_value.get('backendNodeId'), target=target, loop=loop,
-                                        check_existence=False, class_name=class_name, context_id=context_id)
+                                        class_name=class_name, context_id=context_id)
         else:
             return await WebElement(backend_node_id=_value.get('backendNodeId'), target=target, loop=loop,
-                                    check_existence=False, class_name=class_name, context_id=context_id)
+                                    class_name=class_name, context_id=context_id)
+    elif _type == 'htmlcollection':
+        _res = JSNodeList(obj_id=obj_id, target=target, class_name=class_name)
+        for idx, _deep in enumerate(_value):
+            _res.append(await parse_deep(_deep, target))
+        return _res
     elif _type == "window":
-        return JSWindow(context=_value.get("context"), obj_id=obj_id, target=target, context_id=context_id)
+        return JSWindow(context=_value.get("context"), obj_id=obj_id, target=target)
     elif _type == "generator":
-        return JSUnserializable(_type, _value, target=target, obj_id=obj_id, context_id=context_id, description=description)
+        return JSUnserializable(_type, _value, target=target, obj_id=obj_id,
+                                description=description)
 
     # low-level types
     elif _type in ["number", "string", "boolean"]:
@@ -392,4 +570,4 @@ async def parse_deep(deep: dict, target, subtype: str = None, class_name: str = 
     # non-serializable
     else:
         return JSUnserializable(_type, _value, target=target, obj_id=obj_id, description=description, sub_type=subtype,
-                                class_name=class_name, context_id=context_id)
+                                class_name=class_name)

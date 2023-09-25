@@ -7,7 +7,7 @@ from selenium_driverless.types.webelement import NoSuchElementException
 
 async def main():
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless=new")
+    # options.add_argument("--headless=new")
     async with webdriver.Chrome(options=options) as driver:
         await driver.get("https://nopecha.com/demo/turnstile")
         await asyncio.sleep(0.5)
@@ -24,23 +24,28 @@ async def main():
         iframes = await driver.find_elements(By.TAG_NAME, "iframe")
         await asyncio.sleep(0.5)
         targets = await driver.get_targets_for_iframes(iframes)
+
+        target = None
         for target in targets:
             # filter out correct iframe target
             text = None
             try:
-                elem = await target.find_element(By.CSS_SELECTOR, "body > div")
+                elem = await target.find_element(By.CSS_SELECTOR, "body > div.overlay")
                 text = await elem.text
             except NoSuchElementException:
                 pass
             finally:
                 if text:  # 'Only a test.' text
                     break
+        if not target:
+            raise Exception("correct target for iframe not found")
 
         src = await driver.page_source
         checkbox = await target.find_element(By.CSS_SELECTOR, "#challenge-stage > div > label > input[type=checkbox]", timeout=20)
         await checkbox.click(move_to=True)
         await asyncio.sleep(10)
-        await driver.save_screenshot("turstile_captcha.png")
+        print("saving screenshot")
+        await driver.save_screenshot("turnstile_captcha.png")
 
 
 asyncio.run(main())

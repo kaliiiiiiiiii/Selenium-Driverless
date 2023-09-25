@@ -3,7 +3,6 @@ import time
 import inspect
 import numpy as np
 
-from selenium_driverless.types.webelement import WebElement
 from selenium_driverless.scripts.geometry import gen_combined_path, pos_at_time, bias_0_dot_5
 
 
@@ -195,6 +194,7 @@ class Pointer:
 
     async def click(self, x_or_elem: float, y: float or None = None, move_to: bool = True,
                     move_kwargs: dict or None = None, click_kwargs: dict or None = None):
+        from selenium_driverless.types.webelement import WebElement
         if click_kwargs is None:
             click_kwargs = dict()
         if move_kwargs is None:
@@ -210,6 +210,7 @@ class Pointer:
 
     async def move_to(self, x_or_elem: int, y: int or None = None, total_time: float = 0.5, accel: float = 2,
                       mid_time: float = None, smooth_soft=20, **kwargs):
+        from selenium_driverless.types.webelement import WebElement
         if not self.location == [x_or_elem, y]:
             if isinstance(x_or_elem, WebElement):
                 x, y = await x_or_elem.mid_location()

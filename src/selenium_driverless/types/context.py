@@ -195,8 +195,8 @@ class Context:
         return target.pointer
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                                 max_depth: int = None, timeout: int = 2, obj_id=None,
-                                 target_id: str = None, execution_context_id: str = None, unique_context: bool = False):
+                                 max_depth: int = None, timeout: int = 2, target_id: str = None,
+                                 execution_context_id: str = None, unique_context: bool = False):
         """
         example:
         script= "function(...arguments){obj.click()}"
@@ -206,21 +206,18 @@ class Context:
         target = await self.get_target(target_id)
         return await target.execute_raw_script(script, *args, await_res=await_res,
                                                serialization=serialization, max_depth=max_depth,
-                                               timeout=timeout, obj_id=obj_id,
-                                               execution_context_id=execution_context_id,
+                                               timeout=timeout, execution_context_id=execution_context_id,
                                                unique_context=unique_context)
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: int = None, obj_id=None,
-                             target_id: str = None, execution_context_id: str = None,
+                             timeout: int = None, target_id: str = None, execution_context_id: str = None,
                              unique_context: bool = False):
         """
         exaple: script = "return obj.click()"
         """
         target = await self.get_target(target_id)
         return await target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
-                                           timeout=timeout, obj_id=obj_id,
-                                           execution_context_id=execution_context_id,
+                                           timeout=timeout, execution_context_id=execution_context_id,
                                            unique_context=unique_context)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
@@ -229,7 +226,7 @@ class Context:
                                    unique_context: bool = False):
         target = await self.get_target(target_id)
         return await target.execute_async_script(script, *args, max_depth=max_depth, serialization=serialization,
-                                                 timeout=timeout, obj_id=obj_id,
+                                                 timeout=timeout,
                                                  execution_context_id=execution_context_id,
                                                  unique_context=unique_context)
 
@@ -503,7 +500,8 @@ class Context:
         await asyncio.sleep(time_to_wait)
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, parent=None, target_id: str = None, timeout: int or None = None) -> WebElement:
+    async def find_element(self, by: str, value: str, parent=None, target_id: str = None,
+                           timeout: int or None = None) -> WebElement:
         target = await self.get_target(target_id=target_id)
         return await target.find_element(by=by, value=value, parent=parent, timeout=timeout)
 

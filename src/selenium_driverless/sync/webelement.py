@@ -1,24 +1,24 @@
 import asyncio
 import inspect
 
-from selenium_driverless.types.webelement import WebElement as AsyncWebElement, RemoteObject
+from selenium_driverless.types.webelement import WebElement as AsyncWebElement
 
 
 class WebElement(AsyncWebElement):
-    def __init__(self, target, loop=None, js: str = None, obj_id=None, node_id=None, check_existence=True,
-                 context_id: int = None, unique_context: bool = True, class_name:str=None, backend_node_id:str=None):
+    def __init__(self, target, obj_id=None,
+                 node_id=None, backend_node_id: str = None, loop=None, class_name: str = None,
+                 context_id: int = None):
         if not loop:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
         self._loop = loop
-        super().__init__(target=target, js=js, obj_id=obj_id, node_id=node_id,
-                         check_existence=check_existence, loop=self._loop, context_id=context_id,
-                         unique_context=unique_context, class_name=class_name, backend_node_id=backend_node_id)
+        super().__init__(target=target, obj_id=obj_id, node_id=node_id, loop=self._loop, context_id=context_id,
+                         class_name=class_name, backend_node_id=backend_node_id)
         self.__enter__()
 
     @property
     async def node_id(self):
-        if not self._obj_id:
+        if not self.__obj_id__:
             await self.obj_id
             return self._node_id
         self._node_id = None
@@ -33,12 +33,6 @@ class WebElement(AsyncWebElement):
 
     def __exit__(self, *args, **kwargs):
         self.__aexit__(*args, **kwargs)
-
-    # noinspection PyProtectedMember
-    def __eq__(self, other):
-        if isinstance(other, RemoteObject):
-            return self._obj_id == other._obj_id
-        return False
 
     def __getattribute__(self, item):
         res = super().__getattribute__(item)
