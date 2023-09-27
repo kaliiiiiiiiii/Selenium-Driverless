@@ -6,6 +6,11 @@ import numpy as np
 from selenium_driverless.scripts.geometry import gen_combined_path, pos_at_time, bias_0_dot_5
 
 
+def make_rand_click_timeout():
+    return 0.125 + (bias_0_dot_5(0.5, 0.5) - 0.5) / 10
+    # => should be about 130ms +/-50
+
+
 class Modifiers:
     NONE = 0
     ALT = 1
@@ -129,12 +134,16 @@ class BasePointer:
         event = PointerEvent(type_=EventType.RELEASE, **kwargs)
         await self.dispatch(event)
 
-    async def click(self, x: float, y: float, timeout: float = 0.25, **kwargs):
+    async def click(self, x: float, y: float, timeout: float = None, **kwargs):
+        if not timeout:
+            timeout = make_rand_click_timeout()
         await self.down(click_count=1, x=x, y=y, **kwargs)
         await asyncio.sleep(timeout)
         await self.up(click_count=1, x=x, y=y, **kwargs)
 
-    async def doubble_click(self, x: float, y: float, timeout: float = 0.25, **kwargs):
+    async def doubble_click(self, x: float, y: float, timeout: float = None, **kwargs):
+        if not timeout:
+            timeout = make_rand_click_timeout()
         await self.click(timeout=timeout, x=x, y=y, **kwargs)
         await asyncio.sleep(timeout)
         await self.down(click_count=2, x=x, y=y, **kwargs)
@@ -191,6 +200,12 @@ class Pointer:
         self.base = BasePointer(driver=target, pointer_type=pointer_type)
         self.location = [100, 0]
         self._loop = None
+
+    async def down(self, **kwargs):
+        await self.base.down(**kwargs)
+
+    async def up(self, **kwargs):
+        await self.base.down(**kwargs)
 
     async def click(self, x_or_elem: float, y: float or None = None, move_to: bool = True,
                     move_kwargs: dict or None = None, click_kwargs: dict or None = None):

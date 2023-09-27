@@ -294,7 +294,7 @@ class WebElement(JSRemoteObj):
     async def focus(self):
         return await self.__target__.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
 
-    async def click(self, timeout: float = 0.25, bias: float = 5, resolution: int = 50, debug: bool = False,
+    async def click(self, timeout: float = None, bias: float = 5, resolution: int = 50, debug: bool = False,
                     scroll_to=True, move_to: bool = True) -> None:
         """Clicks the element."""
         if scroll_to:

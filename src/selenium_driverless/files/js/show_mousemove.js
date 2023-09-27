@@ -10,6 +10,9 @@ function highest_z_idx() {
   });
   return highestZIndex
 }
+function round_2(num){
+    return Math.round((num + Number.EPSILON) * 100) / 100
+}
 
 z_idx = highest_z_idx()
 
@@ -46,7 +49,7 @@ tab.style.fontSize = "14px";
 tab.style.fontWeight = "bold";
 tab.style.zIndex = String(z_idx+3);
 tab.style.opacity = "0.8"; // Set opacity to make it slightly transparent
-tab.textContent = "Average Frequency: 0.00 Hz, count:0, x:0, y:0";
+tab.textContent = "average ClickDeltaTime: 0.00ms +/-0.00,Average Frequency: 0.00 Hz, count:0, x:0, y:0";
 
 // graph canvas
 const graphCanvas = document.createElement("canvas");
@@ -66,6 +69,12 @@ let lastEventTime = 0;
 let timeSinceClear = 0; // Track time since last clear
 let timeDeltaData = [];
 
+// event listener for mouseup//mousedown delta time
+let mousedownTime = 0;
+let clickdeltaTimes = [];
+let averageClickDeltaTime = 0;
+click_delta_max_diff = 0
+
 
 function plot_point(x, y, color = "red", radius = "2", opacity = 0.5) {
   ctx.fillStyle = color;
@@ -81,7 +90,11 @@ function clear(){
   lastEventTime = 0;
   timeSinceClear = 0;
   timeDeltaData = [];
-  tab.textContent = "Average Frequency: 0.00 Hz, count:0, x:0, y:0";
+  let mousedownTime = 0;
+  let clickdeltaTimes = [];
+  let averageClickDeltaTime = 0;
+  click_delta_max_diff = 0
+  tab.textContent = "average ClickDeltaTime: 0.00ms +/-0.00, Average Frequency: 0.00 Hz, count:0, x:0, y:0";
 };
 
 // Update canvas dimensions on window resize
@@ -178,8 +191,7 @@ function move_handler(event){
       const averageDelta = timeDeltaData.length === 0 ? 0 : timeDeltaData.reduce((sum, value) => sum + value) / timeDeltaData.length;
       const frequency = averageDelta === 0 ? 0 : 1000 / averageDelta; // Calculate frequency in Hz
 
-      tab.textContent = `Average Frequency: ${frequency.toFixed(2)} Hz, count:${timeDeltaData.length}, x:${x}, y:${y}`;
-
+      tab.textContent = `average ClickDeltaTime: ${averageClickDeltaTime}ms +/-${click_delta_max_diff}, Average Frequency: ${frequency.toFixed(2)} Hz, count:${timeDeltaData.length}, x:${x}, y:${y}`;
       // Draw the time-delta graph
       drawTimeDeltaGraph();
     }
@@ -193,11 +205,23 @@ function click_handler(e){
   plot_point(e.x, e.y, "green", 5);
 };
 
+function mouseup_handler(){
+  const mouseupTime = Date.now();
+  const deltaTime = mouseupTime - mousedownTime;
+
+  // Push delta time to the array
+  clickdeltaTimes.push(deltaTime);
+  delta_average = clickdeltaTimes.reduce((sum, time) => sum + time, 0) / clickdeltaTimes.length;
+  click_delta_max_diff = round_2(((Math.max(...clickdeltaTimes)-delta_average)+(delta_average-Math.min(...clickdeltaTimes)))/2)
+  averageClickDeltaTime = round_2(delta_average)
+}
+
 
 document.body.appendChild(canvas);
 document.body.appendChild(graphCanvas);
 document.addEventListener("mousemove", move_handler);
 document.addEventListener("click",click_handler);
+document.addEventListener("mousedown", (e) => {mousedownTime = Date.now();});
 
 document.body.appendChild(tab);
 window.addEventListener("resize", updateCanvasDimensions);
@@ -206,3 +230,4 @@ document.body.appendChild(clearButton);
 clearButton.addEventListener("click", clear);
 
 updateCanvasDimensions(); // Initialize canvas dimensions
+document.addEventListener("mouseup", mouseup_handler)
