@@ -8,7 +8,7 @@
 * multiple tabs simultanously
 * multiple Incognito-contexts with individual proxy & cookies
 * async (`asyncio`) and sync (experimantal) support
-* proxy-auth support (experimental, [examle-code]())
+* proxy-auth support (experimental, [examle-code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
 
 ### Feel free to test my code!
 See [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/dev) for the latest implementations.
