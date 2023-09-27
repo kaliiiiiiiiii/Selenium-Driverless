@@ -38,12 +38,11 @@ class JSRemoteObj:
         if self.__obj_id__:
             return int(self.__obj_id__.split(".")[1])
 
-    def __obj_id_for_context__(self, context_id: int):
+    def __obj_id_for_context__(self, context_id: int = None):
         if self.__obj_id__:
-            obj_id: list = self.__obj_id__.split(".")
-            obj_id[1] = str(context_id)
-            obj_id[2] = "1"  # first item seems to be most reliable
-            return ".".join(obj_id)
+            if context_id != self.__context_id__:
+                return None
+            return self.__obj_id__
 
     async def __exec_raw__(self, script: str, *args, await_res: bool = False, serialization: str = None,
                            max_depth: int = None, timeout: float = 2, execution_context_id: str = None,
@@ -79,6 +78,7 @@ class JSRemoteObj:
 
         _args = []
         for arg in args:
+            is_value: bool = True
 
             if isinstance(arg, JSRemoteObj):
                 if isinstance(arg, WebElement):
@@ -88,11 +88,10 @@ class JSRemoteObj:
                     obj_id = arg.__obj_id_for_context__(exec_context)
 
                 if obj_id:
+                    is_value = False
                     _args.append({"objectId": obj_id})
-                else:
-                    raise ValueError(f"Got non.serializable JSRemoteObject:{arg}")
 
-            else:
+            if is_value:
                 _args.append({"value": arg})
 
         ser_opts = {"serialization": serialization, "maxDepth": max_depth,
@@ -283,7 +282,8 @@ class JSMap(dict, JSRemoteObj):
     # from https://stackoverflow.com/a/71705517
     # modified by kaliiiiiiiiii
 
-    def __init__(self, *args):
+    def __init__(self, *args, obj_id, target):
+        JSRemoteObj.__init__(self, obj_id, target)
         values = [self.__create_element(key, value) for key, value in args]
         self.__values__ = values
         super().__init__()
@@ -521,7 +521,7 @@ async def parse_deep(deep: dict, target, subtype: str = None, class_name: str = 
     elif _type == "function":
         return JSFunction(obj_id=obj_id, target=target, description=description)
     elif _type == "map":
-        _map = JSMap()
+        _map = JSMap(obj_id=obj_id, target=target)
         for key, value in _value:
             key = await parse_deep(key, target)
             _map.set(key, await parse_deep(value, target))
