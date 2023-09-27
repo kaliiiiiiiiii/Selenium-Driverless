@@ -142,6 +142,11 @@ class Target:
             await self.add_cdp_listener("Page.javascriptDialogClosed", remove_alert)
             await self.add_cdp_listener("Page.loadEventFired", self._on_loaded)
             self.socket.on_closed.extend(self._on_closed)
+            try:
+                await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
+            except CDPError as e:
+                if not (e.code == -32601 and e.message == "'Emulation.setFocusEmulationEnabled' wasn't found"):
+                    raise e
         return self
 
     @property

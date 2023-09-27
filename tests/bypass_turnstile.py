@@ -43,7 +43,7 @@ async def main():
         src = await driver.page_source
         checkbox = await target.find_element(By.CSS_SELECTOR, "#challenge-stage > div > label > input[type=checkbox]", timeout=20)
         await checkbox.click(move_to=True)
-        await asyncio.sleep(10)
+        await asyncio.sleep(5)
         print("saving screenshot")
         await driver.save_screenshot("turnstile_captcha.png")
 
