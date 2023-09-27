@@ -316,7 +316,8 @@ class Chrome:
         return target.pointer
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                                 max_depth: int = None, timeout: int = 2, target_id: str = None, execution_context_id: str = None, unique_context: bool = False):
+                                 max_depth: int = None, timeout: int = 2, target_id: str = None,
+                                 execution_context_id: str = None, unique_context: bool = False):
         """
         example:
         script= "function(...arguments){obj.click()}"
@@ -392,7 +393,7 @@ class Chrome:
         target = await self.get_target(target_id)
         await target.focus()
 
-    async def quit(self, timeout: float = 30) -> None:
+    async def quit(self, timeout: float = 30, clean_dirs: bool = True) -> None:
         """Quits the target and closes every associated window.
 
         :Usage:
@@ -401,7 +402,7 @@ class Chrome:
                 target.quit()
         """
 
-        def clean_dirs(dirs: typing.List[str]):
+        def clean_dirs_sync(dirs: typing.List[str]):
             for _dir in dirs:
                 while os.path.isdir(_dir):
                     shutil.rmtree(_dir, ignore_errors=True)
@@ -418,7 +419,7 @@ class Chrome:
             traceback.print_exc()
 
         if not self._is_remote:
-            # noinspection PyBroadException,PyUnusedLocal
+            # noinspection PyBroadException
             try:
                 # wait for process to be killed
                 while True:
@@ -428,16 +429,16 @@ class Chrome:
                         break
                     await asyncio.sleep(0.1)
                     check_timeout(start, timeout)
-                loop = asyncio.get_running_loop()
-                await asyncio.wait_for(
-                    # wait for
-                    loop.run_in_executor(None,
-                                         lambda: clean_dirs([self._temp_dir, self._options.user_data_dir])),
-                    timeout=timeout - (time.monotonic() - start))
-            except Exception as e:
+            except Exception:
                 traceback.print_exc()
             finally:
-                pass
+                if clean_dirs:
+                    loop = asyncio.get_running_loop()
+                    await asyncio.wait_for(
+                        # wait for
+                        loop.run_in_executor(None,
+                                             lambda: clean_dirs_sync([self._temp_dir, self._options.user_data_dir])),
+                        timeout=timeout - (time.monotonic() - start))
 
     @property
     async def current_target_info(self):
@@ -622,7 +623,8 @@ class Chrome:
         await asyncio.sleep(time_to_wait)
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, parent=None, target_id: str = None, timeout: int or None = None) -> WebElement:
+    async def find_element(self, by: str, value: str, parent=None, target_id: str = None,
+                           timeout: int or None = None) -> WebElement:
         target = await self.get_target(target_id=target_id)
         return await target.find_element(by=by, value=value, parent=parent, timeout=timeout)
 
