@@ -11,7 +11,7 @@ loop = asyncio.get_event_loop()
 async def make_driver():
     options = webdriver.ChromeOptions()
     # options.add_argument("--headless=True")
-    return await webdriver.Chrome(options)
+    return await webdriver.Chrome(options, debug=True)
 
 
 async def nowsecure(driver):
