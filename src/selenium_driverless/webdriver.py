@@ -26,6 +26,7 @@ import time
 import traceback
 import typing
 import warnings
+import signal
 from contextlib import asynccontextmanager
 from importlib import import_module
 from typing import List
@@ -56,7 +57,6 @@ from selenium_driverless.sync.base_target import BaseTarget as SyncBaseTarget
 
 # others
 from cdp_socket.utils.conn import get_json
-from selenium_driverless.utils.utils import check_timeout
 from selenium_driverless.types.options import Options as ChromeOptions
 
 
@@ -75,6 +75,7 @@ class Chrome:
          - options - this takes an instance of ChromeOptions
         """
 
+        self._process = None
         self._current_target = None
         self._host = None
         self._timeout = timeout
@@ -126,7 +127,7 @@ class Chrome:
          - capabilities - a capabilities dict to start the session with.
         """
         if not self._started:
-            from selenium_driverless.utils.utils import IS_POSIX, read
+            from selenium_driverless.utils.utils import read
 
             if not self._options.debugger_address:
                 from selenium_driverless.utils.utils import random_port
@@ -142,13 +143,16 @@ class Chrome:
             if not self._is_remote:
                 path = options.binary_location
                 args = options.arguments
-                browser = subprocess.Popen(
+                self._process = subprocess.Popen(
                     [path, *args],
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    close_fds=IS_POSIX,
-                    shell=False
+                    stderr=subprocess.STDOUT,
+                    close_fds=True,
+                    preexec_fn=os.setsid if os.name == 'posix' else None,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0,
+                    shell=False,
+                    text=True
                 )
 
                 host, port = self._options.debugger_address.split(":")
@@ -172,7 +176,7 @@ class Chrome:
 
             if not self._is_remote:
                 # noinspection PyUnboundLocalVariable
-                self.browser_pid = browser.pid
+                self.browser_pid = self._process.pid
             targets = await get_json(self._host, timeout=self._timeout)
             for target in targets:
                 if target["type"] == "page":
@@ -401,44 +405,53 @@ class Chrome:
 
                 target.quit()
         """
-
         def clean_dirs_sync(dirs: typing.List[str]):
             for _dir in dirs:
                 while os.path.isdir(_dir):
                     shutil.rmtree(_dir, ignore_errors=True)
-
-        start = time.monotonic()
-        # noinspection PyUnresolvedReferences,PyBroadException
-        try:
-            await self.base_target.execute_cdp_cmd("Browser.close")
-        except websockets.exceptions.ConnectionClosedError:
-            pass
-        except Exception:
-            import sys
-            print('Ignoring exception at self.base_target.execute_cdp_cmd("Browser.close")', file=sys.stderr)
-            traceback.print_exc()
-
-        if not self._is_remote:
-            # noinspection PyBroadException
+        if self._started:
+            start = time.monotonic()
+            # noinspection PyUnresolvedReferences,PyBroadException
             try:
-                # wait for process to be killed
-                while True:
-                    try:
-                        os.kill(self.browser_pid, 15)
-                    except OSError:
-                        break
-                    await asyncio.sleep(0.1)
-                    check_timeout(start, timeout)
+                await self.base_target.execute_cdp_cmd("Browser.close")
+            except websockets.exceptions.ConnectionClosedError:
+                pass
             except Exception:
+                import sys
+                print('Ignoring exception at self.base_target.execute_cdp_cmd("Browser.close")', file=sys.stderr)
                 traceback.print_exc()
-            finally:
-                if clean_dirs:
-                    loop = asyncio.get_running_loop()
-                    await asyncio.wait_for(
-                        # wait for
-                        loop.run_in_executor(None,
-                                             lambda: clean_dirs_sync([self._temp_dir, self._options.user_data_dir])),
-                        timeout=timeout - (time.monotonic() - start))
+
+            if not self._is_remote:
+                loop = asyncio.get_running_loop()
+                # noinspection PyBroadException
+                try:
+                    # wait for process to be killed
+                    if self._process is not None:
+                        if os.name == 'posix':
+                            os.killpg(os.getpgid(self._process.pid), signal.SIGTERM)
+                        else:
+                            self._process.terminate()
+                        try:
+                            await loop.run_in_executor(None, lambda: self._process.wait(timeout))
+                        except subprocess.TimeoutExpired:
+                            if os.name == 'posix':
+                                os.killpg(os.getpgid(self._process.pid), signal.SIGKILL)
+                            else:
+                                self._process.kill()
+                except Exception:
+                    traceback.print_exc()
+                finally:
+                    self._started = False
+                    if clean_dirs:
+                        await asyncio.wait_for(
+                            # wait for
+                            loop.run_in_executor(None,
+                                                 lambda: clean_dirs_sync([self._temp_dir, self._options.user_data_dir])),
+                            timeout=timeout - (time.monotonic() - start))
+
+    def __del__(self):
+        if self._started:
+            warnings.warn("driver hasn't quit correctly, files might be left in your temp folder & chrome might still be running")
 
     @property
     async def current_target_info(self):
