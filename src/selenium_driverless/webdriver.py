@@ -21,6 +21,7 @@
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 import traceback
@@ -66,13 +67,16 @@ class Chrome:
     def __init__(
             self,
             options: ChromeOptions = None,
-            timeout: float = 30
+            timeout: float = 30,
+            debug: bool = False
     ) -> None:
         """Creates a new instance of the chrome target. Starts the service and
         then creates new instance of chrome target.
 
         :Args:
          - options - this takes an instance of ChromeOptions
+         - timeout - timeout in seconds to start chrome
+         - debug - for debugging Google-Chrome error messages and other debugging stuff lol
         """
 
         self._process = None
@@ -82,6 +86,7 @@ class Chrome:
         self._loop: asyncio.AbstractEventLoop or None = None
         self.browser_pid: int or None = None
         self._base_target = None
+        self._debug = debug
         # noinspection PyTypeChecker
         self._current_context: Context = None
         self._contexts: typing.Dict[str, Context] = {}
@@ -143,11 +148,15 @@ class Chrome:
             if not self._is_remote:
                 path = options.binary_location
                 args = options.arguments
+                if self._debug:
+                    stderr = sys.stderr
+                else:
+                    stderr = subprocess.PIPE
                 self._process = subprocess.Popen(
                     [path, *args],
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
+                    stderr=stderr,
                     close_fds=True,
                     preexec_fn=os.setsid if os.name == 'posix' else None,
                     creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0,
@@ -405,10 +414,12 @@ class Chrome:
 
                 target.quit()
         """
+
         def clean_dirs_sync(dirs: typing.List[str]):
             for _dir in dirs:
                 while os.path.isdir(_dir):
                     shutil.rmtree(_dir, ignore_errors=True)
+
         if self._started:
             start = time.monotonic()
             # noinspection PyUnresolvedReferences,PyBroadException
@@ -446,12 +457,14 @@ class Chrome:
                         await asyncio.wait_for(
                             # wait for
                             loop.run_in_executor(None,
-                                                 lambda: clean_dirs_sync([self._temp_dir, self._options.user_data_dir])),
+                                                 lambda: clean_dirs_sync(
+                                                     [self._temp_dir, self._options.user_data_dir])),
                             timeout=timeout - (time.monotonic() - start))
 
     def __del__(self):
         if self._started:
-            warnings.warn("driver hasn't quit correctly, files might be left in your temp folder & chrome might still be running")
+            warnings.warn(
+                "driver hasn't quit correctly, files might be left in your temp folder & chrome might still be running")
 
     @property
     async def current_target_info(self):
