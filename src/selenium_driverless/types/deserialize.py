@@ -90,6 +90,8 @@ class JSRemoteObj:
                 if obj_id:
                     is_value = False
                     _args.append({"objectId": obj_id})
+                else:
+                    warnings.warn("Can't find remote reference of JSRemoteObj, trying to serialize")
 
             if is_value:
                 _args.append({"value": arg})

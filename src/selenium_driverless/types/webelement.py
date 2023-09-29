@@ -43,8 +43,13 @@ class ElementNotVisible(Exception):
 
 
 class ElementNotInteractable(Exception):
+    def __init__(self, x: float, y: float, _type: str = "interactable"):
+        super().__init__(f"element not {_type} at x:{x}, y:{y}, it might be hidden under another one")
+
+
+class ElementNotClickable(ElementNotInteractable):
     def __init__(self, x: float, y: float):
-        super().__init__(f"element not interactable at x:{x}, y:{y}, it might be hidden under another one")
+        super().__init__(y, y, _type="clickable")
 
 
 # noinspection PyProtectedMember
@@ -146,24 +151,25 @@ class WebElement(JSRemoteObj):
 
     @property
     async def content_document(self):
-        res = await self._describe()
-        document = res.get("contentDocument")
-        if document:
-            # iframe directly accessible
-            if not self._loop:
-                return await WebElement(node_id=document["nodeId"],
-                                        backend_node_id=document["backendNodeId"], target=self.__target__,
-                                        loop=self._loop, class_name="HTMLDocument")
+        _type = await self.tag_name
+        if _type == "iframe":
+            res = await self._describe()
+            document = res.get("contentDocument")
+            if document:
+                # iframe directly accessible
+                if not self._loop:
+                    return await WebElement(node_id=document["nodeId"], backend_node_id=document["backendNodeId"], target=self.__target__,
+                                            loop=self._loop, class_name="HTMLDocument")
+                else:
+                    from selenium_driverless.sync.webelement import WebElement as SyncWebElement
+                    return await SyncWebElement(node_id=document["nodeId"],
+                                                backend_node_id=document["backendNodeId"], target=self.__target__,
+                                                loop=self._loop, class_name='HTMLDocument')
             else:
-                from selenium_driverless.sync.webelement import WebElement as SyncWebElement
-                return await SyncWebElement(node_id=document["nodeId"],
-                                            backend_node_id=document["backendNodeId"], target=self.__target__,
-                                            loop=self._loop, class_name='HTMLDocument')
-        else:
-            # iframe acessible over another target
-            target = await self.__target__.get_targets_for_iframes([self], _warn=False)
-            if target:
-                return await target[0]._document_elem
+                # iframe acessible over another target
+                target = await self.__target__.get_targets_for_iframes([self], _warn=False)
+                if target:
+                    return await target[0]._document_elem
 
     @property
     async def document_url(self):
@@ -261,6 +267,11 @@ class WebElement(JSRemoteObj):
 
         return res
 
+    async def get_listeners(self, depth: int = 3):
+        res = await self.__target__.execute_cdp_cmd(
+            "DOMDebugger.getEventListeners", {"objectId": await self.obj_id, "depth": depth, "pierce": True})
+        return res['listeners']
+
     @property
     async def source(self):
         obj_id = await self.obj_id
@@ -333,34 +344,24 @@ class WebElement(JSRemoteObj):
         return await self.__target__.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
 
     async def click(self, timeout: float = None, bias: float = 5, resolution: int = 50, debug: bool = False,
-                    scroll_to=True, move_to: bool = True) -> None:
+                    scroll_to=True, move_to: bool = True, listener_depth: int = 3) -> None:
         """Clicks the element."""
         if scroll_to:
             await self.scroll_to()
 
-        while True:
-            try:
-                x, y = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
+        is_clickable: bool = listener_depth is None
+        if not is_clickable:
+            for listener in await self.get_listeners(depth=listener_depth):
+                _type = listener["type"]
+                if _type in ["click", "mousedown", "mouseup"]:
+                    is_clickable = True
+                    break
 
-                # ensure element is at location
-                res = await self.__target__.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
-                                                                                       "includeUserAgentShadowDOM": True,
-                                                                                       "ignorePointerEventsNone": True})
-                node_id_at = res["nodeId"]
-                res = await self.__target__.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
-                obj_id_at = res["object"]["objectId"]
-                this_obj_id = await self.obj_id
+        x, y = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
+        if not is_clickable:
+            raise ElementNotClickable(x, y)
 
-                if obj_id_at.split(".")[0] != this_obj_id.split(".")[0]:
-                    raise ElementNotInteractable(x, y)
-
-                await self.__target__.pointer.click(x, y=y, click_kwargs={"timeout": timeout}, move_to=move_to)
-                break
-            except CDPError as e:
-                # element partially within viewport, point outside viewport
-                # todo: make sure point is within viewport at def mid_location
-                if not (e.code == -32000 and e.message == 'No node found at given location'):
-                    raise e
+        await self.__target__.pointer.click(x, y=y, click_kwargs={"timeout": timeout}, move_to=move_to)
 
     async def write(self, text: str):
         await self.focus()
