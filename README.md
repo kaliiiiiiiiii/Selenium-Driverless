@@ -275,11 +275,12 @@ Note: **please check the todo's below at first!**
 - implementations
   - [x] `WebElement`s
     - [ ] improve `mid_location` calculation
+    - [ ] add `WebElement.screenshot`
   - [x] `Input`
       - [x] `Mouse`
         - [x] `mousemove`
         - [x] `click`
-        - [] `scroll`
+        - [ ] `scroll`
         - [ ] `drag&drop`
       - [x] `write`
       - [ ] `Touch`
