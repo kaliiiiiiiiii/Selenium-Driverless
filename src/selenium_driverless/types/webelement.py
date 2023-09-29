@@ -49,7 +49,7 @@ class ElementNotInteractable(Exception):
 
 class ElementNotClickable(ElementNotInteractable):
     def __init__(self, x: float, y: float):
-        super().__init__(y, y, _type="clickable")
+        super().__init__(x, y, _type="clickable")
 
 
 # noinspection PyProtectedMember
