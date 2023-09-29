@@ -23,25 +23,25 @@ async def main():
 
         iframes = await driver.find_elements(By.TAG_NAME, "iframe")
         await asyncio.sleep(0.5)
-        targets = await driver.get_targets_for_iframes(iframes)
 
-        target = None
-        for target in targets:
-            # filter out correct iframe target
+        iframe_document = None
+        for iframe in iframes:
+            # filter out correct iframe document
+            iframe_document = await iframe.content_document
             text = None
             try:
-                elem = await target.find_element(By.CSS_SELECTOR, "body > div.overlay")
+                elem = await iframe_document.find_element(By.CSS_SELECTOR, "body > div.overlay")
                 text = await elem.text
             except NoSuchElementException:
                 pass
             finally:
                 if text:  # 'Only a test.' text
                     break
-        if not target:
+        if not iframe_document:
             raise Exception("correct target for iframe not found")
 
         src = await driver.page_source
-        checkbox = await target.find_element(By.CSS_SELECTOR, "#challenge-stage > div > label > input[type=checkbox]", timeout=20)
+        checkbox = await iframe_document.find_element(By.CSS_SELECTOR, "#challenge-stage > div > label > input[type=checkbox]", timeout=20)
         await checkbox.click(move_to=True)
         await asyncio.sleep(5)
         print("saving screenshot")

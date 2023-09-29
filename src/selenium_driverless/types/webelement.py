@@ -73,6 +73,7 @@ class WebElement(JSRemoteObj):
         self._started = False
         self.___context_id__ = context_id
         self._obj_ids = {}
+        self._frame_id = None
         if obj_id and context_id:
             self._obj_ids[context_id] = obj_id
         self.___obj_id__ = None
@@ -113,11 +114,14 @@ class WebElement(JSRemoteObj):
             if context_id:
                 args["executionContextId"] = context_id
             res = await self.__target__.execute_cdp_cmd("DOM.resolveNode", args)
-            obj_id = res["object"]["objectId"]
-            if self.__context_id__ == context_id:
-                self.___obj_id__ = obj_id
-            self._obj_ids[context_id] = obj_id
-            self._class_name = res["object"]["className"]
+            obj_id = res["object"].get("objectId")
+            if obj_id:
+                if self.__context_id__ == context_id:
+                    self.___obj_id__ = obj_id
+                self._obj_ids[context_id] = obj_id
+            class_name = res["object"].get("className")
+            if class_name:
+                self._class_name = class_name
         return self._obj_ids.get(context_id)
 
     @property
@@ -133,6 +137,38 @@ class WebElement(JSRemoteObj):
             node = await self.__target__.execute_cdp_cmd("DOM.requestNode", {"objectId": await self.obj_id})
             self._node_id = node["nodeId"]
         return self._node_id
+
+    @property
+    async def frame_id(self):
+        if not self._frame_id:
+            await self._describe()
+        return self._frame_id
+
+    @property
+    async def content_document(self):
+        res = await self._describe()
+        document = res.get("contentDocument")
+        if document:
+            # iframe directly accessible
+            if not self._loop:
+                return await WebElement(node_id=document["nodeId"],
+                                        backend_node_id=document["backendNodeId"], target=self.__target__,
+                                        loop=self._loop, class_name="HTMLDocument")
+            else:
+                from selenium_driverless.sync.webelement import WebElement as SyncWebElement
+                return await SyncWebElement(node_id=document["nodeId"],
+                                            backend_node_id=document["backendNodeId"], target=self.__target__,
+                                            loop=self._loop, class_name='HTMLDocument')
+        else:
+            # iframe acessible over another target
+            target = await self.__target__.get_targets_for_iframes([self], _warn=False)
+            if target:
+                return await target[0]._document_elem
+
+    @property
+    async def document_url(self):
+        res = await self._describe()
+        return res.get('documentURL')
 
     @property
     async def backend_node_id(self):
@@ -221,6 +257,8 @@ class WebElement(JSRemoteObj):
         res = res["node"]
         self._backend_node_id = res["backendNodeId"]
         self._node_id = res["nodeId"]
+        self._frame_id = res.get("frameId")
+
         return res
 
     @property
@@ -303,6 +341,19 @@ class WebElement(JSRemoteObj):
         while True:
             try:
                 x, y = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
+
+                # ensure element is at location
+                res = await self.__target__.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
+                                                                                       "includeUserAgentShadowDOM": True,
+                                                                                       "ignorePointerEventsNone": True})
+                node_id_at = res["nodeId"]
+                res = await self.__target__.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
+                obj_id_at = res["object"]["objectId"]
+                this_obj_id = await self.obj_id
+
+                if obj_id_at.split(".")[0] != this_obj_id.split(".")[0]:
+                    raise ElementNotInteractable(x, y)
+
                 await self.__target__.pointer.click(x, y=y, click_kwargs={"timeout": timeout}, move_to=move_to)
                 break
             except CDPError as e:
@@ -371,19 +422,6 @@ class WebElement(JSRemoteObj):
         # noinspection PyUnboundLocalVariable
         x = int(point[0])
         y = int(point[1])
-
-        # ensure element is at location
-        res = await self.__target__.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
-                                                                               "includeUserAgentShadowDOM": True,
-                                                                               "ignorePointerEventsNone": True})
-        node_id_at = res["nodeId"]
-        res = await self.__target__.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
-        obj_id_at = res["object"]["objectId"]
-        this_obj_id = await self.obj_id
-
-        if obj_id_at.split(".")[0] != this_obj_id.split(".")[0]:
-            raise ElementNotInteractable(x, y)
-
         return [x, y]
 
     async def submit(self):
@@ -402,16 +440,20 @@ class WebElement(JSRemoteObj):
         return await self.execute_script(script, unique_context=True)
 
     @property
-    async def dom_attributes(self):
-        res = await self.__target__.execute_cdp_cmd("DOM.getAttributes", {"nodeId": await self.node_id})
-        attr_list = res["attributes"]
-        attributes_dict = defaultdict(lambda: None)
+    async def dom_attributes(self) -> dict:
+        try:
+            res = await self.__target__.execute_cdp_cmd("DOM.getAttributes", {"nodeId": await self.node_id})
+            attr_list = res["attributes"]
+            attributes_dict = defaultdict(lambda: None)
 
-        for i in range(0, len(attr_list), 2):
-            key = attr_list[i]
-            value = attr_list[i + 1]
-            attributes_dict[key] = value
-        return attributes_dict
+            for i in range(0, len(attr_list), 2):
+                key = attr_list[i]
+                value = attr_list[i + 1]
+                attributes_dict[key] = value
+            return attributes_dict
+        except CDPError as e:
+            if not (e.code == -32000 and e.message == 'Node is not an Element'):
+                raise e
 
     async def get_dom_attribute(self, name: str) -> str or None:
         """Gets the given attribute of the element. Unlike
@@ -485,7 +527,7 @@ class WebElement(JSRemoteObj):
           - NoSuchShadowRoot - if no shadow root was attached to element
         """
         # todo: move to CDP
-        return await self.get_property("ShadowRoot")
+        return await self.execute_script("return obj.ShadowRoot()")
 
     # RenderedWebElement Items
     async def is_displayed(self) -> bool:

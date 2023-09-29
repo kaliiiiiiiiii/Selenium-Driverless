@@ -480,7 +480,7 @@ async def parse_deep(deep: dict, target, subtype: str = None, class_name: str = 
     if class_name == 'XPathResult':
         elems = JSNodeList(obj_id=obj_id, target=target, class_name=class_name)
         obj = JSRemoteObj(target=target, obj_id=obj_id)
-        res = await obj.__exec__("console.log(obj);return obj.resultType == 7", serialization="json")
+        res = await obj.__exec__("return obj.resultType == 7", serialization="json")
         if res:
             _len = await obj.__exec__("return obj.snapshotLength", serialization="json")
             for idx in range(_len):

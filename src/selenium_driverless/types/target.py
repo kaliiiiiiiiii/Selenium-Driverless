@@ -166,39 +166,33 @@ class Target:
             alert = await Alert(self, timeout=timeout)
         return alert
 
-    async def get_elem_for_frame(self, frame_id, frame_target, context_id: str = None):
-        await frame_target.execute_cdp_cmd("DOM.enable")
-        # noinspection PyProtectedMember
-        await frame_target._document_elem
-        res = await frame_target.execute_cdp_cmd("DOM.getFrameOwner",
-                                                 {"frameId": frame_id})
-        return await WebElement(target=self, node_id=res['nodeId'], context_id=context_id)
+    async def get_targets_for_iframes(self, iframes: typing.List[WebElement], _warn:bool=True):
+        if _warn:
+            warnings.warn("driver.switch_to.iframe and driver.get_targets_for_iframes is deprecated and will be removed, use Webelement.content_document.find_elements instead", DeprecationWarning)
+        if not iframes:
+            raise ValueError(f"Expected WebElements, but got{iframes}")
 
-    async def get_targets_for_iframes(self, iframes: typing.List[WebElement]):
         async def target_getter(target_id: str, timeout: float = 2):
             return await get_target(target_id=target_id, host=self._host, loop=self._loop, is_remote=self._is_remote,
                                     timeout=timeout)
 
         _targets = await get_targets(cdp_exec=self.execute_cdp_cmd, target_getter=target_getter,
                                      _type="iframe", context_id=self._context_id)
-
-        context_id = iframes[0].__context_id__
         targets = {}
 
         for targetinfo in list(_targets.values()):
             # iterate over iframes
             target = targetinfo.Target
             base_frame = await target.base_frame
-            elem = await self.get_elem_for_frame(frame_id=base_frame["id"], frame_target=self, context_id=context_id)
 
             #  check if iframe element is within iframes to search
             for iframe in iframes:
                 tag_name = await iframe.tag_name
                 if tag_name.upper() != "IFRAME":
                     raise NoSuchIframe(iframe, "element isn't a iframe")
-                await elem.obj_id
                 await iframe.obj_id
-                if elem == iframe:
+                iframe_frame_id = await iframe.frame_id
+                if base_frame["id"] == iframe_frame_id:
                     if await self.type == "iframe":
                         target._parent_target = self
                     else:
