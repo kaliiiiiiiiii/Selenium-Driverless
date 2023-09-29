@@ -232,8 +232,8 @@ await pointer.click(500, 50, move_kwargs=move_kwargs, move_to=True)
 ```python
 iframes = await driver.find_elements(By.TAG_NAME, "iframe")
 await asyncio.sleep(0.5)
-iframe_document = await iframes[0].content_document
-await iframe_document.find_elements(...)
+target = await driver.get_target_for_iframe(iframes[0])
+# target.find_elements(...)
 ```
 
 ### Multiple Contexts
