@@ -40,12 +40,6 @@ class JSRemoteObj:
         if self.__obj_id__:
             return int(self.__obj_id__.split(".")[1])
 
-    def __obj_id_for_context__(self, context_id: int = None):
-        if self.__obj_id__:
-            if context_id != self.__context_id__:
-                return None
-            return self.__obj_id__
-
     @property
     async def __frame_id__(self) -> int:
         return self.___frame_id__
@@ -96,12 +90,14 @@ class JSRemoteObj:
         for arg in args:
             is_value: bool = True
 
+            obj_id = None
             if isinstance(arg, JSRemoteObj):
                 if isinstance(arg, WebElement):
                     await arg.obj_id  # resolve webelement
                     obj_id = await arg.__obj_id_for_context__(exec_context)
                 else:
-                    obj_id = arg.__obj_id_for_context__(exec_context)
+                    if arg.__context_id__ == exec_context:
+                        obj_id = arg.__obj_id__
 
                 if obj_id:
                     is_value = False
@@ -143,8 +139,6 @@ class JSRemoteObj:
         exaple: script = "return elem.click()"
         """
         from selenium_driverless.types.webelement import WebElement
-
-        target = self.__target__
         exec_context = self.__context_id__
         base_obj_id = self.__obj_id__
 
@@ -160,7 +154,7 @@ class JSRemoteObj:
             base_obj_id = await self.__obj_id_for_context__(exec_context)
 
         if exec_context and base_obj_id:
-            obj = JSRemoteObj(obj_id=base_obj_id, target=self,
+            obj = JSRemoteObj(obj_id=base_obj_id, target=self.__target__,
                               isolated_exec_id=self.___isolated_exec_id__,
                               frame_id=await self.__frame_id__)
             args = [obj, *args]
@@ -184,7 +178,6 @@ class JSRemoteObj:
                              unique_context: bool = False):
         from selenium_driverless.types.webelement import WebElement
 
-        target = self.__target__
         exec_context = self.__context_id__
 
         if execution_context_id and unique_context:
@@ -199,7 +192,7 @@ class JSRemoteObj:
             obj_id = await self.__obj_id_for_context__(exec_context)
 
         if exec_context and obj_id:
-            obj = JSRemoteObj(obj_id=obj_id, target=self,
+            obj = JSRemoteObj(obj_id=obj_id, target=self.__target__,
                               isolated_exec_id=await self.___isolated_exec_id__, frame_id=await self.__frame_id__)
             args = [obj, *args]
             script = """

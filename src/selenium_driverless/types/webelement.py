@@ -133,10 +133,7 @@ class WebElement(JSRemoteObj):
         raise exc
 
     async def __obj_id_for_context__(self, context_id: int = None):
-        if not context_id:
-            context_id = await self.context_id
         if not self._obj_ids.get(context_id):
-
             args = {}
             if self._backend_node_id:
                 args["backendNodeId"] = self._backend_node_id
@@ -173,7 +170,7 @@ class WebElement(JSRemoteObj):
         return self._node_id
 
     @property
-    async def __frame_id__(self):
+    async def __frame_id__(self) -> int:
         if not self.___frame_id__:
             await self._describe()
         return self.___frame_id__
@@ -750,7 +747,7 @@ class WebElement(JSRemoteObj):
                                          execution_context_id=execution_context_id)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}("{self.class_name}", obj_id="{self.__obj_id__}", node_id="{self._node_id}", backend_node_id={self._backend_node_id}, context_id={self.__context_id__})'
+        return f'{self.__class__.__name__}("{self.class_name}", obj_id={self.__obj_id__}, node_id="{self._node_id}", backend_node_id={self._backend_node_id}, context_id={self.__context_id__})'
 
     def __eq__(self, other):
         if isinstance(other, WebElement):
