@@ -398,7 +398,8 @@ class WebElement(JSRemoteObj):
 
         is_clickable: bool = listener_depth is None
         if not is_clickable:
-            for listener in await self.get_listeners(depth=listener_depth):
+            listeners = await self.get_listeners(depth=listener_depth)
+            for listener in listeners:
                 _type = listener["type"]
                 if _type in ["click", "mousedown", "mouseup"]:
                     is_clickable = True

@@ -257,7 +257,7 @@ class Target:
     @property
     async def _isolated_context_id(self) -> int:
         doc = await self._document_elem
-        return self._isolated_context_id_
+        return await doc.__isolated_exec_id__
 
     @property
     def pointer(self) -> Pointer:
