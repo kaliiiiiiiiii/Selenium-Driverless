@@ -5,7 +5,7 @@ from selenium_driverless.types.webelement import WebElement as AsyncWebElement
 
 
 class WebElement(AsyncWebElement):
-    def __init__(self, target, obj_id=None,
+    def __init__(self, target, isolated_exec_id:int or None, frame_id:int,obj_id=None,
                  node_id=None, backend_node_id: str = None, loop=None, class_name: str = None,
                  context_id: int = None):
         if not loop:
@@ -13,7 +13,8 @@ class WebElement(AsyncWebElement):
             asyncio.set_event_loop(loop)
         self._loop = loop
         super().__init__(target=target, obj_id=obj_id, node_id=node_id, loop=self._loop, context_id=context_id,
-                         class_name=class_name, backend_node_id=backend_node_id)
+                         class_name=class_name, backend_node_id=backend_node_id,
+                         isolated_exec_id=isolated_exec_id, frame_id=frame_id)
         self.__enter__()
 
     @property

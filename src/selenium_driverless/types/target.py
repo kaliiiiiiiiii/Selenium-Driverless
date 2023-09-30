@@ -166,9 +166,11 @@ class Target:
             alert = await Alert(self, timeout=timeout)
         return alert
 
-    async def get_targets_for_iframes(self, iframes: typing.List[WebElement], _warn:bool=False):
+    async def get_targets_for_iframes(self, iframes: typing.List[WebElement], _warn: bool = False):
         if _warn:
-            warnings.warn("driver.switch_to.iframe and driver.get_targets_for_iframes is deprecated and will be removed, use Webelement.content_document.find_elements instead", DeprecationWarning)
+            warnings.warn(
+                "driver.switch_to.iframe and driver.get_targets_for_iframes is deprecated and will be removed, use Webelement.content_document.find_elements instead",
+                DeprecationWarning)
         if not iframes:
             raise ValueError(f"Expected WebElements, but got{iframes}")
 
@@ -242,7 +244,10 @@ class Target:
             if "exceptionDetails" in res.keys():
                 raise JSEvalException(res["exceptionDetails"])
             obj_id = res["result"]['objectId']
-            obj = JSRemoteObj(obj_id=obj_id, target=self)
+            doc = await self._document_elem
+            # noinspection PyUnresolvedReferences
+            obj = JSRemoteObj(obj_id=obj_id, target=self, isolated_exec_id=doc.___isolated_exec_id__,
+                              frame_id=await doc.__frame_id__)
             if not context_id:
                 context_id = obj.__context_id__
                 self._exec_context_id_ = context_id
@@ -251,12 +256,7 @@ class Target:
 
     @property
     async def _isolated_context_id(self) -> int:
-        if (not self._isolated_context_id_) or self._loop:
-            frame = await self.base_frame
-            res = await self.execute_cdp_cmd("Page.createIsolatedWorld",
-                                             {"frameId": frame["id"], "grantUniveralAccess": True,
-                                              "worldName": "Isolated context with DOM-access, You got here hehe:)"})
-            self._isolated_context_id_ = res["executionContextId"]
+        doc = await self._document_elem
         return self._isolated_context_id_
 
     @property
@@ -510,10 +510,14 @@ class Target:
         if (not self._document_elem_) or self._loop:
             res = await self.execute_cdp_cmd("DOM.getDocument", {"pierce": True})
             node_id = res["root"]["nodeId"]
+            frame = await self.base_frame
+            frame_id = frame["id"]
             if self._loop:
-                self._document_elem_ = await SyncWebElement(target=self, node_id=node_id, loop=self._loop)
+                self._document_elem_ = await SyncWebElement(target=self, node_id=node_id, loop=self._loop,
+                                                            isolated_exec_id=None, frame_id=frame_id)
             else:
-                self._document_elem_ = await WebElement(target=self, node_id=node_id, loop=self._loop)
+                self._document_elem_ = await WebElement(target=self, node_id=node_id, loop=self._loop,
+                                                        isolated_exec_id=None, frame_id=frame_id)
         return self._document_elem_
 
     # noinspection PyUnusedLocal
@@ -536,7 +540,7 @@ class Target:
             await self.execute_cdp_cmd("DOM.enable")
 
         # ensure DOM.getDocument got called
-        await self._document_elem
+        doc = await self._document_elem
 
         elems = []
         res = await self.execute_cdp_cmd("DOM.performSearch",
@@ -550,9 +554,11 @@ class Target:
                                          {"searchId": search_id, "fromIndex": 0, "toIndex": elem_count})
         for node_id in res["nodeIds"]:
             if self._loop:
-                elem = await SyncWebElement(target=self, node_id=node_id, loop=self._loop)
+                elem = await SyncWebElement(target=self, node_id=node_id, loop=self._loop, isolated_exec_id=None,
+                                            frame_id=None)
             else:
-                elem = await WebElement(target=self, node_id=node_id, loop=self._loop)
+                elem = await WebElement(target=self, node_id=node_id, loop=self._loop, isolated_exec_id=None,
+                                        frame_id=None)
             elems.append(elem)
         return elems
 

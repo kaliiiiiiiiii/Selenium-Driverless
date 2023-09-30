@@ -66,9 +66,9 @@ class WebElement(JSRemoteObj):
     instance will fail.
     """
 
-    def __init__(self, target, obj_id=None,
+    def __init__(self, target, frame_id: int, isolated_exec_id: int or None, obj_id=None,
                  node_id=None, backend_node_id: str = None, loop=None, class_name: str = None,
-                 context_id: int = None) -> None:
+                 context_id: int = None, is_iframe: bool = False) -> None:
         self._loop = loop
         if not (obj_id or node_id or backend_node_id):
             raise ValueError("either js, obj_id or node_id need to be specified")
@@ -77,12 +77,13 @@ class WebElement(JSRemoteObj):
         self._class_name = class_name
         self._started = False
         self.___context_id__ = context_id
-        self._obj_ids = {}
-        self._frame_id = None
+        self._obj_ids = {context_id: obj_id}
+        self.___frame_id__ = None
+        self._is_iframe = is_iframe
         if obj_id and context_id:
             self._obj_ids[context_id] = obj_id
         self.___obj_id__ = None
-        super().__init__(target=target, obj_id=obj_id)
+        super().__init__(target=target, frame_id=frame_id, obj_id=obj_id, isolated_exec_id=isolated_exec_id)
 
     def __await__(self):
         return self.__aenter__().__await__()
@@ -91,7 +92,7 @@ class WebElement(JSRemoteObj):
         if not self._started:
             # noinspection PyUnusedLocal
             async def clear_node_ids(data):
-                await self.obj_id
+                self._node_id = None
                 self._node_id = None
                 self._backend_node_id = None
 
@@ -104,18 +105,46 @@ class WebElement(JSRemoteObj):
     async def obj_id(self):
         return await self.__obj_id_for_context__()
 
+    @property
+    async def context_id(self):
+        if not self.___context_id__:
+            await self.obj_id
+        return self.__context_id__
+
+    @property
+    def _args_builder(self) -> dict:
+        if self._node_id:
+            return {"nodeId": self._node_id}
+        elif self.__obj_id__:
+            return {"objectId": self.__obj_id__}
+        elif self._backend_node_id:
+            return {"backendNodeId": self._backend_node_id}
+        else:
+            raise StaleElementReferenceException()
+
+    def _error_handler(self, exc: CDPError):
+        if exc.code == -32000:
+            if exc.message == 'No node found for given backend id':
+                return
+            elif exc.message == 'Cannot find context with specified id':
+                return
+            elif exc.message == 'Could not find object with given id':
+                return
+        raise exc
+
     async def __obj_id_for_context__(self, context_id: int = None):
         if not context_id:
-            context_id = self.__context_id__
+            context_id = await self.context_id
         if not self._obj_ids.get(context_id):
-            args = {}
-            if not (self._node_id or self._backend_node_id):
-                await self.obj_id
 
-            if self._node_id:
-                args["nodeId"] = self._node_id
-            elif self._backend_node_id:
+            args = {}
+            if self._backend_node_id:
                 args["backendNodeId"] = self._backend_node_id
+            elif self._node_id:
+                args["nodeId"] = self._node_id
+            else:
+                return StaleElementReferenceException()
+
             if context_id:
                 args["executionContextId"] = context_id
             res = await self.__target__.execute_cdp_cmd("DOM.resolveNode", args)
@@ -144,32 +173,47 @@ class WebElement(JSRemoteObj):
         return self._node_id
 
     @property
-    async def frame_id(self):
-        if not self._frame_id:
+    async def __frame_id__(self):
+        if not self.___frame_id__:
             await self._describe()
-        return self._frame_id
+        return self.___frame_id__
 
     @property
     async def content_document(self):
-        _type = await self.tag_name
-        if _type == "iframe":
-            res = await self._describe()
-            document = res.get("contentDocument")
-            if document:
-                # iframe directly accessible
-                if not self._loop:
-                    return await WebElement(node_id=document["nodeId"], backend_node_id=document["backendNodeId"], target=self.__target__,
-                                            loop=self._loop, class_name="HTMLDocument")
-                else:
+        """
+        gets the document of the iframe
+        """
+        _desc = await self._describe()
+        if _desc.get("localName") == "iframe":
+            node = _desc.get("contentDocument")
+            if node:
+                frame_id = _desc.get("frameId")
+                if node['documentURL'] == 'about:blank':
+                    # wait for frame to load
+                    if not self.__target__._page_enabled:
+                        await self.__target__.execute_cdp_cmd("Page.enable")
+                    async for data in await self.__target__.get_cdp_event_iter("Page.frameNavigated"):
+                        frame = data["frame"]
+                        if frame["id"] == frame_id:
+                            break
+                    _desc = await self._describe()
+                    node = _desc.get("contentDocument")
+                if self._loop:
                     from selenium_driverless.sync.webelement import WebElement as SyncWebElement
-                    return await SyncWebElement(node_id=document["nodeId"],
-                                                backend_node_id=document["backendNodeId"], target=self.__target__,
-                                                loop=self._loop, class_name='HTMLDocument')
-            else:
-                # iframe acessible over another target
-                target = await self.__target__.get_targets_for_iframes([self], _warn=False)
-                if target:
-                    return await target[0]._document_elem
+                    return await SyncWebElement(backend_node_id=node.get('backendNodeId'),
+                                                target=self.__target__, loop=self._loop,
+                                                class_name='HTMLIFrameElement',
+                                                isolated_exec_id=None, frame_id=frame_id)
+                else:
+                    return await WebElement(backend_node_id=node.get('backendNodeId'),
+                                            target=self.__target__, loop=self._loop,
+                                            class_name='HTMLIFrameElement',
+                                            isolated_exec_id=None, frame_id=frame_id)
+
+            # different target for cross-site
+            targets = await self.__target__.get_targets_for_iframes([self], _warn=False)
+            if targets:
+                return await targets[0]._document_elem
 
     @property
     async def document_url(self):
@@ -240,10 +284,15 @@ class WebElement(JSRemoteObj):
             for node_id in node_ids:
                 if self._loop:
                     from selenium_driverless.sync.webelement import WebElement as SyncWebElement
+                    # noinspection PyUnresolvedReferences
                     elem = SyncWebElement(node_id=node_id, target=self.__target__, loop=self._loop,
-                                          context_id=self.__context_id__)
+                                          context_id=self.__context_id__,
+                                          frame_id=await self.__frame_id__, isolated_exec_id=self.___isolated_exec_id__)
                 else:
-                    elem = await WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__)
+                    # noinspection PyUnresolvedReferences
+                    elem = await WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
+                                            isolated_exec_id=self.___isolated_exec_id__,
+                                            frame_id=await self.__frame_id__)
                 elems.append(elem)
             return elems
         elif by == By.XPATH:
@@ -259,12 +308,13 @@ class WebElement(JSRemoteObj):
             return ValueError("unexpected by")
 
     async def _describe(self):
-        res = await self.__target__.execute_cdp_cmd("DOM.describeNode", {"objectId": await self.obj_id, "pierce": True})
+        args = {"pierce": True}
+        args.update(self._args_builder)
+        res = await self.__target__.execute_cdp_cmd("DOM.describeNode", args)
         res = res["node"]
         self._backend_node_id = res["backendNodeId"]
         self._node_id = res["nodeId"]
-        self._frame_id = res.get("frameId")
-
+        self.___frame_id__ = res.get("frameId")
         return res
 
     async def get_listeners(self, depth: int = 3):
@@ -274,8 +324,8 @@ class WebElement(JSRemoteObj):
 
     @property
     async def source(self):
-        obj_id = await self.obj_id
-        res = await self.__target__.execute_cdp_cmd("DOM.getOuterHTML", {"objectId": obj_id})
+        args = self._args_builder
+        res = await self.__target__.execute_cdp_cmd("DOM.getOuterHTML", args)
         return res["outerHTML"]
 
     async def set_source(self, value: str):
@@ -671,7 +721,9 @@ class WebElement(JSRemoteObj):
         node: dict = await self._describe()
         node_id = node.get("parentId", None)
         if node_id:
-            return WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__)
+            # noinspection PyUnresolvedReferences
+            return WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
+                              isolated_exec_id=self.___isolated_exec_id__, frame_id=await self.__frame_id__)
 
     @property
     def children(self):
