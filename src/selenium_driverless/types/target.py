@@ -193,7 +193,7 @@ class Target:
                 if tag_name.upper() != "IFRAME":
                     raise NoSuchIframe(iframe, "element isn't a iframe")
                 await iframe.obj_id
-                iframe_frame_id = await iframe.frame_id
+                iframe_frame_id = await iframe.__frame_id__
                 if base_frame["id"] == iframe_frame_id:
                     if await self.type == "iframe":
                         target._parent_target = self
