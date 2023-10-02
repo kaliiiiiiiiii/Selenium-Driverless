@@ -9,7 +9,9 @@ loop = asyncio.get_event_loop()
 
 
 async def make_driver():
-    return await webdriver.Chrome()
+    options = webdriver.ChromeOptions()
+    # options.add_argument("--headless=True")
+    return await webdriver.Chrome(options, debug=True)
 
 
 async def nowsecure(driver):
@@ -18,10 +20,7 @@ async def nowsecure(driver):
 
     await driver.get("https://nowsecure.nl#relax", wait_load=True)
     await asyncio.sleep(0.5)
-    try:
-        await get_elem()
-    except NoSuchElementException:
-        await driver.wait_for_cdp("Page.domContentEventFired")
+    await driver.wait_for_cdp("Page.domContentEventFired")
     await get_elem()
 
 
@@ -50,17 +49,12 @@ async def unique_execution_context(driver):
 
 async def bet365(driver):
     async def click_login():
-        login_button = await driver.find_element(By.XPATH, value='//div[contains(@class, "ovm-ParticipantOddsOnly")]', timeout=2)
+        login_button = await driver.find_element(By.XPATH, value='//div[contains(@class, "ovm-ParticipantOddsOnly")]', timeout=15)
         await login_button.click()
 
     await driver.get('https://www.365365824.com/#/IP/B16', wait_load=True)
     await asyncio.sleep(1)
-    try:
-        await click_login()
-    except NoSuchElementException:
-        await driver.wait_for_cdp("Page.frameStoppedLoading", timeout=15)
-        await asyncio.sleep(2)
-        await click_login()
+    await click_login()
 
 
 async def selenium_detector(driver):

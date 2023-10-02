@@ -1,6 +1,6 @@
 # Selenium-Driverless (Non-commercial use only!)
 
-[![Downloads](https://static.pepy.tech/badge/selenium-driverless)](https://pepy.tech/project/driverless) [![](https://img.shields.io/pypi/v/selenium-driverless.svg?color=3399EE)](https://pypi.org/project/selenium-driverless/)
+[![Downloads](https://static.pepy.tech/badge/selenium-driverless)](https://pepy.tech/project/selenium-driverless) [![](https://img.shields.io/pypi/v/selenium-driverless.svg?color=3399EE)](https://pypi.org/project/selenium-driverless/)
 
 
 * use selenium __without chromedriver__
@@ -8,6 +8,7 @@
 * multiple tabs simultanously
 * multiple Incognito-contexts with individual proxy & cookies
 * async (`asyncio`) and sync (experimantal) support
+* proxy-auth support (experimental, [examle-code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
 
 ### Feel free to test my code!
 See [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/dev) for the latest implementations.
@@ -231,7 +232,8 @@ await pointer.click(500, 50, move_kwargs=move_kwargs, move_to=True)
 ```python
 iframes = await driver.find_elements(By.TAG_NAME, "iframe")
 await asyncio.sleep(0.5)
-target = await driver.get_target_for_iframe(iframes[0])
+iframe_document = await iframes[0].content_document
+# iframe_document.find_elements(...)
 ```
 
 ### Multiple Contexts
@@ -274,11 +276,12 @@ Note: **please check the todo's below at first!**
 - implementations
   - [x] `WebElement`s
     - [ ] improve `mid_location` calculation
+    - [ ] add `WebElement.screenshot`
   - [x] `Input`
       - [x] `Mouse`
         - [x] `mousemove`
         - [x] `click`
-        - [] `scroll`
+        - [ ] `scroll`
         - [ ] `drag&drop`
       - [x] `write`
       - [ ] `Touch`
@@ -289,11 +292,6 @@ Note: **please check the todo's below at first!**
       - [ ] `KeyBoard`
         - [ ] `SendKeys`
           - [ ] `send files`
-  - [x] `execute_script` and `execute_async_script`
-    - [ ] make serialization use `deep`
-    - [x] add `Page.createIsolatedWorld` support with `DOM` access
-      - [x] make `element.rect` use this
-      - [ ] make `elem.box_model use this`
   - [ ] [support `options.add_extension()`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/37)
 - [x] sync
   - [ ] move sync to threaded for allowing event_handlers
@@ -329,3 +327,5 @@ I am not responsible what you use the code for!!! Also no warranty!
 Inspiration, code snippets, etc.
 * [selenium_driverless/utils/find_chrome_executable](https://github.com/ultrafunkamsterdam/undetected-chromedriver/blob/1c704a71cf4f29181a59ecf19ddff32f1b4fbfc0/undetected_chromedriver/__init__.py#L844)
 * [cdp-socket](https://github.com/kaliiiiiiiiii/CDP-Socket)
+* [jsobject](https://pypi.org/project/jsobject/)
+* [pycdp/browser.py](https://github.com/HMaker/python-cdp/blob/master/pycdp/browser.py)

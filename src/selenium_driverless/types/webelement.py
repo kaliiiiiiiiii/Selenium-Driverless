@@ -26,7 +26,7 @@ from cdp_socket.exceptions import CDPError
 
 # driverless
 from selenium_driverless.types.by import By
-from selenium_driverless.types import JSEvalException, RemoteObject
+from selenium_driverless.types.deserialize import JSRemoteObj, StaleJSRemoteObjReference
 from selenium_driverless.scripts.geometry import gen_heatmap, gen_rand_point, centroid
 
 
@@ -34,8 +34,10 @@ class NoSuchElementException(Exception):
     pass
 
 
-class StaleElementReferenceException(Exception):
-    pass
+class StaleElementReferenceException(StaleJSRemoteObjReference):
+    def __init__(self, elem):
+        message = f"Page or Frame has been reloaded, or the element removed, {elem}"
+        super().__init__(_object=elem, message=message)
 
 
 class ElementNotVisible(Exception):
@@ -43,12 +45,17 @@ class ElementNotVisible(Exception):
 
 
 class ElementNotInteractable(Exception):
+    def __init__(self, x: float, y: float, _type: str = "interactable"):
+        super().__init__(f"element not {_type} at x:{x}, y:{y}, it might be hidden under another one")
+
+
+class ElementNotClickable(ElementNotInteractable):
     def __init__(self, x: float, y: float):
-        super().__init__(f"element not interactable at x:{x}, y:{y}, it might be hidden under another one")
+        super().__init__(x, y, _type="clickable")
 
 
 # noinspection PyProtectedMember
-class WebElement(RemoteObject):
+class WebElement(JSRemoteObj):
     """Represents a DOM element.
 
     Generally, all interesting operations that interact with a document will be
@@ -61,67 +68,166 @@ class WebElement(RemoteObject):
     instance will fail.
     """
 
-    def __init__(self, target, js: str = None, obj_id=None,
-                 node_id=None, check_existence=True,
-                 loop=None, context_id: int = None,
-                 unique_context: bool = True) -> None:
+    def __init__(self, target, frame_id: int or None, isolated_exec_id: int or None, obj_id=None,
+                 node_id=None, backend_node_id: str = None, loop=None, class_name: str = None,
+                 context_id: int = None, is_iframe: bool = False) -> None:
         self._loop = loop
-        if not (obj_id or node_id or js):
+        if not (obj_id or node_id or backend_node_id):
             raise ValueError("either js, obj_id or node_id need to be specified")
         self._node_id = node_id
-        super().__init__(target=target, js=js, obj_id=obj_id, check_existence=check_existence, context_id=context_id,
-                         unique_context=unique_context)
+        self._backend_node_id = backend_node_id
+        self._class_name = class_name
+        self._started = False
+        self.___context_id__ = context_id
+        self._obj_ids = {context_id: obj_id}
+        self.___frame_id__ = None
+        self._is_iframe = is_iframe
+        self._stale = False
+        if obj_id and context_id:
+            self._obj_ids[context_id] = obj_id
+        self.___obj_id__ = None
+        super().__init__(target=target, frame_id=frame_id, obj_id=obj_id, isolated_exec_id=isolated_exec_id)
 
     def __await__(self):
-        return super().__await__()
+        return self.__aenter__().__await__()
 
     async def __aenter__(self):
         if not self._started:
-            if self._check_exist:
-                await self.obj_id
+            async def set_stale_frame(data):
+                if data["frame"]["id"] == self.___frame_id__:
+                    self._stale = True
 
-            # noinspection PyUnusedLocal
-            async def clear_node_id(data):
-                if not self._obj_id:
-                    await self.obj_id
-                self._node_id = None
-
-            await self._target.add_cdp_listener("Page.loadEventFired", clear_node_id)
+            if not self.__target__._page_enabled:
+                await self.__target__.execute_cdp_cmd("Page.enable")
+            await self.__target__.add_cdp_listener("Page.frameNavigated", set_stale_frame)
             self._started = True
 
         return self
 
     @property
     async def obj_id(self):
-        if not self._obj_id:
-            context_id = self.context_id
-            if self._js:
-                args = {"expression": self._js,
-                        "serializationOptions": {
-                            "serialization": "idOnly"}}
-                if context_id:
-                    args["contextId"] = context_id
-                res = await self._target.execute_cdp_cmd("Runtime.evaluate", args)
-                if "exceptionDetails" in res.keys():
-                    raise JSEvalException(res["exceptionDetails"])
-                res = res["result"]
-                self._obj_id = res['objectId']
-                if res["subtype"] != "node":
-                    raise ValueError("object isn't a node")
+        return await self.__obj_id_for_context__()
+
+    @property
+    async def context_id(self):
+        self._check_stale()
+        if not self.___context_id__:
+            await self.obj_id
+        return self.__context_id__
+
+    def _check_stale(self):
+        if self._stale:
+            raise StaleElementReferenceException(elem=self)
+
+    @property
+    def _args_builder(self) -> dict:
+        self._check_stale()
+        if self._node_id:
+            return {"nodeId": self._node_id}
+        elif self.__obj_id__:
+            return {"objectId": self.__obj_id__}
+        elif self._backend_node_id:
+            return {"backendNodeId": self._backend_node_id}
+        else:
+            raise ValueError(f"missing remote element id's for {self}")
+
+    async def __obj_id_for_context__(self, context_id: int = None):
+        self._check_stale()
+        if not self._obj_ids.get(context_id):
+            args = {}
+            if self._backend_node_id:
+                args["backendNodeId"] = self._backend_node_id
+            elif self._node_id:
+                args["nodeId"] = self._node_id
             else:
-                args = {"nodeId": self._node_id}
-                if context_id:
-                    args["contextId"] = context_id
-                res = await self._target.execute_cdp_cmd("DOM.resolveNode", args)
-                self._obj_id = res["object"]["objectId"]
-        return self._obj_id
+                raise ValueError(f"missing remote element id's for {self}")
+
+            if context_id:
+                args["executionContextId"] = context_id
+            res = await self.__target__.execute_cdp_cmd("DOM.resolveNode", args)
+            obj_id = res["object"].get("objectId")
+            if obj_id:
+                if self.__context_id__ == context_id:
+                    self.___obj_id__ = obj_id
+                self._obj_ids[context_id] = obj_id
+            class_name = res["object"].get("className")
+            if class_name:
+                self._class_name = class_name
+        return self._obj_ids.get(context_id)
+
+    @property
+    def __context_id__(self):
+        if self.__obj_id__:
+            return int(self.__obj_id__.split(".")[1])
+        else:
+            return self.___context_id__
 
     @property
     async def node_id(self):
+        self._check_stale()
         if not self._node_id:
-            node = await self._target.execute_cdp_cmd("DOM.requestNode", {"objectId": await self.obj_id})
+            node = await self.__target__.execute_cdp_cmd("DOM.requestNode", {"objectId": await self.obj_id})
             self._node_id = node["nodeId"]
         return self._node_id
+
+    @property
+    async def __frame_id__(self) -> int:
+        if not self.___frame_id__:
+            await self._describe()
+        return self.___frame_id__
+
+    @property
+    async def content_document(self):
+        """
+        gets the document of the iframe
+        """
+        _desc = await self._describe()
+        if _desc.get("localName") == "iframe":
+            node = _desc.get("contentDocument")
+            if node:
+                frame_id = _desc.get("frameId")
+                if node['documentURL'] == 'about:blank':
+                    # wait for frame to load
+                    if not self.__target__._page_enabled:
+                        await self.__target__.execute_cdp_cmd("Page.enable")
+                    async for data in await self.__target__.get_cdp_event_iter("Page.frameNavigated"):
+                        frame = data["frame"]
+                        if frame["id"] == frame_id:
+                            break
+                    self._stale = False
+                    _desc = await self._describe()
+                    node = _desc.get("contentDocument")
+                if self._loop:
+                    from selenium_driverless.sync.webelement import WebElement as SyncWebElement
+                    return await SyncWebElement(backend_node_id=node.get('backendNodeId'),
+                                                target=self.__target__, loop=self._loop,
+                                                class_name='HTMLIFrameElement',
+                                                isolated_exec_id=None, frame_id=frame_id)
+                else:
+                    return await WebElement(backend_node_id=node.get('backendNodeId'),
+                                            target=self.__target__, loop=self._loop,
+                                            class_name='HTMLIFrameElement',
+                                            isolated_exec_id=None, frame_id=frame_id)
+
+            # different target for cross-site
+            targets = await self.__target__.get_targets_for_iframes([self])
+            if targets:
+                return await targets[0]._document_elem
+
+    @property
+    async def document_url(self):
+        res = await self._describe()
+        return res.get('documentURL')
+
+    @property
+    async def backend_node_id(self):
+        if not self._backend_node_id:
+            await self._describe()
+        return self._backend_node_id
+
+    @property
+    def class_name(self):
+        return self._class_name
 
     async def find_element(self, by: str, value: str, idx: int = 0, timeout: int or None = None):
         """Find an element given a By strategy and locator.
@@ -167,20 +273,25 @@ class WebElement(RemoteObject):
 
         if by == By.TAG_NAME:
             return await self.execute_script("return obj.getElementsByTagName(arguments[0])",
-                                             value, serialization="deep", unique_context=True,
-                                             execution_context_id=self.context_id, timeout=10)
+                                             value, serialization="deep", unique_context=True, timeout=10)
         elif by == By.CSS_SELECTOR:
             elems = []
             node_id = await self.node_id
-            res = await self._target.execute_cdp_cmd("DOM.querySelectorAll", {"nodeId": node_id,
-                                                                              "selector": value}, timeout=2)
+            res = await self.__target__.execute_cdp_cmd("DOM.querySelectorAll", {"nodeId": node_id,
+                                                                                 "selector": value}, timeout=2)
             node_ids = res["nodeIds"]
             for node_id in node_ids:
                 if self._loop:
                     from selenium_driverless.sync.webelement import WebElement as SyncWebElement
-                    elem = SyncWebElement(node_id=node_id, target=self._target, check_existence=False, loop=self._loop)
+                    # noinspection PyUnresolvedReferences
+                    elem = SyncWebElement(node_id=node_id, target=self.__target__, loop=self._loop,
+                                          context_id=self.__context_id__,
+                                          frame_id=await self.__frame_id__, isolated_exec_id=self.___isolated_exec_id__)
                 else:
-                    elem = await WebElement(node_id=node_id, target=self._target, check_existence=False)
+                    # noinspection PyUnresolvedReferences
+                    elem = await WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
+                                            isolated_exec_id=self.___isolated_exec_id__,
+                                            frame_id=await self.__frame_id__)
                 elems.append(elem)
             return elems
         elif by == By.XPATH:
@@ -191,22 +302,33 @@ class WebElement(RemoteObject):
                           XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
                           null,
                         );"""
-            return await self.execute_script(scipt, value, serialization="deep", unique_context=True, timeout=10)
+            return await self.execute_script(scipt, value, serialization="deep", timeout=10, unique_context=True)
         else:
             return ValueError("unexpected by")
 
     async def _describe(self):
-        res = await self._target.execute_cdp_cmd("DOM.describeNode", {"objectId": await self.obj_id, "pierce": True})
-        return res["node"]
+        args = {"pierce": True}
+        args.update(self._args_builder)
+        res = await self.__target__.execute_cdp_cmd("DOM.describeNode", args)
+        res = res["node"]
+        self._backend_node_id = res["backendNodeId"]
+        self._node_id = res["nodeId"]
+        self.___frame_id__ = res.get("frameId")
+        return res
+
+    async def get_listeners(self, depth: int = 3):
+        res = await self.__target__.execute_cdp_cmd(
+            "DOMDebugger.getEventListeners", {"objectId": await self.obj_id, "depth": depth, "pierce": True})
+        return res['listeners']
 
     @property
     async def source(self):
-        obj_id = await self.obj_id
-        res = await self._target.execute_cdp_cmd("DOM.getOuterHTML", {"objectId": obj_id})
+        args = self._args_builder
+        res = await self.__target__.execute_cdp_cmd("DOM.getOuterHTML", args)
         return res["outerHTML"]
 
     async def set_source(self, value: str):
-        await self._target.execute_cdp_cmd("DOM.setOuterHTML", {"nodeId": await self.node_id, "outerHTML": value})
+        await self.__target__.execute_cdp_cmd("DOM.setOuterHTML", {"nodeId": await self.node_id, "outerHTML": value})
 
     async def get_property(self, name: str) -> str or None:
         """Gets the given property of the element.
@@ -219,7 +341,7 @@ class WebElement(RemoteObject):
 
                 text_length = target_element.get_property("text_length")
         """
-        return await self.execute_script(f"return obj[arguments[0]]", name, unique_context=True)
+        return await self.execute_script(f"return obj[arguments[0]]", name)
 
     @property
     async def tag_name(self) -> str:
@@ -242,52 +364,67 @@ class WebElement(RemoteObject):
         await self.execute_script("obj.value = ''", unique_context=True)
 
     async def remove(self):
-        await self._target.execute_cdp_cmd("DOM.removeNode", {"nodeId": await self.node_id})
+        await self.__target__.execute_cdp_cmd("DOM.removeNode", {"nodeId": await self.node_id})
 
     async def highlight(self, highlight=True):
-        if not self._target._dom_enabled:
-            await self._target.execute_cdp_cmd("DOM.enable")
+        if not self.__target__._dom_enabled:
+            await self.__target__.execute_cdp_cmd("DOM.enable")
         if highlight:
-            await self._target.execute_cdp_cmd("Overlay.enable")
-            await self._target.execute_cdp_cmd("Overlay.highlightNode", {"objectId": await self.obj_id,
-                                                                         "highlightConfig": {
-                                                                             "showInfo": True,
-                                                                             "borderColor": {
-                                                                                 "r": 76, "g": 175, "b": 80, "a": 1
-                                                                             },
-                                                                             "contentColor": {
-                                                                                 "r": 76, "g": 175, "b": 80, "a": 0.24
-                                                                             },
-                                                                             "shapeColor": {
-                                                                                 "r": 76, "g": 175, "b": 80, "a": 0.24
-                                                                             }
-                                                                         }})
+            args = self._args_builder
+            args["highlightConfig"] = {
+                "showInfo": True,
+                "borderColor": {
+                    "r": 76, "g": 175, "b": 80, "a": 1
+                },
+                "contentColor": {
+                    "r": 76, "g": 175, "b": 80,
+                    "a": 0.24
+                },
+                "shapeColor": {
+                    "r": 76, "g": 175, "b": 80,
+                    "a": 0.24
+                }
+            }
+            await self.__target__.execute_cdp_cmd("Overlay.enable")
+            await self.__target__.execute_cdp_cmd("Overlay.highlightNode", args)
         else:
-            await self._target.execute_cdp_cmd("Overlay.disable")
+            await self.__target__.execute_cdp_cmd("Overlay.disable")
 
     async def focus(self):
-        return await self._target.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
+        args = self._args_builder
+        return await self.__target__.execute_cdp_cmd("DOM.focus", args)
 
-    async def click(self, timeout: float = 0.25, bias: float = 5, resolution: int = 50, debug: bool = False,
-                    scroll_to=True, move_to: bool = True) -> None:
+    async def is_clickable(self, listener_depth=3):
+        _type = await self.tag_name
+        if _type in ["a", "button", "command", "details", "input", "select", "textarea", "video", "map"]:
+            return True
+        is_clickable: bool = listener_depth is None
+        if not is_clickable:
+            listeners = await self.get_listeners(depth=listener_depth)
+            for listener in listeners:
+                _type = listener["type"]
+                if _type in ["click", "mousedown", "mouseup"]:
+                    is_clickable = True
+                    break
+        return is_clickable
+
+    async def click(self, timeout: float = None, bias: float = 5, resolution: int = 50, debug: bool = False,
+                    scroll_to=True, move_to: bool = True, ensure_clickable: bool or int = False) -> None:
         """Clicks the element."""
         if scroll_to:
             await self.scroll_to()
 
-        while True:
-            try:
-                x, y = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
-                await self._target.pointer.click(x, y=y, click_kwargs={"timeout": timeout}, move_to=move_to)
-                break
-            except CDPError as e:
-                # element partially within viewport, point outside viewport
-                # todo: make sure point is within viewport at def mid_location
-                if not (e.code == -32000 and e.message == 'No node found at given location'):
-                    raise e
+        x, y = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
+        if ensure_clickable:
+            is_clickable = await self.is_clickable()
+            if not is_clickable:
+                raise ElementNotClickable(x, y)
+
+        await self.__target__.pointer.click(x, y=y, click_kwargs={"timeout": timeout}, move_to=move_to)
 
     async def write(self, text: str):
         await self.focus()
-        await self._target.execute_cdp_cmd("Input.insertText", {"text": text})
+        await self.__target__.execute_cdp_cmd("Input.insertText", {"text": text})
 
     async def send_keys(self, value: str) -> None:
         # noinspection GrazieInspection
@@ -345,19 +482,6 @@ class WebElement(RemoteObject):
         # noinspection PyUnboundLocalVariable
         x = int(point[0])
         y = int(point[1])
-
-        # ensure element is at location
-        res = await self._target.execute_cdp_cmd("DOM.getNodeForLocation", {"x": x, "y": y,
-                                                                            "includeUserAgentShadowDOM": True,
-                                                                            "ignorePointerEventsNone": True})
-        node_id_at = res["nodeId"]
-        res = await self._target.execute_cdp_cmd("DOM.resolveNode", {"nodeId": node_id_at})
-        obj_id_at = res["object"]["objectId"]
-        this_obj_id = await self.obj_id
-
-        if obj_id_at.split(".")[0] != this_obj_id.split(".")[0]:
-            raise ElementNotInteractable(x, y)
-
         return [x, y]
 
     async def submit(self):
@@ -376,16 +500,20 @@ class WebElement(RemoteObject):
         return await self.execute_script(script, unique_context=True)
 
     @property
-    async def dom_attributes(self):
-        res = await self._target.execute_cdp_cmd("DOM.getAttributes", {"nodeId": await self.node_id})
-        attr_list = res["attributes"]
-        attributes_dict = defaultdict(lambda: None)
+    async def dom_attributes(self) -> dict:
+        try:
+            res = await self.__target__.execute_cdp_cmd("DOM.getAttributes", {"nodeId": await self.node_id})
+            attr_list = res["attributes"]
+            attributes_dict = defaultdict(lambda: None)
 
-        for i in range(0, len(attr_list), 2):
-            key = attr_list[i]
-            value = attr_list[i + 1]
-            attributes_dict[key] = value
-        return attributes_dict
+            for i in range(0, len(attr_list), 2):
+                key = attr_list[i]
+                value = attr_list[i + 1]
+                attributes_dict[key] = value
+            return attributes_dict
+        except CDPError as e:
+            if not (e.code == -32000 and e.message == 'Node is not an Element'):
+                raise e
 
     async def get_dom_attribute(self, name: str) -> str or None:
         """Gets the given attribute of the element. Unlike
@@ -404,8 +532,8 @@ class WebElement(RemoteObject):
         return attrs[name]
 
     async def set_dom_attribute(self, name: str, value: str):
-        self._target.execute_cdp_cmd("DOM.setAttributeValue", {"nodeId": await self.node_id,
-                                                               "name": name, "value": value})
+        await self.__target__.execute_cdp_cmd("DOM.setAttributeValue", {"nodeId": await self.node_id,
+                                                                        "name": name, "value": value})
 
     async def get_attribute(self, name):
         """Gets the given attribute or property of the element.
@@ -459,7 +587,7 @@ class WebElement(RemoteObject):
           - NoSuchShadowRoot - if no shadow root was attached to element
         """
         # todo: move to CDP
-        return await self.get_property("ShadowRoot")
+        return await self.execute_script("return obj.ShadowRoot()")
 
     # RenderedWebElement Items
     async def is_displayed(self) -> bool:
@@ -482,11 +610,11 @@ class WebElement(RemoteObject):
         return {"x": round(result["x"]), "y": round(result["y"])}
 
     async def scroll_to(self, rect: dict = None):
-        args = {"objectId": await self.obj_id}
+        args = self._args_builder
         if rect:
             args["rect"] = rect
         try:
-            await self._target.execute_cdp_cmd("DOM.scrollIntoViewIfNeeded", args)
+            await self.__target__.execute_cdp_cmd("DOM.scrollIntoViewIfNeeded", args)
             return True
         except CDPError as e:
             if e.code == -32000 and e.message == 'Node is detached from document':
@@ -518,7 +646,8 @@ class WebElement(RemoteObject):
 
     @property
     async def box_model(self):
-        res = await self._target.execute_cdp_cmd("DOM.getBoxModel", {"objectId": await self.obj_id})
+        args = self._args_builder
+        res = await self.__target__.execute_cdp_cmd("DOM.getBoxModel", args)
         model = res['model']
         keys = ['content', 'padding', 'border', 'margin']
         for key in keys:
@@ -600,9 +729,16 @@ class WebElement(RemoteObject):
         else:
             args["objectId"] = await self.obj_id
         node: dict = await self._describe()
-        node_id = node.get("parentId", None)
+        node_id = node.get("parentId")
         if node_id:
-            return WebElement(node_id=node_id, check_existence=False, target=self._target)
+            if self._loop:
+                # noinspection PyUnresolvedReferences
+                return SyncWebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
+                                      isolated_exec_id=self.___isolated_exec_id__, frame_id=await self.__frame_id__)
+            else:
+                # noinspection PyUnresolvedReferences
+                return WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
+                                  isolated_exec_id=self.___isolated_exec_id__, frame_id=await self.__frame_id__)
 
     @property
     def children(self):
@@ -611,43 +747,36 @@ class WebElement(RemoteObject):
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
                                  max_depth: int = 2, timeout: float = 2, execution_context_id: str = None,
                                  unique_context: bool = True):
-        exec_id = self.context_id
-        if exec_id:
-            execution_context_id = exec_id
-        else:
-            for arg in args:
-                if isinstance(arg, RemoteObject):
-                    execution_context_id = arg.context_id
-        return await super().execute_raw_script(script, *args, await_res=await_res, serialization=serialization,
-                                                max_depth=max_depth, timeout=timeout,
-                                                execution_context_id=execution_context_id,
-                                                unique_context=unique_context)
+        return await self.__exec_raw__(script, *args, await_res=await_res, serialization=serialization,
+                                       max_depth=max_depth, timeout=timeout,
+                                       execution_context_id=execution_context_id,
+                                       unique_context=unique_context)
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: float = 2,
-                             only_value=True, execution_context_id: str = None, unique_context: bool = True):
-        exec_id = self.context_id
-        if exec_id:
-            execution_context_id = exec_id
-        else:
-            for arg in args:
-                if isinstance(arg, RemoteObject):
-                    execution_context_id = arg.context_id
-        return await super().execute_script(script, *args, max_depth=max_depth, serialization=serialization,
-                                            timeout=timeout, only_value=only_value,
-                                            execution_context_id=execution_context_id,
-                                            unique_context=unique_context)
+                             timeout: float = 2, execution_context_id: str = None, unique_context: bool = True):
+        return await self.__exec__(script, *args, max_depth=max_depth, serialization=serialization,
+                                   timeout=timeout, unique_context=unique_context,
+                                   execution_context_id=execution_context_id)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                                   timeout: float = 2,
-                                   only_value=True, execution_context_id: str = None, unique_context: bool = False):
-        exec_id = self.context_id
-        if exec_id:
-            execution_context_id = exec_id
-        else:
-            for arg in args:
-                if isinstance(arg, RemoteObject):
-                    execution_context_id = arg.context_id
-        return await super().execute_async_script(script, *args, max_depth=max_depth, serialization=serialization,
-                                                  timeout=timeout, execution_context_id=execution_context_id,
-                                                  unique_context=unique_context)
+                                   timeout: float = 2, execution_context_id: str = None, unique_context: bool = True):
+        return await self.__exec_async__(script, *args, max_depth=max_depth, serialization=serialization,
+                                         timeout=timeout, unique_context=unique_context,
+                                         execution_context_id=execution_context_id)
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}("{self.class_name}", obj_id={self.__obj_id__}, node_id="{self._node_id}", backend_node_id={self._backend_node_id}, context_id={self.__context_id__})'
+
+    def __eq__(self, other):
+        if isinstance(other, WebElement):
+            if other.__target__ == self.__target__:
+                if other.__obj_id__ and self.__obj_id__:
+                    return other.__obj_id__.split(".")[0] == self.__obj_id__.split(".")[0]
+                elif other._backend_node_id == self._backend_node_id:
+                    return True
+                elif other._node_id == self._node_id:
+                    return True
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)

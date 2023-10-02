@@ -3,4 +3,5 @@ include *.md
 include LICENSE.md
 recursive-include tests test*.py
 include src/selenium_driverless/files/js/*
+include src/selenium_driverless/files/is_first_run
 

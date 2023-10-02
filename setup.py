@@ -1,9 +1,4 @@
-import sys
 import setuptools
-
-print('This package has a "Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)" Licence.\n'
-      "therefore, you'll have to ask the developer first, if you want to use this package for your buisiness.\n"
-      "https://github.com/kaliiiiiiiiii/Selenium-Driverless", file=sys.stderr)
 
 requirements = ['selenium~=4.6', "cdp-socket>=1.1", "numpy~=1.21", "matplotlib~=3.5", "scipy~=1.7"]
 

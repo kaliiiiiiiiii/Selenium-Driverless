@@ -1,32 +1,27 @@
+# io
+import asyncio
 import typing
 import warnings
 from base64 import b64decode
 from typing import List
 from typing import Optional
 
-# io
-import asyncio
 import websockets
-from cdp_socket.socket import SingleCDPSocket
 from cdp_socket.exceptions import CDPError
-
+from cdp_socket.socket import SingleCDPSocket
 from selenium.webdriver.common.print_page_options import PrintOptions
 
 # pointer
-from selenium_driverless.input.pointer import Pointer
 from selenium_driverless.sync.pointer import Pointer as SyncPointer
-
-# WebElement
-from selenium_driverless.sync.webelement import WebElement as SyncWebElement
-from selenium_driverless.types.webelement import WebElement, RemoteObject
-
-# Alert
-from selenium_driverless.types.alert import Alert
-from selenium_driverless.sync.alert import Alert as SyncAlert
-
+from selenium_driverless.input.pointer import Pointer
 # other
 from selenium_driverless.scripts.driver_utils import get_targets, get_target, get_cookies, get_cookie, delete_cookie, \
     delete_all_cookies, add_cookie
+from selenium_driverless.sync.alert import Alert as SyncAlert
+# Alert
+from selenium_driverless.types.alert import Alert
+from selenium_driverless.types.webelement import WebElement
+from selenium_driverless.sync.webelement import WebElement as SyncWebElement
 
 
 class NoSuchIframe(Exception):
@@ -59,13 +54,14 @@ class Target:
         self._page_enabled = None
         self._dom_enabled = None
 
-        self._global_this_ = None
+        self._global_this_ = {}
         self._document_elem_ = None
         self._alert = None
 
         self._targets: list = []
         self._socket = None
         self._isolated_context_id_ = None
+        self._exec_context_id_ = ""
         self._targets: typing.Dict[str, Target] = {}
 
         self._is_remote = is_remote
@@ -101,6 +97,11 @@ class Target:
     def socket(self) -> SingleCDPSocket:
         return self._socket
 
+    def __eq__(self, other):
+        if isinstance(other, Target):
+            return other.socket == self.socket
+        return False
+
     def __enter__(self):
         return self
 
@@ -125,7 +126,6 @@ class Target:
         if not self._socket:
             self._socket = await SingleCDPSocket(websock_url=f'ws://{self._host}/devtools/page/{self._id}',
                                                  timeout=self._timeout, loop=self._loop)
-            self._global_this_ = await RemoteObject(target=self, js="globalThis", check_existence=False)
             if self._loop:
                 self._pointer = SyncPointer(target=self, loop=self._loop)
             else:
@@ -152,11 +152,10 @@ class Target:
             return self._on_closed_
 
     # noinspection PyUnusedLocals,PyUnusedLocal
-    async def _on_loaded(self, *args, clear_context_id=False, **kwargs):
-        self._global_this_ = None
+    async def _on_loaded(self, *args, **kwargs):
+        self._global_this_ = {}
         self._document_elem_ = None
-        if clear_context_id:
-            self._isolated_context_id_ = None
+        self._isolated_context_id_ = None
 
     async def get_alert(self, timeout: float = 5):
         if not self._page_enabled:
@@ -167,48 +166,37 @@ class Target:
             alert = await Alert(self, timeout=timeout)
         return alert
 
-    async def get_elem_for_frame(self, frame_id, frame_target, context_id: str = None,
-                                 unique_context: bool = True):
-        await frame_target.execute_cdp_cmd("DOM.enable")
-        # noinspection PyProtectedMember
-        await frame_target._document_elem
-        res = await frame_target.execute_cdp_cmd("DOM.getFrameOwner",
-                                                 {"frameId": frame_id})
-        return await WebElement(self, node_id=res['nodeId'],
-                                context_id=context_id, unique_context=unique_context)
-
     async def get_targets_for_iframes(self, iframes: typing.List[WebElement]):
+        if not iframes:
+            raise ValueError(f"Expected WebElements, but got{iframes}")
+
         async def target_getter(target_id: str, timeout: float = 2):
             return await get_target(target_id=target_id, host=self._host, loop=self._loop, is_remote=self._is_remote,
                                     timeout=timeout)
 
         _targets = await get_targets(cdp_exec=self.execute_cdp_cmd, target_getter=target_getter,
                                      _type="iframe", context_id=self._context_id)
-
-        context_id = iframes[0].context_id
-        # noinspection PyProtectedMember
-        unique_context = iframes[0]._unique_context
-        targets = []
+        targets = {}
 
         for targetinfo in list(_targets.values()):
             # iterate over iframes
             target = targetinfo.Target
             base_frame = await target.base_frame
-            elem = await self.get_elem_for_frame(frame_id=base_frame["id"], frame_target=self,
-                                                 context_id=context_id, unique_context=unique_context)
 
             #  check if iframe element is within iframes to search
             for iframe in iframes:
                 tag_name = await iframe.tag_name
                 if tag_name.upper() != "IFRAME":
                     raise NoSuchIframe(iframe, "element isn't a iframe")
-                if elem == iframe:
+                await iframe.obj_id
+                iframe_frame_id = await iframe.__frame_id__
+                if base_frame["id"] == iframe_frame_id:
                     if await self.type == "iframe":
                         target._parent_target = self
                     else:
                         target._base_target = self
-                    targets.append(target)
-        return targets
+                    targets[target.id] = target
+        return list(targets.values())
 
     async def get_target_for_iframe(self, iframe: WebElement):
         targets = await self.get_targets_for_iframes([iframe])
@@ -237,185 +225,93 @@ class Target:
         await get
         await self._on_loaded()
 
-    async def _parse_res(self, res, exec_context_id: int = None):
-        if "subtype" in res.keys():
-            if res["subtype"] == 'node':
-                if self._loop:
-                    res["value"] = await SyncWebElement(target=self, obj_id=res["objectId"],
-                                                        check_existence=False, context_id=exec_context_id,
-                                                        loop=self._loop)
-                else:
-                    res["value"] = await WebElement(target=self, obj_id=res["objectId"],
-                                                    check_existence=False, context_id=exec_context_id, loop=self._loop)
-        if 'className' in res.keys():
-            class_name = res['className']
-            if class_name in ['NodeList', 'HTMLCollection']:
-                elems = []
-                obj = await RemoteObject(target=self, obj_id=res["objectId"], check_existence=False)
-                for idx in range(int(res['description'][-2])):
-                    elems.append(await obj.execute_script("return this[arguments[0]]", idx, serialization="deep"))
-                res["value"] = elems
-            elif class_name == 'XPathResult':
-                elems = []
-                obj = await RemoteObject(target=self, obj_id=res["objectId"], check_existence=False)
-                if await obj.execute_script("return [7].includes(obj.resultType)", serialization="json"):
-                    for idx in range(await obj.execute_script("return obj.snapshotLength", serialization="json")):
-                        elems.append(await obj.execute_script("return obj.snapshotItem(arguments[0])", idx,
-                                                              serialization="deep"))
-                    res["value"] = elems
-        return res
-
-    @property
-    async def _global_this(self):
-        if (not self._global_this_) or self._loop:
-            self._global_this_ = await RemoteObject(target=self, js="globalThis", check_existence=False)
-        return self._global_this_
+    async def _global_this(self, context_id: str = None):
+        if not context_id:
+            context_id = self._exec_context_id_
+        if (not self._global_this_.get(context_id)) or self._loop:
+            from selenium_driverless.types.deserialize import JSRemoteObj
+            from selenium_driverless.types import JSEvalException
+            args = {"expression": "globalThis",
+                    "serializationOptions": {
+                        "serialization": "idOnly"}}
+            if context_id:
+                args["contextId"] = context_id
+            res = await self.execute_cdp_cmd("Runtime.evaluate", args)
+            if "exceptionDetails" in res.keys():
+                raise JSEvalException(res["exceptionDetails"])
+            obj_id = res["result"]['objectId']
+            doc = await self._document_elem
+            # noinspection PyUnresolvedReferences
+            obj = JSRemoteObj(obj_id=obj_id, target=self, isolated_exec_id=doc.___isolated_exec_id__,
+                              frame_id=await doc.__frame_id__)
+            if not context_id:
+                context_id = obj.__context_id__
+                self._exec_context_id_ = context_id
+            self._global_this_[context_id] = obj
+        return self._global_this_[context_id]
 
     @property
     async def _isolated_context_id(self) -> int:
-        if (not self._isolated_context_id_) or self._loop:
-            frame = await self.base_frame
-            res = await self.execute_cdp_cmd("Page.createIsolatedWorld",
-                                             {"frameId": frame["id"], "grantUniveralAccess": True,
-                                              "worldName": "You got here hehe:)"})
-            self._isolated_context_id_ = res["executionContextId"]
-        return self._isolated_context_id_
+        doc = await self._document_elem
+        return await doc.__isolated_exec_id__
 
     @property
     def pointer(self) -> Pointer:
         return self._pointer
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                                 max_depth: int = None, timeout: float = 2, obj_id: str = None,
-                                 execution_context_id: str = None, unique_context: bool = False):
+                                 max_depth: int = None, timeout: float = 2, execution_context_id: str = None,
+                                 unique_context: bool = False):
         """
         example:
         script= "function(...arguments){obj.click()}"
         "const obj" will be the Object according to obj_id
         this is by default globalThis (=> window)
         """
-        from selenium_driverless.types import RemoteObject, JSEvalException
+        if execution_context_id and unique_context:
+            warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
+        if unique_context:
+            execution_context_id = await self._isolated_context_id
 
-        if not args:
-            args = []
-        if not serialization:
-            serialization = "deep"
-
-        _args = []
-        base_id = None
-        for arg in args:
-            if isinstance(arg, RemoteObject):
-                _args.append({"objectId": await arg.obj_id})
-                exec_id = arg.context_id
-                if not exec_id:
-                    # noinspection PyProtectedMember
-                    base_id = arg._base_obj
-                if execution_context_id and exec_id != execution_context_id:
-                    raise ValueError("got multiple arguments with different execution-context-id's")
-                execution_context_id = exec_id
-            else:
-                _args.append({"value": arg})
-
-        if not (obj_id or execution_context_id):
-            if unique_context:
-                execution_context_id = await self._isolated_context_id
-            else:
-                if base_id:
-                    obj_id = base_id
-                else:
-                    global_this = await self._global_this
-                    obj_id = await global_this.obj_id
-
-        ser_opts = {"serialization": serialization, "maxDepth": max_depth,
-                    "additionalParameters": {"includeShadowTree": "all", "maxNodeDepth": max_depth}}
-        args = {"functionDeclaration": script,
-                "arguments": _args, "userGesture": True, "awaitPromise": await_res, "serializationOptions": ser_opts}
-
-        if execution_context_id and obj_id:
-            raise ValueError("execution_context_id and obj_id can't be specified at the same time")
-        if obj_id:
-            args["objectId"] = obj_id
-        if execution_context_id:
-            args["executionContextId"] = execution_context_id
-
-        res = await self.execute_cdp_cmd("Runtime.callFunctionOn", args, timeout=timeout)
-        if "exceptionDetails" in res.keys():
-            raise JSEvalException(res["exceptionDetails"])
-        res = res["result"]
-        res = await self._parse_res(res, exec_context_id=execution_context_id)
+        globalthis = await self._global_this(execution_context_id)
+        res = await globalthis.__exec_raw__(script, *args, await_res=await_res, serialization=serialization,
+                                            max_depth=max_depth, timeout=timeout,
+                                            execution_context_id=execution_context_id)
         return res
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: float = None, only_value=True, obj_id=None, execution_context_id: str = None,
+                             timeout: float = None, execution_context_id: str = None,
                              unique_context: bool = None):
         """
         exaple: script = "return elem.click()"
         """
-        from selenium_driverless.types import RemoteObject
-        for arg in args:
-            if isinstance(arg, RemoteObject):
-                execution_context_id = arg.context_id
+        if execution_context_id and unique_context:
+            warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
+        if unique_context:
+            execution_context_id = await self._isolated_context_id
 
-        if execution_context_id and obj_id:
-            obj = RemoteObject(obj_id=obj_id, target=self, check_existence=False,
-                               context_id=execution_context_id, unique_context=unique_context)
-            args = [obj, *args]
-            obj_id = None
-            script = """
-                (function(...arguments){
-                    const obj = arguments[0]
-                    arguments = arguments[1:]
-                    """ + script + "})"
-        else:
-            script = """
-                        (function(...arguments){
-                            const obj = this   
-                            """ + script + "})"
-        res = await self.execute_raw_script(script, *args, max_depth=max_depth,
-                                            serialization=serialization, timeout=timeout,
-                                            await_res=False, obj_id=obj_id, unique_context=unique_context,
-                                            execution_context_id=execution_context_id)
-        if only_value:
-            if "value" in res.keys():
-                return res["value"]
-        else:
-            return res
+        globalthis = await self._global_this(execution_context_id)
+        res = await globalthis.__exec__(script, *args, serialization=serialization,
+                                        max_depth=max_depth, timeout=timeout,
+                                        execution_context_id=execution_context_id)
+        return res
 
-    async def execute_async_script(self, script: str, *args, max_depth: int = 2,
-                                   serialization: str = None, timeout: float = 2,
-                                   only_value=True, obj_id=None, execution_context_id: str = None,
-                                   unique_context: bool = False):
-        from selenium_driverless.types import RemoteObject
-        for arg in args:
-            if isinstance(arg, RemoteObject):
-                execution_context_id = arg.context_id
-        if execution_context_id and obj_id:
-            obj = RemoteObject(obj_id=obj_id, target=self, check_existence=False,
-                               context_id=execution_context_id, unique_context=unique_context)
-            args = [obj, *args]
-            obj_id = None
-            script = """
-                (function(...arguments){
-                    const obj = arguments[0]
-                    arguments = arguments[1:]
-                    const promise = new Promise((resolve, reject) => {
-                                          arguments.push(resolve)
-                        });""" + script + ";return promise})"
-        else:
-            script = """(function(...arguments){
-                                   const obj = this
-                                   const promise = new Promise((resolve, reject) => {
-                                          arguments.push(resolve)
-                                    });""" + script + ";return promise})"
-        res = await self.execute_raw_script(script, *args, max_depth=max_depth,
-                                            serialization=serialization, timeout=timeout,
-                                            await_res=True, obj_id=obj_id,
-                                            execution_context_id=execution_context_id, unique_context=unique_context)
-        if only_value:
-            if "value" in res.keys():
-                return res["value"]
-        else:
-            return res
+    async def execute_async_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
+                                   timeout: float = None, execution_context_id: str = None,
+                                   unique_context: bool = None):
+        """
+        exaple: script = "return elem.click()"
+        """
+        if execution_context_id and unique_context:
+            warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
+        if unique_context:
+            execution_context_id = await self._isolated_context_id
+
+        globalthis = await self._global_this(execution_context_id)
+        res = await globalthis.__exec_async__(script, *args, serialization=serialization,
+                                              max_depth=max_depth, timeout=timeout,
+                                              execution_context_id=execution_context_id)
+        return res
 
     @property
     async def current_url(self) -> str:
@@ -607,15 +503,17 @@ class Target:
 
     @property
     async def _document_elem(self) -> WebElement:
-        if (not self._document_elem_) or self._loop:
+        if not self._document_elem_:
             res = await self.execute_cdp_cmd("DOM.getDocument", {"pierce": True})
             node_id = res["root"]["nodeId"]
+            frame = await self.base_frame
+            frame_id = frame["id"]
             if self._loop:
-                self._document_elem_ = await SyncWebElement(target=self, node_id=node_id, check_existence=False,
-                                                            loop=self._loop, unique_context=True)
+                self._document_elem_ = await SyncWebElement(target=self, node_id=node_id, loop=self._loop,
+                                                            isolated_exec_id=None, frame_id=frame_id)
             else:
-                self._document_elem_ = await WebElement(target=self, node_id=node_id, check_existence=False,
-                                                        loop=self._loop, unique_context=True)
+                self._document_elem_ = await WebElement(target=self, node_id=node_id, loop=self._loop,
+                                                        isolated_exec_id=None, frame_id=frame_id)
         return self._document_elem_
 
     # noinspection PyUnusedLocal
@@ -652,9 +550,11 @@ class Target:
                                          {"searchId": search_id, "fromIndex": 0, "toIndex": elem_count})
         for node_id in res["nodeIds"]:
             if self._loop:
-                elem = await SyncWebElement(target=self, check_existence=False, node_id=node_id, loop=self._loop)
+                elem = await SyncWebElement(target=self, node_id=node_id, loop=self._loop, isolated_exec_id=None,
+                                            frame_id=None)
             else:
-                elem = await WebElement(target=self, check_existence=False, node_id=node_id, loop=self._loop)
+                elem = await WebElement(target=self, node_id=node_id, loop=self._loop, isolated_exec_id=None,
+                                        frame_id=None)
             elems.append(elem)
         return elems
 
@@ -725,7 +625,7 @@ class Target:
 
                 target.get_screenshot_as_base64()
         """
-        res = await self.execute_cdp_cmd("Page.captureScreenshot", {"format": "png"})
+        res = await self.execute_cdp_cmd("Page.captureScreenshot", {"format": "png"}, timeout=30)
         return res["data"]
 
     async def get_network_conditions(self):
@@ -942,3 +842,6 @@ class TargetInfo:
     @property
     def subtype(self):
         return self._subtype
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(type="{self.type}",title="{self.title})"'

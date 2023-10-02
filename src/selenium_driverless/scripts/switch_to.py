@@ -20,6 +20,7 @@
 import asyncio
 from typing import Optional
 from typing import Union
+import warnings
 
 
 from selenium_driverless.types.by import By
@@ -109,6 +110,9 @@ class SwitchTo:
                 target.switch_to.frame(1)
                 target.switch_to.frame(target.find_elements(By.TAG_NAME, "iframe")[0])
         """
+        warnings.warn(
+            "driver.switch_to.iframe deprecated and not reliable use Webelement.content_document instead",
+            DeprecationWarning)
         if isinstance(frame_reference, str):
             try:
                 frame_reference = await self._context.find_element(By.ID, frame_reference)
