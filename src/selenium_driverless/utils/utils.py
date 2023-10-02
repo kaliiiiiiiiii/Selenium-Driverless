@@ -117,3 +117,6 @@ def random_port(host: str = None):
 def check_timeout(start_monotonic: float, timeout: float):
     if (time.monotonic() - start_monotonic) > timeout:
         raise TimeoutError(f"driver.quit took longer than timeout: {timeout}")
+
+
+is_first_run = read("files/is_first_run") == "true"

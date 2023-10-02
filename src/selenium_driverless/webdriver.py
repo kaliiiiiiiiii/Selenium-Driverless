@@ -59,6 +59,7 @@ from selenium_driverless.sync.base_target import BaseTarget as SyncBaseTarget
 # others
 from cdp_socket.utils.conn import get_json
 from selenium_driverless.types.options import Options as ChromeOptions
+from selenium_driverless.utils.utils import is_first_run
 
 
 class Chrome:
@@ -78,7 +79,13 @@ class Chrome:
          - timeout - timeout in seconds to start chrome
          - debug - for debugging Google-Chrome error messages and other debugging stuff lol
         """
-
+        if is_first_run:
+            print(
+                'This package has a "Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)" Licence.\n'
+                "therefore, you'll have to ask the developer first, if you want to use this package for your buisiness.\n"
+                "https://github.com/kaliiiiiiiiii/Selenium-Driverless", file=sys.stderr)
+            from selenium_driverless.utils.utils import write
+            write("files/is_first_run", "false")
         self._process = None
         self._current_target = None
         self._host = None

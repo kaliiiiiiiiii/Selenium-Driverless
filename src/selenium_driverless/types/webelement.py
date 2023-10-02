@@ -68,7 +68,7 @@ class WebElement(JSRemoteObj):
     instance will fail.
     """
 
-    def __init__(self, target, frame_id: int, isolated_exec_id: int or None, obj_id=None,
+    def __init__(self, target, frame_id: int or None, isolated_exec_id: int or None, obj_id=None,
                  node_id=None, backend_node_id: str = None, loop=None, class_name: str = None,
                  context_id: int = None, is_iframe: bool = False) -> None:
         self._loop = loop
@@ -194,6 +194,7 @@ class WebElement(JSRemoteObj):
                         frame = data["frame"]
                         if frame["id"] == frame_id:
                             break
+                    self._stale = False
                     _desc = await self._describe()
                     node = _desc.get("contentDocument")
                 if self._loop:

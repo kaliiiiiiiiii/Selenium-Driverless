@@ -507,7 +507,7 @@ class Target:
 
     @property
     async def _document_elem(self) -> WebElement:
-        if (not self._document_elem_) or self._loop:
+        if not self._document_elem_:
             res = await self.execute_cdp_cmd("DOM.getDocument", {"pierce": True})
             node_id = res["root"]["nodeId"]
             frame = await self.base_frame
@@ -540,7 +540,7 @@ class Target:
             await self.execute_cdp_cmd("DOM.enable")
 
         # ensure DOM.getDocument got called
-        doc = await self._document_elem
+        await self._document_elem
 
         elems = []
         res = await self.execute_cdp_cmd("DOM.performSearch",
