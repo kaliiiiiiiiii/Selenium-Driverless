@@ -93,13 +93,13 @@ class WebElement(JSRemoteObj):
 
     async def __aenter__(self):
         if not self._started:
-            def set_stale_frame(data):
-                if data["frameId"] == self.___frame_id__:
+            async def set_stale_frame(data):
+                if data["frame"]["id"] == self.___frame_id__:
                     self._stale = True
 
             if not self.__target__._page_enabled:
                 await self.__target__.execute_cdp_cmd("Page.enable")
-            await self.__target__.add_cdp_listener("Page.frameStartedLoading", set_stale_frame)
+            await self.__target__.add_cdp_listener("Page.frameNavigated", set_stale_frame)
             self._started = True
 
         return self
@@ -172,7 +172,6 @@ class WebElement(JSRemoteObj):
 
     @property
     async def __frame_id__(self) -> int:
-        self._check_stale()
         if not self.___frame_id__:
             await self._describe()
         return self.___frame_id__
@@ -372,19 +371,19 @@ class WebElement(JSRemoteObj):
         if highlight:
             args = self._args_builder
             args["highlightConfig"] = {
-                             "showInfo": True,
-                             "borderColor": {
-                                 "r": 76, "g": 175, "b": 80, "a": 1
-                             },
-                             "contentColor": {
-                                 "r": 76, "g": 175, "b": 80,
-                                 "a": 0.24
-                             },
-                             "shapeColor": {
-                                 "r": 76, "g": 175, "b": 80,
-                                 "a": 0.24
-                             }
-                         }
+                "showInfo": True,
+                "borderColor": {
+                    "r": 76, "g": 175, "b": 80, "a": 1
+                },
+                "contentColor": {
+                    "r": 76, "g": 175, "b": 80,
+                    "a": 0.24
+                },
+                "shapeColor": {
+                    "r": 76, "g": 175, "b": 80,
+                    "a": 0.24
+                }
+            }
             await self.__target__.execute_cdp_cmd("Overlay.enable")
             await self.__target__.execute_cdp_cmd("Overlay.highlightNode", args)
         else:
@@ -394,12 +393,10 @@ class WebElement(JSRemoteObj):
         args = self._args_builder
         return await self.__target__.execute_cdp_cmd("DOM.focus", args)
 
-    async def click(self, timeout: float = None, bias: float = 5, resolution: int = 50, debug: bool = False,
-                    scroll_to=True, move_to: bool = True, listener_depth: int = 3) -> None:
-        """Clicks the element."""
-        if scroll_to:
-            await self.scroll_to()
-
+    async def is_clickable(self, listener_depth=3):
+        _type = await self.tag_name
+        if _type in ["a", "button", "command", "details", "input", "select", "textarea", "video", "map"]:
+            return True
         is_clickable: bool = listener_depth is None
         if not is_clickable:
             listeners = await self.get_listeners(depth=listener_depth)
@@ -408,10 +405,19 @@ class WebElement(JSRemoteObj):
                 if _type in ["click", "mousedown", "mouseup"]:
                     is_clickable = True
                     break
+        return is_clickable
+
+    async def click(self, timeout: float = None, bias: float = 5, resolution: int = 50, debug: bool = False,
+                    scroll_to=True, move_to: bool = True, ensure_clickable: bool or int = False) -> None:
+        """Clicks the element."""
+        if scroll_to:
+            await self.scroll_to()
 
         x, y = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
-        if not is_clickable:
-            raise ElementNotClickable(x, y)
+        if ensure_clickable:
+            is_clickable = await self.is_clickable()
+            if not is_clickable:
+                raise ElementNotClickable(x, y)
 
         await self.__target__.pointer.click(x, y=y, click_kwargs={"timeout": timeout}, move_to=move_to)
 
@@ -722,11 +728,16 @@ class WebElement(JSRemoteObj):
         else:
             args["objectId"] = await self.obj_id
         node: dict = await self._describe()
-        node_id = node.get("parentId", None)
+        node_id = node.get("parentId")
         if node_id:
-            # noinspection PyUnresolvedReferences
-            return WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
-                              isolated_exec_id=self.___isolated_exec_id__, frame_id=await self.__frame_id__)
+            if self._loop:
+                # noinspection PyUnresolvedReferences
+                return SyncWebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
+                                      isolated_exec_id=self.___isolated_exec_id__, frame_id=await self.__frame_id__)
+            else:
+                # noinspection PyUnresolvedReferences
+                return WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
+                                  isolated_exec_id=self.___isolated_exec_id__, frame_id=await self.__frame_id__)
 
     @property
     def children(self):
