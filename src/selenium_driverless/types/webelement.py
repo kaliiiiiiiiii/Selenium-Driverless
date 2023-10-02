@@ -26,7 +26,7 @@ from cdp_socket.exceptions import CDPError
 
 # driverless
 from selenium_driverless.types.by import By
-from selenium_driverless.types.deserialize import JSRemoteObj
+from selenium_driverless.types.deserialize import JSRemoteObj, StaleJSRemoteObjReference
 from selenium_driverless.scripts.geometry import gen_heatmap, gen_rand_point, centroid
 
 
@@ -34,8 +34,10 @@ class NoSuchElementException(Exception):
     pass
 
 
-class StaleElementReferenceException(Exception):
-    pass
+class StaleElementReferenceException(StaleJSRemoteObjReference):
+    def __init__(self, elem):
+        message = f"Page or Frame has been reloaded, or the element removed, {elem}"
+        super().__init__(_object=elem, message=message)
 
 
 class ElementNotVisible(Exception):
@@ -80,6 +82,7 @@ class WebElement(JSRemoteObj):
         self._obj_ids = {context_id: obj_id}
         self.___frame_id__ = None
         self._is_iframe = is_iframe
+        self._stale = False
         if obj_id and context_id:
             self._obj_ids[context_id] = obj_id
         self.___obj_id__ = None
@@ -90,13 +93,13 @@ class WebElement(JSRemoteObj):
 
     async def __aenter__(self):
         if not self._started:
-            # noinspection PyUnusedLocal
-            async def clear_node_ids(data):
-                self._node_id = None
-                self._node_id = None
-                self._backend_node_id = None
+            def set_stale_frame(data):
+                if data["frameId"] == self.___frame_id__:
+                    self._stale = True
 
-            await self.__target__.add_cdp_listener("Page.loadEventFired", clear_node_ids)
+            if not self.__target__._page_enabled:
+                await self.__target__.execute_cdp_cmd("Page.enable")
+            await self.__target__.add_cdp_listener("Page.frameStartedLoading", set_stale_frame)
             self._started = True
 
         return self
@@ -107,12 +110,18 @@ class WebElement(JSRemoteObj):
 
     @property
     async def context_id(self):
+        self._check_stale()
         if not self.___context_id__:
             await self.obj_id
         return self.__context_id__
 
+    def _check_stale(self):
+        if self._stale:
+            raise StaleElementReferenceException(elem=self)
+
     @property
     def _args_builder(self) -> dict:
+        self._check_stale()
         if self._node_id:
             return {"nodeId": self._node_id}
         elif self.__obj_id__:
@@ -120,19 +129,10 @@ class WebElement(JSRemoteObj):
         elif self._backend_node_id:
             return {"backendNodeId": self._backend_node_id}
         else:
-            raise StaleElementReferenceException()
-
-    def _error_handler(self, exc: CDPError):
-        if exc.code == -32000:
-            if exc.message == 'No node found for given backend id':
-                return
-            elif exc.message == 'Cannot find context with specified id':
-                return
-            elif exc.message == 'Could not find object with given id':
-                return
-        raise exc
+            raise ValueError(f"missing remote element id's for {self}")
 
     async def __obj_id_for_context__(self, context_id: int = None):
+        self._check_stale()
         if not self._obj_ids.get(context_id):
             args = {}
             if self._backend_node_id:
@@ -140,7 +140,7 @@ class WebElement(JSRemoteObj):
             elif self._node_id:
                 args["nodeId"] = self._node_id
             else:
-                return StaleElementReferenceException()
+                raise ValueError(f"missing remote element id's for {self}")
 
             if context_id:
                 args["executionContextId"] = context_id
@@ -164,6 +164,7 @@ class WebElement(JSRemoteObj):
 
     @property
     async def node_id(self):
+        self._check_stale()
         if not self._node_id:
             node = await self.__target__.execute_cdp_cmd("DOM.requestNode", {"objectId": await self.obj_id})
             self._node_id = node["nodeId"]
@@ -171,6 +172,7 @@ class WebElement(JSRemoteObj):
 
     @property
     async def __frame_id__(self) -> int:
+        self._check_stale()
         if not self.___frame_id__:
             await self._describe()
         return self.___frame_id__
@@ -368,27 +370,29 @@ class WebElement(JSRemoteObj):
         if not self.__target__._dom_enabled:
             await self.__target__.execute_cdp_cmd("DOM.enable")
         if highlight:
+            args = self._args_builder
+            args["highlightConfig"] = {
+                             "showInfo": True,
+                             "borderColor": {
+                                 "r": 76, "g": 175, "b": 80, "a": 1
+                             },
+                             "contentColor": {
+                                 "r": 76, "g": 175, "b": 80,
+                                 "a": 0.24
+                             },
+                             "shapeColor": {
+                                 "r": 76, "g": 175, "b": 80,
+                                 "a": 0.24
+                             }
+                         }
             await self.__target__.execute_cdp_cmd("Overlay.enable")
-            await self.__target__.execute_cdp_cmd("Overlay.highlightNode", {"objectId": await self.obj_id,
-                                                                            "highlightConfig": {
-                                                                                "showInfo": True,
-                                                                                "borderColor": {
-                                                                                    "r": 76, "g": 175, "b": 80, "a": 1
-                                                                                },
-                                                                                "contentColor": {
-                                                                                    "r": 76, "g": 175, "b": 80,
-                                                                                    "a": 0.24
-                                                                                },
-                                                                                "shapeColor": {
-                                                                                    "r": 76, "g": 175, "b": 80,
-                                                                                    "a": 0.24
-                                                                                }
-                                                                            }})
+            await self.__target__.execute_cdp_cmd("Overlay.highlightNode", args)
         else:
             await self.__target__.execute_cdp_cmd("Overlay.disable")
 
     async def focus(self):
-        return await self.__target__.execute_cdp_cmd("DOM.focus", {"objectId": await self.obj_id})
+        args = self._args_builder
+        return await self.__target__.execute_cdp_cmd("DOM.focus", args)
 
     async def click(self, timeout: float = None, bias: float = 5, resolution: int = 50, debug: bool = False,
                     scroll_to=True, move_to: bool = True, listener_depth: int = 3) -> None:
@@ -599,7 +603,7 @@ class WebElement(JSRemoteObj):
         return {"x": round(result["x"]), "y": round(result["y"])}
 
     async def scroll_to(self, rect: dict = None):
-        args = {"objectId": await self.obj_id}
+        args = self._args_builder
         if rect:
             args["rect"] = rect
         try:
@@ -635,7 +639,8 @@ class WebElement(JSRemoteObj):
 
     @property
     async def box_model(self):
-        res = await self.__target__.execute_cdp_cmd("DOM.getBoxModel", {"objectId": await self.obj_id})
+        args = self._args_builder
+        res = await self.__target__.execute_cdp_cmd("DOM.getBoxModel", args)
         model = res['model']
         keys = ['content', 'padding', 'border', 'margin']
         for key in keys:

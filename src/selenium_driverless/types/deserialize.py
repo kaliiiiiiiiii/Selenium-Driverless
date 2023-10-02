@@ -1,5 +1,18 @@
 import asyncio
 import warnings
+from cdp_socket.exceptions import CDPError
+
+
+class StaleJSRemoteObjReference(Exception):
+    def __init__(self, _object, message: str = None):
+        self._remote_obj = _object
+        if not message:
+            message = f"Page or Frame has been reloaded, or the object deleted, {_object}"
+        super().__init__(message)
+
+    @property
+    def remote_obj(self):
+        return self._remote_obj
 
 
 class JSRemoteObj:
@@ -103,7 +116,7 @@ class JSRemoteObj:
                     is_value = False
                     _args.append({"objectId": obj_id})
                 else:
-                    warnings.warn("Can't find remote reference of JSRemoteObj, trying to serialize")
+                    warnings.warn(f"Can't find remote reference of {arg}, or got different execution context, trying to serialize. \n you can avoid this warning by passing json.dumps(arg) instead of the arg itsself")
 
             if is_value:
                 _args.append({"value": arg})
@@ -119,6 +132,12 @@ class JSRemoteObj:
             args["executionContextId"] = exec_context
         try:
             res = await self.__target__.execute_cdp_cmd("Runtime.callFunctionOn", args, timeout=timeout)
+        except CDPError as e:
+            if e.code == -32000 and e.message in ['Cannot find context with specified id',
+                                                  'Argument should belong to the same JavaScript world as target object']:
+                raise StaleJSRemoteObjReference(_object=self)
+            else:
+                raise e
         except Exception as e:
             raise e
         if "exceptionDetails" in res.keys():
@@ -142,22 +161,23 @@ class JSRemoteObj:
         exec_context = self.__context_id__
         base_obj_id = self.__obj_id__
 
-        if execution_context_id and unique_context:
+        if execution_context_id and (unique_context or unique_context is False):
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
         if execution_context_id:
             exec_context = execution_context_id
         elif unique_context:
             # noinspection PyProtectedMember
             exec_context = await self.__isolated_exec_id__
+        elif unique_context is False:
+            # noinspection PyProtectedMember
+            global_this = await self.__target__._global_this()
+            exec_context = global_this.__context_id__
 
         if isinstance(self, WebElement):
             base_obj_id = await self.__obj_id_for_context__(exec_context)
 
         if exec_context and base_obj_id:
-            obj = JSRemoteObj(obj_id=base_obj_id, target=self.__target__,
-                              isolated_exec_id=self.___isolated_exec_id__,
-                              frame_id=await self.__frame_id__)
-            args = [obj, *args]
+            args = [self, *args]
             script = """
                 (function(...arguments){
                     const obj = arguments.shift()
@@ -192,9 +212,7 @@ class JSRemoteObj:
             obj_id = await self.__obj_id_for_context__(exec_context)
 
         if exec_context and obj_id:
-            obj = JSRemoteObj(obj_id=obj_id, target=self.__target__,
-                              isolated_exec_id=await self.___isolated_exec_id__, frame_id=await self.__frame_id__)
-            args = [obj, *args]
+            args = [self, *args]
             script = """
                 (function(...arguments){
                     const obj = arguments.shift()
@@ -606,12 +624,14 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
                                     class_name=class_name, context_id=context_id,
                                     isolated_exec_id=isolated_exec_id, frame_id=frame_id)
     elif _type == 'htmlcollection':
-        _res = JSNodeList(obj_id=obj_id, target=target, class_name=class_name, isolated_exec_id=isolated_exec_id, frame_id=frame_id)
+        _res = JSNodeList(obj_id=obj_id, target=target, class_name=class_name, isolated_exec_id=isolated_exec_id,
+                          frame_id=frame_id)
         for idx, _deep in enumerate(_value):
             _res.append(await parse_deep(_deep, target, isolated_exec_id=isolated_exec_id, frame_id=frame_id))
         return _res
     elif _type == "window":
-        return JSWindow(context=_value.get("context"), obj_id=obj_id, target=target, isolated_exec_id=isolated_exec_id, frame_id=frame_id)
+        return JSWindow(context=_value.get("context"), obj_id=obj_id, target=target, isolated_exec_id=isolated_exec_id,
+                        frame_id=frame_id)
     elif _type == "generator":
         return JSUnserializable(_type, _value, target=target, obj_id=obj_id,
                                 description=description, isolated_exec_id=isolated_exec_id, frame_id=frame_id)
