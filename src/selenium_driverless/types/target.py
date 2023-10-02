@@ -166,11 +166,7 @@ class Target:
             alert = await Alert(self, timeout=timeout)
         return alert
 
-    async def get_targets_for_iframes(self, iframes: typing.List[WebElement], _warn: bool = False):
-        if _warn:
-            warnings.warn(
-                "driver.switch_to.iframe and driver.get_targets_for_iframes is deprecated and will be removed, use Webelement.content_document.find_elements instead",
-                DeprecationWarning)
+    async def get_targets_for_iframes(self, iframes: typing.List[WebElement]):
         if not iframes:
             raise ValueError(f"Expected WebElements, but got{iframes}")
 

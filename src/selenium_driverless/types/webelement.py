@@ -210,7 +210,7 @@ class WebElement(JSRemoteObj):
                                             isolated_exec_id=None, frame_id=frame_id)
 
             # different target for cross-site
-            targets = await self.__target__.get_targets_for_iframes([self], _warn=False)
+            targets = await self.__target__.get_targets_for_iframes([self])
             if targets:
                 return await targets[0]._document_elem
 
