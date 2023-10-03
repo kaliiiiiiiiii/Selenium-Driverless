@@ -42,10 +42,12 @@ class JSRemoteObj:
 
     @property
     def __target__(self):
+        # noinspection PyUnresolvedReferences
         return self.___target__
 
     @property
     def __obj_id__(self):
+        # noinspection PyUnresolvedReferences
         return self.___obj_id__
 
     @property
@@ -55,16 +57,19 @@ class JSRemoteObj:
 
     @property
     async def __frame_id__(self) -> int:
+        # noinspection PyUnresolvedReferences
         return self.___frame_id__
 
     @property
     async def __isolated_exec_id__(self) -> int:
+        # noinspection PyUnresolvedReferences
         if not self.___isolated_exec_id__:
             res = await self.__target__.execute_cdp_cmd(
                 "Page.createIsolatedWorld",
                 {"frameId": await self.__frame_id__, "grantUniveralAccess": True,
                  "worldName": "Isolated execution context with DOM-access, You got here hehe:)"})
             super().__setattr__("___isolated_exec_id__", res["executionContextId"])
+        # noinspection PyUnresolvedReferences
         return self.___isolated_exec_id__
 
     async def __exec_raw__(self, script: str, *args, await_res: bool = False, serialization: str = None,
@@ -143,7 +148,7 @@ class JSRemoteObj:
         if "exceptionDetails" in res.keys():
             raise JSEvalException(res["exceptionDetails"])
         res = res["result"]
-        # noinspection PyProtectedMember
+        # noinspection PyProtectedMember,PyUnresolvedReferences
         res = await parse_deep(deep=res.get('deepSerializedValue'), subtype=res.get('subtype'),
                                class_name=res.get('className'), value=res.get("value"),
                                description=res.get("description"), target=target,
@@ -627,7 +632,7 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
         _res = JSNodeList(obj_id=obj_id, target=target, class_name=class_name, isolated_exec_id=isolated_exec_id,
                           frame_id=frame_id)
         for idx, _deep in enumerate(_value):
-            _res.append(await parse_deep(_deep, target, isolated_exec_id=isolated_exec_id, frame_id=frame_id))
+            _res.append(await parse_deep(_deep, target, isolated_exec_id=isolated_exec_id, frame_id=frame_id, loop=loop))
         return _res
     elif _type == "window":
         return JSWindow(context=_value.get("context"), obj_id=obj_id, target=target, isolated_exec_id=isolated_exec_id,
