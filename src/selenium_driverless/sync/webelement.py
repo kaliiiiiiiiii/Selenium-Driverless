@@ -18,14 +18,6 @@ class WebElement(AsyncWebElement):
         self.__enter__()
 
     @property
-    async def node_id(self):
-        if not self.__obj_id__:
-            await self.obj_id
-            return self._node_id
-        self._node_id = None
-        return await super().node_id
-
-    @property
     def class_name(self):
         return self._class_name
 
