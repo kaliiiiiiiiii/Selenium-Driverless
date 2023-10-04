@@ -49,9 +49,10 @@ async def unique_execution_context(driver):
 
 async def bet365(driver):
     async def click_login():
-        login_button = await driver.find_element(By.XPATH, value='//div[contains(@class, "ovm-ParticipantOddsOnly")]', timeout=15)
+        login_button = await driver.find_element(By.XPATH, value='//div[contains(@class, "ovm-ParticipantOddsOnly")]', timeout=20)
         await login_button.click()
 
+    await driver.focus()
     await driver.get('https://www.365365824.com/#/IP/B16', wait_load=True)
     await asyncio.sleep(1)
     await click_login()
@@ -116,8 +117,10 @@ class Driver(unittest.TestCase):
                 coros.append(test(target))
 
             await asyncio.gather(*coros)
-        finally:
+        except Exception as e:
             await driver.quit()
+            raise e
+        await driver.quit()
 
 
 if __name__ == '__main__':
