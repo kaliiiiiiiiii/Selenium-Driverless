@@ -17,6 +17,7 @@ from selenium_driverless.input.pointer import Pointer
 # other
 from selenium_driverless.scripts.driver_utils import get_targets, get_target, get_cookies, get_cookie, delete_cookie, \
     delete_all_cookies, add_cookie
+from selenium_driverless.types.deserialize import StaleJSRemoteObjReference
 from selenium_driverless.sync.alert import Alert as SyncAlert
 # Alert
 from selenium_driverless.types.alert import Alert
@@ -141,6 +142,7 @@ class Target:
             await self.add_cdp_listener("Page.javascriptDialogOpening", set_alert)
             await self.add_cdp_listener("Page.javascriptDialogClosed", remove_alert)
             await self.add_cdp_listener("Page.loadEventFired", self._on_loaded)
+            await self.add_cdp_listener("Page.windowOpen", self._on_loaded)
             self.socket.on_closed.extend(self._on_closed)
         return self
 
@@ -156,6 +158,7 @@ class Target:
         self._global_this_ = {}
         self._document_elem_ = None
         self._isolated_context_id_ = None
+        self._exec_context_id_ = None
 
     async def get_alert(self, timeout: float = 5):
         if not self._page_enabled:
@@ -240,10 +243,10 @@ class Target:
             if "exceptionDetails" in res.keys():
                 raise JSEvalException(res["exceptionDetails"])
             obj_id = res["result"]['objectId']
-            doc = await self._document_elem
+            base_frame = await self.base_frame
             # noinspection PyUnresolvedReferences
-            obj = JSRemoteObj(obj_id=obj_id, target=self, isolated_exec_id=doc.___isolated_exec_id__,
-                              frame_id=await doc.__frame_id__)
+            obj = JSRemoteObj(obj_id=obj_id, target=self, isolated_exec_id=None,
+                              frame_id=base_frame["id"])
             if not context_id:
                 context_id = obj.__context_id__
                 self._exec_context_id_ = context_id
@@ -268,15 +271,23 @@ class Target:
         "const obj" will be the Object according to obj_id
         this is by default globalThis (=> window)
         """
+        wait_load = asyncio.create_task(self.wait_for_cdp("Page.loadEventFired", timeout))
         if execution_context_id and unique_context:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
         if unique_context:
             execution_context_id = await self._isolated_context_id
 
         globalthis = await self._global_this(execution_context_id)
-        res = await globalthis.__exec_raw__(script, *args, await_res=await_res, serialization=serialization,
-                                            max_depth=max_depth, timeout=timeout,
-                                            execution_context_id=execution_context_id)
+        try:
+            res = await globalthis.__exec_raw__(script, *args, await_res=await_res, serialization=serialization,
+                                                max_depth=max_depth, timeout=timeout,
+                                                execution_context_id=execution_context_id)
+        except StaleJSRemoteObjReference:
+            await wait_load
+            globalthis = await self._global_this(execution_context_id)
+            res = await globalthis.__exec_raw__(script, *args, await_res=await_res, serialization=serialization,
+                                                max_depth=max_depth, timeout=timeout,
+                                                execution_context_id=execution_context_id)
         return res
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
@@ -285,15 +296,23 @@ class Target:
         """
         exaple: script = "return elem.click()"
         """
+        wait_load = asyncio.create_task(self.wait_for_cdp("Page.loadEventFired", timeout))
         if execution_context_id and unique_context:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
         if unique_context:
             execution_context_id = await self._isolated_context_id
 
         globalthis = await self._global_this(execution_context_id)
-        res = await globalthis.__exec__(script, *args, serialization=serialization,
-                                        max_depth=max_depth, timeout=timeout,
-                                        execution_context_id=execution_context_id)
+        try:
+            res = await globalthis.__exec__(script, *args, serialization=serialization,
+                                            max_depth=max_depth, timeout=timeout,
+                                            execution_context_id=execution_context_id)
+        except StaleJSRemoteObjReference:
+            await wait_load
+            globalthis = await self._global_this(execution_context_id)
+            res = await globalthis.__exec__(script, *args, serialization=serialization,
+                                            max_depth=max_depth, timeout=timeout,
+                                            execution_context_id=execution_context_id)
         return res
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
@@ -302,15 +321,23 @@ class Target:
         """
         exaple: script = "return elem.click()"
         """
+        wait_load = asyncio.create_task(self.wait_for_cdp("Page.loadEventFired", timeout))
         if execution_context_id and unique_context:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
         if unique_context:
             execution_context_id = await self._isolated_context_id
 
         globalthis = await self._global_this(execution_context_id)
-        res = await globalthis.__exec_async__(script, *args, serialization=serialization,
-                                              max_depth=max_depth, timeout=timeout,
-                                              execution_context_id=execution_context_id)
+        try:
+            res = await globalthis.__exec_async__(script, *args, serialization=serialization,
+                                                  max_depth=max_depth, timeout=timeout,
+                                                  execution_context_id=execution_context_id)
+        except StaleJSRemoteObjReference:
+            await wait_load
+            globalthis = await self._global_this(execution_context_id)
+            res = await globalthis.__exec_async__(script, *args, serialization=serialization,
+                                                  max_depth=max_depth, timeout=timeout,
+                                                  execution_context_id=execution_context_id)
         return res
 
     @property
