@@ -271,7 +271,6 @@ class Target:
         "const obj" will be the Object according to obj_id
         this is by default globalThis (=> window)
         """
-        wait_load = asyncio.create_task(self.wait_for_cdp("Page.loadEventFired", timeout))
         if execution_context_id and unique_context:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
         if unique_context:
@@ -283,7 +282,7 @@ class Target:
                                                 max_depth=max_depth, timeout=timeout,
                                                 execution_context_id=execution_context_id)
         except StaleJSRemoteObjReference:
-            await wait_load
+            await self.wait_for_cdp("Page.loadEventFired", timeout)
             globalthis = await self._global_this(execution_context_id)
             res = await globalthis.__exec_raw__(script, *args, await_res=await_res, serialization=serialization,
                                                 max_depth=max_depth, timeout=timeout,
@@ -296,7 +295,6 @@ class Target:
         """
         exaple: script = "return elem.click()"
         """
-        wait_load = asyncio.create_task(self.wait_for_cdp("Page.loadEventFired", timeout))
         if execution_context_id and unique_context:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
         if unique_context:
@@ -308,7 +306,7 @@ class Target:
                                             max_depth=max_depth, timeout=timeout,
                                             execution_context_id=execution_context_id)
         except StaleJSRemoteObjReference:
-            await wait_load
+            await self.wait_for_cdp("Page.loadEventFired", timeout)
             globalthis = await self._global_this(execution_context_id)
             res = await globalthis.__exec__(script, *args, serialization=serialization,
                                             max_depth=max_depth, timeout=timeout,
@@ -321,7 +319,6 @@ class Target:
         """
         exaple: script = "return elem.click()"
         """
-        wait_load = asyncio.create_task(self.wait_for_cdp("Page.loadEventFired", timeout))
         if execution_context_id and unique_context:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
         if unique_context:
@@ -333,7 +330,7 @@ class Target:
                                                   max_depth=max_depth, timeout=timeout,
                                                   execution_context_id=execution_context_id)
         except StaleJSRemoteObjReference:
-            await wait_load
+            await self.wait_for_cdp("Page.loadEventFired", timeout)
             globalthis = await self._global_this(execution_context_id)
             res = await globalthis.__exec_async__(script, *args, serialization=serialization,
                                                   max_depth=max_depth, timeout=timeout,
