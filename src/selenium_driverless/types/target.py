@@ -224,7 +224,7 @@ class Target:
             try:
                 await wait
             except asyncio.TimeoutError:
-                raise TimeoutError(f"page didn't load within timeout of {timeout}")
+                raise TimeoutError(f"page: {url} didn't load within timeout of {timeout}")
         await get
         await self._on_loaded()
 
