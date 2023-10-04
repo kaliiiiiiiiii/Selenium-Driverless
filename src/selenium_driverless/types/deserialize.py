@@ -16,7 +16,7 @@ class StaleJSRemoteObjReference(Exception):
 
 
 class JSRemoteObj:
-    def __init__(self, obj_id: str, target, frame_id: int, isolated_exec_id: int):
+    def __init__(self, obj_id: str, target, frame_id: int, isolated_exec_id: int or None):
         super().__init__()
         super().__setattr__("___obj_id__", obj_id)
         super().__setattr__("___target__", target)
