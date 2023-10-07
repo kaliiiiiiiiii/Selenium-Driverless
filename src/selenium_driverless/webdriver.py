@@ -79,6 +79,8 @@ class Chrome:
          - timeout - timeout in seconds to start chrome
          - debug - for debugging Google-Chrome error messages and other debugging stuff lol
         """
+        self._stderr = None
+        self._stderr_file = None
         if is_first_run:
             print(
                 'This package has a "Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)" Licence.\n'
@@ -156,14 +158,15 @@ class Chrome:
                 path = options.binary_location
                 args = options.arguments
                 if self._debug:
-                    stderr = sys.stderr
+                    self._stderr = sys.stderr
                 else:
-                    stderr = subprocess.PIPE
+                    self._stderr = tempfile.TemporaryFile(prefix="selenium_driverless")
+                    self._stderr_file = self._stderr
                 self._process = subprocess.Popen(
                     [path, *args],
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
-                    stderr=stderr,
+                    stderr=self._stderr,
                     close_fds=True,
                     preexec_fn=os.setsid if os.name == 'posix' else None,
                     creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0,
@@ -461,6 +464,12 @@ class Chrome:
                 finally:
                     self._started = False
                     if clean_dirs:
+                        if self._stderr_file:
+                            # noinspection PyBroadException
+                            try:
+                                self._stderr.close()
+                            except Exception:
+                                traceback.print_exc()
                         await asyncio.wait_for(
                             # wait for
                             loop.run_in_executor(None,
