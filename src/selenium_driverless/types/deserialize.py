@@ -121,7 +121,8 @@ class JSRemoteObj:
                     is_value = False
                     _args.append({"objectId": obj_id})
                 else:
-                    warnings.warn(f"Can't find remote reference of {arg}, or got different execution context, trying to serialize. \n you can avoid this warning by passing json.dumps(arg) instead of the arg itsself")
+                    warnings.warn(
+                        f"Can't find remote reference of {arg}, or got different execution context, trying to serialize. \n you can avoid this warning by passing json.dumps(arg) instead of the arg itsself")
 
             if is_value:
                 _args.append({"value": arg})
@@ -258,7 +259,7 @@ class JSObject(JSRemoteObj, dict):
         self[k] = v
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(description={self.__description__}, sub_type={self.__sub_type__}, class_name={self.__class_name__}, obj_id="{self.__obj_id__}", context_id={self.__context_id__})'
+        return f'{self.__class__.__name__}(description={self.__description__}, sub_type={self.__sub_type__}, class_name={self.__class_name__}, obj_id={self.__obj_id__}, context_id={self.__context_id__})'
 
     def __hash__(self):
         # noinspection PyUnresolvedReferences
@@ -312,7 +313,7 @@ class JSFunction(JSRemoteObj):
 
     def __repr__(self):
         # noinspection PyUnresolvedReferences
-        return f'{self.__class__.__name__}("{self.__description__}", obj_id="{self.__obj_id__}", context_id={self.__context_id__})'
+        return f'{self.__class__.__name__}("{self.__description__}", obj_id={self.__obj_id__}, context_id={self.__context_id__})'
 
 
 class JSMapException(Exception):
@@ -514,7 +515,7 @@ class JSUnserializable(JSRemoteObj):
 
     def __repr__(self):
         # noinspection PyUnresolvedReferences
-        return f'{self.__class__.__name__}(type="{self.type}",description="{self.description}", sub_type="{self.sub_type}", class_name="{self.class_name}", value={self.value}, obj_id="{self.__obj_id__}", context_id={self.__context_id__})'
+        return f'{self.__class__.__name__}(type="{self.type}",description="{self.description}", sub_type="{self.sub_type}", class_name="{self.class_name}", value={self.value}, obj_id={self.__obj_id__}, context_id={self.__context_id__})'
 
 
 async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, subtype: str = None,
@@ -529,6 +530,9 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
         else:
             return JSUnserializable("IdOnly", None, target=target, obj_id=obj_id,
                                     isolated_exec_id=isolated_exec_id, frame_id=frame_id)
+
+    _type = deep.get("type")
+    _value = deep.get("value")
 
     # special types
     if class_name == 'XPathResult':
@@ -552,9 +556,11 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
         return elems
 
     # structures
-    _type = deep.get("type")
-    _value = deep.get("value")
     if _type == "array":
+        if _value is None:
+            return JSUnserializable(_type, _value, target=target, obj_id=obj_id, description=description,
+                                    sub_type=subtype,
+                                    class_name=class_name, isolated_exec_id=isolated_exec_id, frame_id=frame_id)
         _res = JSArray(obj_id=obj_id, target=target,
                        isolated_exec_id=isolated_exec_id, frame_id=frame_id)
         for idx, _deep in enumerate(_value):
@@ -562,6 +568,10 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
                                          isolated_exec_id=isolated_exec_id, frame_id=frame_id))
         return _res
     elif _type == "object":
+        if _value is None:
+            return JSUnserializable(_type, _value, target=target, obj_id=obj_id, description=description,
+                                    sub_type=subtype,
+                                    class_name=class_name, isolated_exec_id=isolated_exec_id, frame_id=frame_id)
         _res = JSObject(obj_id=obj_id, target=target, description=description, sub_type=subtype, class_name=class_name,
                         isolated_exec_id=isolated_exec_id, frame_id=frame_id)
         for key, value in _value:
@@ -632,7 +642,8 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
         _res = JSNodeList(obj_id=obj_id, target=target, class_name=class_name, isolated_exec_id=isolated_exec_id,
                           frame_id=frame_id)
         for idx, _deep in enumerate(_value):
-            _res.append(await parse_deep(_deep, target, isolated_exec_id=isolated_exec_id, frame_id=frame_id, loop=loop))
+            _res.append(
+                await parse_deep(_deep, target, isolated_exec_id=isolated_exec_id, frame_id=frame_id, loop=loop))
         return _res
     elif _type == "window":
         return JSWindow(context=_value.get("context"), obj_id=obj_id, target=target, isolated_exec_id=isolated_exec_id,
