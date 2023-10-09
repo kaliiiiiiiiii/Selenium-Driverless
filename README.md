@@ -10,8 +10,10 @@
 * async (`asyncio`) and sync (experimantal) support
 * proxy-auth support (experimental, [examle-code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
 
-### Feel free to test my code!
-See [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/dev) for the latest implementations.
+### Questions? 
+Feel free to join the [Diriverless-Community](https://discord.com/invite/ze6EAkja) on **Discord**:)
+
+Also, see [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/dev) for the latest implementations.
 <details>
 <summary>dev-installation (click to expand)</summary>
 
@@ -266,7 +268,8 @@ asyncio.run(main())
 
 ## Help
 
-Please feel free to open an issue or fork! \
+You found a bug? Feel free to open an issue:)
+You've got other questions or proposials? feel free to join the [Diriverless-Community](https://discord.com/invite/ze6EAkja) on **Discord** or open a discusion\
 Note: **please check the todo's below at first!**
 
 ## Todo's
