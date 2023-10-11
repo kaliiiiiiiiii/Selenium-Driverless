@@ -33,6 +33,7 @@ class Options(metaclass=ABCMeta):
     KEY = "goog:chromeOptions"
 
     def __init__(self) -> None:
+
         from selenium_driverless.utils.utils import find_chrome_executable, IS_POSIX
         super().__init__()
 
@@ -49,6 +50,7 @@ class Options(metaclass=ABCMeta):
         self.user_data_dir = None
         self._arguments = []
         self._ignore_local_proxy = False
+        self._auto_clean_dirs = True
 
         self.add_argument("--no-first-run")
         self.add_argument('--disable-component-update')
@@ -118,6 +120,17 @@ class Options(metaclass=ABCMeta):
         """
         raise NotImplementedError()
         return self._caps["platformName"]
+
+    @property
+    def auto_clean_dirs(self) -> bool or None:
+        """
+        clear userdata directories on exit automatically
+        """
+        return self._auto_clean_dirs
+
+    @auto_clean_dirs.setter
+    def auto_clean_dirs(self, enabled: bool) -> None:
+        self._auto_clean_dirs = enabled
 
     @platform_name.setter
     def platform_name(self, platform: str) -> None:

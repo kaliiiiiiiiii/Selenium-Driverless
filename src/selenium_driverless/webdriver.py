@@ -110,7 +110,7 @@ class Chrome:
             options.add_argument(
                 "--user-data-dir=" + self._temp_dir + "/data_dir")
 
-        self._options = options
+        self._options:ChromeOptions = options
         self._is_remote = True
         self._is_remote = False
         self._started = False
@@ -126,7 +126,7 @@ class Chrome:
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.quit()
+        await self.quit(clean_dirs=self._options.auto_clean_dirs)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
