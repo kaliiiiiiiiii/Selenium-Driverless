@@ -35,6 +35,7 @@ from typing import Optional
 
 # io
 import asyncio
+import websockets
 
 # selenium
 from selenium.webdriver.common.print_page_options import PrintOptions
@@ -443,13 +444,18 @@ class Chrome:
             start = time.monotonic()
             # noinspection PyUnresolvedReferences,PyBroadException
             try:
-                await self.base_target.execute_cdp_cmd("Browser.close")
+                try:
+                    await self.base_target.execute_cdp_cmd("Browser.close")
+                except websockets.ConnectionClosedError:
+                    pass
                 if self._is_remote:
                     await loop.run_in_executor(None, lambda: self._process.wait(timeout))
-            except Exception:
+            except Exception as e:
                 import sys
                 print('Ignoring exception at self.base_target.execute_cdp_cmd("Browser.close")', file=sys.stderr)
                 traceback.print_exc()
+            else:
+                self._process = None
 
             if not self._is_remote:
                 # noinspection PyBroadException
