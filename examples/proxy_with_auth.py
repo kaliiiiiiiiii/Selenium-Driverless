@@ -1,8 +1,6 @@
 from selenium_driverless import webdriver
 import asyncio
 
-global driver
-
 user = "user1"
 psw = "password"
 host = "http://my_proxy.com:5000"
@@ -10,9 +8,8 @@ host = "http://my_proxy.com:5000"
 response = {"response": "ProvideCredentials", "username": user, "password": psw}
 
 
-async def auth_callback(data):
-    global driver
-    if data["authChallenge"]["origin"] == f"{host}":
+async def auth_callback(data, driver):
+    if data["authChallenge"]["origin"] == host:
         await driver.base_target.execute_cdp_cmd("Fetch.continueWithAuth",
                                                  {"requestId": data["requestId"], "authChallengeResponse": response})
     else:
@@ -21,23 +18,19 @@ async def auth_callback(data):
                                                   "authChallengeResponse": {"response": "Default"}})
     print(data)
 
-
-async def on_request(params):
-    global driver
+async def on_request(params, driver):
     await driver.base_target.execute_cdp_cmd("Fetch.continueRequest", {"requestId": params['requestId']})
 
 
 async def main():
-    global driver
-
     options = webdriver.ChromeOptions()
     options.add_argument(f"--proxy-server={host}")
     async with webdriver.Chrome(options=options) as driver:
         await driver.base_target.execute_cdp_cmd("Fetch.enable",
                                                  {"handleAuthRequests": True, "patterns":
-                                                     [{"urlPattern": f"*"}]})
-        await driver.base_target.add_cdp_listener("Fetch.authRequired", auth_callback)
-        await driver.base_target.add_cdp_listener("Fetch.requestPaused", on_request)
+                                                     [{"urlPattern": "*"}]})
+            await driver.base_target.add_cdp_listener("Fetch.authRequired", lambda data: auth_callback(data, driver))
+            await driver.base_target.add_cdp_listener("Fetch.requestPaused", lambda params: on_request(params, driver))
 
         await driver.get("https://nordvpn.com/uk/what-is-my-ip/", wait_load=False)
 
