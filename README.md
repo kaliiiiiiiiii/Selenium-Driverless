@@ -9,6 +9,7 @@
 * multiple Incognito-contexts with individual proxy & cookies
 * async (`asyncio`) and sync (experimantal) support
 * proxy-auth support (experimental, [examle-code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
+* request interception (see events example script)
 
 ### Questions? 
 Feel free to join the [Diriverless-Community](https://discord.com/invite/ze6EAkja) on **Discord**:)
@@ -97,39 +98,73 @@ async with webdriver.Chrome(options=options) as driver:
 ### use events
 - use CDP events (see [chrome-developer-protocoll](https://chromedevtools.github.io/devtools-protocol/) for possible events) 
 
-**Note**: synchronous might not work properly
+**Notes**: synchronous might not work properly
 
 <details>
 <summary>Examle Code (Click to expand)</summary>
 
+warning: network interception with `Fetch.enable` might have issues with cross-domain iframes, maximum websocket message size or Font requests.\
+You might try using [`Network.setRequestInterception](https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-setRequestInterception) (officially deprecated) or narrowing the pattern
+
 ```python
-from selenium_driverless import webdriver
 import asyncio
+import base64
+import sys
+import time
+import traceback
 
-global driver
+from cdp_socket.exceptions import CDPError
+
+from selenium_driverless import webdriver
 
 
-async def on_request(params):
-    await driver.execute_cdp_cmd("Fetch.continueRequest", {"requestId": params['requestId']})
-    print(params["request"]["url"])
+async def on_request(params, global_conn):
+
+    url = params["request"]["url"]
+    _params = {"requestId": params['requestId']}
+    if params.get('responseStatusCode') in [301, 302, 303, 307, 308]:
+        # redirected request
+        return await global_conn.execute_cdp_cmd("Fetch.continueResponse", _params)
+    else:
+        try:
+            body = await global_conn.execute_cdp_cmd("Fetch.getResponseBody", _params, timeout=1)
+        except CDPError as e:
+            if e.code == -32000 and e.message == 'Can only get response body on requests captured after headers received.':
+                print(params, "\n", file=sys.stderr)
+                traceback.print_exc()
+                await global_conn.execute_cdp_cmd("Fetch.continueResponse", _params)
+            else:
+                raise e
+        else:
+            start = time.monotonic()
+            body_encoded = base64.b64decode(body['body'])
+
+            # modify body here
+
+            body_modified = base64.b64encode(body_encoded).decode()
+            fulfill_params = {"responseCode": 200, "body": body_modified}
+            fulfill_params.update(_params)
+            _time = time.monotonic() - start
+            if _time > 0.01:
+                print(f"decoding took long: {_time} s")
+            await global_conn.execute_cdp_cmd("Fetch.fulfillRequest", fulfill_params)
+            print("Mocked response", url)
 
 
 async def main():
-    global driver
     options = webdriver.ChromeOptions()
-    async with webdriver.Chrome(options=options) as driver:
-        await driver.get('http://nowsecure.nl#relax')
-
-        # enable Fetch
-        await driver.execute_cdp_cmd("Fetch.enable")
-        await driver.add_cdp_listener("Fetch.requestPaused", on_request)
-
-        await driver.wait_for_cdp(event="Page.loadEventFired", timeout=5)
-
-        await driver.remove_cdp_listener("Fetch.requestPaused", on_request)
-        await driver.execute_cdp_cmd("Fetch.disable")
-
-        print(await driver.title)
+    options.add_argument("--window-size=500,900")
+    async with webdriver.Chrome(options=options, max_ws_size=2 ** 30) as driver:
+        driver.base_target.socket.on_closed.append(lambda code, reason: print(f"chrome exited"))
+        global_conn = driver.base_target
+        await driver.get("about:blank")
+        await global_conn.execute_cdp_cmd("Fetch.enable", cmd_args={"patterns": [{"requestStage": "Response", "urlPattern":"*"}]})
+        await global_conn.add_cdp_listener("Fetch.requestPaused", lambda data: on_request(data, global_conn))
+        await driver.get(
+            'https://wikipedia.org',
+            timeout=60, wait_load=False)
+        while True:
+            await asyncio.sleep(10)
 
 
 asyncio.run(main())
