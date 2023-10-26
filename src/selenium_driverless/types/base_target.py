@@ -11,7 +11,7 @@ class BaseTarget:
 
     # noinspection PyMissingConstructor
     def __init__(self, host: str, is_remote: bool = False,
-                 loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30) -> None:
+                 loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30, max_ws_size:int=2**20) -> None:
         """Creates a new instance of the chrome target. Starts the service and
         then creates new instance of chrome target.
 
@@ -27,6 +27,7 @@ class BaseTarget:
         self._loop = loop
         self._started = False
         self._timeout = timeout
+        self._max_ws_size = max_ws_size
 
     def __repr__(self):
         return f'<{type(self).__module__}.{type(self).__name__} (target_id="{self.id}", host="{self._host}")>'
@@ -70,7 +71,7 @@ class BaseTarget:
                 except aiohttp.ClientError:
                     pass
             self._socket = await SingleCDPSocket(websock_url=_json["webSocketDebuggerUrl"], timeout=self._timeout,
-                                                 loop=self._loop)
+                                                 loop=self._loop, max_size=self._max_ws_size)
             self._started = True
         return self
 

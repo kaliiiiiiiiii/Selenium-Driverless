@@ -41,7 +41,7 @@ class Target:
     # noinspection PyShadowingBuiltins
     def __init__(self, host: str, target_id: str, is_remote: bool = False,
                  loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
-                 type: str = None, start_socket: bool = False) -> None:
+                 type: str = None, start_socket: bool = False, max_ws_size:int=2**20) -> None:
         """Creates a new instance of the chrome target. Starts the service and
         then creates new instance of chrome target.
 
@@ -54,6 +54,7 @@ class Target:
         self._pointer = None
         self._page_enabled = None
         self._dom_enabled = None
+        self._max_ws_size = max_ws_size
 
         self._global_this_ = {}
         self._document_elem_ = None
@@ -126,7 +127,7 @@ class Target:
     async def _init(self):
         if not self._socket:
             self._socket = await SingleCDPSocket(websock_url=f'ws://{self._host}/devtools/page/{self._id}',
-                                                 timeout=self._timeout, loop=self._loop)
+                                                 timeout=self._timeout, loop=self._loop, max_size=self._max_ws_size)
             if self._loop:
                 self._pointer = SyncPointer(target=self, loop=self._loop)
             else:
@@ -173,12 +174,12 @@ class Target:
         if not iframes:
             raise ValueError(f"Expected WebElements, but got{iframes}")
 
-        async def target_getter(target_id: str, timeout: float = 2):
+        async def target_getter(target_id: str, timeout: float = 2, max_ws_size:int=2**20):
             return await get_target(target_id=target_id, host=self._host, loop=self._loop, is_remote=self._is_remote,
-                                    timeout=timeout)
+                                    timeout=timeout, max_ws_size=max_ws_size)
 
         _targets = await get_targets(cdp_exec=self.execute_cdp_cmd, target_getter=target_getter,
-                                     _type="iframe", context_id=self._context_id)
+                                     _type="iframe", context_id=self._context_id, max_ws_size=self._max_ws_size)
         targets = {}
 
         for targetinfo in list(_targets.values()):

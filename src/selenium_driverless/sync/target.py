@@ -8,10 +8,10 @@ class Target(AsyncTarget):
     # noinspection PyShadowingBuiltins
     def __init__(self, host: str, target_id: str, is_remote: bool = False,
                  loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
-                 type: str = None) -> None:
+                 type: str = None,max_ws_size: int = 2 ** 20) -> None:
         super().__init__(host=host, target_id=target_id,
                          is_remote=is_remote, loop=loop,
-                         timeout=timeout, type=type)
+                         timeout=timeout, type=type, max_ws_size=max_ws_size)
         if not loop:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
