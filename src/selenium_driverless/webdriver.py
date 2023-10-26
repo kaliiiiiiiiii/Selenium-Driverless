@@ -223,6 +223,7 @@ class Chrome:
 
                     # noinspection PyProtectedMember
                     context._closed_callbacks.append(remove_context)
+                    self.base_target.socket.on_closed.append(lambda code, reason: self.quit(clean_dirs=self._options.auto_clean_dirs))
                     self._current_context = context
                     self._contexts[_id] = context
 
@@ -444,22 +445,29 @@ class Chrome:
             start = time.monotonic()
             # noinspection PyUnresolvedReferences,PyBroadException
             try:
-                try:
-                    await self.base_target.execute_cdp_cmd("Browser.close")
-                except websockets.ConnectionClosedError:
-                    pass
-                if self._is_remote:
-                    await loop.run_in_executor(None, lambda: self._process.wait(timeout))
-            except Exception as e:
+                # assumption: chrome is still running
+                await self.base_target.execute_cdp_cmd("Browser.close", timeout=2)
+            except websockets.ConnectionClosedError:
+                pass
+            except Exception:
                 import sys
                 print('Ignoring exception at self.base_target.execute_cdp_cmd("Browser.close")', file=sys.stderr)
                 traceback.print_exc()
-            else:
-                self._process = None
-
             if not self._is_remote:
+                if self._process is not None:
+                    # assumption: chrome is being shutdown manually or programmatically
+                    # noinspection PyBroadException
+                    try:
+                        await loop.run_in_executor(None, lambda: self._process.wait(timeout))
+                    except Exception:
+                        import sys
+                        print('Ignoring exception at self.base_target.execute_cdp_cmd("Browser.close")', file=sys.stderr)
+                        traceback.print_exc()
+                    else:
+                        self._process = None
                 # noinspection PyBroadException
                 try:
+                    # assumption: chrome hasn't closed within timeout, killing with force
                     # wait for process to be killed
                     if self._process is not None:
                         if os.name == 'posix':
