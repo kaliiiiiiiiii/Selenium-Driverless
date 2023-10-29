@@ -21,11 +21,7 @@ class Chrome(AsyncDriver):
         self.__aexit__(*args, **kwargs)
 
     def quit(self, timeout: float = 30, clean_dirs: bool = True):
-        try:
-            asyncio.get_running_loop()
-            return super().quit(timeout=timeout, clean_dirs=clean_dirs)
-        except RuntimeError:
-            return self._loop.run_until_complete(super().quit(timeout=timeout, clean_dirs=clean_dirs))
+        return self.__getattribute__("quit")(timeout=timeout, clean_dirs=clean_dirs)
 
     def __getattribute__(self, item):
         res = super().__getattribute__(item)
