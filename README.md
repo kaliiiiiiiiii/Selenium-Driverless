@@ -12,7 +12,7 @@
 * request interception (see events example script)
 
 ### Questions? 
-Feel free to join the [Diriverless-Community](https://discord.com/invite/ze6EAkja) on **Discord**:)
+Feel free to join the [Diriverless-Community](https://discord.com/invite/MzZZjr2ZM3) on **Discord**:)
 
 Also, see [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/dev) for the latest implementations.
 <details>
