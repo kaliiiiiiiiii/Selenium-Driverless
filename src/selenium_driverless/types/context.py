@@ -58,7 +58,7 @@ class Context:
     # noinspection PyProtectedMember
     def __init__(self, base_target: Target, context_id: str = None,
                  loop: asyncio.AbstractEventLoop = None, _base_target: BaseTarget or None = None,
-                 is_incognito: bool = False) -> None:
+                 is_incognito: bool = False, max_ws_size: int = 2 ** 20) -> None:
         self._loop: asyncio.AbstractEventLoop or None = None
         self.browser_pid: int or None = None
         self._targets: typing.Dict[str, Target] = {}
@@ -70,6 +70,7 @@ class Context:
         self._current_target = base_target
         self._host = base_target._host
         self._is_remote = base_target._is_remote
+        self._max_ws_size:int=max_ws_size
 
         self._context_id = context_id
         self._closed_callbacks: typing.List[callable] = []
@@ -105,7 +106,7 @@ class Context:
         if not self._started:
             if not self.base_target:
                 self._base_target = await BaseTarget(host=self._host, is_remote=self._is_remote,
-                                                     timeout=15, loop=self._loop)
+                                                     timeout=15, loop=self._loop, max_ws_size=self._max_ws_size)
             if not self.context_id:
                 self._context_id = await self._current_target.browser_context_id
             _type = await self.current_target.type
@@ -140,7 +141,7 @@ class Context:
         if context_id == "self":
             context_id = self.context_id
         return await get_targets(cdp_exec=self.base_target.execute_cdp_cmd, target_getter=self.get_target, _type=_type,
-                                 context_id=context_id)
+                                 context_id=context_id, max_ws_size=self._max_ws_size)
 
     @property
     def current_target(self) -> Target:
@@ -155,13 +156,15 @@ class Context:
         # noinspection PyProtectedMember
         return await self.current_target._isolated_context_id
 
-    async def get_target(self, target_id: str = None, timeout: float = 2) -> Target:
+    async def get_target(self, target_id: str = None, timeout: float = 2, max_ws_size:int=None) -> Target:
+        if not max_ws_size:
+            max_ws_size = self._max_ws_size
         if not target_id:
             return self._current_target
         target: Target = self._targets.get(target_id)
         if not target:
             target: Target = await get_target(target_id=target_id, host=self._host,
-                                              loop=self._loop, is_remote=self._is_remote, timeout=timeout)
+                                              loop=self._loop, is_remote=self._is_remote, timeout=timeout, max_ws_size=max_ws_size)
             self._targets[target_id] = target
 
             # noinspection PyUnusedLocal

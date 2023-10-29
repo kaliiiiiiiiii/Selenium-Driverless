@@ -69,7 +69,8 @@ class Chrome:
             self,
             options: ChromeOptions = None,
             timeout: float = 30,
-            debug: bool = False
+            debug: bool = False,
+            max_ws_size: int = 2 ** 20
     ) -> None:
         """Creates a new instance of the chrome target. Starts the service and
         then creates new instance of chrome target.
@@ -100,6 +101,7 @@ class Chrome:
         self._current_context: Context = None
         self._contexts: typing.Dict[str, Context] = {}
         self._temp_dir = tempfile.TemporaryDirectory(prefix="selenium_driverless_").name
+        self._max_ws_size = max_ws_size
 
         if not options:
             options = ChromeOptions()
@@ -110,7 +112,7 @@ class Chrome:
             options.add_argument(
                 "--user-data-dir=" + self._temp_dir + "/data_dir")
 
-        self._options:ChromeOptions = options
+        self._options: ChromeOptions = options
         self._is_remote = True
         self._is_remote = False
         self._started = False
@@ -188,10 +190,12 @@ class Chrome:
             self._host = f"{host}:{port}"
             if self._loop:
                 self._base_target = await SyncBaseTarget(host=self._host, is_remote=self._is_remote,
-                                                         timeout=self._timeout, loop=self._loop)
+                                                         timeout=self._timeout, loop=self._loop,
+                                                         max_ws_size=self._max_ws_size)
             else:
                 self._base_target = await BaseTarget(host=self._host, is_remote=self._is_remote,
-                                                     timeout=self._timeout, loop=self._loop)
+                                                     timeout=self._timeout, loop=self._loop,
+                                                     max_ws_size=self._max_ws_size)
 
             if not self._is_remote:
                 # noinspection PyUnboundLocalVariable
@@ -201,15 +205,16 @@ class Chrome:
                 if target["type"] == "page":
                     target_id = target["id"]
                     self._current_target = await get_target(target_id=target_id, host=self._host,
-                                                            loop=self._loop, is_remote=self._is_remote, timeout=2)
+                                                            loop=self._loop, is_remote=self._is_remote, timeout=2,
+                                                            max_ws_size=self._max_ws_size)
 
                     # handle the context
                     if self._loop:
                         context = await SyncContext(base_target=self._current_target, loop=self._loop,
-                                                    _base_target=self.base_target)
+                                                    _base_target=self.base_target, max_ws_size=self._max_ws_size)
                     else:
                         context = await Context(base_target=self._current_target, loop=self._loop,
-                                                _base_target=self.base_target)
+                                                _base_target=self.base_target, max_ws_size=self._max_ws_size)
                     _id = context.context_id
 
                     def remove_context():
@@ -218,6 +223,7 @@ class Chrome:
 
                     # noinspection PyProtectedMember
                     context._closed_callbacks.append(remove_context)
+                    self.base_target.socket.on_closed.append(lambda code, reason: self.quit(clean_dirs=self._options.auto_clean_dirs))
                     self._current_context = context
                     self._contexts[_id] = context
 
@@ -246,10 +252,12 @@ class Chrome:
                 if not context:
                     if self._loop:
                         context = await SyncContext(base_target=self._current_target, context_id=_id,
-                                                    loop=self._loop, _base_target=self._base_target)
+                                                    loop=self._loop, _base_target=self._base_target,
+                                                    max_ws_size=self._max_ws_size)
                     else:
                         context = await Context(base_target=self._current_target, context_id=_id,
-                                                loop=self._loop, _base_target=self._base_target)
+                                                loop=self._loop, _base_target=self._base_target,
+                                                max_ws_size=self._max_ws_size)
                 contexts[_id] = context
         self._contexts.update(contexts)
         return self._contexts
@@ -270,10 +278,11 @@ class Chrome:
         _id = res["browserContextId"]
         if self._loop:
             context = await SyncContext(base_target=self._base_target, context_id=_id, loop=self._loop,
-                                        _base_target=self._base_target, is_incognito=True)
+                                        _base_target=self._base_target, is_incognito=True,
+                                        max_ws_size=self._max_ws_size)
         else:
             context = await Context(base_target=self._base_target, context_id=_id, loop=self._loop,
-                                    _base_target=self._base_target, is_incognito=True)
+                                    _base_target=self._base_target, is_incognito=True, max_ws_size=self._max_ws_size)
         self._contexts[_id] = context
 
         def remove_context():
@@ -425,6 +434,8 @@ class Chrome:
                 target.quit()
         """
 
+        loop = asyncio.get_running_loop()
+
         def clean_dirs_sync(dirs: typing.List[str]):
             for _dir in dirs:
                 while os.path.isdir(_dir):
@@ -434,18 +445,29 @@ class Chrome:
             start = time.monotonic()
             # noinspection PyUnresolvedReferences,PyBroadException
             try:
-                await self.base_target.execute_cdp_cmd("Browser.close")
-            except websockets.exceptions.ConnectionClosedError:
+                # assumption: chrome is still running
+                await self.base_target.execute_cdp_cmd("Browser.close", timeout=2)
+            except websockets.ConnectionClosedError:
                 pass
             except Exception:
                 import sys
                 print('Ignoring exception at self.base_target.execute_cdp_cmd("Browser.close")', file=sys.stderr)
                 traceback.print_exc()
-
             if not self._is_remote:
-                loop = asyncio.get_running_loop()
+                if self._process is not None:
+                    # assumption: chrome is being shutdown manually or programmatically
+                    # noinspection PyBroadException
+                    try:
+                        await loop.run_in_executor(None, lambda: self._process.wait(timeout))
+                    except Exception:
+                        import sys
+                        print('Ignoring exception at self.base_target.execute_cdp_cmd("Browser.close")', file=sys.stderr)
+                        traceback.print_exc()
+                    else:
+                        self._process = None
                 # noinspection PyBroadException
                 try:
+                    # assumption: chrome hasn't closed within timeout, killing with force
                     # wait for process to be killed
                     if self._process is not None:
                         if os.name == 'posix':

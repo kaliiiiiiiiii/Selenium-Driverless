@@ -47,7 +47,7 @@ class Options(metaclass=ABCMeta):
         self._extensions = []
         self._experimental_options = {}
         self._debugger_address = None
-        self.user_data_dir = None
+        self._user_data_dir = None
         self._arguments = []
         self._ignore_local_proxy = False
         self._auto_clean_dirs = True
@@ -323,7 +323,7 @@ class Options(metaclass=ABCMeta):
                 user_data_dir = argument[16:]
                 if not os.path.isdir(user_data_dir):
                     os.makedirs(user_data_dir, exist_ok=True)
-                self.user_data_dir = user_data_dir
+                self._user_data_dir = user_data_dir
             elif argument[:24] == "--remote-debugging-port=":
                 port = int(argument[24:])
                 if not self._debugger_address:
@@ -332,6 +332,14 @@ class Options(metaclass=ABCMeta):
             self._arguments.append(argument)
         else:
             raise ValueError("argument can not be null")
+
+    @property
+    def user_data_dir(self) -> str:
+        return self._user_data_dir
+
+    @user_data_dir.setter
+    def user_data_dir(self, _dir: str):
+        self.add_argument(f"--user-data-dir={_dir}")
 
     def ignore_local_proxy_environment_variables(self) -> None:
         """By calling this you will ignore HTTP_PROXY and HTTPS_PROXY from
