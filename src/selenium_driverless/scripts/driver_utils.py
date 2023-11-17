@@ -109,5 +109,5 @@ async def add_cookie(target, cookie_dict, context_id: str = None) -> None:
         assert cookie_dict["sameSite"] in ["Strict", "Lax", "None"]
     args = {"cookies": [cookie_dict]}
     if context_id:
-        args["Storage.setCookies"] = context_id
+        args["browserContextId"] = context_id
     await target.execute_cdp_cmd("Storage.setCookies", args)
