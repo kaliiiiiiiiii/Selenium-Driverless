@@ -244,10 +244,17 @@ class Target:
             if "exceptionDetails" in res.keys():
                 raise JSEvalException(res["exceptionDetails"])
             obj_id = res["result"]['objectId']
+
+
             base_frame = await self.base_frame
+            # target can have no frames at all
+            frame_id = None
+            if base_frame:
+                frame_id = base_frame.get("id")
+
             # noinspection PyUnresolvedReferences
             obj = JSRemoteObj(obj_id=obj_id, target=self, isolated_exec_id=None,
-                              frame_id=base_frame["id"])
+                              frame_id=frame_id)
             if not context_id:
                 context_id = obj.__context_id__
                 self._exec_context_id_ = context_id
@@ -397,13 +404,19 @@ class Target:
 
     @property
     async def frame_tree(self):
-        res = await self.execute_cdp_cmd("Page.getFrameTree")
-        return res["frameTree"]
+        try:
+            res = await self.execute_cdp_cmd("Page.getFrameTree")
+            return res["frameTree"]
+        except CDPError as e:
+            if not(e.code == -32601 and e.message == "'Page.getFrameTree' wasn't found"):
+                raise e
+
 
     @property
     async def base_frame(self):
         res = await self.frame_tree
-        return res["frame"]
+        if res:
+            return res["frame"]
 
     @property
     async def type(self):

@@ -56,7 +56,7 @@ class Context:
     """Allows you to drive the browser without chromedriver."""
 
     # noinspection PyProtectedMember
-    def __init__(self, base_target: Target, context_id: str = None,
+    def __init__(self, base_target: Target, driver, context_id: str = None,
                  loop: asyncio.AbstractEventLoop = None, _base_target: BaseTarget or None = None,
                  is_incognito: bool = False, max_ws_size: int = 2 ** 20) -> None:
         self._loop: asyncio.AbstractEventLoop or None = None
@@ -70,11 +70,12 @@ class Context:
         self._current_target = base_target
         self._host = base_target._host
         self._is_remote = base_target._is_remote
-        self._max_ws_size:int=max_ws_size
+        self._max_ws_size: int = max_ws_size
 
         self._context_id = context_id
         self._closed_callbacks: typing.List[callable] = []
-        self._base_target = None
+        self._base_target = _base_target
+        self._driver = driver
         self._is_incognito = is_incognito
 
     def __repr__(self):
@@ -156,7 +157,7 @@ class Context:
         # noinspection PyProtectedMember
         return await self.current_target._isolated_context_id
 
-    async def get_target(self, target_id: str = None, timeout: float = 2, max_ws_size:int=None) -> Target:
+    async def get_target(self, target_id: str = None, timeout: float = 2, max_ws_size: int = None) -> Target:
         if not max_ws_size:
             max_ws_size = self._max_ws_size
         if not target_id:
@@ -164,7 +165,8 @@ class Context:
         target: Target = self._targets.get(target_id)
         if not target:
             target: Target = await get_target(target_id=target_id, host=self._host,
-                                              loop=self._loop, is_remote=self._is_remote, timeout=timeout, max_ws_size=max_ws_size)
+                                              loop=self._loop, is_remote=self._is_remote, timeout=timeout,
+                                              max_ws_size=max_ws_size)
             self._targets[target_id] = target
 
             # noinspection PyUnusedLocal
@@ -785,6 +787,8 @@ class Context:
         if origin:
             args["origin"] = origin
         await self.execute_cdp_cmd("Browser.setPermission", args)
+
+
 
     async def wait_for_cdp(self, event: str, timeout: float or None = None, target_id: str = None):
         target = await self.get_target(target_id=target_id)
