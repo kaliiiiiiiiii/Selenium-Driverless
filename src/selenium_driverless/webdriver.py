@@ -60,7 +60,6 @@ from selenium_driverless.sync.base_target import BaseTarget as SyncBaseTarget
 # others
 from cdp_socket.utils.conn import get_json
 from selenium_driverless.types.options import Options as ChromeOptions
-from selenium_driverless.utils.utils import is_first_run
 
 
 class Chrome:
@@ -81,19 +80,13 @@ class Chrome:
          - timeout - timeout in seconds to start chrome
          - debug - for debugging Google-Chrome error messages and other debugging stuff lol
         """
+        self._prefs = {}
         self._auth_interception_enabled = None
         self._mv3_extension = None
         self._extensions_incognito_allowed = None
         self._base_context = None
         self._stderr = None
         self._stderr_file = None
-        if is_first_run:
-            print(
-                'This package has a "Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)" License.\n'
-                "Therefore, you'll have to ask the developer first if you want to use this package for your business.\n"
-                "https://github.com/kaliiiiiiiiii/Selenium-Driverless", file=sys.stderr)
-            from selenium_driverless.utils.utils import write
-            write("files/is_first_run", "false")
         self._process = None
         self._current_target = None
         self._host = None
@@ -115,9 +108,6 @@ class Chrome:
         if not options.binary_location:
             from selenium_driverless.utils.utils import find_chrome_executable
             options.binary_location = find_chrome_executable()
-        if not options.user_data_dir:
-            options.add_argument(
-                "--user-data-dir=" + self._temp_dir + "/data_dir")
 
         self._options: ChromeOptions = options
         self._is_remote = True
@@ -152,6 +142,17 @@ class Chrome:
         """
         if not self._started:
             from selenium_driverless.utils.utils import read, write
+            from selenium_driverless.utils.utils import is_first_run
+            from selenium_driverless.scripts.prefs import read_prefs, write_prefs
+
+            is_first_run = await is_first_run()
+
+            if is_first_run:
+                print(
+                    'This package has a "Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)" License.\n'
+                    "Therefore, you'll have to ask the developer first if you want to use this package for your business.\n"
+                    "https://github.com/kaliiiiiiiiii/Selenium-Driverless", file=sys.stderr)
+                await write("files/is_first_run", "false")
 
             if not self._options.debugger_address:
                 from selenium_driverless.utils.utils import random_port
@@ -161,11 +162,26 @@ class Chrome:
 
             if self._options.headless and not self._is_remote:
                 # patch useragent
-                user_agent = read("files/useragent", sel_root=True)
+                user_agent = await read("files/useragent", sel_root=True)
                 if user_agent:
                     self._options.add_argument(f"--user-agent={user_agent}")
                 else:
                     warnings.warn("headless is detectable at first run")
+
+            # handle prefs
+            if self._options.user_data_dir:
+                prefs_path = self._options.user_data_dir + "/Default/Preferences"
+                if os.path.isfile(prefs_path):
+                    self._prefs = await read_prefs(prefs_path)
+                else:
+                    os.makedirs(os.path.dirname(prefs_path), exist_ok=True)
+            else:
+                self._options.add_argument(
+                    "--user-data-dir=" + self._temp_dir + "/data_dir")
+                prefs_path = self._options.user_data_dir + "/Default/Preferences"
+                os.makedirs(os.path.dirname(prefs_path), exist_ok=True)
+            self._prefs.update(self._options.prefs)
+            await write_prefs(self._prefs, prefs_path)
 
             # noinspection PyProtectedMember
             # handle extensions
@@ -219,7 +235,8 @@ class Chrome:
                     path = self._options.user_data_dir + "/DevToolsActivePort"
                     while not os.path.isfile(path):
                         await asyncio.sleep(0.1)
-                    port = int(read(path, sel_root=False).split("\n")[0])
+                    port = await read(path, sel_root=False)
+                    port = int(port.split("\n")[0])
                     self._options.debugger_address = f"127.0.0.1:{port}"
 
             host, port = self._options.debugger_address.split(":")
@@ -240,7 +257,7 @@ class Chrome:
                 res = await self._base_target.execute_cdp_cmd("Browser.getVersion")
                 user_agent = res["userAgent"]
                 user_agent = user_agent.replace("HeadlessChrome", "Chrome")
-                write("files/useragent", user_agent, sel_root=True)
+                await write("files/useragent", user_agent, sel_root=True)
 
             if not self._is_remote:
                 # noinspection PyUnboundLocalVariable
@@ -347,7 +364,7 @@ class Chrome:
         self._mv3_extension = None
         self._auth_interception_enabled = False
 
-        if self._options.proxy:
+        if self._options.single_proxy:
             await self.ensure_extensions_incognito_allowed()
         if self._auth:
             mv3_target = await self.mv3_extension
@@ -416,6 +433,7 @@ class Chrome:
                 }
                 make_global()
             """
+            await asyncio.sleep(0.1)
             await page.execute_async_script(script)
             self._extensions_incognito_allowed = True
             await page.close()

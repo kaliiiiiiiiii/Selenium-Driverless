@@ -274,6 +274,20 @@ iframe_document = await iframes[0].content_document
 # iframe_document.find_elements(...)
 ```
 
+### use preferences
+```python
+from selenium_driverless import webdriver
+options = webdriver.ChromeOptions()
+
+ # recommended usage
+options.update_pref("download.prompt_for_download", False)
+# or
+options.prefs.update({"download": {"prompt_for_download": False}})
+
+# supported
+options.add_experimental_option("prefs", {"download.prompt_for_download": False})
+```
+
 ### Multiple Contexts
 - different cookies for each context
 - A context can have multiple windows and tabs within

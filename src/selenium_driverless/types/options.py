@@ -27,6 +27,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.proxy import Proxy
 
 from selenium_driverless.utils.utils import sel_driverless_path
+from selenium_driverless.scripts.prefs import prefs_to_json
 
 
 # noinspection PyUnreachableCode,PyUnusedLocal
@@ -51,6 +52,7 @@ class Options(metaclass=ABCMeta):
         self._debugger_address = None
         self._user_data_dir = None
         self._arguments = []
+        self._prefs = {}
         self._ignore_local_proxy = False
         self._auto_clean_dirs = True
         self._headless = False
@@ -301,6 +303,13 @@ class Options(metaclass=ABCMeta):
     #
 
     @property
+    def prefs(self) -> dict:
+        return self._prefs
+
+    def update_pref(self, pref: str, value):
+        self._prefs.update(prefs_to_json({pref: value}))
+
+    @property
     def arguments(self):
         """
         :Returns: A list of arguments needed for the browser
@@ -439,8 +448,10 @@ class Options(metaclass=ABCMeta):
           name: The experimental option name.
           value: The option value.
         """
-        raise NotImplementedError()
-        self._experimental_options[name] = value
+        if name == "prefs":
+            self.prefs.update(prefs_to_json(value))
+        else:
+            raise NotImplementedError()
 
     @property
     def headless(self) -> bool:

@@ -3,7 +3,6 @@
 
 import sys
 import typing
-import json
 import os
 import time
 
@@ -11,6 +10,7 @@ import socket
 import selenium
 import selenium_driverless
 from contextlib import closing
+import aiofiles
 
 IS_POSIX = sys.platform.startswith(("darwin", "cygwin", "linux", "linux2"))
 T_JSON_DICT = typing.Dict[str, typing.Any]
@@ -69,40 +69,22 @@ def sel_path():
     return os.path.dirname(selenium.__file__) + "/"
 
 
-def read(filename: str, encoding: str = "utf-8", sel_root: bool = True):
+async def read(filename: str, encoding: str = "utf-8", sel_root: bool = True):
     if sel_root:
         path = sel_driverless_path() + filename
     else:
         path = filename
-    with open(path, encoding=encoding) as f:
-        return f.read()
+    async with aiofiles.open(path, encoding=encoding) as f:
+        return await f.read()
 
 
-def write(filename: str, content: str, encoding: str = "utf-8", sel_root: bool = True):
+async def write(filename: str, content: str, encoding: str = "utf-8", sel_root: bool = True):
     if sel_root:
         path = sel_driverless_path() + filename
     else:
         path = filename
-    with open(path, "w+", encoding=encoding) as f:
-        return f.write(content)
-
-
-def read_json(filename: str = 'example.json', encoding: str = "utf-8", sel_root: bool = True):
-    if sel_root:
-        path = sel_driverless_path() + filename
-    else:
-        path = filename
-    with open(path, 'r', encoding=encoding) as f:
-        return json.load(f)
-
-
-def write_json(obj: dict or list, filename: str = "out.json", encoding: str = "utf-8", sel_root=True):
-    if sel_root:
-        path = sel_driverless_path() + filename
-    else:
-        path = filename
-    with open(path, "w", encoding=encoding) as outfile:
-        outfile.write(json.dumps(obj))
+    async with aiofiles.open(path, "w+", encoding=encoding) as f:
+        return await f.write(content)
 
 
 def random_port(host: str = None):
@@ -119,9 +101,16 @@ def check_timeout(start_monotonic: float, timeout: float):
         raise TimeoutError(f"driver.quit took longer than timeout: {timeout}")
 
 
-is_first_run = read("files/is_first_run") == "true"
+async def is_first_run():
+    res = await read("files/is_first_run")
+    return res == "true"
+
 
 def reset_all():
-    write("files/is_first_run", "true")
-    write("files/useragent", "")
+    import asyncio
+    async def _reset_all():
+        await write("files/is_first_run", "true")
+        await write("files/useragent", "")
+
+    asyncio.run(_reset_all())
     print("resetting all")
