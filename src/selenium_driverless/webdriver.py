@@ -151,7 +151,7 @@ class Chrome:
          - capabilities - a capabilities dict to start the session with.
         """
         if not self._started:
-            from selenium_driverless.utils.utils import read
+            from selenium_driverless.utils.utils import read, write
 
             if not self._options.debugger_address:
                 from selenium_driverless.utils.utils import random_port
@@ -159,17 +159,33 @@ class Chrome:
                 self._options._debugger_address = f"127.0.0.1:{port}"
                 self._options.add_argument(f"--remote-debugging-port={port}")
 
-            import zipfile
-            extension_paths = []
-            # noinspection PyProtectedMember
-            for path in self._options._extension_paths:
-                if os.path.isfile(path):
-                    with zipfile.ZipFile(path, 'r') as zip_ref:
-                        path = self._temp_dir + f"/{uuid.uuid4().hex}"
-                        zip_ref.extractall(path)
-                extension_paths.append(path)
+            if self._options.headless and not self._is_remote:
+                # patch useragent
+                user_agent = read("files/useragent", sel_root=True)
+                if user_agent:
+                    self._options.add_argument(f"--user-agent={user_agent}")
+                else:
+                    warnings.warn("headless is detectable at first run")
 
-            self._options.arguments.append(f"--load-extension=" + ','.join(extension_paths))
+            # noinspection PyProtectedMember
+            # handle extensions
+            if self._options._extension_paths:
+                import zipfile
+                extension_paths = []
+                loop = asyncio.get_running_loop()
+
+                # noinspection PyProtectedMember
+                def extractall():
+                    for _path in self._options._extension_paths:
+                        if os.path.isfile(_path):
+                            with zipfile.ZipFile(_path, 'r') as zip_ref:
+                                _path = self._temp_dir + f"/{uuid.uuid4().hex}"
+                                zip_ref.extractall(_path)
+                        extension_paths.append(_path)
+
+                await loop.run_in_executor(None, extractall)
+
+                self._options.arguments.append(f"--load-extension=" + ','.join(extension_paths))
 
             self._options.add_argument("about:blank")
             options = self._options
@@ -217,6 +233,14 @@ class Chrome:
                 self._base_target = await BaseTarget(host=self._host, is_remote=self._is_remote,
                                                      timeout=self._timeout, loop=self._loop,
                                                      max_ws_size=self._max_ws_size)
+
+            # fetch useragent at first headless run
+            # noinspection PyUnboundLocalVariable
+            if not self._is_remote and (is_first_run or (self._options.headless and not user_agent)):
+                res = await self._base_target.execute_cdp_cmd("Browser.getVersion")
+                user_agent = res["userAgent"]
+                user_agent = user_agent.replace("HeadlessChrome", "Chrome")
+                write("files/useragent", user_agent, sel_root=True)
 
             if not self._is_remote:
                 # noinspection PyUnboundLocalVariable
@@ -285,7 +309,7 @@ class Chrome:
         return self._contexts
 
     async def new_context(self, proxy_bypass_list=None, proxy_server: str = None,
-                          universal_access_origins=None, url: str = None, wait_load:bool=True):
+                          universal_access_origins=None, url: str = None, wait_load: bool = True):
         self._has_incognito_contexts = True
         if proxy_bypass_list is None:
             proxy_bypass_list = ["localhost"]

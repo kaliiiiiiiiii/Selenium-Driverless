@@ -53,6 +53,7 @@ class Options(metaclass=ABCMeta):
         self._arguments = []
         self._ignore_local_proxy = False
         self._auto_clean_dirs = True
+        self._headless = False
 
         self.add_argument("--no-first-run")
         self.add_argument('--disable-component-update')
@@ -328,6 +329,12 @@ class Options(metaclass=ABCMeta):
                 extensions = argument[17:].split(",")
                 self._extension_paths.extend(extensions)
                 return
+            elif argument[:10] == "--headless":
+                self._headless = True
+                if not (len(argument) > 10 and argument[11:] == "new"):
+                    warnings.warn(
+                        'headless without "--headless=new" might be buggy, makes you detectable & breaks proxies',
+                        DeprecationWarning)
             self._arguments.append(argument)
         else:
             raise ValueError("argument can not be null")
@@ -440,12 +447,7 @@ class Options(metaclass=ABCMeta):
         """
         :Returns: True if the headless argument is set, else False
         """
-        warnings.warn(
-            "headless property is deprecated, instead check for '--headless' in arguments",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return "--headless" in self._arguments
+        return self._headless
 
     @headless.setter
     def headless(self, value: bool) -> None:
@@ -457,16 +459,7 @@ class Options(metaclass=ABCMeta):
         :Args:
           value: boolean value indicating to set the headless option
         """
-        warnings.warn(
-            "headless property is deprecated, instead use add_argument('--headless') or add_argument('--headless=new')",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        args = {"--headless"}
-        if value:
-            self._arguments.extend(args)
-        else:
-            self._arguments = list(set(self._arguments) - args)
+        self.add_argument("--headless=new")
 
     def to_capabilities(self) -> dict:
         """

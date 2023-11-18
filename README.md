@@ -10,6 +10,7 @@
 * async (`asyncio`) and sync (experimantal) support
 * dynamic proxies with auth support ([examle-code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
 * request interception (see events example script)
+* headless mostly supported
 
 ### Questions? 
 Feel free to join the [Diriverless-Community](https://discord.com/invite/MzZZjr2ZM3) on **Discord**:)

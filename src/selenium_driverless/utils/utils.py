@@ -120,3 +120,8 @@ def check_timeout(start_monotonic: float, timeout: float):
 
 
 is_first_run = read("files/is_first_run") == "true"
+
+def reset_all():
+    write("files/is_first_run", "true")
+    write("files/useragent", "")
+    print("resetting all")
