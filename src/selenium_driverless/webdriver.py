@@ -229,10 +229,10 @@ class Chrome:
                     # handle the context
                     if self._loop:
                         context = await SyncContext(base_target=self._current_target, driver=self, loop=self._loop,
-                                                    _base_target=self.base_target, max_ws_size=self._max_ws_size)
+                                                    max_ws_size=self._max_ws_size)
                     else:
                         context = await Context(base_target=self._current_target, driver=self, loop=self._loop,
-                                                _base_target=self.base_target, max_ws_size=self._max_ws_size)
+                                                max_ws_size=self._max_ws_size)
                     _id = context.context_id
 
                     def remove_context():
@@ -275,12 +275,10 @@ class Chrome:
                 if not context:
                     if self._loop:
                         context = await SyncContext(base_target=self._current_target, context_id=_id,
-                                                    loop=self._loop, _base_target=self._base_target,
-                                                    max_ws_size=self._max_ws_size, driver=self)
+                                                    loop=self._loop, max_ws_size=self._max_ws_size, driver=self)
                     else:
                         context = await Context(base_target=self._current_target, context_id=_id,
-                                                loop=self._loop, _base_target=self._base_target,
-                                                max_ws_size=self._max_ws_size, driver=self)
+                                                loop=self._loop, max_ws_size=self._max_ws_size, driver=self)
                 contexts[_id] = context
         self._contexts.update(contexts)
         return self._contexts
@@ -301,11 +299,11 @@ class Chrome:
         _id = res["browserContextId"]
         if self._loop:
             context = await SyncContext(base_target=self._base_target, context_id=_id, loop=self._loop,
-                                        _base_target=self._base_target, is_incognito=True,
+                                        is_incognito=True,
                                         max_ws_size=self._max_ws_size, driver=self)
         else:
             context = await Context(base_target=self._base_target, context_id=_id, loop=self._loop,
-                                    _base_target=self._base_target, is_incognito=True, max_ws_size=self._max_ws_size,
+                                    is_incognito=True, max_ws_size=self._max_ws_size,
                                     driver=self)
         self._contexts[_id] = context
 
@@ -616,6 +614,19 @@ class Chrome:
             if info.type == "page":
                 tabs.append(info)
         return tabs
+
+    async def new_window(self, type_hint: Optional[str] = "tab", url="", activate: bool = True) -> Target:
+        """Switches to a new top-level browsing context.
+
+        The type hint can be one of "tab" or "window". If not specified the
+        browser will automatically select it.
+
+        :Usage:
+            ::
+
+                target.switch_to.new_window('tab')
+        """
+        return await self.current_context.new_window(type_hint=type_hint, url=url, activate=activate)
 
     async def set_window_state(self, state):
         states = ["normal", "minimized", "maximized", "fullscreen"]
@@ -1048,40 +1059,41 @@ class Chrome:
         await self.execute_cdp_cmd("Browser.setPermission", args)
 
     async def set_proxy(self, proxy_config):
+        # noinspection GrazieInspection
         """
-        see https://developer.chrome.com/docs/extensions/reference/proxy/
-        proxy_config = {
-            "mode": "fixed_servers",
-            "rules": {
-                "proxyForHttp": {
-                    "scheme": scheme,
-                    "host": host,
-                    "port": port
-                },
-                "proxyForHttps": {
-                    "scheme": scheme,
-                    "host": host,
-                    "port": port
-                },
-                "proxyForFtp": {
-                    "scheme": scheme,
-                    "host": host,
-                    "port": port
-                },
-                "fallbackProxy": {
-                    "scheme": scheme,
-                    "host": host,
-                    "port": port
-                },
-                "bypassList": ["<local>"]
-            }
-        }
-        """
+                see https://developer.chrome.com/docs/extensions/reference/proxy/
+                proxy_config = {
+                    "mode": "fixed_servers",
+                    "rules": {
+                        "proxyForHttp": {
+                            "scheme": scheme,
+                            "host": host,
+                            "port": port
+                        },
+                        "proxyForHttps": {
+                            "scheme": scheme,
+                            "host": host,
+                            "port": port
+                        },
+                        "proxyForFtp": {
+                            "scheme": scheme,
+                            "host": host,
+                            "port": port
+                        },
+                        "fallbackProxy": {
+                            "scheme": scheme,
+                            "host": host,
+                            "port": port
+                        },
+                        "bypassList": ["<local>"]
+                    }
+                }
+                """
         extension = await self.mv3_extension
         await extension.execute_async_script("chrome.proxy.settings.set(arguments[0], arguments[arguments.length -1])",
                                              {"value": proxy_config, "scope": 'regular'})
 
-    async def set_single_proxy(self, proxy:str, bypass_list=None):
+    async def set_single_proxy(self, proxy: str, bypass_list=None):
 
         # parse scheme
         proxy = proxy.split("://")

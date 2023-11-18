@@ -90,7 +90,7 @@ async def create_tabs(n_tabs: int, driver):
 
     targets = [driver.current_target, context.current_target]
     for _ in range(n_tabs - 2):
-        targets.append(await driver.switch_to.new_window("tab"))
+        targets.append(await driver.new_window("tab"))
     return targets
 
 
