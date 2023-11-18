@@ -285,7 +285,7 @@ class Chrome:
         return self._contexts
 
     async def new_context(self, proxy_bypass_list=None, proxy_server: str = None,
-                          universal_access_origins=None, url: str = None):
+                          universal_access_origins=None, url: str = None, wait_load:bool=True):
         self._has_incognito_contexts = True
         if proxy_bypass_list is None:
             proxy_bypass_list = ["localhost"]
@@ -319,7 +319,7 @@ class Chrome:
         tabs = await context.get_targets(_type="page", context_id=_id)
         context._current_target = list(tabs.values())[0].Target
 
-        # reload auth & extension to fix non-applied auth
+        # reload auth & extension target to fix non-applied auth
         self._mv3_extension = None
         self._auth_interception_enabled = False
 
@@ -330,7 +330,7 @@ class Chrome:
             await self._ensure_auth_interception()
             await mv3_target.execute_script("globalThis.authCreds = arguments[0]", self._auth)
         if url:
-            await context.get(url, wait_load=False)
+            await context.get(url, wait_load=wait_load)
         return context
 
     async def get_targets(self, _type: str = None, context_id: str or None = "self") -> typing.Dict[str, TargetInfo]:
