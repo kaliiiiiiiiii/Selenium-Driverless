@@ -84,8 +84,8 @@ class Chrome:
         self._stderr_file = None
         if is_first_run:
             print(
-                'This package has a "Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)" Licence.\n'
-                "therefore, you'll have to ask the developer first, if you want to use this package for your buisiness.\n"
+                'This package has a "Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)" License.\n'
+                "Therefore, you'll have to ask the developer first if you want to use this package for your business.\n"
                 "https://github.com/kaliiiiiiiiii/Selenium-Driverless", file=sys.stderr)
             from selenium_driverless.utils.utils import write
             write("files/is_first_run", "false")
