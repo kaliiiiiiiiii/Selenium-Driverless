@@ -108,6 +108,8 @@ class Chrome:
         self._temp_dir = tempfile.TemporaryDirectory(prefix="selenium_driverless_").name
         self._max_ws_size = max_ws_size
 
+        self._auth = {}
+
         if not options:
             options = ChromeOptions()
         if not options.binary_location:
@@ -120,6 +122,7 @@ class Chrome:
         self._options: ChromeOptions = options
         self._is_remote = True
         self._is_remote = False
+        self._has_incognito_contexts: bool = False
         self._started = False
 
     def __repr__(self):
@@ -247,12 +250,10 @@ class Chrome:
                     self._current_context = context
                     self._base_context = context
                     self._contexts[_id] = context
-
                     break
             await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
             if self._options.single_proxy:
                 await self.set_single_proxy(self._options.single_proxy)
-
             self._started = True
         return self
 
@@ -284,7 +285,8 @@ class Chrome:
         return self._contexts
 
     async def new_context(self, proxy_bypass_list=None, proxy_server: str = None,
-                          universal_access_origins=None, url: str = "about:blank"):
+                          universal_access_origins=None, url: str = None):
+        self._has_incognito_contexts = True
         if proxy_bypass_list is None:
             proxy_bypass_list = ["localhost"]
 
@@ -313,9 +315,22 @@ class Chrome:
 
         # noinspection PyProtectedMember
         context._closed_callbacks.append(remove_context)
-        await context.switch_to.new_window("window", activate=False, url=url)
+        await context.switch_to.new_window("window", activate=False)
         tabs = await context.get_targets(_type="page", context_id=_id)
         context._current_target = list(tabs.values())[0].Target
+
+        # reload auth & extension to fix non-applied auth
+        self._mv3_extension = None
+        self._auth_interception_enabled = False
+
+        if self._options.proxy:
+            await self.ensure_extensions_incognito_allowed()
+        if self._auth:
+            mv3_target = await self.mv3_extension
+            await self._ensure_auth_interception()
+            await mv3_target.execute_script("globalThis.authCreds = arguments[0]", self._auth)
+        if url:
+            await context.get(url, wait_load=False)
         return context
 
     async def get_targets(self, _type: str = None, context_id: str or None = "self") -> typing.Dict[str, TargetInfo]:
@@ -333,7 +348,8 @@ class Chrome:
 
     @property
     async def mv3_extension(self, timeout: float = 5) -> Target:
-        await self.ensure_extensions_incognito_allowed()
+        if self._has_incognito_contexts:
+            await self.ensure_extensions_incognito_allowed()
         if not self._mv3_extension:
             import re
             import time
@@ -1153,7 +1169,7 @@ class Chrome:
     async def _ensure_auth_interception(self):
         if not self._auth_interception_enabled:
             script = """
-                        globalThis.authCreds = {}
+                        if(globalThis.authCreds == undefined){globalThis.authCreds = {}}
                         globalThis.onAuth = function onAuth(details) {
                             return globalThis.authCreds[details.challenger.host+":"+details.challenger.port]
                         }
@@ -1165,28 +1181,28 @@ class Chrome:
                         """
             mv3_target = await self.mv3_extension
             await mv3_target.execute_script(script)
+            self._auth_interception_enabled = True
 
     async def set_auth(self, username: str, password: str, host_with_port):
         # provide auth
         await self._ensure_auth_interception()
         mv3_target = await self.mv3_extension
-        await mv3_target.execute_script("globalThis.authCreds[arguments[1]] = arguments[0]", {
+        arg = {
             "authCredentials": {
                 "username": username,
                 "password": password
             }
-        }, host_with_port)
+        }
+        await mv3_target.execute_script("globalThis.authCreds[arguments[1]] = arguments[0]", arg, host_with_port)
+        self._auth[host_with_port] = arg
 
     async def clear_auth(self):
         # provide auth
-        await self._ensure_auth_interception()
         mv3_target = await self.mv3_extension
-        await mv3_target.execute_script(
-            """
-            chrome.webRequest.onAuthRequired.removeEventListener(globalThis.onAuth)
-            globalThis.authCreds = {}
-            """
-        )
+        script = "chrome.webRequest.onAuthRequired.removeListener(globalThis.onAuth);"
+        self._auth = {}
+        await mv3_target.execute_script(script)
+        self._auth_interception_enabled = False
 
     async def wait_for_cdp(self, event: str, timeout: float or None = None, target_id: str = None):
         target = await self.get_target(target_id=target_id)

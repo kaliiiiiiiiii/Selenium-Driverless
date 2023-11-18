@@ -102,6 +102,8 @@ class Context:
         :Args:
          - capabilities - a capabilities dict to start the session with.
         """
+        from selenium_driverless.webdriver import Chrome
+        self._driver:Chrome
 
         if not self._started:
             if not self.context_id:
@@ -122,7 +124,6 @@ class Context:
                 self._switch_to = await SwitchTo(context=self, loop=self._loop, context_id=self._context_id)
             if targets:
                 await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
-
             self._started = True
         return self
 
