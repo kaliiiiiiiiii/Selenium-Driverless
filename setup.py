@@ -1,7 +1,4 @@
 import setuptools
-from selenium_driverless.utils.utils import reset_all
-
-reset_all()
 
 requirements = ['selenium~=4.6', "cdp-socket>=1.1.1", "numpy~=1.21", "matplotlib~=3.5", "scipy~=1.7", "aiofiles"]
 
