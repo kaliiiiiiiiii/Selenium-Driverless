@@ -3,13 +3,13 @@
 [![Downloads](https://static.pepy.tech/badge/selenium-driverless)](https://pepy.tech/project/selenium-driverless) [![](https://img.shields.io/pypi/v/selenium-driverless.svg?color=3399EE)](https://pypi.org/project/selenium-driverless/)
 
 
-* use selenium __without chromedriver__
-* currently passes __cloudfare__, __bet365__, [turnstile](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/master/dev#bypass-turnstile) and others
-* multiple tabs simultanously
-* multiple Incognito-contexts with individual proxy & cookies
-* async (`asyncio`) and sync (experimantal) support
-* proxy-auth support (experimental, [examle-code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
-* request interception (see events example script)
+- Use Selenium __without chromedriver__
+- Currently passes __Cloudflare__, __Bet365__, [Turnstile](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/master/dev#bypass-turnstile), and others
+- Multiple tabs simultaneously
+- Multiple Incognito-contexts with individual proxy & cookies
+- Async (`asyncio`) and sync (experimental) support
+- Proxy-auth support (experimental, [example code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
+- Request interception (see events example script)
 
 ### Questions? 
 Feel free to join the [Diriverless-Community](https://discord.com/invite/MzZZjr2ZM3) on **Discord**:)
@@ -101,7 +101,7 @@ async with webdriver.Chrome(options=options) as driver:
 **Notes**: synchronous might not work properly
 
 <details>
-<summary>Examle Code (Click to expand)</summary>
+<summary>Example Code (Click to expand)</summary>
 
 warning: network interception with `Fetch.enable` might have issues with cross-domain iframes, maximum websocket message size or Font requests.\
 You might try using [`Network.setRequestInterception](https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-setRequestInterception) (officially deprecated) or narrowing the pattern
@@ -171,11 +171,11 @@ asyncio.run(main())
 ```
 </details>
 
-### Multiple tabs simultously
-Note: `asyncio` is recommendet, `threading` only works on independent `webdriver.Chrome` instances.
+## Multiple tabs simultaneously
+Note: asyncio is recommended, threading only works on independent webdriver.Chrome instances.
 
 <details>
-<summary>Examle Code (Click to expand)</summary>
+<summary>Example Code (Click to expand)</summary>
 
 ```python
 from selenium_driverless.sync import webdriver
@@ -216,7 +216,7 @@ asyncio.run(main())
 ### Unique execution contexts
 - execute `javascript` without getting detected
 <details>
-<summary>Examle Code (Click to expand)</summary>
+<summary>Example Code (Click to expand)</summary>
 
 ```python
 from selenium_driverless.sync import webdriver
@@ -279,7 +279,7 @@ iframe_document = await iframes[0].content_document
 - different proxy for each context
 - opens as a window as incognito
 <details>
-<summary>Examle Code (Click to expand)</summary>
+<summary>Example Code (Click to expand)</summary>
 
 ```python
 from selenium_driverless.sync import webdriver
