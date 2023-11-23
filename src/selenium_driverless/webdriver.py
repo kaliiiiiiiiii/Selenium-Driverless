@@ -36,6 +36,8 @@ from typing import Optional
 
 # io
 import asyncio
+
+import cdp_socket.exceptions
 import websockets
 
 # selenium
@@ -439,6 +441,9 @@ class Chrome:
                     return await self.mv3_extension
                 except JSEvalException as e:
                     await asyncio.sleep(0.2)
+                except cdp_socket.exceptions.CDPError as e:
+                    if e.code == -32000 and e.message == 'Could not find object with given id':
+                        await asyncio.sleep(0.2)
                 else:
                     break
             self._mv3_extension = extension_target
