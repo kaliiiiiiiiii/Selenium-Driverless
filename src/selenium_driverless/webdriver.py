@@ -330,7 +330,6 @@ class Chrome:
 
     async def new_context(self, proxy_bypass_list=None, proxy_server: str = True,
                           universal_access_origins=None, url: str = "about:blank"):
-        self._has_incognito_contexts = True
         await self.ensure_extensions_incognito_allowed()
         if proxy_bypass_list is None:
             proxy_bypass_list = ["localhost"]
@@ -346,6 +345,8 @@ class Chrome:
 
         # create context ensuring extension racing conditions
         self._auth_interception_enabled = False
+        has_incognito_ctxs = not (not self._has_incognito_contexts)
+        self._has_incognito_contexts = True
         mv3_ext = await self.mv3_extension
         self._mv3_extension = None
 
@@ -354,6 +355,7 @@ class Chrome:
         except Exception as e:
             self._mv3_extension = mv3_ext
             self._auth_interception_enabled = True
+            self._has_incognito_contexts = has_incognito_ctxs
             raise e
 
         _id = res["browserContextId"]
