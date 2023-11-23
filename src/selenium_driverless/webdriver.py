@@ -60,6 +60,7 @@ from selenium_driverless.sync.base_target import BaseTarget as SyncBaseTarget
 # others
 from cdp_socket.utils.conn import get_json
 from selenium_driverless.types.options import Options as ChromeOptions
+from selenium_driverless.types import JSEvalException
 
 
 class Chrome:
@@ -268,7 +269,7 @@ class Chrome:
                     target_id = target["id"]
                     self._current_target = await get_target(target_id=target_id, host=self._host,
                                                             loop=self._loop, is_remote=self._is_remote, timeout=2,
-                                                            max_ws_size=self._max_ws_size)
+                                                            max_ws_size=self._max_ws_size, driver=self)
 
                     # handle the context
                     if self._loop:
@@ -325,20 +326,34 @@ class Chrome:
         self._contexts.update(contexts)
         return self._contexts
 
-    async def new_context(self, proxy_bypass_list=None, proxy_server: str = None,
-                          universal_access_origins=None, url: str = None, wait_load: bool = True):
+    async def new_context(self, proxy_bypass_list=None, proxy_server: str = True,
+                          universal_access_origins=None, url: str = "about:blank"):
         self._has_incognito_contexts = True
+        await self.ensure_extensions_incognito_allowed()
         if proxy_bypass_list is None:
             proxy_bypass_list = ["localhost"]
-
+        if proxy_server is None:
+            proxy_server = ""
         args = {"disposeOnDetach": False}
         if proxy_bypass_list:
             args["proxyBypassList"] = ",".join(proxy_bypass_list)
-        if proxy_server:
+        if not (proxy_server is True):
             args["proxyServer"] = proxy_server
         if universal_access_origins:
             args["originsWithUniversalNetworkAccess"] = universal_access_origins
-        res = await self.base_target.execute_cdp_cmd("Target.createBrowserContext", args)
+
+        # create context ensuring extension racing conditions
+        self._auth_interception_enabled = False
+        mv3_ext = await self.mv3_extension
+        self._mv3_extension = None
+
+        try:
+            res = await self.base_target.execute_cdp_cmd("Target.createBrowserContext", args)
+        except Exception as e:
+            self._mv3_extension = mv3_ext
+            self._auth_interception_enabled = True
+            raise e
+
         _id = res["browserContextId"]
         if self._loop:
             context = await SyncContext(base_target=self._base_target, context_id=_id, loop=self._loop,
@@ -356,22 +371,28 @@ class Chrome:
 
         # noinspection PyProtectedMember
         context._closed_callbacks.append(remove_context)
-        await context.switch_to.new_window("window", activate=False)
+        await context.switch_to.new_window("window", activate=False, url=url)
         tabs = await context.get_targets(_type="page", context_id=_id)
         context._current_target = list(tabs.values())[0].Target
+        context._current_target._timeout = 5
 
         # reload auth & extension target to fix non-applied auth
-        self._mv3_extension = None
-        self._auth_interception_enabled = False
-
-        if self._options.single_proxy:
-            await self.ensure_extensions_incognito_allowed()
         if self._auth:
-            mv3_target = await self.mv3_extension
-            await self._ensure_auth_interception()
-            await mv3_target.execute_script("globalThis.authCreds = arguments[0]", self._auth)
-        if url:
-            await context.get(url, wait_load=wait_load)
+            self._mv3_extension = None
+            while True:
+                # ensure racing conditions with extension
+                try:
+                    mv3_target = await self.mv3_extension
+                    self._auth_interception_enabled = False
+                    await self._ensure_auth_interception(timeout=0.3, set_flag=False)
+                    await mv3_target.execute_script("globalThis.authCreds = arguments[0]", self._auth, timeout=0.3)
+                except asyncio.TimeoutError:
+                    await asyncio.sleep(0.1)
+                    self._mv3_extension = None
+                else:
+                    self._auth_interception_enabled = True
+                    self._mv3_extension = mv3_target
+                    return context
         return context
 
     async def get_targets(self, _type: str = None, context_id: str or None = "self") -> typing.Dict[str, TargetInfo]:
@@ -388,7 +409,7 @@ class Chrome:
         return self._base_target
 
     @property
-    async def mv3_extension(self, timeout: float = 5) -> Target:
+    async def mv3_extension(self, timeout: float = 10) -> Target:
         if self._has_incognito_contexts:
             await self.ensure_extensions_incognito_allowed()
         if not self._mv3_extension:
@@ -408,19 +429,28 @@ class Chrome:
                 if not extension_target:
                     if (time.monotonic() - start) > timeout:
                         raise TimeoutError(f"Couldn't find mv3 extension within {timeout} seconds")
-            # fix WebRTC leak
-            await extension_target.execute_script("chrome.privacy.network.webRTCIPHandlingPolicy.set(arguments[0])",
-                                                  {"value": "disable_non_proxied_udp"})
+            while True:
+                try:
+                    # fix WebRTC leak
+                    await extension_target.execute_script("chrome.privacy.network.webRTCIPHandlingPolicy.set(arguments[0])",
+                                                        {"value": "disable_non_proxied_udp"})
+                except asyncio.TimeoutError:
+                    await asyncio.sleep(0.2)
+                    return await self.mv3_extension
+                except JSEvalException as e:
+                    await asyncio.sleep(0.2)
+                else:
+                    break
             self._mv3_extension = extension_target
         return self._mv3_extension
 
     async def ensure_extensions_incognito_allowed(self):
         if not self._extensions_incognito_allowed:
             self._extensions_incognito_allowed = True
+            page = None
             try:
                 base_ctx = self._base_context
-                base_page = base_ctx.current_target
-                page = await base_ctx.switch_to.new_window("tab", "chrome://extensions", activate=False)
+                page = await base_ctx.new_window("tab", "chrome://extensions", activate=False)
                 script = """
                     var callback = arguments[arguments.length -1]
                     async function make_global(){
@@ -436,13 +466,14 @@ class Chrome:
                     make_global()
                 """
                 await asyncio.sleep(0.1)
-                await page.execute_async_script(script)
+                await page.execute_async_script(script, timeout=5)
             except Exception as e:
                 self._extensions_incognito_allowed = False
-                raise e
+                if page:
+                     await page.close()
+                await self.ensure_extensions_incognito_allowed()
             self._extensions_incognito_allowed = True
             await page.close()
-            await base_ctx.switch_to.target(base_page)
 
     @property
     def base_context(self):
@@ -1213,7 +1244,7 @@ class Chrome:
             );
         """)
 
-    async def _ensure_auth_interception(self):
+    async def _ensure_auth_interception(self, timeout: float = 0.3, set_flag:bool=True):
         if not self._auth_interception_enabled:
             script = """
                         if(globalThis.authCreds == undefined){globalThis.authCreds = {}}
@@ -1227,8 +1258,9 @@ class Chrome:
                             );
                         """
             mv3_target = await self.mv3_extension
-            await mv3_target.execute_script(script)
-            self._auth_interception_enabled = True
+            await mv3_target.execute_script(script, timeout=timeout)
+            if set_flag:
+                self._auth_interception_enabled = True
 
     async def set_auth(self, username: str, password: str, host_with_port):
         # provide auth

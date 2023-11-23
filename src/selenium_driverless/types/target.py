@@ -39,7 +39,7 @@ class Target:
     """Allows you to drive the browser without chromedriver."""
 
     # noinspection PyShadowingBuiltins
-    def __init__(self, host: str, target_id: str, is_remote: bool = False,
+    def __init__(self, host: str, target_id: str, driver, is_remote: bool = False,
                  loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
                  type: str = None, start_socket: bool = False, max_ws_size:int=2**20) -> None:
         """Creates a new instance of the chrome target. Starts the service and
@@ -76,6 +76,8 @@ class Target:
         self._loop = loop
         self._start_socket = start_socket
         self._on_closed_ = []
+
+        self._driver = driver
 
     def __repr__(self):
         return f'<{type(self).__module__}.{type(self).__name__} (target_id="{self.id}", host="{self._host}")>'
@@ -176,7 +178,7 @@ class Target:
 
         async def target_getter(target_id: str, timeout: float = 2, max_ws_size:int=2**20):
             return await get_target(target_id=target_id, host=self._host, loop=self._loop, is_remote=self._is_remote,
-                                    timeout=timeout, max_ws_size=max_ws_size)
+                                    timeout=timeout, max_ws_size=max_ws_size, driver=self._driver)
 
         _targets = await get_targets(cdp_exec=self.execute_cdp_cmd, target_getter=target_getter,
                                      _type="iframe", context_id=self._context_id, max_ws_size=self._max_ws_size)
@@ -208,7 +210,7 @@ class Target:
             raise NoSuchIframe(iframe, "no target for iframe found")
         return targets[0]
 
-    # noinspection PyUnboundLocalVariable
+    # noinspection PyUnboundLocalVariable,PyProtectedMember
     async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
         """Loads a web page in the current browser session."""
         if url == "about:blank":
@@ -387,6 +389,8 @@ class Target:
                 pass
             else:
                 raise e
+        except asyncio.TimeoutError:
+            pass
 
     async def focus(self):
         await self.execute_cdp_cmd("Target.activateTarget",

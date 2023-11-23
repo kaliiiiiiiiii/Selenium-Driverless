@@ -163,7 +163,7 @@ class Context:
         if not target:
             target: Target = await get_target(target_id=target_id, host=self._host,
                                               loop=self._loop, is_remote=self._is_remote, timeout=timeout,
-                                              max_ws_size=max_ws_size)
+                                              max_ws_size=max_ws_size, driver=self._driver)
             self._targets[target_id] = target
 
             # noinspection PyUnusedLocal
