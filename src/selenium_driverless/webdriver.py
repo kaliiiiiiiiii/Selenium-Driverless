@@ -416,25 +416,30 @@ class Chrome:
 
     async def ensure_extensions_incognito_allowed(self):
         if not self._extensions_incognito_allowed:
-            base_ctx = self._base_context
-            base_page = base_ctx.current_target
-            page = await base_ctx.switch_to.new_window("tab", "chrome://extensions", activate=False)
-            script = """
-                var callback = arguments[arguments.length -1]
-                async function make_global(){
-                    const extensions = await chrome.developerPrivate.getExtensionsInfo();
-                    extensions.forEach( async function(extension)  {
-                        chrome.developerPrivate.updateExtensionConfiguration({
-                            extensionId: extension.id,
-                            incognitoAccess: true
-                        })
-                    });
-                    callback()
-                }
-                make_global()
-            """
-            await asyncio.sleep(0.1)
-            await page.execute_async_script(script)
+            self._extensions_incognito_allowed = True
+            try:
+                base_ctx = self._base_context
+                base_page = base_ctx.current_target
+                page = await base_ctx.switch_to.new_window("tab", "chrome://extensions", activate=False)
+                script = """
+                    var callback = arguments[arguments.length -1]
+                    async function make_global(){
+                        const extensions = await chrome.developerPrivate.getExtensionsInfo();
+                        extensions.forEach( async function(extension)  {
+                            chrome.developerPrivate.updateExtensionConfiguration({
+                                extensionId: extension.id,
+                                incognitoAccess: true
+                            })
+                        });
+                        callback()
+                    }
+                    make_global()
+                """
+                await asyncio.sleep(0.1)
+                await page.execute_async_script(script)
+            except Exception as e:
+                self._extensions_incognito_allowed = False
+                raise e
             self._extensions_incognito_allowed = True
             await page.close()
             await base_ctx.switch_to.target(base_page)
