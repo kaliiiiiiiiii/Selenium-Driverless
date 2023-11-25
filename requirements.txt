@@ -2,6 +2,8 @@ selenium==4.11.2
 cdp-socket>=1.0.6
 numpy
 aiofiles~=23.2
+matplotlib
+scipy
 
 # dev
 setuptools
