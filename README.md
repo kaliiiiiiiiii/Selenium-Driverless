@@ -10,6 +10,7 @@
 - Async (`asyncio`) and sync (experimental) support
 - Proxy-auth support (experimental, [example code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
 - Request interception (see events example script)
+- headless mostly supported
 
 ### Questions? 
 Feel free to join the [Diriverless-Community](https://discord.com/invite/MzZZjr2ZM3) on **Discord**:)
@@ -199,7 +200,7 @@ async def main():
     options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
         target_1 = await driver.current_target
-        target_2 = await driver.switch_to.new_window("tab", activate=False)
+        target_2 = await driver.new_window("tab", activate=False)
         await asyncio.gather(
             target_1_handler(target_1),
             target_2_handler(target_2)
@@ -273,6 +274,20 @@ iframe_document = await iframes[0].content_document
 # iframe_document.find_elements(...)
 ```
 
+### use preferences
+```python
+from selenium_driverless import webdriver
+options = webdriver.ChromeOptions()
+
+ # recommended usage
+options.update_pref("download.prompt_for_download", False)
+# or
+options.prefs.update({"download": {"prompt_for_download": False}})
+
+# supported
+options.add_experimental_option("prefs", {"download.prompt_for_download": False})
+```
+
 ### Multiple Contexts
 - different cookies for each context
 - A context can have multiple windows and tabs within
@@ -331,6 +346,7 @@ Note: **please check the todo's below at first!**
         - [ ] `SendKeys`
           - [ ] `send files`
   - [ ] [support `options.add_extension()`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/37)
+  - [ ] [support prefs](https://github.com/kaliiiiiiiiii/Selenium-Driverless/discussions/92#discussioncomment-7462309)
 - [x] sync
   - [ ] move sync to threaded for allowing event_handlers
   - [ ] support multithreading with sync version

@@ -56,8 +56,8 @@ class Context:
     """Allows you to drive the browser without chromedriver."""
 
     # noinspection PyProtectedMember
-    def __init__(self, base_target: Target, context_id: str = None,
-                 loop: asyncio.AbstractEventLoop = None, _base_target: BaseTarget or None = None,
+    def __init__(self, base_target: Target, driver, context_id: str = None,
+                 loop: asyncio.AbstractEventLoop = None,
                  is_incognito: bool = False, max_ws_size: int = 2 ** 20) -> None:
         self._loop: asyncio.AbstractEventLoop or None = None
         self.browser_pid: int or None = None
@@ -70,11 +70,11 @@ class Context:
         self._current_target = base_target
         self._host = base_target._host
         self._is_remote = base_target._is_remote
-        self._max_ws_size:int=max_ws_size
+        self._max_ws_size: int = max_ws_size
 
         self._context_id = context_id
         self._closed_callbacks: typing.List[callable] = []
-        self._base_target = None
+        self._driver = driver
         self._is_incognito = is_incognito
 
     def __repr__(self):
@@ -102,11 +102,10 @@ class Context:
         :Args:
          - capabilities - a capabilities dict to start the session with.
         """
+        from selenium_driverless.webdriver import Chrome
+        self._driver:Chrome
 
         if not self._started:
-            if not self.base_target:
-                self._base_target = await BaseTarget(host=self._host, is_remote=self._is_remote,
-                                                     timeout=15, loop=self._loop, max_ws_size=self._max_ws_size)
             if not self.context_id:
                 self._context_id = await self._current_target.browser_context_id
             _type = await self.current_target.type
@@ -125,7 +124,6 @@ class Context:
                 self._switch_to = await SwitchTo(context=self, loop=self._loop, context_id=self._context_id)
             if targets:
                 await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
-
             self._started = True
         return self
 
@@ -149,14 +147,14 @@ class Context:
 
     @property
     def base_target(self) -> BaseTarget:
-        return self._base_target
+        return self._driver.base_target
 
     @property
     async def _isolated_context_id(self):
         # noinspection PyProtectedMember
         return await self.current_target._isolated_context_id
 
-    async def get_target(self, target_id: str = None, timeout: float = 2, max_ws_size:int=None) -> Target:
+    async def get_target(self, target_id: str = None, timeout: float = 2, max_ws_size: int = None) -> Target:
         if not max_ws_size:
             max_ws_size = self._max_ws_size
         if not target_id:
@@ -164,7 +162,8 @@ class Context:
         target: Target = self._targets.get(target_id)
         if not target:
             target: Target = await get_target(target_id=target_id, host=self._host,
-                                              loop=self._loop, is_remote=self._is_remote, timeout=timeout, max_ws_size=max_ws_size)
+                                              loop=self._loop, is_remote=self._is_remote, timeout=timeout,
+                                              max_ws_size=max_ws_size, driver=self._driver)
             self._targets[target_id] = target
 
             # noinspection PyUnusedLocal
@@ -224,7 +223,7 @@ class Context:
                                            unique_context=unique_context)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
-                                   serialization: str = None, timeout: int = 2, obj_id=None,
+                                   serialization: str = None, timeout: int = 2,
                                    target_id: str = None, execution_context_id: str = None,
                                    unique_context: bool = False):
         target = await self.get_target(target_id)
@@ -353,6 +352,37 @@ class Context:
             if info.type == "page":
                 tabs.append(info)
         return tabs
+
+    async def new_window(self, type_hint: Optional[str] = "tab", url="", activate: bool = True) -> Target:
+        """Switches to a new top-level browsing context.
+
+        The type hint can be one of "tab" or "window". If not specified the
+        browser will automatically select it.
+
+        :Usage:
+            ::
+
+                target.switch_to.new_window('tab')
+        """
+        if self._is_incognito and url in ["chrome://extensions"]:
+            raise ValueError(f"{url} only supported in non-incognito contexts")
+        new_tab = False
+        if type_hint == "window":
+            new_tab = True
+        elif type_hint == "tab":
+            pass
+        else:
+            raise ValueError("type hint needs to be 'window' or 'tab'")
+        args = {"url": url, "newWindow": new_tab, "forTab": new_tab}
+        # noinspection PyProtectedMember
+        if self._context_id and self._is_incognito:
+            args["browserContextId"] = self._context_id
+        target = await self.base_target.execute_cdp_cmd("Target.createTarget", args)
+        target_id = target["targetId"]
+        target = await self.get_target(target_id)
+        if activate:
+            await target.focus()
+        return target
 
     async def set_window_state(self, state):
         states = ["normal", "minimized", "maximized", "fullscreen"]

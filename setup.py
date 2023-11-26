@@ -1,6 +1,6 @@
 import setuptools
 
-requirements = ['selenium~=4.6', "cdp-socket>=1.1.1", "numpy~=1.21", "matplotlib~=3.5", "scipy~=1.7"]
+requirements = ['selenium~=4.6', "cdp-socket>=1.1.1", "numpy~=1.21", "matplotlib~=3.5", "scipy~=1.7", "aiofiles"]
 
 with open('README.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read()
