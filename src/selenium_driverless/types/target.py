@@ -1,5 +1,6 @@
 # io
 import asyncio
+import time
 import typing
 import warnings
 from base64 import b64decode
@@ -18,6 +19,7 @@ from selenium_driverless.input.pointer import Pointer
 from selenium_driverless.scripts.driver_utils import get_targets, get_target, get_cookies, get_cookie, delete_cookie, \
     delete_all_cookies, add_cookie
 from selenium_driverless.types.deserialize import StaleJSRemoteObjReference
+from selenium_driverless.types.webelement import StaleElementReferenceException, NoSuchElementException
 from selenium_driverless.sync.alert import Alert as SyncAlert
 # Alert
 from selenium_driverless.types.alert import Alert
@@ -560,9 +562,24 @@ class Target:
 
     # noinspection PyUnusedLocal
     async def find_element(self, by: str, value: str, parent=None, timeout: int or None = None) -> WebElement:
-        if not parent:
+        start = time.monotonic()
+        elem = None
+        while not elem:
             parent = await self._document_elem
-        return await parent.find_element(by=by, value=value, timeout=timeout)
+            try:
+                elem = await parent.find_element(by=by, value=value, timeout=None)
+            except StaleElementReferenceException as e:
+                if e.remote_obj == parent:
+                    self._document_elem_ = None
+                else:
+                    raise e
+            except NoSuchElementException:
+                pass
+            if (not timeout) or (time.monotonic() - start) > timeout:
+                break
+        if not elem:
+            raise NoSuchElementException()
+        return elem
 
     async def find_elements(self, by: str, value: str, parent=None) -> typing.List[WebElement]:
         if not parent:
