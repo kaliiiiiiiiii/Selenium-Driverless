@@ -76,7 +76,7 @@ def sel_path():
     return os.path.dirname(selenium.__file__) + "/"
 
 
-async def read(filename: str, encoding: str = "utf-8", sel_root: bool = True):
+async def read(filename: str, encoding: str = "utf-8", sel_root: bool = False):
     if sel_root:
         path = sel_driverless_path() + filename
     else:
@@ -85,7 +85,7 @@ async def read(filename: str, encoding: str = "utf-8", sel_root: bool = True):
         return await f.read()
 
 
-async def write(filename: str, content: str, encoding: str = "utf-8", sel_root: bool = True):
+async def write(filename: str, content: str, encoding: str = "utf-8", sel_root: bool = False):
     if sel_root:
         path = sel_driverless_path() + filename
     else:
