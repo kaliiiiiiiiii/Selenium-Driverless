@@ -4,6 +4,7 @@ import time
 import typing
 import warnings
 from base64 import b64decode
+import aiofiles
 from typing import List
 from typing import Optional
 
@@ -638,8 +639,8 @@ class Target:
             )
         png = await self.get_screenshot_as_png()
         try:
-            with open(filename, "wb") as f:
-                f.write(png)
+            async with aiofiles.open(filename, "wb") as f:
+                await f.write(png)
         except OSError:
             return False
         finally:

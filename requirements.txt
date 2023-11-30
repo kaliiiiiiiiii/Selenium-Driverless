@@ -4,6 +4,7 @@ numpy
 aiofiles~=23.2
 matplotlib
 scipy
+platformdirs
 
 # dev
 setuptools

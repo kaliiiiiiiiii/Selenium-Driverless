@@ -145,17 +145,11 @@ class Chrome:
         """
         if not self._started:
             from selenium_driverless.utils.utils import read, write
-            from selenium_driverless.utils.utils import is_first_run
+            from selenium_driverless.utils.utils import is_first_run, get_default_ua, set_default_ua
             from selenium_driverless.scripts.prefs import read_prefs, write_prefs
 
-            is_first_run = await is_first_run()
-
-            if is_first_run:
-                print(
-                    'This package has a "Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)" License.\n'
-                    "Therefore, you'll have to ask the developer first if you want to use this package for your business.\n"
-                    "https://github.com/kaliiiiiiiiii/Selenium-Driverless", file=sys.stderr)
-                await write("files/is_first_run", "false")
+            await is_first_run()
+            user_agent = await get_default_ua()
 
             if not self._options.debugger_address:
                 from selenium_driverless.utils.utils import random_port
@@ -165,7 +159,6 @@ class Chrome:
 
             if self._options.headless and not self._is_remote:
                 # patch useragent
-                user_agent = await read("files/useragent", sel_root=True)
                 if user_agent:
                     self._options.add_argument(f"--user-agent={user_agent}")
                 else:
@@ -256,11 +249,11 @@ class Chrome:
 
             # fetch useragent at first headless run
             # noinspection PyUnboundLocalVariable
-            if not self._is_remote and (is_first_run or (self._options.headless and not user_agent)):
+            if not self._is_remote:
                 res = await self._base_target.execute_cdp_cmd("Browser.getVersion")
                 user_agent = res["userAgent"]
                 user_agent = user_agent.replace("HeadlessChrome", "Chrome")
-                await write("files/useragent", user_agent, sel_root=True)
+                await set_default_ua(user_agent)
 
             if not self._is_remote:
                 # noinspection PyUnboundLocalVariable
