@@ -569,12 +569,11 @@ class Target:
             try:
                 elem = await parent.find_element(by=by, value=value, timeout=None)
             except StaleElementReferenceException as e:
-                if e.remote_obj == parent:
-                    self._document_elem_ = None
-                else:
-                    raise e
+                self._document_elem_ = None
             except NoSuchElementException:
                 pass
+            except StaleJSRemoteObjReference:
+                self._document_elem_ = None
             if (not timeout) or (time.monotonic() - start) > timeout:
                 break
         if not elem:
