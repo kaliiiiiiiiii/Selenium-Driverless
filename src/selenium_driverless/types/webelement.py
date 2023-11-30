@@ -302,14 +302,14 @@ class WebElement(JSRemoteObj):
                 elems.append(elem)
             return elems
         elif by == By.XPATH:
-            scipt = """return document.evaluate(
+            script = """return document.evaluate(
                           arguments[0],
                           obj,
                           null,
                           XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
                           null,
                         );"""
-            return await self.execute_script(scipt, value, serialization="deep", timeout=10, unique_context=True)
+            return await self.execute_script(script, value, serialization="deep", timeout=10, unique_context=True)
         else:
             return ValueError("unexpected by")
 
