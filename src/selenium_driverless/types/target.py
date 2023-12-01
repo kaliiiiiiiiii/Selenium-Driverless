@@ -543,8 +543,12 @@ class Target:
                 target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/'})
                 target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/', 'secure' : True})
                 target.add_cookie({'name' : 'foo', 'value' : 'bar', 'sameSite' : 'Strict'})
+            ..etc
+            see https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-CookieParam
         """
-        return await add_cookie(target=self, cookie_dict=cookie_dict, context_id=await self.browser_context_id)
+        if not (cookie_dict.get("url") or cookie_dict.get("domain") or cookie_dict.get("path")):
+            cookie_dict["url"] = await self.current_url
+        return await add_cookie(target=self, cookie_dict=cookie_dict)
 
     @property
     async def _document_elem(self) -> WebElement:
