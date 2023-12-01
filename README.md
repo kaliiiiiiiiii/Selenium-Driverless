@@ -22,6 +22,10 @@ Also, see [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree
 `pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/heads/dev.zip`
 </details>
 
+### Still getting detected?
+Feel free to give me a feedback! \
+You're a company and looking for another solution? Maybe **[undetect.io](https://undetect.io/partner/steve)** is smth for you
+
 ### Dependencies
 
 * [Python >= 3.7](https://www.python.org/downloads/)
