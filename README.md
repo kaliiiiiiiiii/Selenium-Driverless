@@ -10,10 +10,10 @@
 - Async (`asyncio`) and sync (experimental) support
 - Proxy-auth support (experimental, [example code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
 - Request interception (see events example script)
-- headless mostly supported
+- headless supported
 
 ### Questions? 
-Feel free to join the [Diriverless-Community](https://discord.com/invite/MzZZjr2ZM3) on **Discord**:)
+Feel free to join the [Driverless-Community](https://discord.com/invite/MzZZjr2ZM3) on **Discord**:)
 
 Also, see [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/dev) for the latest implementations.
 <details>
@@ -310,7 +310,10 @@ async def main():
     options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
         context_1 = driver.current_context
+        
+        await driver.set_auth("username", "password", "localhost:5000")
         context_2 = await driver.new_context(proxy_bypass_list=["localhost"], proxy_server="http://localhost:5000")
+        
         await context_1.current_target.get("https://examle.com")
         await context_2.get("https://examle.com")
         input("press ENTER to exit:)")
