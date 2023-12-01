@@ -26,6 +26,15 @@ Also, see [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree
 Feel free to give me a feedback! \
 You're a company and looking for another solution? Maybe **[undetect.io](https://undetect.io/partner/steve)** is smth for you
 
+#### Also, feel free to
+<a href="https://www.buymeacoffee.com/kaliiii">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://www.buymeacoffee.com/assets/img/custom_images/black_img.png" />
+    <source media="(prefers-color-scheme: light)" srcset="https://www.buymeacoffee.com/assets/img/custom_images/white_img.png" />
+    <img alt="Star History Chart" src="https://www.buymeacoffee.com/assets/img/custom_images/black_img.png" />
+  </picture>
+</a>
+
 ### Dependencies
 
 * [Python >= 3.7](https://www.python.org/downloads/)
