@@ -96,6 +96,7 @@ class WebElement(JSRemoteObj):
             async def set_stale_frame(data):
                 if data["frame"]["id"] == self.___frame_id__:
                     self._stale = True
+                await self.__target__.remove_cdp_listener("Page.frameNavigated", set_stale_frame)
 
             if not self.__target__._page_enabled:
                 await self.__target__.execute_cdp_cmd("Page.enable")
@@ -144,7 +145,13 @@ class WebElement(JSRemoteObj):
 
             if context_id:
                 args["executionContextId"] = context_id
-            res = await self.__target__.execute_cdp_cmd("DOM.resolveNode", args)
+            try:
+                res = await self.__target__.execute_cdp_cmd("DOM.resolveNode", args)
+            except CDPError as e:
+                if e.code == -32000 and e.message == 'No node with given id found':
+                    raise StaleElementReferenceException(self)
+                else:
+                    raise e
             obj_id = res["object"].get("objectId")
             if obj_id:
                 if self.__context_id__ == context_id:
@@ -295,14 +302,14 @@ class WebElement(JSRemoteObj):
                 elems.append(elem)
             return elems
         elif by == By.XPATH:
-            scipt = """return document.evaluate(
+            script = """return document.evaluate(
                           arguments[0],
                           obj,
                           null,
                           XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
                           null,
                         );"""
-            return await self.execute_script(scipt, value, serialization="deep", timeout=10, unique_context=True)
+            return await self.execute_script(script, value, serialization="deep", timeout=10, unique_context=True)
         else:
             return ValueError("unexpected by")
 
@@ -643,6 +650,33 @@ class WebElement(JSRemoteObj):
         result = await self.execute_script("return obj.getClientRects()[0].toJSON()", serialization="json",
                                            unique_context=True)
         return result
+    @property
+    async def css_metrics(self):
+        script = """
+            function getRotationAngle(target) 
+                {
+                  const _obj = window.getComputedStyle(target, null);
+                  const matrix = _obj.getPropertyValue('transform');
+                  let angle = 0; 
+                  if (matrix !== 'none') 
+                  {
+                    const values = matrix.split('(')[1].split(')')[0].split(',');
+                    const a = values[0];
+                    const b = values[1];
+                    angle = Math.round(Math.atan2(b, a) * (180/Math.PI));
+                  } 
+                
+                  return (angle < 0) ? angle +=360 : angle;
+                }
+            var _rects = obj.getClientRects()
+            var rects = []
+            for(let i = 0; i < _rects.length; i++){
+                rects.push(_rects[i].toJSON())
+            }
+            var rotation = getRotationAngle(obj)
+            return [rects, rotation]
+        """
+        return await self.execute_script(script, max_depth=4)
 
     @property
     async def box_model(self):

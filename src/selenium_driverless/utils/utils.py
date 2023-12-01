@@ -3,7 +3,6 @@
 
 import sys
 import typing
-import json
 import os
 import time
 
@@ -11,9 +10,17 @@ import socket
 import selenium
 import selenium_driverless
 from contextlib import closing
+import aiofiles
+from platformdirs import user_data_dir
+from selenium_driverless import __version__
 
 IS_POSIX = sys.platform.startswith(("darwin", "cygwin", "linux", "linux2"))
 T_JSON_DICT = typing.Dict[str, typing.Any]
+
+DATA_DIR = user_data_dir(appname="selenium-driverless", appauthor="kaliiiiiiiiii", ensure_exists=True)
+LICENSE = '\nThis package has a "Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)" License.\n' \
+          "Therefore, you'll have to ask the developer first if you want to use this package for your business.\n" \
+          "https://github.com/kaliiiiiiiiii/Selenium-Driverless"
 
 
 def find_chrome_executable():
@@ -69,40 +76,22 @@ def sel_path():
     return os.path.dirname(selenium.__file__) + "/"
 
 
-def read(filename: str, encoding: str = "utf-8", sel_root: bool = True):
+async def read(filename: str, encoding: str = "utf-8", sel_root: bool = False):
     if sel_root:
         path = sel_driverless_path() + filename
     else:
         path = filename
-    with open(path, encoding=encoding) as f:
-        return f.read()
+    async with aiofiles.open(path, encoding=encoding) as f:
+        return await f.read()
 
 
-def write(filename: str, content: str, encoding: str = "utf-8", sel_root: bool = True):
+async def write(filename: str, content: str, encoding: str = "utf-8", sel_root: bool = False):
     if sel_root:
         path = sel_driverless_path() + filename
     else:
         path = filename
-    with open(path, "w+", encoding=encoding) as f:
-        return f.write(content)
-
-
-def read_json(filename: str = 'example.json', encoding: str = "utf-8", sel_root: bool = True):
-    if sel_root:
-        path = sel_driverless_path() + filename
-    else:
-        path = filename
-    with open(path, 'r', encoding=encoding) as f:
-        return json.load(f)
-
-
-def write_json(obj: dict or list, filename: str = "out.json", encoding: str = "utf-8", sel_root=True):
-    if sel_root:
-        path = sel_driverless_path() + filename
-    else:
-        path = filename
-    with open(path, "w", encoding=encoding) as outfile:
-        outfile.write(json.dumps(obj))
+    async with aiofiles.open(path, "w+", encoding=encoding) as f:
+        return await f.write(content)
 
 
 def random_port(host: str = None):
@@ -119,4 +108,31 @@ def check_timeout(start_monotonic: float, timeout: float):
         raise TimeoutError(f"driver.quit took longer than timeout: {timeout}")
 
 
-is_first_run = read("files/is_first_run") == "true"
+async def is_first_run():
+    path = DATA_DIR + "/is_first_run"
+    if os.path.isfile(path):
+        res = await read(path, sel_root=False)
+        if res == __version__:
+            return False
+        else:
+            await write(path, __version__, sel_root=False)
+            print(LICENSE, file=sys.stderr)
+            # new version
+            return None
+    else:
+        # first run
+        print(LICENSE, file=sys.stderr)
+        await write(path, __version__, sel_root=False)
+        return True
+
+
+async def get_default_ua():
+    path = DATA_DIR + "/useragent"
+    if os.path.isfile(path):
+        res = await read(path, sel_root=False)
+        return res
+
+
+async def set_default_ua(ua: str):
+    path = DATA_DIR + "/useragent"
+    await write(path, ua, sel_root=False)

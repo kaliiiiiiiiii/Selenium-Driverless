@@ -1,8 +1,10 @@
 # io
 import asyncio
+import time
 import typing
 import warnings
 from base64 import b64decode
+import aiofiles
 from typing import List
 from typing import Optional
 
@@ -18,6 +20,7 @@ from selenium_driverless.input.pointer import Pointer
 from selenium_driverless.scripts.driver_utils import get_targets, get_target, get_cookies, get_cookie, delete_cookie, \
     delete_all_cookies, add_cookie
 from selenium_driverless.types.deserialize import StaleJSRemoteObjReference
+from selenium_driverless.types.webelement import StaleElementReferenceException, NoSuchElementException
 from selenium_driverless.sync.alert import Alert as SyncAlert
 # Alert
 from selenium_driverless.types.alert import Alert
@@ -39,7 +42,7 @@ class Target:
     """Allows you to drive the browser without chromedriver."""
 
     # noinspection PyShadowingBuiltins
-    def __init__(self, host: str, target_id: str, is_remote: bool = False,
+    def __init__(self, host: str, target_id: str, driver, is_remote: bool = False,
                  loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
                  type: str = None, start_socket: bool = False, max_ws_size:int=2**20) -> None:
         """Creates a new instance of the chrome target. Starts the service and
@@ -76,6 +79,8 @@ class Target:
         self._loop = loop
         self._start_socket = start_socket
         self._on_closed_ = []
+
+        self._driver = driver
 
     def __repr__(self):
         return f'<{type(self).__module__}.{type(self).__name__} (target_id="{self.id}", host="{self._host}")>'
@@ -176,7 +181,7 @@ class Target:
 
         async def target_getter(target_id: str, timeout: float = 2, max_ws_size:int=2**20):
             return await get_target(target_id=target_id, host=self._host, loop=self._loop, is_remote=self._is_remote,
-                                    timeout=timeout, max_ws_size=max_ws_size)
+                                    timeout=timeout, max_ws_size=max_ws_size, driver=self._driver)
 
         _targets = await get_targets(cdp_exec=self.execute_cdp_cmd, target_getter=target_getter,
                                      _type="iframe", context_id=self._context_id, max_ws_size=self._max_ws_size)
@@ -208,7 +213,7 @@ class Target:
             raise NoSuchIframe(iframe, "no target for iframe found")
         return targets[0]
 
-    # noinspection PyUnboundLocalVariable
+    # noinspection PyUnboundLocalVariable,PyProtectedMember
     async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
         """Loads a web page in the current browser session."""
         if url == "about:blank":
@@ -220,7 +225,7 @@ class Target:
         args = {"url": url, "transitionType": "link"}
         if referrer:
             args["referrer"] = referrer
-        get = asyncio.create_task(self.execute_cdp_cmd("Page.navigate", args))
+        get = asyncio.create_task(self.execute_cdp_cmd("Page.navigate", args, timeout=20))
         if wait_load:
             try:
                 await wait
@@ -244,10 +249,17 @@ class Target:
             if "exceptionDetails" in res.keys():
                 raise JSEvalException(res["exceptionDetails"])
             obj_id = res["result"]['objectId']
+
+
             base_frame = await self.base_frame
+            # target can have no frames at all
+            frame_id = None
+            if base_frame:
+                frame_id = base_frame.get("id")
+
             # noinspection PyUnresolvedReferences
             obj = JSRemoteObj(obj_id=obj_id, target=self, isolated_exec_id=None,
-                              frame_id=base_frame["id"])
+                              frame_id=frame_id)
             if not context_id:
                 context_id = obj.__context_id__
                 self._exec_context_id_ = context_id
@@ -380,6 +392,8 @@ class Target:
                 pass
             else:
                 raise e
+        except asyncio.TimeoutError:
+            pass
 
     async def focus(self):
         await self.execute_cdp_cmd("Target.activateTarget",
@@ -397,13 +411,19 @@ class Target:
 
     @property
     async def frame_tree(self):
-        res = await self.execute_cdp_cmd("Page.getFrameTree")
-        return res["frameTree"]
+        try:
+            res = await self.execute_cdp_cmd("Page.getFrameTree")
+            return res["frameTree"]
+        except CDPError as e:
+            if not(e.code == -32601 and e.message == "'Page.getFrameTree' wasn't found"):
+                raise e
+
 
     @property
     async def base_frame(self):
         res = await self.frame_tree
-        return res["frame"]
+        if res:
+            return res["frame"]
 
     @property
     async def type(self):
@@ -523,8 +543,12 @@ class Target:
                 target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/'})
                 target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/', 'secure' : True})
                 target.add_cookie({'name' : 'foo', 'value' : 'bar', 'sameSite' : 'Strict'})
+            ..etc
+            see https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-CookieParam
         """
-        return await add_cookie(target=self, cookie_dict=cookie_dict, context_id=await self.browser_context_id)
+        if not (cookie_dict.get("url") or cookie_dict.get("domain") or cookie_dict.get("path")):
+            cookie_dict["url"] = await self.current_url
+        return await add_cookie(target=self, cookie_dict=cookie_dict)
 
     @property
     async def _document_elem(self) -> WebElement:
@@ -543,9 +567,23 @@ class Target:
 
     # noinspection PyUnusedLocal
     async def find_element(self, by: str, value: str, parent=None, timeout: int or None = None) -> WebElement:
-        if not parent:
+        start = time.monotonic()
+        elem = None
+        while not elem:
             parent = await self._document_elem
-        return await parent.find_element(by=by, value=value, timeout=timeout)
+            try:
+                elem = await parent.find_element(by=by, value=value, timeout=None)
+            except StaleElementReferenceException as e:
+                self._document_elem_ = None
+            except NoSuchElementException:
+                pass
+            except StaleJSRemoteObjReference:
+                self._document_elem_ = None
+            if (not timeout) or (time.monotonic() - start) > timeout:
+                break
+        if not elem:
+            raise NoSuchElementException()
+        return elem
 
     async def find_elements(self, by: str, value: str, parent=None) -> typing.List[WebElement]:
         if not parent:
@@ -605,8 +643,8 @@ class Target:
             )
         png = await self.get_screenshot_as_png()
         try:
-            with open(filename, "wb") as f:
-                f.write(png)
+            async with aiofiles.open(filename, "wb") as f:
+                await f.write(png)
         except OSError:
             return False
         finally:

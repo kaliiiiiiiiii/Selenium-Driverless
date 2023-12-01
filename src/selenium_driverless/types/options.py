@@ -17,15 +17,17 @@
 
 # modified by kaliiiiiiiiii | Aurin Aegerter
 
-import base64
 import os
 import warnings
 from abc import ABCMeta
-from typing import Union, Optional, List, BinaryIO
+from typing import Union, Optional, List
 
 # selenium
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.proxy import Proxy
+
+from selenium_driverless.utils.utils import sel_driverless_path
+from selenium_driverless.scripts.prefs import prefs_to_json
 
 
 # noinspection PyUnreachableCode,PyUnusedLocal
@@ -34,6 +36,7 @@ class Options(metaclass=ABCMeta):
 
     def __init__(self) -> None:
 
+        self._single_proxy = None
         from selenium_driverless.utils.utils import find_chrome_executable, IS_POSIX
         super().__init__()
 
@@ -43,14 +46,16 @@ class Options(metaclass=ABCMeta):
         self.mobile_options = None
 
         self._binary_location = find_chrome_executable()
-        self._extension_files = []
+        self._extension_paths = []
         self._extensions = []
         self._experimental_options = {}
         self._debugger_address = None
         self._user_data_dir = None
         self._arguments = []
+        self._prefs = {}
         self._ignore_local_proxy = False
         self._auto_clean_dirs = True
+        self._headless = False
 
         self.add_argument("--no-first-run")
         self.add_argument('--disable-component-update')
@@ -73,6 +78,9 @@ class Options(metaclass=ABCMeta):
         self.add_argument('--homepage=about:blank')
 
         self._is_remote = True
+
+        # extension
+        self.add_extension(sel_driverless_path() + "files/mv3_extension")
 
     @property
     def capabilities(self):
@@ -267,24 +275,6 @@ class Options(metaclass=ABCMeta):
         self._caps["strictFileInteractability"] = value
 
     @property
-    def set_window_rect(self) -> bool:
-        """
-        :returns: whether the remote end supports setting window size and position
-        """
-        return True
-
-    @set_window_rect.setter
-    def set_window_rect(self, value: bool) -> None:
-        # noinspection GrazieInspection
-        """Whether the remote end supports all of the resizing and positioning
-                commands. The default is false. https://w3c.github.io/webdriver/#dfn-
-                strict-file-interactability.
-
-                :param value: whether remote end must support setting window resizing and repositioning
-                """
-        pass
-
-    @property
     def proxy(self) -> Proxy:
         """
         :Returns: Proxy if set, otherwise None.
@@ -300,9 +290,24 @@ class Options(metaclass=ABCMeta):
         warnings.warn("not started with chromedriver, only aplying single proxy")
         self.set_capability("proxy", value=value.to_dict())
 
+    @property
+    def single_proxy(self):
+        return self._single_proxy
+
+    @single_proxy.setter
+    def single_proxy(self, proxy: str):
+        self._single_proxy = proxy
+
     #
     # Options(BaseOptions) from here on
     #
+
+    @property
+    def prefs(self) -> dict:
+        return self._prefs
+
+    def update_pref(self, pref: str, value):
+        self._prefs.update(prefs_to_json({pref: value}))
 
     @property
     def arguments(self):
@@ -329,6 +334,16 @@ class Options(metaclass=ABCMeta):
                 if not self._debugger_address:
                     self._debugger_address = f"127.0.0.1:{port}"
                 self._is_remote = False
+            elif argument[:17] == "--load-extension=":
+                extensions = argument[17:].split(",")
+                self._extension_paths.extend(extensions)
+                return
+            elif argument[:10] == "--headless":
+                self._headless = True
+                if not (len(argument) > 10 and argument[11:] == "new"):
+                    warnings.warn(
+                        'headless without "--headless=new" might be buggy, makes you detectable & breaks proxies',
+                        DeprecationWarning)
             self._arguments.append(argument)
         else:
             raise ValueError("argument can not be null")
@@ -392,19 +407,6 @@ class Options(metaclass=ABCMeta):
         """
         raise NotImplementedError()
 
-        def _decode(file_data: BinaryIO) -> str:
-            # Should not use base64.encodestring() which inserts newlines every
-            # 76 characters (per RFC 1521).  Chromedriver has to remove those
-            # unnecessary newlines before decoding, causing performance hit.
-            return base64.b64encode(file_data.read()).decode("utf-8")
-
-        encoded_extensions = []
-        for extension in self._extension_files:
-            with open(extension, "rb") as f:
-                encoded_extensions.append(_decode(f))
-
-        return encoded_extensions + self._extensions
-
     def add_extension(self, extension: str) -> None:
         """Adds the path to the extension to a list that will be used to
         extract it to the Chrome.
@@ -412,15 +414,11 @@ class Options(metaclass=ABCMeta):
         :Args:
          - extension: path to the \\*.crx file
         """
-        raise NotImplementedError()
-        if extension:
-            extension_to_add = os.path.abspath(os.path.expanduser(extension))
-            if os.path.exists(extension_to_add):
-                self._extension_files.append(extension_to_add)
-            else:
-                raise OSError("Path to the extension doesn't exist")
+        extension_to_add = os.path.abspath(os.path.expanduser(extension))
+        if os.path.exists(extension_to_add):
+            self._extension_paths.append(extension_to_add)
         else:
-            raise ValueError("argument can not be null")
+            raise OSError("Path to the extension doesn't exist")
 
     def add_encoded_extension(self, extension: str) -> None:
         """Adds Base64 encoded string with extension data to a list that will
@@ -450,20 +448,17 @@ class Options(metaclass=ABCMeta):
           name: The experimental option name.
           value: The option value.
         """
-        raise NotImplementedError()
-        self._experimental_options[name] = value
+        if name == "prefs":
+            self.prefs.update(prefs_to_json(value))
+        else:
+            raise NotImplementedError()
 
     @property
     def headless(self) -> bool:
         """
         :Returns: True if the headless argument is set, else False
         """
-        warnings.warn(
-            "headless property is deprecated, instead check for '--headless' in arguments",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return "--headless" in self._arguments
+        return self._headless
 
     @headless.setter
     def headless(self, value: bool) -> None:
@@ -475,16 +470,7 @@ class Options(metaclass=ABCMeta):
         :Args:
           value: boolean value indicating to set the headless option
         """
-        warnings.warn(
-            "headless property is deprecated, instead use add_argument('--headless') or add_argument('--headless=new')",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        args = {"--headless"}
-        if value:
-            self._arguments.extend(args)
-        else:
-            self._arguments = list(set(self._arguments) - args)
+        self.add_argument("--headless=new")
 
     def to_capabilities(self) -> dict:
         """

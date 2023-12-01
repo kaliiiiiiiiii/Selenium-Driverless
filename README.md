@@ -3,16 +3,17 @@
 [![Downloads](https://static.pepy.tech/badge/selenium-driverless)](https://pepy.tech/project/selenium-driverless) [![](https://img.shields.io/pypi/v/selenium-driverless.svg?color=3399EE)](https://pypi.org/project/selenium-driverless/)
 
 
-* use selenium __without chromedriver__
-* currently passes __cloudfare__, __bet365__, [turnstile](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/master/dev#bypass-turnstile) and others
-* multiple tabs simultanously
-* multiple Incognito-contexts with individual proxy & cookies
-* async (`asyncio`) and sync (experimantal) support
-* proxy-auth support (experimental, [examle-code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
-* request interception (see events example script)
+- Use Selenium __without chromedriver__
+- Currently passes __Cloudflare__, __Bet365__, [Turnstile](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/master/dev#bypass-turnstile), and others
+- Multiple tabs simultaneously
+- Multiple Incognito-contexts with individual proxy & cookies
+- Async (`asyncio`) and sync (experimental) support
+- Proxy-auth support (experimental, [example code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
+- Request interception (see events example script)
+- headless supported
 
 ### Questions? 
-Feel free to join the [Diriverless-Community](https://discord.com/invite/MzZZjr2ZM3) on **Discord**:)
+Feel free to join the [Driverless-Community](https://discord.com/invite/MzZZjr2ZM3) on **Discord**:)
 
 Also, see [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/dev) for the latest implementations.
 <details>
@@ -20,6 +21,19 @@ Also, see [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree
 
 `pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/heads/dev.zip`
 </details>
+
+### Still getting detected?
+Feel free to give me a feedback! \
+You're a company and looking for another solution? Maybe **[undetect.io](https://undetect.io/partner/steve)** is smth for you
+
+#### Also, feel free to
+<a href="https://www.buymeacoffee.com/kaliiii">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://www.buymeacoffee.com/assets/img/custom_images/black_img.png" />
+    <source media="(prefers-color-scheme: light)" srcset="https://www.buymeacoffee.com/assets/img/custom_images/white_img.png" />
+    <img alt="Star History Chart" src="https://www.buymeacoffee.com/assets/img/custom_images/black_img.png" />
+  </picture>
+</a>
 
 ### Dependencies
 
@@ -101,7 +115,7 @@ async with webdriver.Chrome(options=options) as driver:
 **Notes**: synchronous might not work properly
 
 <details>
-<summary>Examle Code (Click to expand)</summary>
+<summary>Example Code (Click to expand)</summary>
 
 warning: network interception with `Fetch.enable` might have issues with cross-domain iframes, maximum websocket message size or Font requests.\
 You might try using [`Network.setRequestInterception](https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-setRequestInterception) (officially deprecated) or narrowing the pattern
@@ -171,11 +185,11 @@ asyncio.run(main())
 ```
 </details>
 
-### Multiple tabs simultously
-Note: `asyncio` is recommendet, `threading` only works on independent `webdriver.Chrome` instances.
+## Multiple tabs simultaneously
+Note: asyncio is recommended, threading only works on independent webdriver.Chrome instances.
 
 <details>
-<summary>Examle Code (Click to expand)</summary>
+<summary>Example Code (Click to expand)</summary>
 
 ```python
 from selenium_driverless.sync import webdriver
@@ -199,7 +213,7 @@ async def main():
     options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
         target_1 = await driver.current_target
-        target_2 = await driver.switch_to.new_window("tab", activate=False)
+        target_2 = await driver.new_window("tab", activate=False)
         await asyncio.gather(
             target_1_handler(target_1),
             target_2_handler(target_2)
@@ -216,7 +230,7 @@ asyncio.run(main())
 ### Unique execution contexts
 - execute `javascript` without getting detected
 <details>
-<summary>Examle Code (Click to expand)</summary>
+<summary>Example Code (Click to expand)</summary>
 
 ```python
 from selenium_driverless.sync import webdriver
@@ -273,13 +287,27 @@ iframe_document = await iframes[0].content_document
 # iframe_document.find_elements(...)
 ```
 
+### use preferences
+```python
+from selenium_driverless import webdriver
+options = webdriver.ChromeOptions()
+
+ # recommended usage
+options.update_pref("download.prompt_for_download", False)
+# or
+options.prefs.update({"download": {"prompt_for_download": False}})
+
+# supported
+options.add_experimental_option("prefs", {"download.prompt_for_download": False})
+```
+
 ### Multiple Contexts
 - different cookies for each context
 - A context can have multiple windows and tabs within
 - different proxy for each context
 - opens as a window as incognito
 <details>
-<summary>Examle Code (Click to expand)</summary>
+<summary>Example Code (Click to expand)</summary>
 
 ```python
 from selenium_driverless.sync import webdriver
@@ -291,7 +319,10 @@ async def main():
     options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
         context_1 = driver.current_context
+        
+        await driver.set_auth("username", "password", "localhost:5000")
         context_2 = await driver.new_context(proxy_bypass_list=["localhost"], proxy_server="http://localhost:5000")
+        
         await context_1.current_target.get("https://examle.com")
         await context_2.get("https://examle.com")
         input("press ENTER to exit:)")
@@ -331,6 +362,7 @@ Note: **please check the todo's below at first!**
         - [ ] `SendKeys`
           - [ ] `send files`
   - [ ] [support `options.add_extension()`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/37)
+  - [ ] [support prefs](https://github.com/kaliiiiiiiiii/Selenium-Driverless/discussions/92#discussioncomment-7462309)
 - [x] sync
   - [ ] move sync to threaded for allowing event_handlers
   - [ ] support multithreading with sync version

@@ -26,6 +26,7 @@ import tempfile
 import time
 import traceback
 import typing
+import uuid
 import warnings
 import signal
 from contextlib import asynccontextmanager
@@ -35,6 +36,8 @@ from typing import Optional
 
 # io
 import asyncio
+
+import cdp_socket.exceptions
 import websockets
 
 # selenium
@@ -59,7 +62,7 @@ from selenium_driverless.sync.base_target import BaseTarget as SyncBaseTarget
 # others
 from cdp_socket.utils.conn import get_json
 from selenium_driverless.types.options import Options as ChromeOptions
-from selenium_driverless.utils.utils import is_first_run
+from selenium_driverless.types import JSEvalException
 
 
 class Chrome:
@@ -80,15 +83,13 @@ class Chrome:
          - timeout - timeout in seconds to start chrome
          - debug - for debugging Google-Chrome error messages and other debugging stuff lol
         """
+        self._prefs = {}
+        self._auth_interception_enabled = None
+        self._mv3_extension = None
+        self._extensions_incognito_allowed = None
+        self._base_context = None
         self._stderr = None
         self._stderr_file = None
-        if is_first_run:
-            print(
-                'This package has a "Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)" Licence.\n'
-                "therefore, you'll have to ask the developer first, if you want to use this package for your buisiness.\n"
-                "https://github.com/kaliiiiiiiiii/Selenium-Driverless", file=sys.stderr)
-            from selenium_driverless.utils.utils import write
-            write("files/is_first_run", "false")
         self._process = None
         self._current_target = None
         self._host = None
@@ -103,18 +104,18 @@ class Chrome:
         self._temp_dir = tempfile.TemporaryDirectory(prefix="selenium_driverless_").name
         self._max_ws_size = max_ws_size
 
+        self._auth = {}
+
         if not options:
             options = ChromeOptions()
         if not options.binary_location:
             from selenium_driverless.utils.utils import find_chrome_executable
             options.binary_location = find_chrome_executable()
-        if not options.user_data_dir:
-            options.add_argument(
-                "--user-data-dir=" + self._temp_dir + "/data_dir")
 
         self._options: ChromeOptions = options
         self._is_remote = True
         self._is_remote = False
+        self._has_incognito_contexts: bool = False
         self._started = False
 
     def __repr__(self):
@@ -143,13 +144,61 @@ class Chrome:
          - capabilities - a capabilities dict to start the session with.
         """
         if not self._started:
-            from selenium_driverless.utils.utils import read
+            from selenium_driverless.utils.utils import read, write
+            from selenium_driverless.utils.utils import is_first_run, get_default_ua, set_default_ua
+            from selenium_driverless.scripts.prefs import read_prefs, write_prefs
+
+            await is_first_run()
+            user_agent = await get_default_ua()
 
             if not self._options.debugger_address:
                 from selenium_driverless.utils.utils import random_port
                 port = random_port()
                 self._options._debugger_address = f"127.0.0.1:{port}"
                 self._options.add_argument(f"--remote-debugging-port={port}")
+
+            if self._options.headless and not self._is_remote:
+                # patch useragent
+                if user_agent:
+                    self._options.add_argument(f"--user-agent={user_agent}")
+                else:
+                    warnings.warn("headless is detectable at first run")
+
+            # handle prefs
+            if self._options.user_data_dir:
+                prefs_path = self._options.user_data_dir + "/Default/Preferences"
+                if os.path.isfile(prefs_path):
+                    self._prefs = await read_prefs(prefs_path)
+                else:
+                    os.makedirs(os.path.dirname(prefs_path), exist_ok=True)
+            else:
+                self._options.add_argument(
+                    "--user-data-dir=" + self._temp_dir + "/data_dir")
+                prefs_path = self._options.user_data_dir + "/Default/Preferences"
+                os.makedirs(os.path.dirname(prefs_path), exist_ok=True)
+            self._prefs.update(self._options.prefs)
+            await write_prefs(self._prefs, prefs_path)
+
+            # noinspection PyProtectedMember
+            # handle extensions
+            if self._options._extension_paths:
+                import zipfile
+                extension_paths = []
+                loop = asyncio.get_running_loop()
+
+                # noinspection PyProtectedMember
+                def extractall():
+                    for _path in self._options._extension_paths:
+                        if os.path.isfile(_path):
+                            with zipfile.ZipFile(_path, 'r') as zip_ref:
+                                _path = self._temp_dir + f"/{uuid.uuid4().hex}"
+                                zip_ref.extractall(_path)
+                        extension_paths.append(_path)
+
+                await loop.run_in_executor(None, extractall)
+
+                self._options.arguments.append(f"--load-extension=" + ','.join(extension_paths))
+
             self._options.add_argument("about:blank")
             options = self._options
 
@@ -182,7 +231,8 @@ class Chrome:
                     path = self._options.user_data_dir + "/DevToolsActivePort"
                     while not os.path.isfile(path):
                         await asyncio.sleep(0.1)
-                    port = int(read(path, sel_root=False).split("\n")[0])
+                    port = await read(path, sel_root=False)
+                    port = int(port.split("\n")[0])
                     self._options.debugger_address = f"127.0.0.1:{port}"
 
             host, port = self._options.debugger_address.split(":")
@@ -197,6 +247,14 @@ class Chrome:
                                                      timeout=self._timeout, loop=self._loop,
                                                      max_ws_size=self._max_ws_size)
 
+            # fetch useragent at first headless run
+            # noinspection PyUnboundLocalVariable
+            if not self._is_remote:
+                res = await self._base_target.execute_cdp_cmd("Browser.getVersion")
+                user_agent = res["userAgent"]
+                user_agent = user_agent.replace("HeadlessChrome", "Chrome")
+                await set_default_ua(user_agent)
+
             if not self._is_remote:
                 # noinspection PyUnboundLocalVariable
                 self.browser_pid = self._process.pid
@@ -206,30 +264,33 @@ class Chrome:
                     target_id = target["id"]
                     self._current_target = await get_target(target_id=target_id, host=self._host,
                                                             loop=self._loop, is_remote=self._is_remote, timeout=2,
-                                                            max_ws_size=self._max_ws_size)
+                                                            max_ws_size=self._max_ws_size, driver=self)
 
                     # handle the context
                     if self._loop:
-                        context = await SyncContext(base_target=self._current_target, loop=self._loop,
-                                                    _base_target=self.base_target, max_ws_size=self._max_ws_size)
+                        context = await SyncContext(base_target=self._current_target, driver=self, loop=self._loop,
+                                                    max_ws_size=self._max_ws_size)
                     else:
-                        context = await Context(base_target=self._current_target, loop=self._loop,
-                                                _base_target=self.base_target, max_ws_size=self._max_ws_size)
+                        context = await Context(base_target=self._current_target, driver=self, loop=self._loop,
+                                                max_ws_size=self._max_ws_size)
                     _id = context.context_id
 
                     def remove_context():
                         if _id in self._contexts:
                             del self._contexts[_id]
+                        self._base_context = None
 
                     # noinspection PyProtectedMember
                     context._closed_callbacks.append(remove_context)
-                    self.base_target.socket.on_closed.append(lambda code, reason: self.quit(clean_dirs=self._options.auto_clean_dirs))
+                    self.base_target.socket.on_closed.append(
+                        lambda code, reason: self.quit(clean_dirs=self._options.auto_clean_dirs))
                     self._current_context = context
+                    self._base_context = context
                     self._contexts[_id] = context
-
                     break
             await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
-
+            if self._options.single_proxy:
+                await self.set_single_proxy(self._options.single_proxy)
             self._started = True
         return self
 
@@ -252,37 +313,53 @@ class Chrome:
                 if not context:
                     if self._loop:
                         context = await SyncContext(base_target=self._current_target, context_id=_id,
-                                                    loop=self._loop, _base_target=self._base_target,
-                                                    max_ws_size=self._max_ws_size)
+                                                    loop=self._loop, max_ws_size=self._max_ws_size, driver=self)
                     else:
                         context = await Context(base_target=self._current_target, context_id=_id,
-                                                loop=self._loop, _base_target=self._base_target,
-                                                max_ws_size=self._max_ws_size)
+                                                loop=self._loop, max_ws_size=self._max_ws_size, driver=self)
                 contexts[_id] = context
         self._contexts.update(contexts)
         return self._contexts
 
-    async def new_context(self, proxy_bypass_list=None, proxy_server: str = None,
+    async def new_context(self, proxy_bypass_list=None, proxy_server: str = True,
                           universal_access_origins=None, url: str = "about:blank"):
+        await self.ensure_extensions_incognito_allowed()
         if proxy_bypass_list is None:
             proxy_bypass_list = ["localhost"]
-
+        if proxy_server is None:
+            proxy_server = ""
         args = {"disposeOnDetach": False}
         if proxy_bypass_list:
             args["proxyBypassList"] = ",".join(proxy_bypass_list)
-        if proxy_server:
+        if not (proxy_server is True):
             args["proxyServer"] = proxy_server
         if universal_access_origins:
             args["originsWithUniversalNetworkAccess"] = universal_access_origins
-        res = await self.base_target.execute_cdp_cmd("Target.createBrowserContext", args)
+
+        # create context ensuring extension racing conditions
+        self._auth_interception_enabled = False
+        has_incognito_ctxs = not (not self._has_incognito_contexts)
+        self._has_incognito_contexts = True
+        mv3_ext = await self.mv3_extension
+        self._mv3_extension = None
+
+        try:
+            res = await self.base_target.execute_cdp_cmd("Target.createBrowserContext", args)
+        except Exception as e:
+            self._mv3_extension = mv3_ext
+            self._auth_interception_enabled = True
+            self._has_incognito_contexts = has_incognito_ctxs
+            raise e
+
         _id = res["browserContextId"]
         if self._loop:
             context = await SyncContext(base_target=self._base_target, context_id=_id, loop=self._loop,
-                                        _base_target=self._base_target, is_incognito=True,
-                                        max_ws_size=self._max_ws_size)
+                                        is_incognito=True,
+                                        max_ws_size=self._max_ws_size, driver=self)
         else:
             context = await Context(base_target=self._base_target, context_id=_id, loop=self._loop,
-                                    _base_target=self._base_target, is_incognito=True, max_ws_size=self._max_ws_size)
+                                    is_incognito=True, max_ws_size=self._max_ws_size,
+                                    driver=self)
         self._contexts[_id] = context
 
         def remove_context():
@@ -294,6 +371,25 @@ class Chrome:
         await context.switch_to.new_window("window", activate=False, url=url)
         tabs = await context.get_targets(_type="page", context_id=_id)
         context._current_target = list(tabs.values())[0].Target
+        context._current_target._timeout = 5
+
+        # reload auth & extension target to fix non-applied auth
+        if self._auth:
+            self._mv3_extension = None
+            while True:
+                # ensure racing conditions with extension
+                try:
+                    mv3_target = await self.mv3_extension
+                    self._auth_interception_enabled = False
+                    await self._ensure_auth_interception(timeout=0.3, set_flag=False)
+                    await mv3_target.execute_script("globalThis.authCreds = arguments[0]", self._auth, timeout=0.3)
+                except asyncio.TimeoutError:
+                    await asyncio.sleep(0.1)
+                    self._mv3_extension = None
+                else:
+                    self._auth_interception_enabled = True
+                    self._mv3_extension = mv3_target
+                    return context
         return context
 
     async def get_targets(self, _type: str = None, context_id: str or None = "self") -> typing.Dict[str, TargetInfo]:
@@ -308,6 +404,80 @@ class Chrome:
     @property
     def base_target(self) -> BaseTarget:
         return self._base_target
+
+    @property
+    async def mv3_extension(self, timeout: float = 10) -> Target:
+        if self._has_incognito_contexts:
+            await self.ensure_extensions_incognito_allowed()
+        if not self._mv3_extension:
+            import re
+            import time
+            start = time.monotonic()
+            extension_target = None
+            while not extension_target:
+                targets = await self.get_targets(context_id=None)
+                for target in targets.values():
+                    if target.type == "service_worker":
+                        if re.fullmatch(
+                                r"chrome-extension://(.*)/driverless_background_mv3_243ffdd55e32a012b4f253b2879af978\.js",
+                                target.url):
+                            extension_target = target.Target
+                            break
+                if not extension_target:
+                    if (time.monotonic() - start) > timeout:
+                        raise TimeoutError(f"Couldn't find mv3 extension within {timeout} seconds")
+            while True:
+                try:
+                    # fix WebRTC leak
+                    await extension_target.execute_script("chrome.privacy.network.webRTCIPHandlingPolicy.set(arguments[0])",
+                                                        {"value": "disable_non_proxied_udp"})
+                except asyncio.TimeoutError:
+                    await asyncio.sleep(0.2)
+                    return await self.mv3_extension
+                except JSEvalException as e:
+                    await asyncio.sleep(0.2)
+                except cdp_socket.exceptions.CDPError as e:
+                    if e.code == -32000 and e.message == 'Could not find object with given id':
+                        await asyncio.sleep(0.2)
+                else:
+                    break
+            self._mv3_extension = extension_target
+        return self._mv3_extension
+
+    async def ensure_extensions_incognito_allowed(self):
+        if not self._extensions_incognito_allowed:
+            self._extensions_incognito_allowed = True
+            page = None
+            try:
+                base_ctx = self._base_context
+                page = await base_ctx.new_window("tab", "chrome://extensions", activate=False)
+                script = """
+                    var callback = arguments[arguments.length -1]
+                    async function make_global(){
+                        const extensions = await chrome.developerPrivate.getExtensionsInfo();
+                        extensions.forEach( async function(extension)  {
+                            chrome.developerPrivate.updateExtensionConfiguration({
+                                extensionId: extension.id,
+                                incognitoAccess: true
+                            })
+                        });
+                        callback()
+                    }
+                    make_global()
+                """
+                await asyncio.sleep(0.1)
+                await page.execute_async_script(script, timeout=5)
+            except Exception as e:
+                self._extensions_incognito_allowed = False
+                if page:
+                     await page.close()
+                await self.ensure_extensions_incognito_allowed()
+            self._extensions_incognito_allowed = True
+            await page.close()
+
+    @property
+    def base_context(self):
+        return self._base_context
 
     @property
     def current_context(self) -> Context:
@@ -461,7 +631,8 @@ class Chrome:
                         await loop.run_in_executor(None, lambda: self._process.wait(timeout))
                     except Exception:
                         import sys
-                        print('Ignoring exception at self.base_target.execute_cdp_cmd("Browser.close")', file=sys.stderr)
+                        print('Ignoring exception at self.base_target.execute_cdp_cmd("Browser.close")',
+                              file=sys.stderr)
                         traceback.print_exc()
                     else:
                         self._process = None
@@ -537,6 +708,19 @@ class Chrome:
             if info.type == "page":
                 tabs.append(info)
         return tabs
+
+    async def new_window(self, type_hint: Optional[str] = "tab", url="", activate: bool = True) -> Target:
+        """Switches to a new top-level browsing context.
+
+        The type hint can be one of "tab" or "window". If not specified the
+        browser will automatically select it.
+
+        :Usage:
+            ::
+
+                target.switch_to.new_window('tab')
+        """
+        return await self.current_context.new_window(type_hint=type_hint, url=url, activate=activate)
 
     async def set_window_state(self, state):
         states = ["normal", "minimized", "maximized", "fullscreen"]
@@ -967,6 +1151,137 @@ class Chrome:
         if origin:
             args["origin"] = origin
         await self.execute_cdp_cmd("Browser.setPermission", args)
+
+    async def set_proxy(self, proxy_config):
+        # noinspection GrazieInspection
+        """
+                see https://developer.chrome.com/docs/extensions/reference/proxy/
+                proxy_config = {
+                    "mode": "fixed_servers",
+                    "rules": {
+                        "proxyForHttp": {
+                            "scheme": scheme,
+                            "host": host,
+                            "port": port
+                        },
+                        "proxyForHttps": {
+                            "scheme": scheme,
+                            "host": host,
+                            "port": port
+                        },
+                        "proxyForFtp": {
+                            "scheme": scheme,
+                            "host": host,
+                            "port": port
+                        },
+                        "fallbackProxy": {
+                            "scheme": scheme,
+                            "host": host,
+                            "port": port
+                        },
+                        "bypassList": ["<local>"]
+                    }
+                }
+                """
+        extension = await self.mv3_extension
+        await extension.execute_async_script("chrome.proxy.settings.set(arguments[0], arguments[arguments.length -1])",
+                                             {"value": proxy_config, "scope": 'regular'})
+
+    async def set_single_proxy(self, proxy: str, bypass_list=None):
+
+        # parse scheme
+        proxy = proxy.split("://")
+        if len(proxy) == 2:
+            scheme, proxy = proxy
+        else:
+            scheme = None
+            proxy = proxy[0]
+
+        proxy = proxy.split("@")
+        if len(proxy) == 2:
+            creds, proxy = proxy
+        else:
+            proxy = proxy[0]
+            creds = None
+
+        # parse host & port
+        proxy = proxy.split(":")
+        if len(proxy) == 2:
+            host, port = proxy
+            port = int(port.replace("/", ""))
+        else:
+            port = None
+            host = proxy[0]
+
+        rule = {"host": host}
+        if scheme:
+            rule["scheme"] = scheme
+        if port:
+            rule["port"] = port
+        if bypass_list is None:
+            bypass_list = ["<local>"]
+        proxy_config = {
+            "mode": "fixed_servers",
+            "rules": {
+                "proxyForHttp": rule,
+                "proxyForHttps": rule,
+                "proxyForFtp": rule,
+                "fallbackProxy": rule,
+                "bypassList": bypass_list
+            }
+        }
+        await self.set_proxy(proxy_config)
+        if creds:
+            user, passw = creds.split(":")
+            await self.set_auth(user, passw, f"{host}:{port}")
+
+    async def clear_proxy(self):
+        extension = await self.mv3_extension
+        await extension.execute_async_script("""
+            chrome.proxy.settings.set(
+              {value: {mode: "direct"}, scope: 'regular'},
+              arguments[arguments.length -1]
+            );
+        """)
+
+    async def _ensure_auth_interception(self, timeout: float = 0.3, set_flag:bool=True):
+        if not self._auth_interception_enabled:
+            script = """
+                        if(globalThis.authCreds == undefined){globalThis.authCreds = {}}
+                        globalThis.onAuth = function onAuth(details) {
+                            return globalThis.authCreds[details.challenger.host+":"+details.challenger.port]
+                        }
+                        chrome.webRequest.onAuthRequired.addListener(
+                            onAuth,
+                            {urls: ["<all_urls>"]},
+                            ['blocking']
+                            );
+                        """
+            mv3_target = await self.mv3_extension
+            await mv3_target.execute_script(script, timeout=timeout)
+            if set_flag:
+                self._auth_interception_enabled = True
+
+    async def set_auth(self, username: str, password: str, host_with_port):
+        # provide auth
+        await self._ensure_auth_interception()
+        mv3_target = await self.mv3_extension
+        arg = {
+            "authCredentials": {
+                "username": username,
+                "password": password
+            }
+        }
+        await mv3_target.execute_script("globalThis.authCreds[arguments[1]] = arguments[0]", arg, host_with_port)
+        self._auth[host_with_port] = arg
+
+    async def clear_auth(self):
+        # provide auth
+        mv3_target = await self.mv3_extension
+        script = "chrome.webRequest.onAuthRequired.removeListener(globalThis.onAuth);"
+        self._auth = {}
+        await mv3_target.execute_script(script)
+        self._auth_interception_enabled = False
 
     async def wait_for_cdp(self, event: str, timeout: float or None = None, target_id: str = None):
         target = await self.get_target(target_id=target_id)

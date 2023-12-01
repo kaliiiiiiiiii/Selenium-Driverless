@@ -132,6 +132,7 @@ class SwitchTo:
         elif isinstance(target_id, Target):
             self._context._current_target = target_id
         elif isinstance(target_id, WebElement):
+            # noinspection PyDeprecation
             self._context._current_target = self.frame(target_id, activate=False)
         else:
             self._context._current_target = await self._context.get_target(target_id)
@@ -151,22 +152,8 @@ class SwitchTo:
 
                 target.switch_to.new_window('tab')
         """
-        if self._is_incognito and url in ["chrome://extensions"]:
-            raise ValueError(f"{url} only supported in non-incognito contexts")
-        new_tab = False
-        if type_hint == "window":
-            new_tab = True
-        elif type_hint == "tab":
-            pass
-        else:
-            raise ValueError("type hint needs to be 'window' or 'tab'")
-        args = {"url": url, "newWindow": new_tab, "forTab": new_tab}
-        # noinspection PyProtectedMember
-        if self._context_id and self._is_incognito:
-            args["browserContextId"] = self._context_id
-        target = await self._context.base_target.execute_cdp_cmd("Target.createTarget", args)
-        target_id = target["targetId"]
-        return await self.target(target_id, activate=activate)
+        target = await self._context.new_window(type_hint=type_hint, url=url, activate=activate)
+        return await self.target(target, activate=activate)
 
     async def parent_frame(self, activate: bool = False) -> None:
         """Switches focus to the parent context. If the current context is the
