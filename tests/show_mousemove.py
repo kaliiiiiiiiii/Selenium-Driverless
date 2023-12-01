@@ -8,7 +8,7 @@ async def main():
     options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
         await driver.get("about:blank")
-        await driver.execute_script(script=await read("/files/js/show_mousemove.js"))
+        await driver.execute_script(script=await read("/files/js/show_mousemove.js", sel_root=True))
         elem = await driver.find_element(By.ID, "clear")
         pointer = await driver.current_pointer
 
