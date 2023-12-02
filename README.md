@@ -368,6 +368,7 @@ Note: **please check the todo's below at first!**
   - [ ] support multithreading with sync version
     - [x] on independent driver instances
     - [ ] on same driver instance
+- [ ] check [Python 3.12.0](https://www.python.org/downloads/release/python-3120/)
 </details>
 
 ## Authors
