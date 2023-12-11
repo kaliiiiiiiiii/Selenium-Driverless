@@ -310,7 +310,6 @@ options.add_experimental_option("prefs", {"download.prompt_for_download": False}
 <summary>Example Code (Click to expand)</summary>
 
 ```python
-from selenium_driverless.sync import webdriver
 from selenium_driverless import webdriver
 import asyncio
 
