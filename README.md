@@ -320,6 +320,7 @@ async def main():
         context_1 = driver.current_context
         
         await driver.set_auth("username", "password", "localhost:5000")
+        # proxy not supported on windows due to https://bugs.chromium.org/p/chromium/issues/detail?id=1310057
         context_2 = await driver.new_context(proxy_bypass_list=["localhost"], proxy_server="http://localhost:5000")
         
         await context_1.current_target.get("https://examle.com")
