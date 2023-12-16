@@ -6,8 +6,9 @@ from selenium_driverless.webdriver import Chrome as AsyncDriver
 
 
 class Chrome(AsyncDriver):
-    def __init__(self, options: ChromeOptions = None, loop: asyncio.AbstractEventLoop = None, max_ws_size: int = 2 ** 20):
-        super().__init__(options=options,max_ws_size=max_ws_size)
+    def __init__(self, options: ChromeOptions = None, loop: asyncio.AbstractEventLoop = None,
+                 max_ws_size: int = 2 ** 20):
+        super().__init__(options=options, max_ws_size=max_ws_size)
         if not loop:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)

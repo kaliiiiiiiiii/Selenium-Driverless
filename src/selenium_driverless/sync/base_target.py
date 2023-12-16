@@ -7,7 +7,8 @@ from selenium_driverless.types.base_target import BaseTarget as AsyncBaseTarget
 class BaseTarget(AsyncBaseTarget):
     # noinspection PyShadowingBuiltins
     def __init__(self, host: str, is_remote: bool = False,
-                 loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30, max_ws_size: int = 2 ** 20) -> None:
+                 loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
+                 max_ws_size: int = 2 ** 20) -> None:
         if not loop:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)

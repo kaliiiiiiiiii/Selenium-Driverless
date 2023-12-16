@@ -1,9 +1,8 @@
-import unittest
 import asyncio
+import unittest
 
 from selenium_driverless import webdriver
 from selenium_driverless.types.by import By
-from selenium_driverless.types.webelement import NoSuchElementException
 
 loop = asyncio.get_event_loop()
 
@@ -100,7 +99,8 @@ class Driver(unittest.TestCase):
         loop.run_until_complete(self._test_all())
         self.assertEqual(True, True)
 
-    async def _test_all(self):
+    @staticmethod
+    async def _test_all():
         tests = [
             prompt,
             bet365,

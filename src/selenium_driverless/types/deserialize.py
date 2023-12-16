@@ -64,8 +64,11 @@ class JSRemoteObj:
     async def __isolated_exec_id__(self) -> int:
         # noinspection PyUnresolvedReferences
         if not self.___isolated_exec_id__:
+            # noinspection SpellCheckingInspection
             res = await self.__target__.execute_cdp_cmd(
                 "Page.createIsolatedWorld",
+                # yes the following typo is actually not a typo:) see
+                # https://source.chromium.org/chromium/chromium/src/+/main:out/android-Debug/gen/third_party/blink/renderer/core/inspector/protocol/page.cc;l=1284-1288;drc=d9d30d5b272205375f655202e169d681c3bed0c7
                 {"frameId": await self.__frame_id__, "grantUniveralAccess": True,
                  "worldName": "Isolated execution context with DOM-access, You got here hehe:)"})
             super().__setattr__("___isolated_exec_id__", res["executionContextId"])
@@ -122,7 +125,9 @@ class JSRemoteObj:
                     _args.append({"objectId": obj_id})
                 else:
                     warnings.warn(
-                        f"Can't find remote reference of {arg}, or got different execution context, trying to serialize. \n you can avoid this warning by passing json.dumps(arg) instead of the arg itsself")
+                        f"Can't find remote reference of {arg}, or got different execution context, "
+                        "trying to serialize."
+                        "\n you can avoid this warning by passing json.dumps(arg) instead of the arg itself")
 
             if is_value:
                 _args.append({"value": arg})
@@ -140,7 +145,8 @@ class JSRemoteObj:
             res = await self.__target__.execute_cdp_cmd("Runtime.callFunctionOn", args, timeout=timeout)
         except CDPError as e:
             if e.code == -32000 and e.message in ['Cannot find context with specified id',
-                                                  'Argument should belong to the same JavaScript world as target object']:
+                                                  'Argument should belong to the same JavaScript world '
+                                                  'as target object']:
                 raise StaleJSRemoteObjReference(_object=self)
             else:
                 raise e
@@ -161,7 +167,7 @@ class JSRemoteObj:
                        timeout: float = 2, execution_context_id: str = None,
                        unique_context: bool = None):
         """
-        exaple: script = "return elem.click()"
+        example: script = "return elem.click()"
         """
         from selenium_driverless.types.webelement import WebElement
         exec_context = self.__context_id__
@@ -252,14 +258,15 @@ class JSObject(JSRemoteObj, dict):
         # noinspection PyBroadException
         try:
             return self[k]
-        except:
+        except Exception:
             return self.__getitem__(k)
 
     def __setattr__(self, k, v):
         self[k] = v
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(description={self.__description__}, sub_type={self.__sub_type__}, class_name={self.__class_name__}, obj_id={self.__obj_id__}, context_id={self.__context_id__})'
+        return (f'{self.__class__.__name__}(description={self.__description__}, sub_type={self.__sub_type__}, '
+                f'class_name={self.__class_name__}, obj_id={self.__obj_id__}, context_id={self.__context_id__})')
 
     def __hash__(self):
         # noinspection PyUnresolvedReferences
@@ -313,7 +320,8 @@ class JSFunction(JSRemoteObj):
 
     def __repr__(self):
         # noinspection PyUnresolvedReferences
-        return f'{self.__class__.__name__}("{self.__description__}", obj_id={self.__obj_id__}, context_id={self.__context_id__})'
+        return (f'{self.__class__.__name__}("{self.__description__}", obj_id={self.__obj_id__}, '
+                f'context_id={self.__context_id__})')
 
 
 class JSMapException(Exception):
@@ -477,7 +485,8 @@ class JSNodeList(JSArray):
 
     def __repr__(self):
         # noinspection PyUnresolvedReferences
-        return f'{self.__class__.__name__}("{self.__class_name__}",obj_id={self.__obj_id__}, context_id={self.__context_id__})'
+        return (f'{self.__class__.__name__}("{self.__class_name__}",obj_id={self.__obj_id__}, '
+                f'context_id={self.__context_id__})')
 
 
 class JSUnserializable(JSRemoteObj):
@@ -515,7 +524,9 @@ class JSUnserializable(JSRemoteObj):
 
     def __repr__(self):
         # noinspection PyUnresolvedReferences
-        return f'{self.__class__.__name__}(type="{self.type}",description="{self.description}", sub_type="{self.sub_type}", class_name="{self.class_name}", value={self.value}, obj_id={self.__obj_id__}, context_id={self.__context_id__})'
+        return (f'{self.__class__.__name__}(type="{self.type}",description="{self.description}", '
+                f'sub_type="{self.sub_type}", class_name="{self.class_name}", value={self.value}, '
+                f'obj_id={self.__obj_id__}, context_id={self.__context_id__})')
 
 
 async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, subtype: str = None,

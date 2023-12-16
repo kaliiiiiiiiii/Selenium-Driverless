@@ -17,7 +17,9 @@ async def main():
 
         for _ in range(50):
             await pointer.click(100, 500, move_kwargs=move_kwargs, move_to=True)
+            await asyncio.sleep(0)
             await pointer.click(500, 50, move_kwargs=move_kwargs, move_to=True)
+            await asyncio.sleep(0)
         input("Press ENTER to exit")
 
 

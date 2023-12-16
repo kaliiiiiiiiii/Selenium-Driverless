@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 # edited by kaliiiiiiiiiii
+import asyncio
 import time
 import traceback
 import warnings
@@ -282,31 +283,8 @@ class WebElement(JSRemoteObj):
             return await self.execute_script("return obj.getElementsByTagName(arguments[0])",
                                              value, serialization="deep", unique_context=True, timeout=10)
         elif by == By.CSS_SELECTOR:
-            elems = []
-            node_id = await self.node_id
-            try:
-                res = await self.__target__.execute_cdp_cmd("DOM.querySelectorAll", {"nodeId": node_id,
-                                                                                 "selector": value}, timeout=2)
-            except CDPError as e:
-                if e.code == -32000 and e.message == 'Could not find node with given id':
-                    raise StaleElementReferenceException(self)
-                else:
-                    raise e
-            node_ids = res["nodeIds"]
-            for node_id in node_ids:
-                if self._loop:
-                    from selenium_driverless.sync.webelement import WebElement as SyncWebElement
-                    # noinspection PyUnresolvedReferences
-                    elem = SyncWebElement(node_id=node_id, target=self.__target__, loop=self._loop,
-                                          context_id=self.__context_id__,
-                                          frame_id=await self.__frame_id__, isolated_exec_id=self.___isolated_exec_id__)
-                else:
-                    # noinspection PyUnresolvedReferences
-                    elem = await WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
-                                            isolated_exec_id=self.___isolated_exec_id__,
-                                            frame_id=await self.__frame_id__)
-                elems.append(elem)
-            return elems
+            return await self.execute_script("return obj.querySelectorAll(arguments[0])", value, timeout=10,
+                                             unique_context=True)
         elif by == By.XPATH:
             script = """return document.evaluate(
                           arguments[0],
@@ -341,7 +319,14 @@ class WebElement(JSRemoteObj):
         return res["outerHTML"]
 
     async def set_source(self, value: str):
-        await self.__target__.execute_cdp_cmd("DOM.setOuterHTML", {"nodeId": await self.node_id, "outerHTML": value})
+        try:
+            await self.__target__.execute_cdp_cmd("DOM.setOuterHTML",
+                                                  {"nodeId": await self.node_id, "outerHTML": value})
+        except CDPError as e:
+            if e.code == -32000 and e.message == 'Could not find node with given id':
+                raise StaleElementReferenceException(self)
+            else:
+                raise e
 
     async def get_property(self, name: str) -> str or None:
         """Gets the given property of the element.
@@ -421,13 +406,25 @@ class WebElement(JSRemoteObj):
                     break
         return is_clickable
 
-    async def click(self, timeout: float = None, bias: float = 5, resolution: int = 50, debug: bool = False,
-                    scroll_to=True, move_to: bool = True, ensure_clickable: bool or int = False) -> None:
+    async def click(self, timeout: float = None, visible_timeout: float = 30, bias: float = 5, resolution: int = 50,
+                    debug: bool = False, scroll_to=True, move_to: bool = True,
+                    ensure_clickable: bool or int = False) -> None:
         """Clicks the element."""
         if scroll_to:
             await self.scroll_to()
-
-        x, y = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
+        cords = None
+        start = time.monotonic()
+        while not cords:
+            try:
+                cords = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
+            except CDPError as e:
+                if e.code == -32000 and e.message == 'Could not compute box model.':
+                    await asyncio.sleep(0.1)
+                else:
+                    raise e
+            if (time.monotonic() - start) > visible_timeout:
+                raise TimeoutError(f"Couldn't compute element location within {visible_timeout} seconds")
+        x, y = cords
         if ensure_clickable:
             is_clickable = await self.is_clickable()
             if not is_clickable:
@@ -656,6 +653,7 @@ class WebElement(JSRemoteObj):
         result = await self.execute_script("return obj.getClientRects()[0].toJSON()", serialization="json",
                                            unique_context=True)
         return result
+
     @property
     async def css_metrics(self):
         script = """
@@ -805,7 +803,9 @@ class WebElement(JSRemoteObj):
                                          execution_context_id=execution_context_id)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}("{self.class_name}", obj_id={self.__obj_id__}, node_id="{self._node_id}", backend_node_id={self._backend_node_id}, context_id={self.__context_id__})'
+        return (f'{self.__class__.__name__}("{self.class_name}", '
+                f'obj_id={self.__obj_id__}, node_id="{self._node_id}", backend_node_id={self._backend_node_id}, '
+                f'context_id={self.__context_id__})')
 
     def __eq__(self, other):
         if isinstance(other, WebElement):
