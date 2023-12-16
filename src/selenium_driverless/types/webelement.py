@@ -97,7 +97,10 @@ class WebElement(JSRemoteObj):
             async def set_stale_frame(data):
                 if data["frame"]["id"] == self.___frame_id__:
                     self._stale = True
-                await self.__target__.remove_cdp_listener("Page.frameNavigated", set_stale_frame)
+                try:
+                    await self.__target__.remove_cdp_listener("Page.frameNavigated", set_stale_frame)
+                except ValueError:
+                    pass
 
             if not self.__target__._page_enabled:
                 await self.__target__.execute_cdp_cmd("Page.enable")
