@@ -284,8 +284,14 @@ class WebElement(JSRemoteObj):
         elif by == By.CSS_SELECTOR:
             elems = []
             node_id = await self.node_id
-            res = await self.__target__.execute_cdp_cmd("DOM.querySelectorAll", {"nodeId": node_id,
+            try:
+                res = await self.__target__.execute_cdp_cmd("DOM.querySelectorAll", {"nodeId": node_id,
                                                                                  "selector": value}, timeout=2)
+            except CDPError as e:
+                if e.code == -32000 and e.message == 'Could not find node with given id':
+                    raise StaleElementReferenceException(self)
+                else:
+                    raise e
             node_ids = res["nodeIds"]
             for node_id in node_ids:
                 if self._loop:
