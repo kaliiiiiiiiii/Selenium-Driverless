@@ -52,7 +52,14 @@ class Options(metaclass=ABCMeta):
         self._debugger_address = None
         self._user_data_dir = None
         self._arguments = []
-        self._prefs = {}
+        self._prefs = {'devtools':{
+                        'preferences':{
+                            # always open devtools in undocked
+                            'currentDockState': '"undocked"',
+                            # always open devtools with console open
+                            'panel-selectedTab': '"console"'}
+                            }
+                       }
         self._ignore_local_proxy = False
         self._auto_clean_dirs = True
         self._headless = False
