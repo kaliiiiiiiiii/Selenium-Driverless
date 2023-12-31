@@ -6,7 +6,7 @@ matplotlib~=3.8.1
 scipy~=1.11.3
 platformdirs~=3.11.0
 websockets~=11.0.3
-aiohttp~=3.8.6
+aiohttp
 
 # dev
 setuptools~=68.2.2
