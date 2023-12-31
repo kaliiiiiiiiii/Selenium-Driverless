@@ -2,7 +2,8 @@ import asyncio
 import typing
 
 
-async def get_targets(cdp_exec: callable, target_getter: callable, _type: str = None, context_id: str = None, max_ws_size:int=2**20):
+async def get_targets(cdp_exec: callable, target_getter: callable, _type: str = None, context_id: str = None,
+                      max_ws_size: int = 2 ** 20):
     from selenium_driverless.types.target import TargetInfo
     res = await cdp_exec("Target.getTargets")
     _infos = res["targetInfos"]
@@ -19,8 +20,9 @@ async def get_targets(cdp_exec: callable, target_getter: callable, _type: str = 
 
 
 # noinspection PyProtectedMember
-async def get_target(target_id: str, host: str,driver, loop: asyncio.AbstractEventLoop or None, is_remote: bool = False,
-                     timeout: float = 2, max_ws_size:int=2**20):
+async def get_target(target_id: str, host: str, driver, loop: asyncio.AbstractEventLoop or None,
+                     is_remote: bool = False,
+                     timeout: float = 2, max_ws_size: int = 2 ** 20):
     from selenium_driverless.types.target import Target
     from selenium_driverless.sync.target import Target as SyncTarget
     if loop:
@@ -29,7 +31,8 @@ async def get_target(target_id: str, host: str,driver, loop: asyncio.AbstractEve
                                           timeout=timeout, max_ws_size=max_ws_size, driver=driver)
     else:
         target: Target = await Target(host=host, target_id=target_id,
-                                      is_remote=is_remote, loop=loop, timeout=timeout, max_ws_size=max_ws_size, driver=driver)
+                                      is_remote=is_remote, loop=loop, timeout=timeout, max_ws_size=max_ws_size,
+                                      driver=driver)
     return target
 
 

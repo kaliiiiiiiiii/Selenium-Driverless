@@ -144,7 +144,7 @@ class Chrome:
          - capabilities - a capabilities dict to start the session with.
         """
         if not self._started:
-            from selenium_driverless.utils.utils import read, write
+            from selenium_driverless.utils.utils import read
             from selenium_driverless.utils.utils import is_first_run, get_default_ua, set_default_ua
             from selenium_driverless.scripts.prefs import read_prefs, write_prefs
 
@@ -419,7 +419,8 @@ class Chrome:
                 for target in targets.values():
                     if target.type == "service_worker":
                         if re.fullmatch(
-                                r"chrome-extension://(.*)/driverless_background_mv3_243ffdd55e32a012b4f253b2879af978\.js",
+                                r"chrome-extension://(.*)/"
+                                r"driverless_background_mv3_243ffdd55e32a012b4f253b2879af978\.js",
                                 target.url):
                             extension_target = target.Target
                             break
@@ -429,8 +430,9 @@ class Chrome:
             while True:
                 try:
                     # fix WebRTC leak
-                    await extension_target.execute_script("chrome.privacy.network.webRTCIPHandlingPolicy.set(arguments[0])",
-                                                        {"value": "disable_non_proxied_udp"})
+                    await extension_target.execute_script(
+                        "chrome.privacy.network.webRTCIPHandlingPolicy.set(arguments[0])",
+                        {"value": "disable_non_proxied_udp"})
                 except asyncio.TimeoutError:
                     await asyncio.sleep(0.2)
                     return await self.mv3_extension
@@ -470,7 +472,7 @@ class Chrome:
             except Exception as e:
                 self._extensions_incognito_allowed = False
                 if page:
-                     await page.close()
+                    await page.close()
                 await self.ensure_extensions_incognito_allowed()
             self._extensions_incognito_allowed = True
             await page.close()
@@ -537,7 +539,7 @@ class Chrome:
                              target_id: str = None, execution_context_id: str = None,
                              unique_context: bool = False):
         """
-        exaple: script = "return obj.click()"
+        example: script = "return obj.click()"
         """
         target = await self.get_target(target_id)
         return await target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
@@ -663,17 +665,26 @@ class Chrome:
                                 self._stderr.close()
                             except Exception:
                                 traceback.print_exc()
-                        await asyncio.wait_for(
-                            # wait for
-                            loop.run_in_executor(None,
-                                                 lambda: clean_dirs_sync(
-                                                     [self._temp_dir, self._options.user_data_dir])),
-                            timeout=timeout - (time.monotonic() - start))
+                        try:
+                            await asyncio.wait_for(
+                                # wait for
+                                loop.run_in_executor(None,
+                                                     lambda: clean_dirs_sync(
+                                                         [self._temp_dir, self._options.user_data_dir])),
+                                timeout=timeout - (time.monotonic() - start))
+                        except Exception as e:
+                            warnings.warn(
+                                "driver hasn't quit correctly, "
+                                "files might be left in your temp folder & chrome might still be running",
+                                ResourceWarning)
+                            raise e
 
     def __del__(self):
         if self._started:
             warnings.warn(
-                "driver hasn't quit correctly, files might be left in your temp folder & chrome might still be running")
+                "driver hasn't quit correctly, "
+                "files might be left in your temp folder & chrome might still be running",
+                ResourceWarning)
 
     @property
     async def current_target_info(self):
@@ -867,7 +878,8 @@ class Chrome:
         await target.add_cookie(cookie_dict=cookie_dict)
 
     # Timeouts
-    async def sleep(self, time_to_wait: float) -> None:
+    @staticmethod
+    async def sleep(time_to_wait) -> None:
         await asyncio.sleep(time_to_wait)
 
     # noinspection PyUnusedLocal
@@ -1061,7 +1073,7 @@ class Chrome:
 
     @asynccontextmanager
     async def bidi_connection(self):
-        warnings.warn("bidi connection for driverless is deprecated, use the direct API's instead", DeprecationWarning)
+        warnings.warn("bidi connection for driverless is deprecated, use the direct APIs instead", DeprecationWarning)
         cdp = import_module("selenium.webdriver.common.bidi.cdp")
 
         version, ws_url = self._get_cdp_details()
@@ -1244,7 +1256,7 @@ class Chrome:
             );
         """)
 
-    async def _ensure_auth_interception(self, timeout: float = 0.3, set_flag:bool=True):
+    async def _ensure_auth_interception(self, timeout: float = 0.3, set_flag: bool = True):
         if not self._auth_interception_enabled:
             script = """
                         if(globalThis.authCreds == undefined){globalThis.authCreds = {}}

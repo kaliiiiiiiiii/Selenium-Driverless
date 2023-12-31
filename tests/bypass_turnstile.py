@@ -41,7 +41,9 @@ async def main():
             raise Exception("correct target for iframe not found")
 
         src = await driver.page_source
-        checkbox = await iframe_document.find_element(By.CSS_SELECTOR, "#challenge-stage > div > label > input[type=checkbox]", timeout=20)
+        checkbox = await iframe_document.find_element(By.CSS_SELECTOR,
+                                                      "#challenge-stage > div > label > input[type=checkbox]",
+                                                      timeout=20)
         await checkbox.click(move_to=True)
         await asyncio.sleep(5)
         print("saving screenshot")

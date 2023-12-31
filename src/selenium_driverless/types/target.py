@@ -44,7 +44,7 @@ class Target:
     # noinspection PyShadowingBuiltins
     def __init__(self, host: str, target_id: str, driver, is_remote: bool = False,
                  loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
-                 type: str = None, start_socket: bool = False, max_ws_size:int=2**20) -> None:
+                 type: str = None, start_socket: bool = False, max_ws_size: int = 2 ** 20) -> None:
         """Creates a new instance of the chrome target. Starts the service and
         then creates new instance of chrome target.
 
@@ -179,7 +179,7 @@ class Target:
         if not iframes:
             raise ValueError(f"Expected WebElements, but got{iframes}")
 
-        async def target_getter(target_id: str, timeout: float = 2, max_ws_size:int=2**20):
+        async def target_getter(target_id: str, timeout: float = 2, max_ws_size: int = 2 ** 20):
             return await get_target(target_id=target_id, host=self._host, loop=self._loop, is_remote=self._is_remote,
                                     timeout=timeout, max_ws_size=max_ws_size, driver=self._driver)
 
@@ -250,7 +250,6 @@ class Target:
                 raise JSEvalException(res["exceptionDetails"])
             obj_id = res["result"]['objectId']
 
-
             base_frame = await self.base_frame
             # target can have no frames at all
             frame_id = None
@@ -306,7 +305,7 @@ class Target:
                              timeout: float = None, execution_context_id: str = None,
                              unique_context: bool = None):
         """
-        exaple: script = "return elem.click()"
+        example: script = "return elem.click()"
         """
         if execution_context_id and unique_context:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
@@ -330,7 +329,7 @@ class Target:
                                    timeout: float = None, execution_context_id: str = None,
                                    unique_context: bool = None):
         """
-        exaple: script = "return elem.click()"
+        example: script = "return elem.click()"
         """
         if execution_context_id and unique_context:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
@@ -415,9 +414,8 @@ class Target:
             res = await self.execute_cdp_cmd("Page.getFrameTree")
             return res["frameTree"]
         except CDPError as e:
-            if not(e.code == -32601 and e.message == "'Page.getFrameTree' wasn't found"):
+            if not (e.code == -32601 and e.message == "'Page.getFrameTree' wasn't found"):
                 raise e
-
 
     @property
     async def base_frame(self):
@@ -573,14 +571,11 @@ class Target:
             parent = await self._document_elem
             try:
                 elem = await parent.find_element(by=by, value=value, timeout=None)
-            except StaleElementReferenceException as e:
-                self._document_elem_ = None
-            except NoSuchElementException:
-                pass
-            except StaleJSRemoteObjReference:
-                self._document_elem_ = None
+            except (StaleElementReferenceException, NoSuchElementException, StaleJSRemoteObjReference):
+                await self._on_loaded()
             if (not timeout) or (time.monotonic() - start) > timeout:
                 break
+            await asyncio.sleep(0.01)
         if not elem:
             raise NoSuchElementException()
         return elem
@@ -589,6 +584,18 @@ class Target:
         if not parent:
             parent = await self._document_elem
         return await parent.find_elements(by=by, value=value)
+
+    async def set_source(self, source: str, timeout: float = 15):
+        start = time.monotonic()
+        while (time.monotonic() - start) < timeout:
+            try:
+                document = await self._document_elem
+                await document.set_source(source)
+                return
+            except StaleElementReferenceException:
+                await self._on_loaded()
+                await asyncio.sleep(0)
+        raise TimeoutError("Couldn't get document element to not be stale")
 
     async def search_elements(self, query: str) -> typing.List[WebElement]:
         """
@@ -862,6 +869,7 @@ class TargetInfo:
             self._started = True
         return self
 
+    # noinspection PyPep8Naming
     @property
     def Target(self) -> Target:
         return self._target

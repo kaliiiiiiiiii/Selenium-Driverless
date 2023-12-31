@@ -5,7 +5,7 @@ from selenium_driverless.types.webelement import WebElement as AsyncWebElement
 
 
 class WebElement(AsyncWebElement):
-    def __init__(self, target, isolated_exec_id:int or None, frame_id:int or None,obj_id=None,
+    def __init__(self, target, isolated_exec_id: int or None, frame_id: int or None, obj_id=None,
                  node_id=None, backend_node_id: str = None, loop=None, class_name: str = None,
                  context_id: int = None):
         if not loop:

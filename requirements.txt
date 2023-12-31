@@ -1,12 +1,14 @@
 selenium==4.11.2
 cdp-socket>=1.0.6
-numpy
+numpy~=1.26.2
 aiofiles~=23.2
-matplotlib
-scipy
-platformdirs
+matplotlib~=3.8.1
+scipy~=1.11.3
+platformdirs~=3.11.0
+websockets~=11.0.3
+aiohttp~=3.8.6
 
 # dev
-setuptools
+setuptools~=68.2.2
 twine
 pytest

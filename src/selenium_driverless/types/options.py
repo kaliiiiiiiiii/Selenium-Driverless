@@ -52,7 +52,14 @@ class Options(metaclass=ABCMeta):
         self._debugger_address = None
         self._user_data_dir = None
         self._arguments = []
-        self._prefs = {}
+        self._prefs = {'devtools':{
+                        'preferences':{
+                            # always open devtools in undocked
+                            'currentDockState': '"undocked"',
+                            # always open devtools with console open
+                            'panel-selectedTab': '"console"'}
+                            }
+                       }
         self._ignore_local_proxy = False
         self._auto_clean_dirs = True
         self._headless = False
@@ -91,7 +98,7 @@ class Options(metaclass=ABCMeta):
         if name == "proxy":
             proxy = None
             proxy_keys = ['ftpProxy', 'httpProxy', 'sslProxy']
-            warnings.warn("not started with chromedriver, only aplying single proxy")
+            warnings.warn("not started with chromedriver, only applying single proxy")
             for key, value in value.items():
                 if key in proxy_keys:
                     self.add_argument(f'--proxy-server={value}')
@@ -287,7 +294,7 @@ class Options(metaclass=ABCMeta):
         raise NotImplementedError()
         if not isinstance(value, Proxy):
             raise InvalidArgumentException("Only Proxy objects can be passed in.")
-        warnings.warn("not started with chromedriver, only aplying single proxy")
+        warnings.warn("not started with chromedriver, only applying single proxy")
         self.set_capability("proxy", value=value.to_dict())
 
     @property

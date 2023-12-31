@@ -75,7 +75,7 @@ class PointerEvent:
         delta_x: int = 0, delta_y: int = 0,
         pointer_type: str = PointerType.MOUSE
         """
-        self._comand = "Input.dispatchMouseEvent"
+        self._command = "Input.dispatchMouseEvent"
 
         self.type_ = type_
         self.x = x
@@ -115,7 +115,7 @@ class PointerEvent:
             _json["timestamp"] = self.timestamp
         if self.buttons:
             _json["buttons"] = self.buttons
-        return [self._comand, _json]
+        return [self._command, _json]
 
 
 class BasePointer:
@@ -141,7 +141,7 @@ class BasePointer:
         await asyncio.sleep(timeout)
         await self.up(click_count=1, x=x, y=y, **kwargs)
 
-    async def doubble_click(self, x: float, y: float, timeout: float = None, **kwargs):
+    async def double_click(self, x: float, y: float, timeout: float = None, **kwargs):
         if not timeout:
             timeout = make_rand_click_timeout()
         await self.click(timeout=timeout, x=x, y=y, **kwargs)
@@ -154,18 +154,18 @@ class BasePointer:
         event = PointerEvent(type_=EventType.MOVE, x=x, y=y, **kwargs)
         await self.dispatch(event)
 
-    async def move_path(self, total_time: float, pos_from_time_callback: callable, freq_assumpton: float = 60,
+    async def move_path(self, total_time: float, pos_from_time_callback: callable, freq_assumption: float = 60,
                         **kwargs):
         """
         param: total_time
-            total time the pointer shoul take to move the path
+            total time the pointer should take to move the path
         param: pos_from_time_callback
-            a function which returns cordinates for a specific time
+            a function which returns coordinates for a specific time
             def callback(time:float):
                 # do something
                 return [x, y]
         param freq_assumption:
-            assumption on mousemove event frequency, required for accuracy
+            assumption on a mousemove event frequency, required for accuracy
         """
         x = None
         y = None
@@ -180,7 +180,7 @@ class BasePointer:
             if _time > total_time or _time < 0:
                 return x, y
 
-            # get cordinates at time
+            # get coordinates at time
             res = pos_from_time_callback(_time)
             if inspect.iscoroutinefunction(pos_from_time_callback):
                 await res
@@ -189,7 +189,7 @@ class BasePointer:
             await self.move_to(x=x, y=y, **kwargs)
 
             if i == -1:
-                start = time.monotonic() - (1 / freq_assumpton)  # => aproximately 0.017, assuming 60 Hz
+                start = time.monotonic() - (1 / freq_assumption)  # => approximately 0.017, assuming 60 Hz
             i += 1
 
 

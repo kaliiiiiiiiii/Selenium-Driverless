@@ -310,7 +310,6 @@ options.add_experimental_option("prefs", {"download.prompt_for_download": False}
 <summary>Example Code (Click to expand)</summary>
 
 ```python
-from selenium_driverless.sync import webdriver
 from selenium_driverless import webdriver
 import asyncio
 
@@ -321,6 +320,7 @@ async def main():
         context_1 = driver.current_context
         
         await driver.set_auth("username", "password", "localhost:5000")
+        # proxy not supported on windows due to https://bugs.chromium.org/p/chromium/issues/detail?id=1310057
         context_2 = await driver.new_context(proxy_bypass_list=["localhost"], proxy_server="http://localhost:5000")
         
         await context_1.current_target.get("https://examle.com")
@@ -368,6 +368,7 @@ Note: **please check the todo's below at first!**
   - [ ] support multithreading with sync version
     - [x] on independent driver instances
     - [ ] on same driver instance
+- [ ] check [Python 3.12.0](https://www.python.org/downloads/release/python-3120/)
 </details>
 
 ## Authors

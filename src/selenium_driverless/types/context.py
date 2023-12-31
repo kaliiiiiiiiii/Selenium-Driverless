@@ -24,8 +24,6 @@ import traceback
 import typing
 import warnings
 
-from contextlib import asynccontextmanager
-from importlib import import_module
 from typing import List
 from typing import Optional
 
@@ -36,7 +34,6 @@ from cdp_socket.exceptions import CDPError
 
 # selenium
 from selenium.webdriver.common.print_page_options import PrintOptions
-from selenium.webdriver.remote.bidi_connection import BidiConnection
 # SwitchTo
 from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
@@ -103,7 +100,7 @@ class Context:
          - capabilities - a capabilities dict to start the session with.
         """
         from selenium_driverless.webdriver import Chrome
-        self._driver:Chrome
+        self._driver: Chrome
 
         if not self._started:
             if not self.context_id:
@@ -215,7 +212,7 @@ class Context:
                              timeout: int = None, target_id: str = None, execution_context_id: str = None,
                              unique_context: bool = False):
         """
-        exaple: script = "return obj.click()"
+        example: script = "return obj.click()"
         """
         target = await self.get_target(target_id)
         return await target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
@@ -305,7 +302,7 @@ class Context:
                         await target.close(timeout=2)
                         check_timeout(start_monotonic, timeout)
                     except websockets.exceptions.InvalidStatusCode:
-                        # allread closed
+                        # already closed
                         pass
                     except ConnectionAbortedError:
                         pass
@@ -529,7 +526,8 @@ class Context:
         await target.add_cookie(cookie_dict=cookie_dict)
 
     # Timeouts
-    async def sleep(self, time_to_wait: float) -> None:
+    @staticmethod
+    async def sleep(time_to_wait: float) -> None:
         await asyncio.sleep(time_to_wait)
 
     # noinspection PyUnusedLocal
@@ -720,39 +718,6 @@ class Context:
         del bounds["top"]
 
         return bounds
-
-    @asynccontextmanager
-    async def bidi_connection(self):
-        warnings.warn("bidi connection for driverless is deprecated, use the direct API's instead", DeprecationWarning)
-        cdp = import_module("selenium.webdriver.common.bidi.cdp")
-
-        version, ws_url = self._get_cdp_details()
-
-        devtools = cdp.import_devtools(version)
-        async with cdp.open_cdp(ws_url) as conn:
-            targets = await conn.execute(devtools.Target.get_targets())
-            target_id = targets[0].target_id
-            async with conn.open_session(target_id) as session:
-                yield BidiConnection(session, cdp, devtools)
-
-    def _get_cdp_details(self):
-        import json
-
-        import urllib3
-
-        http = urllib3.PoolManager()
-        debugger_address = self._host
-        res = http.request("GET", f"http://{debugger_address}/json/version")
-        data = json.loads(res.data)
-
-        browser_version = data.get("Browser")
-        websocket_url = data.get("webSocketDebuggerUrl")
-
-        import re
-
-        version = re.search(r".*/(\d+)\.", browser_version).group(1)
-
-        return version, websocket_url
 
     async def get_network_conditions(self, target_id: str = None):
         """Gets Chromium network emulation settings.

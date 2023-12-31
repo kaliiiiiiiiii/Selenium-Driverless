@@ -3,11 +3,11 @@ import inspect
 
 from selenium_driverless.types.context import Context as AsyncContext
 from selenium_driverless.types.target import Target
-from selenium_driverless.types.base_target import BaseTarget
 
 
 class Context(AsyncContext):
-    def __init__(self, base_target: Target, driver, context_id: str = None, loop: asyncio.AbstractEventLoop = None, is_incognito: bool = False, max_ws_size: int = 2 ** 20) -> None:
+    def __init__(self, base_target: Target, driver, context_id: str = None, loop: asyncio.AbstractEventLoop = None,
+                 is_incognito: bool = False, max_ws_size: int = 2 ** 20) -> None:
         if not loop:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)

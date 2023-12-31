@@ -13,8 +13,8 @@ def gen_heatmap(polygon_vertices: np.array, num_points: int = 70):
 
     x_vals = np.linspace(x_min, x_max, num_points)
     y_vals = np.linspace(y_min, y_max, num_points)
-    X, Y = np.meshgrid(x_vals, y_vals)
-    points = np.column_stack((X.flatten(), Y.flatten()))
+    x, y = np.meshgrid(x_vals, y_vals)
+    points = np.column_stack((x.flatten(), y.flatten()))
 
     distances = np.empty(num_points ** 2)
     for i, point in enumerate(points):
@@ -24,6 +24,7 @@ def gen_heatmap(polygon_vertices: np.array, num_points: int = 70):
             edge_end = polygon_vertices[(j + 1) % len(polygon_vertices)]
 
             v1 = edge_end - edge_start
+            # noinspection PyUnresolvedReferences
             v2 = point - edge_start
             distance = np.linalg.norm(np.cross(v1, v2)) / np.linalg.norm(v1)
 
