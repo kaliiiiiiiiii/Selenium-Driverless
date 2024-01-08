@@ -134,6 +134,10 @@ class BasePointer:
         event = PointerEvent(type_=EventType.RELEASE, **kwargs)
         await self.dispatch(event)
 
+    async def scroll(self, **kwargs):
+        event = PointerEvent(type_=EventType.WHEEL, **kwargs)
+        await self.dispatch(event)
+
     async def click(self, x: float, y: float, timeout: float = None, **kwargs):
         if not timeout:
             timeout = make_rand_click_timeout()
@@ -206,6 +210,13 @@ class Pointer:
 
     async def up(self, **kwargs):
         await self.base.down(**kwargs)
+
+    async def scroll(self, **kwargs):
+        if "x" not in kwargs:
+            kwargs["x"] = 0
+        if "y" not in kwargs:
+            kwargs["y"] = 0
+        await self.base.scroll(**kwargs)
 
     async def click(self, x_or_elem: float, y: float or None = None, move_to: bool = True,
                     move_kwargs: dict or None = None, click_kwargs: dict or None = None):
