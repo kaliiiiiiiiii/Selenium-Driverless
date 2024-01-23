@@ -66,7 +66,7 @@ from selenium_driverless.types import JSEvalException
 
 
 class Chrome:
-    """Allows you to drive the browser without chromedriver."""
+    """Control the chromium based browsers without any driver."""
 
     def __init__(
             self,
@@ -85,10 +85,9 @@ class Chrome:
                 await driver.get('https://abrahamjuliot.github.io/creepjs/', wait_load=True)
                 print(await driver.title)
 
-        :Args:
-         - options - this takes an instance of ChromeOptions.rst
-         - timeout - timeout in seconds to start chrome
-         - debug - for debugging Google-Chrome error messages and other debugging stuff lol
+        :param options: this takes an instance of ChromeOptions.rst
+        :param timeout: timeout in seconds to start chrome
+        :param debug: redirect errors from the chromium process output (stderr) to console
         """
         self._prefs = {}
         self._auth_interception_enabled = None
@@ -126,7 +125,7 @@ class Chrome:
         self._started = False
 
     def __repr__(self):
-        return f'<{type(self).__module__}.{type(self).__name__} (session="{self.current_window_handle}")>'
+        return f'<{type(self).__module__}.{type(self).__name__} (session="{self.current_target.id}")>'
 
     async def __aenter__(self):
         await self.start_session()
@@ -145,11 +144,6 @@ class Chrome:
         return self.start_session().__await__()
 
     async def start_session(self):
-        """Creates a new session with the desired capabilities.
-
-        :Args:
-         - capabilities - a capabilities dict to start the session with.
-        """
         if not self._started:
             from selenium_driverless.utils.utils import read
             from selenium_driverless.utils.utils import is_first_run, get_default_ua, set_default_ua
@@ -306,15 +300,27 @@ class Chrome:
         return self
 
     @property
-    async def frame_tree(self):
+    async def frame_tree(self) -> dict:
+        """
+        **async**
+        all nested frames within the current target
+        """
         return await self.current_context.frame_tree
 
     @property
-    async def targets(self):
+    async def targets(self) -> typing.Dict[str, TargetInfo]:
+        """
+        **async**
+        all targets within the current context
+        """
         return await self.current_context.targets
 
     @property
     async def contexts(self) -> typing.Dict[str, Context]:
+        """
+        **async**
+        all (incognito) contexts on Chrome.
+        """
         targets = await self.get_targets(context_id=None)
         contexts = {}
         for info in targets.values():
@@ -332,8 +338,24 @@ class Chrome:
         self._contexts.update(contexts)
         return self._contexts
 
-    async def new_context(self, proxy_bypass_list=None, proxy_server: str = True,
-                          universal_access_origins=None, url: str = "about:blank"):
+    async def new_context(self, proxy_bypass_list: typing.List[str] = None, proxy_server: str = True,
+                          universal_access_origins=typing.List[str], url: str = "about:blank") -> Context:
+        """
+        creates a new (incognito) context
+
+        :param url: the url the first tab will start at. "about:blank" by default
+        :param universal_access_origins: An optional list of origins to grant unlimited cross-origin access to. Parts of the URL other than those constituting origin are ignored
+
+        .. warning::
+            The proxy parameter doesn't work on Windows due to `crbug#1310057 <https://bugs.chromium.org/p/chromium/issues/detail?id=1310057>`__.
+
+        .. code block:: python
+            await driver.set_auth("username", "password", "localhost:5000")
+            context = await driver.new_context(proxy_bypass_list=["localhost"], proxy_server="http://localhost:5000")
+
+        :param proxy_server: a proxy-server to use for the context
+        :param proxy_bypass_list: a list of proxies to ignore
+        """
         await self.ensure_extensions_incognito_allowed()
         if proxy_bypass_list is None:
             proxy_bypass_list = ["localhost"]
@@ -403,21 +425,43 @@ class Chrome:
                     return context
         return context
 
-    async def get_targets(self, _type: str = None, context_id: str or None = "self") -> typing.Dict[str, TargetInfo]:
+    async def get_targets(self,
+                          _type: str = typing.Union["page", "background_page", "service_worker", "browser", "other"],
+                          context_id: str or None = "self") -> typing.Dict[str, TargetInfo]:
+        """
+        get all targets within the current context
+        :param _type: filter by target type
+        :param context_id: if ``None``, this function returns all targets for all contexts.
+        """
         return await self.current_context.get_targets(_type=_type, context_id=context_id)
 
     @property
     def current_target(self) -> Target:
+        """
+        the current Target
+        """
         if self.current_context:
             return self.current_context.current_target
         return self._current_target
 
     @property
     def base_target(self) -> BaseTarget:
+        """
+        The connection handle for the global connection to Chrome
+
+        .. warning::
+            only the bindings for using the CDP-protocol on BaseTarget supported
+        """
         return self._base_target
 
     @property
     async def mv3_extension(self, timeout: float = 10) -> Target:
+        """
+        **async** the target for the background script of the by default loaded Chrome-extension (manifest-version==3)
+
+        .. note:
+            for incognito context, the extension uses the "spanning" configuration, as there isn't a way to debug "split" mode over CDP
+        """
         if self._has_incognito_contexts:
             await self.ensure_extensions_incognito_allowed()
         if not self._mv3_extension:
@@ -447,7 +491,7 @@ class Chrome:
                 except asyncio.TimeoutError:
                     await asyncio.sleep(0.2)
                     return await self.mv3_extension
-                except JSEvalException as e:
+                except JSEvalException:
                     await asyncio.sleep(0.2)
                 except cdp_socket.exceptions.CDPError as e:
                     if e.code == -32000 and e.message == 'Could not find object with given id':
@@ -458,6 +502,14 @@ class Chrome:
         return self._mv3_extension
 
     async def ensure_extensions_incognito_allowed(self):
+        """
+        ensure that all installed Chrome-extensions are allowed in incognito context.
+
+        .. warning::
+            Generally, the extension decides whether to use the ``split``, ``spanning`` or ``not_allowed`` configuration.
+            For changing this behaviour, you'll have to modify the ``manifest.json`` file within the compressed extension or directory.
+            See `developer.chrome.com/docs/extensions/reference/manifest/incognito <https://developer.chrome.com/docs/extensions/reference/manifest/incognito?hl=en>`__.
+        """
         if not self._extensions_incognito_allowed:
             self._extensions_incognito_allowed = True
             page = None
@@ -480,7 +532,7 @@ class Chrome:
                 """
                 await asyncio.sleep(0.1)
                 await page.execute_async_script(script, timeout=5)
-            except Exception as e:
+            except Exception:
                 self._extensions_incognito_allowed = False
                 if page:
                     await page.close()
@@ -489,11 +541,17 @@ class Chrome:
             await page.close()
 
     @property
-    def base_context(self):
+    def base_context(self) -> Context:
+        """
+        the Context which isn't incognito
+        """
         return self._base_context
 
     @property
     def current_context(self) -> Context:
+        """
+        the current context switched to
+        """
         if not self._current_context:
             if self._contexts:
                 return list(self._contexts.values())[0]
@@ -505,53 +563,105 @@ class Chrome:
         return await self.current_context._isolated_context_id
 
     async def get_target(self, target_id: str = None, timeout: float = 2) -> Target:
+        """
+        get a Target by TargetId for advanced usage of the CDP protocol
+        :param target_id:
+        :param timeout: timeout in seconds for connecting to the target if it's not tracked already
+        """
         if not target_id:
             return self.current_target
         return await self.current_context.get_target(target_id=target_id, timeout=timeout)
 
     async def get_target_for_iframe(self, iframe: WebElement) -> Target:
+        """
+        get the Target for a specific iframe
+
+        .. warning::
+            only cross-iframes have a Target due to `OOPIF <https://www.chromium.org/developers/design-documents/oop-iframes/>`__. See `site-isolation <https://www.chromium.org/Home/chromium-security/site-isolation/>`__
+            For a general solution, have a look at ``WebElement.content_document`` instead
+
+        :param iframe: the iframe to get the Target for
+        """
         return await self.current_target.get_target_for_iframe(iframe=iframe)
 
-    async def get_targets_for_iframes(self, iframes: typing.List[WebElement]) -> Target:
+    async def get_targets_for_iframes(self, iframes: typing.List[WebElement]) -> typing.List[Target]:
+        """
+        returns a list of targets for iframes
+        see ``webdriver.Chrome.get_target_for_iframe`` for more information
+
+        :param iframes: the iframe to get the targets for
+        """
         return await self.current_target.get_targets_for_iframes(iframes=iframes)
 
     async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
-        """Loads a web page in the current browser session."""
+        """Loads a web page in the current Target
+
+        :param url: the url to load.
+        :param referrer: the referrer to load the page with
+        :param wait_load: whether to wait for the webpage to load
+        :param timeout: the maximum time in seconds for waiting on load
+
+        .. warning::
+            loading pages which initiate a download requires to set ``wait_load=False`` for now. see `issues#140 <https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/140>`__
+        """
         await self.current_target.get(url=url, referrer=referrer, wait_load=wait_load, timeout=timeout)
 
     @property
     async def title(self) -> str:
-        """Returns the title of the current target"""
+        """**async** the title of the current target"""
         target = await self.current_target_info
         return target.title
 
     @property
     async def current_pointer(self) -> Pointer:
+        """
+        **async** the Pointer of the current Target
+        """
         target = self.current_target
         return target.pointer
 
-    async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                                 max_depth: int = None, timeout: int = 2, target_id: str = None,
-                                 execution_context_id: str = None, unique_context: bool = False):
+    async def execute_raw_script(self, script: str, *args, await_res: bool = False,
+                                 serialization: str = typing.Union["deep", "json", "idOnly"],
+                                 max_depth: int = None, timeout: int = 2, execution_context_id: str = None,
+                                 unique_context: bool = False):
+        """executes a JavaScript on ``GlobalThis`` such as
+
+        .. code-block:: js
+
+            function(...arguments){return document}
+
+        ``this`` refers to ``globalThis`` (=> window)
+
+        :param script: the script as a string
+        :param args: the argument which are passed to the function. Those can be either json-serializable or a RemoteObject such as WebELement
+        :param await_res: whether to await the function or the return value of it
+        :param serialization: can be one of ``deep``, ``json``, ``idOnly``
+        :param max_depth: The maximum depth objects get serialized.
+        :param timeout: the maximum time to wait for the execution to complete
+        :param execution_context_id: the execution context id to run the JavaScript in. Exclusive with unique_context
+        :param unique_context: whether to use a isolated context to run the Script in.
+
+        see `Runtime.callFunctionOn <https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#method-callFunctionOn>`_
         """
-        example:
-        script= "function(...arguments){obj.click()}"
-        "const obj" will be the Object according to obj_id
-        this is by default globalThis (=> window)
-        """
-        target = await self.get_target(target_id)
-        return await target.execute_raw_script(script, *args, await_res=await_res,
-                                               serialization=serialization, max_depth=max_depth,
-                                               timeout=timeout, execution_context_id=execution_context_id,
-                                               unique_context=unique_context)
+        return await self.current_target.execute_raw_script(script, *args, await_res=await_res,
+                                                            serialization=serialization, max_depth=max_depth,
+                                                            timeout=timeout, execution_context_id=execution_context_id,
+                                                            unique_context=unique_context)
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                              timeout: int = None,
                              target_id: str = None, execution_context_id: str = None,
                              unique_context: bool = False):
-        """
-        example: script = "return obj.click()"
-        """
+        """executes JavaScript synchronously on ``GlobalThis`` such as
+
+                .. code-block:: js
+
+                    return document
+
+                ``this`` refers to ``globalThis`` (=> window)
+
+                see :func:`Chrome.execute_raw_script <selenium_driverless.webdriver.Chrome.execute_raw_script>` for argument descriptions
+                """
         target = await self.get_target(target_id)
         return await target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
                                            timeout=timeout, execution_context_id=execution_context_id,
@@ -561,6 +671,16 @@ class Chrome:
                                    serialization: str = None, timeout: int = 2,
                                    target_id: str = None, execution_context_id: str = None,
                                    unique_context: bool = False):
+        """executes JavaScript asynchronously on ``GlobalThis`` such as
+
+                        .. code-block:: js
+
+                            resolve = arguments[arguments.length-1]
+
+                        ``this`` refers to ``globalThis`` (=> window)
+
+                        see :func:`Chrome.execute_raw_script <selenium_driverless.webdriver.Chrome.execute_raw_script>` for argument descriptions
+                        """
         target = await self.get_target(target_id)
         return await target.execute_async_script(script, *args, max_depth=max_depth, serialization=serialization,
                                                  timeout=timeout,
@@ -569,52 +689,33 @@ class Chrome:
 
     @property
     async def current_url(self) -> str:
-        """Gets the URL of the current page.
-
-        :Usage:
-            ::
-
-                target.current_url
+        """**async** current URL of the current Target
         """
         target = self.current_target
         return await target.url
 
     @property
     async def page_source(self) -> str:
-        """Gets the docs_source of the current page.
-
-        :Usage:
-            ::
-
-                target.page_source
+        """**async** html of the current page.
         """
         target = self.current_target
         return await target.page_source
 
-    async def close(self, timeout: float = 2, target_id: str = None) -> None:
-        """Closes the current window.
-
-        :Usage:
-            ::
-
-                target.close()
+    async def close(self, timeout: float = 2) -> None:
+        """Closes the current target (only works for tabs).
+        :param timeout: timeout in seconds for the tab to close
         """
-        if not target_id:
-            target_id = self.current_window_handle
-        target = await self.get_target(target_id)
-        await target.close(timeout=timeout)
+        await self.current_target.close(timeout=timeout)
 
-    async def focus(self, target_id: str = None):
-        target = await self.get_target(target_id)
-        await target.focus()
+    async def focus(self):
+        """focuses the current target (only works for tabs)
+        """
+        await self.current_target.focus()
 
     async def quit(self, timeout: float = 30, clean_dirs: bool = True) -> None:
-        """Quits the target and closes every associated window.
-
-        :Usage:
-            ::
-
-                target.quit()
+        """Closes Chrome
+        :param timeout: the maximum time waiting for chrome to quit correctly
+        :param clean_dirs: whether to clean out the user-data-dir directory
         """
 
         loop = asyncio.get_running_loop()
@@ -698,32 +799,41 @@ class Chrome:
                 ResourceWarning)
 
     @property
-    async def current_target_info(self):
-        target = self.current_target
-        return await target.info
+    async def current_target_info(self) -> TargetInfo:
+        """**async** TargetInfo of the current target"""
+        return await self.current_target.info
 
     @property
     def current_window_handle(self) -> str:
-        """Returns the current target_id
+        """current TargetId
+
+        .. warning::
+
+            this is deprecated and will be removed
+            use ``webdriver.Chrome.current_target.id`` instead
         """
+        warnings.warn(f'"webdriver.Chrome.current_window_handle" is deprecated and will be removed\n'
+                      'use "webdriver.Chrome.current_target.id" instead', DeprecationWarning)
         if self.current_target:
             return self.current_target.id
 
     @property
     async def current_window_id(self):
-        result = await self.execute_cdp_cmd("Browser.getWindowForTarget", {"targetId": self.current_window_handle})
+        """**async** the ``WindowId`` of the window the current Target belongs to
+        """
+        result = await self.execute_cdp_cmd("Browser.getWindowForTarget", {"targetId": self.current_target.id})
         return result["windowId"]
 
     @property
     async def window_handles(self) -> List[TargetInfo]:
-        """Returns the handles of all windows within the current session.
+        """**async** TargetInfo on all tabs in the current context
 
-        :Usage:
-            ::
+        .. warning::
 
-                target.window_handles
+            the tabs aren't ordered by position in the window. Do not rely on the index, but iterate and filter them.
         """
-        warnings.warn("window_handles aren't ordered")
+        warnings.warn(
+            "the tabs aren't ordered by position in the window. Do not rely on the index, but iterate and filter them.")
         tabs = []
         targets = await self.targets
         for info in list(targets.values()):
@@ -731,40 +841,48 @@ class Chrome:
                 tabs.append(info)
         return tabs
 
-    async def new_window(self, type_hint: Optional[str] = "tab", url="", activate: bool = True) -> Target:
-        """Switches to a new top-level browsing context.
+    async def new_window(self, type_hint: typing.Union[typing.Literal["tab"], typing.Literal["window"]] = "tab", url="",
+                         activate: bool = True) -> Target:
+        """Creates a new window or tab in the current context
 
-        The type hint can be one of "tab" or "window". If not specified the
-        browser will automatically select it.
+        :param type_hint: whether to create a tab or window
+        :param url: the url which the new window should start on. Defaults to about:blank
+        :param activate: whether to explicitly activate/focus the window
 
-        :Usage:
-            ::
+        .. code-block:: python
 
-                target.switch_to.new_window('tab')
+            new_target = driver.new_window('tab')
         """
         return await self.current_context.new_window(type_hint=type_hint, url=url, activate=activate)
 
-    async def set_window_state(self, state):
-        states = ["normal", "minimized", "maximized", "fullscreen"]
-        if state not in states:
-            raise ValueError(f"expected one of {states}, but got: {state}")
+    async def set_window_state(self, state: typing.Union[typing.Literal["normal"], typing.Literal["minimized"], typing.Literal["maximized"], typing.Literal["fullscreen"]]):
+        """sets the window state on the window the current Target belongs to
+        :param state: the state to set
+        """
         window_id = await self.current_window_id
         bounds = {"windowState": state}
         await self.execute_cdp_cmd("Browser.setWindowBounds", {"bounds": bounds, "windowId": window_id})
 
     async def normalize_window(self):
+        """Normalizes the window position and size on the window the current Target belongs to
+        """
         await self.set_window_state("normal")
 
     async def maximize_window(self) -> None:
-        """Maximizes the current window that webdriver is using."""
+        """Maximizes the window the current Target belongs to"""
         await self.set_window_state("maximized")
 
     async def fullscreen_window(self) -> None:
-        """Invokes the window manager-specific 'full screen' operation."""
+        """enters fullscreen on the window the current Target belongs to"""
         await self.set_window_state("fullscreen")
 
     async def minimize_window(self) -> None:
-        """Invokes the window manager-specific 'minimize' operation."""
+        """minimizes the window the current Target belongs to.
+
+        .. warning::
+
+            Minimizing isn't recommended as it can throttle some functionalities in chrome.
+        """
         await self.set_window_state("maximized")
 
     # noinspection PyUnusedLocal

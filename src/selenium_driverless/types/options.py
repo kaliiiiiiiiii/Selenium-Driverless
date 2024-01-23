@@ -23,9 +23,6 @@ from abc import ABCMeta
 import typing
 from typing import Union, Optional, List
 
-# selenium
-from selenium.webdriver.common.proxy import Proxy
-
 from selenium_driverless.utils.utils import sel_driverless_path
 from selenium_driverless.scripts.prefs import prefs_to_json
 
@@ -78,6 +75,7 @@ class Options(metaclass=ABCMeta):
         self.add_argument('--disable-background-networking')
         self.add_argument('--no-pings')
 
+        # noinspection SpellCheckingInspection
         self.add_argument('--disable-infobars')
         self.add_argument('--disable-breakpad')
         self.add_argument("--no-default-browser-check")
@@ -107,8 +105,9 @@ class Options(metaclass=ABCMeta):
     ) -> None:
         """Enables mobile browser use for browsers that support it.
 
-        :Args:
-            android_activity: The name of the android package to start
+        :param android_activity: The name of the android package to start
+        :param android_package:
+        :param device_serial:
         """
         raise NotImplementedError()
         if not android_package:
@@ -148,10 +147,6 @@ class Options(metaclass=ABCMeta):
     @single_proxy.setter
     def single_proxy(self, proxy: str):
         self._single_proxy = proxy
-
-    #
-    # Options(BaseOptions) from here on
-    #
 
     @property
     def prefs(self) -> dict:
@@ -201,7 +196,7 @@ class Options(metaclass=ABCMeta):
     @property
     def user_data_dir(self) -> str:
         """the directory to save all browser data in.
-        ``None`` (default) will temporarely create a directory in $temp
+        ``None`` (default) will temporarily create a directory in $temp
         """
         return self._user_data_dir
 
@@ -242,8 +237,7 @@ class Options(metaclass=ABCMeta):
         """Adds an extension to Chrome
         The extension can either be a compressed file (zip, crx, etc.) or extracted in a directory
 
-        :Args:
-         - extension: path to the \\*.crx file
+        :param path: path to the extension
         """
         extension_to_add = os.path.abspath(os.path.expanduser(path))
         if os.path.exists(extension_to_add):
@@ -258,9 +252,8 @@ class Options(metaclass=ABCMeta):
             only ``name="prefs"`` supported.
             This method is deprecated and will be removed. Use :obj:`ChromeOptions.update_pref` instead.
 
-        :Args:
-          name: The experimental option name.
-          value: The option value.
+        :param name: The experimental option name.
+        :param value: The option value.
         """
         if name == "prefs":
             self.prefs.update(prefs_to_json(value))
