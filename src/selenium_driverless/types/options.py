@@ -20,6 +20,7 @@
 import os
 import warnings
 from abc import ABCMeta
+import typing
 from typing import Union, Optional, List
 
 # selenium
@@ -63,6 +64,7 @@ class Options(metaclass=ABCMeta):
         self._ignore_local_proxy = False
         self._auto_clean_dirs = True
         self._headless = False
+        self._startup_url = "about:blank"
 
         self.add_argument("--no-first-run")
         self.add_argument('--disable-component-update')
@@ -330,7 +332,7 @@ class Options(metaclass=ABCMeta):
         :Args:
          - Sets the arguments
         """
-        if argument:
+        if type(argument) is str:
             if argument[:16] == "--user-data-dir=":
                 user_data_dir = argument[16:]
                 if not os.path.isdir(user_data_dir):
@@ -353,7 +355,7 @@ class Options(metaclass=ABCMeta):
                         DeprecationWarning)
             self._arguments.append(argument)
         else:
-            raise ValueError("argument can not be null")
+            raise ValueError("argument has to be str")
 
     @property
     def user_data_dir(self) -> str:
@@ -478,6 +480,16 @@ class Options(metaclass=ABCMeta):
           value: boolean value indicating to set the headless option
         """
         self.add_argument("--headless=new")
+
+    @property
+    def startup_url(self):
+        return self._startup_url
+
+    @startup_url.setter
+    def startup_url(self, url:typing.Union[str, None]):
+        if url is None:
+            url = ""
+        self._startup_url = url
 
     def to_capabilities(self) -> dict:
         """

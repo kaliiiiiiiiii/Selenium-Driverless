@@ -20,6 +20,7 @@ import time
 import traceback
 import warnings
 import numpy as np
+import typing
 
 from base64 import b64decode
 from collections import defaultdict
@@ -439,8 +440,16 @@ class WebElement(JSRemoteObj):
         await self.focus()
         await self.__target__.execute_cdp_cmd("Input.insertText", {"text": text})
 
+    async def set_file(self, path:str):
+        await self.set_files([path])
+
+    async def set_files(self, paths:typing.List[str]):
+        args = {"files": paths}
+        args.update(self._args_builder)
+        await self.__target__.execute_cdp_cmd("DOM.setFileInputFiles", args)
+
     async def send_keys(self, value: str) -> None:
-        # noinspection GrazieInspection
+        # noinspection GrazieInspections
         """Simulates typing into the element.
 
                 :Args:

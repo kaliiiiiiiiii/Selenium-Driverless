@@ -3,6 +3,7 @@ import asyncio
 
 
 async def main():
+    # socks5 with credentials not supported due to https://bugs.chromium.org/p/chromium/issues/detail?id=1309413
     proxy = "http://user1:passwrd1@example.proxy.com:5001/"
 
     options = webdriver.ChromeOptions()

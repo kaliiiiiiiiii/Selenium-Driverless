@@ -218,6 +218,17 @@ class Target:
         """Loads a web page in the current browser session."""
         if url == "about:blank":
             wait_load = False
+
+        if "#" in url:
+            # thanks to https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/139#issuecomment-1877197974
+            current_url_base = (await self.current_url).split("#")[0]
+            if url[0] == "#":
+                # allow to navigate only by fragment ID of the current url
+                url = current_url_base + url
+                wait_load = False
+            elif url.split("#")[0] == current_url_base:
+                wait_load = False
+
         if wait_load:
             if not self._page_enabled:
                 await self.execute_cdp_cmd("Page.enable")

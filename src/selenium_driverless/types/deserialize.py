@@ -557,13 +557,12 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
                 elems.append(await obj.__exec__("return obj.snapshotItem(arguments[0])", idx,
                                                 serialization="deep"))
             return elems
-    if class_name in ['NodeList']:
-        elems = []
-        obj = JSRemoteObj(target=target, obj_id=obj_id,
-                          isolated_exec_id=isolated_exec_id, frame_id=frame_id)
+    if class_name == 'NodeList' or _type == 'htmlcollection':
+        elems = JSNodeList(obj_id=obj_id, target=target, class_name=class_name, isolated_exec_id=isolated_exec_id,
+                           frame_id=frame_id)
         for idx in range(int(description[-2])):
-            elems.append(await obj.__exec__("return obj[arguments[0]]", idx, serialization="deep",
-                                            execution_context_id=context_id))
+            elems.append(await elems.__exec__("return obj[arguments[0]]", idx, serialization="deep",
+                                              execution_context_id=context_id))
         return elems
 
     # structures
@@ -649,13 +648,6 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
                                     loop=loop,
                                     class_name=class_name, context_id=context_id,
                                     isolated_exec_id=isolated_exec_id, frame_id=frame_id)
-    elif _type == 'htmlcollection':
-        _res = JSNodeList(obj_id=obj_id, target=target, class_name=class_name, isolated_exec_id=isolated_exec_id,
-                          frame_id=frame_id)
-        for idx, _deep in enumerate(_value):
-            _res.append(
-                await parse_deep(_deep, target, isolated_exec_id=isolated_exec_id, frame_id=frame_id, loop=loop))
-        return _res
     elif _type == "window":
         return JSWindow(context=_value.get("context"), obj_id=obj_id, target=target, isolated_exec_id=isolated_exec_id,
                         frame_id=frame_id)
