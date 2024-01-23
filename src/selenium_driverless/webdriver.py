@@ -199,7 +199,9 @@ class Chrome:
 
                 self._options.arguments.append(f"--load-extension=" + ','.join(extension_paths))
 
-            self._options.add_argument("about:blank")
+            self._options.add_argument(self._options.startup_url)
+            self._options.startup_url = ""
+
             options = self._options
 
             # noinspection PyProtectedMember

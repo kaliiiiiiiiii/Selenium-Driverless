@@ -63,6 +63,7 @@ class Options(metaclass=ABCMeta):
         self._ignore_local_proxy = False
         self._auto_clean_dirs = True
         self._headless = False
+        self._startup_url = "about:blank"
 
         self.add_argument("--no-first-run")
         self.add_argument('--disable-component-update')
@@ -478,6 +479,14 @@ class Options(metaclass=ABCMeta):
           value: boolean value indicating to set the headless option
         """
         self.add_argument("--headless=new")
+
+    @property
+    def startup_url(self):
+        return self._startup_url
+
+    @startup_url.setter
+    def startup_url(self, url:str):
+        self._startup_url = url
 
     def to_capabilities(self) -> dict:
         """
