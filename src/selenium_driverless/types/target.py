@@ -49,7 +49,7 @@ class Target:
         then creates new instance of chrome target.
 
         :Args:
-         - options - this takes an instance of ChromeOptions
+         - options - this takes an instance of ChromeOptions.rst
         """
         self._base_target = None
         self._parent_target = None
@@ -374,7 +374,7 @@ class Target:
 
     @property
     async def page_source(self) -> str:
-        """Gets the source of the current page.
+        """Gets the docs_source of the current page.
 
         :Usage:
             ::

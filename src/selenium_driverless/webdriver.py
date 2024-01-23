@@ -78,8 +78,15 @@ class Chrome:
         """Creates a new instance of the chrome target. Starts the service and
         then creates new instance of chrome target.
 
+        .. code-block:: python
+
+            options = webdriver.ChromeOptions.rst()
+            async with webdriver.Chrome(options=options) as driver:
+                await driver.get('https://abrahamjuliot.github.io/creepjs/', wait_load=True)
+                print(await driver.title)
+
         :Args:
-         - options - this takes an instance of ChromeOptions
+         - options - this takes an instance of ChromeOptions.rst
          - timeout - timeout in seconds to start chrome
          - debug - for debugging Google-Chrome error messages and other debugging stuff lol
         """
@@ -574,7 +581,7 @@ class Chrome:
 
     @property
     async def page_source(self) -> str:
-        """Gets the source of the current page.
+        """Gets the docs_source of the current page.
 
         :Usage:
             ::

@@ -9,6 +9,9 @@ websockets~=11.0.3
 aiohttp
 
 # dev
-setuptools~=68.2.2
+setuptools
 twine
 pytest
+sphinx-rtd-theme
+sphinx-autodoc-typehints
+sphinx

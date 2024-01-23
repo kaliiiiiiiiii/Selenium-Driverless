@@ -243,7 +243,7 @@ class Context:
 
     @property
     async def page_source(self) -> str:
-        """Gets the source of the current page.
+        """Gets the docs_source of the current page.
 
         :Usage:
             ::
