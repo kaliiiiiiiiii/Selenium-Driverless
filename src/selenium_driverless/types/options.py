@@ -331,7 +331,7 @@ class Options(metaclass=ABCMeta):
         :Args:
          - Sets the arguments
         """
-        if argument:
+        if type(argument) is str:
             if argument[:16] == "--user-data-dir=":
                 user_data_dir = argument[16:]
                 if not os.path.isdir(user_data_dir):
@@ -354,7 +354,7 @@ class Options(metaclass=ABCMeta):
                         DeprecationWarning)
             self._arguments.append(argument)
         else:
-            raise ValueError("argument can not be null")
+            raise ValueError("argument has to be str")
 
     @property
     def user_data_dir(self) -> str:
@@ -486,7 +486,10 @@ class Options(metaclass=ABCMeta):
 
     @startup_url.setter
     def startup_url(self, url:str):
-        self._startup_url = url
+        if url:
+            self._startup_url = url
+        else:
+            self._startup_url = "chrome://new-tab-page/"
 
     def to_capabilities(self) -> dict:
         """
