@@ -137,9 +137,11 @@ class Options(metaclass=ABCMeta):
             options.single_proxy = "http://user1:passwrd1@example.proxy.com:5001/"
 
         .. warning::
-            Only supported when Chrome has been started with driverless or the extension at ``selenium_driverless/files/mv3_extension`` has been loaded into the browser.
-            ``Socks5`` doesn't support authentication due to
-            `crbug#1309413 <https://bugs.chromium.org/p/chromium/issues/detail?id=1309413>`__.
+
+            - Only supported when Chrome has been started with driverless or the extension at ``selenium_driverless/files/mv3_extension`` has been loaded into the browser.
+
+            - ``Socks5`` doesn't support authentication due to `crbug#1309413 <https://bugs.chromium.org/p/chromium/issues/detail?id=1309413>`__.
+
         """
 
         return self._single_proxy
