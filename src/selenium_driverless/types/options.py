@@ -20,6 +20,7 @@
 import os
 import warnings
 from abc import ABCMeta
+import typing
 from typing import Union, Optional, List
 
 # selenium
@@ -485,11 +486,10 @@ class Options(metaclass=ABCMeta):
         return self._startup_url
 
     @startup_url.setter
-    def startup_url(self, url:str):
-        if url:
-            self._startup_url = url
-        else:
-            self._startup_url = "chrome://new-tab-page/"
+    def startup_url(self, url:typing.Union[str, None]):
+        if url is None:
+            url = ""
+        self._startup_url = url
 
     def to_capabilities(self) -> dict:
         """

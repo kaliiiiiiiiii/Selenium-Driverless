@@ -198,6 +198,7 @@ class Chrome:
                 await loop.run_in_executor(None, extractall)
 
                 self._options.arguments.append(f"--load-extension=" + ','.join(extension_paths))
+            self._options._extension_paths = []
 
             if self._options.startup_url:
                 self._options.add_argument(self._options.startup_url)
