@@ -6,12 +6,10 @@ import warnings
 from base64 import b64decode
 import aiofiles
 from typing import List
-from typing import Optional
 
 import websockets
 from cdp_socket.exceptions import CDPError
 from cdp_socket.socket import SingleCDPSocket
-from selenium.webdriver.common.print_page_options import PrintOptions
 
 # pointer
 from selenium_driverless.sync.pointer import Pointer as SyncPointer
@@ -240,7 +238,7 @@ class Target:
         if wait_load:
             try:
                 await wait
-            except asyncio.TimeoutError:
+            except (asyncio.TimeoutError, TimeoutError):
                 raise TimeoutError(f'page: "{url}" didn\'t load within timeout of {timeout}')
         await get
         await self._on_loaded()
@@ -402,7 +400,7 @@ class Target:
                 pass
             else:
                 raise e
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, TimeoutError):
             pass
 
     async def focus(self):

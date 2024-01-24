@@ -33,7 +33,6 @@ import websockets
 from cdp_socket.exceptions import CDPError
 
 # selenium
-from selenium.webdriver.common.print_page_options import PrintOptions
 # SwitchTo
 from selenium_driverless.scripts.switch_to import SwitchTo
 from selenium_driverless.sync.switch_to import SwitchTo as SyncSwitchTo
@@ -405,14 +404,14 @@ class Context:
         await self.set_window_state("maximized")
 
     # noinspection PyUnusedLocal
-    async def print_page(self, print_options: Optional[PrintOptions] = None) -> str:
+    async def print_page(self) -> str:
         """Takes PDF of the current page.
 
         The target makes the best effort to return a PDF based on the
         provided parameters.
         """
         target = self.current_target
-        return await target.print_page(print_options=print_options)
+        return await target.print_page()
 
     @property
     def switch_to(self) -> SwitchTo:

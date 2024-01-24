@@ -257,9 +257,9 @@ class WebElement(JSRemoteObj):
             elems = await self.find_elements(by=by, value=value)
             if (not timeout) or (time.monotonic() - start) > timeout:
                 break
-        if not elems:
-            raise NoSuchElementException()
-        return elems[idx]
+        if elems and isinstance(elems, list):
+            return elems[idx]
+        raise NoSuchElementException()
 
     async def find_elements(self, by: str = By.ID, value: str or None = None):
         """Find elements given a By strategy and locator.
@@ -440,10 +440,10 @@ class WebElement(JSRemoteObj):
         await self.focus()
         await self.__target__.execute_cdp_cmd("Input.insertText", {"text": text})
 
-    async def set_file(self, path:str):
+    async def set_file(self, path: str):
         await self.set_files([path])
 
-    async def set_files(self, paths:typing.List[str]):
+    async def set_files(self, paths: typing.List[str]):
         args = {"files": paths}
         args.update(self._args_builder)
         await self.__target__.execute_cdp_cmd("DOM.setFileInputFiles", args)

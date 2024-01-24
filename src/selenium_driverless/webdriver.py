@@ -32,7 +32,6 @@ import signal
 from contextlib import asynccontextmanager
 from importlib import import_module
 from typing import List
-from typing import Optional
 
 # io
 import asyncio
@@ -41,7 +40,6 @@ import cdp_socket.exceptions
 import websockets
 
 # selenium
-from selenium.webdriver.common.print_page_options import PrintOptions
 from selenium.webdriver.remote.bidi_connection import BidiConnection
 
 # interactions
@@ -339,7 +337,7 @@ class Chrome:
         return self._contexts
 
     async def new_context(self, proxy_bypass_list: typing.List[str] = None, proxy_server: str = True,
-                          universal_access_origins=typing.List[str], url: str = "about:blank") -> Context:
+                          universal_access_origins: typing.List[str] = None, url: str = "about:blank") -> Context:
         """
         creates a new (incognito) context
 
@@ -416,7 +414,7 @@ class Chrome:
                     self._auth_interception_enabled = False
                     await self._ensure_auth_interception(timeout=0.3, set_flag=False)
                     await mv3_target.execute_script("globalThis.authCreds = arguments[0]", self._auth, timeout=0.3)
-                except asyncio.TimeoutError:
+                except (asyncio.TimeoutError, TimeoutError):
                     await asyncio.sleep(0.1)
                     self._mv3_extension = None
                 else:
@@ -426,7 +424,8 @@ class Chrome:
         return context
 
     async def get_targets(self,
-                          _type: str = typing.Union["page", "background_page", "service_worker", "browser", "other"],
+                          _type: typing.Union[typing.Literal["page"], typing.Literal["background_page"],
+                          typing.Literal["service_worker"], typing.Literal["browser"], typing.Literal["other"]] = None,
                           context_id: str or None = "self") -> typing.Dict[str, TargetInfo]:
         """
         get all targets within the current context
@@ -487,8 +486,8 @@ class Chrome:
                     # fix WebRTC leak
                     await extension_target.execute_script(
                         "chrome.privacy.network.webRTCIPHandlingPolicy.set(arguments[0])",
-                        {"value": "disable_non_proxied_udp"})
-                except asyncio.TimeoutError:
+                        {"value": "disable_non_proxied_udp"}, timeout=2)
+                except (asyncio.TimeoutError, TimeoutError):
                     await asyncio.sleep(0.2)
                     return await self.mv3_extension
                 except JSEvalException:
@@ -621,7 +620,8 @@ class Chrome:
         return target.pointer
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False,
-                                 serialization: str = typing.Union["deep", "json", "idOnly"],
+                                 serialization: typing.Union[
+                                     typing.Literal["deep"], typing.Literal["json"], typing.Literal["idOnly"]] = "deep",
                                  max_depth: int = None, timeout: int = 2, execution_context_id: str = None,
                                  unique_context: bool = False):
         """executes a JavaScript on ``GlobalThis`` such as
@@ -855,7 +855,9 @@ class Chrome:
         """
         return await self.current_context.new_window(type_hint=type_hint, url=url, activate=activate)
 
-    async def set_window_state(self, state: typing.Union[typing.Literal["normal"], typing.Literal["minimized"], typing.Literal["maximized"], typing.Literal["fullscreen"]]):
+    async def set_window_state(self, state: typing.Union[
+        typing.Literal["normal"], typing.Literal["minimized"], typing.Literal["maximized"], typing.Literal[
+            "fullscreen"]]):
         """sets the window state on the window the current Target belongs to
         :param state: the state to set
         """
@@ -1175,6 +1177,7 @@ class Chrome:
     def _get_cdp_details(self):
         import json
 
+        # noinspection PyPackageRequirements
         import urllib3
 
         http = urllib3.PoolManager()

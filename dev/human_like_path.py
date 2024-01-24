@@ -59,4 +59,4 @@ path = gen_combined_path(click_points, n_points_soft=5, smooth_soft=10, n_points
 
 mid_time = bias_0_dot_5(0.5, max_offset=0.3)
 print(mid_time)
-visualize_events(path, click_points, 1, accel=3, mid_time=mid_time)
+visualize_events(path, click_points, 1, accel=3, _mid_time=mid_time)

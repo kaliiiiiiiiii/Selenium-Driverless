@@ -66,12 +66,13 @@ class Alert:
             if not self.target._alert:
                 try:
                     await self.target.wait_for_cdp("Page.javascriptDialogOpening", self._timeout)
-                except asyncio.TimeoutError:
+                except (asyncio.TimeoutError, TimeoutError):
                     self._warn_not_detected()
             self._started = True
         return self
 
-    def _warn_not_detected(self):
+    @staticmethod
+    def _warn_not_detected():
         warnings.warn("clouldn't detect if dialog is shown, you might execute Page.enable before")
 
     @property
