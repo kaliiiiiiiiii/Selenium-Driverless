@@ -886,88 +886,46 @@ class Chrome:
         await self.set_window_state("maximized")
 
     # noinspection PyUnusedLocal
-    async def print_page(self, print_options: Optional[PrintOptions] = None) -> str:
-        """Takes PDF of the current page.
-
-        The target makes the best effort to return a PDF based on the
-        provided parameters.
+    async def print_page(self) -> str:
+        """Prints the page (current target => tab) to PDF
         """
         target = self.current_target
-        return await target.print_page(print_options=print_options)
+        return await target.print_page()
 
     @property
     def switch_to(self) -> SwitchTo:
-        """
-        :Returns:
-            - SwitchTo: an object containing all options to switch focus into
-
-        :Usage:
-            ::
-
-                element = target.switch_to.active_element
-                alert = target.switch_to.alert
-                target.switch_to.default_content()
-                target.switch_to.frame('frame_name')
-                target.switch_to.frame(1)
-                target.switch_to.frame(target.find_elements(By.TAG_NAME, "iframe")[0])
-                target.switch_to.parent_frame()
-                target.switch_to.window('main')
+        """SwitchTo handle
         """
         return self.current_context.switch_to
 
     # Navigation
-    async def back(self, target_id: str = None) -> None:
-        """Goes one step backward in the browser history.
-
-        :Usage:
-            ::
-
-                target.back()
+    async def back(self) -> None:
+        """Goes one step backward in the browser history on the current target (has to be a tab).
         """
-        target = await self.get_target(target_id=target_id)
-        await target.back()
+        await self.current_target.back()
 
-    async def forward(self, target_id: str = None) -> None:
-        """Goes one step forward in the browser history.
-
-        :Usage:
-            ::
-
-                target.forward()
+    async def forward(self) -> None:
+        """Goes one step forward in the browser history on the current target (has to be a tab).
         """
-        target = await self.get_target(target_id=target_id)
-        await target.forward()
+        await self.current_target.forward()
 
-    async def refresh(self, target_id: str = None) -> None:
-        """Refreshes the current page.
-
-        :Usage:
-            ::
-
-                target.refresh()
+    async def refresh(self) -> None:
+        """Refreshes the current tab (target).
         """
-        target = await self.get_target(target_id=target_id)
-        await target.refresh()
+        await self.current_target.refresh()
 
     # Options
-    async def get_cookies(self, target_id: str = None) -> List[dict]:
+    async def get_cookies(self) -> List[dict]:
         """Returns a set of dictionaries, corresponding to cookies visible in
         the current target.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_cookies()
+        return await self.current_target.get_cookies()
 
-    async def get_cookie(self, name, target_id: str = None) -> typing.Optional[typing.Dict]:
+    async def get_cookie(self, name) -> typing.Optional[typing.Dict]:
         """Get a single cookie by name. Returns the cookie if found, None if
         not.
-
-        :Usage:
-            ::
-
-                target.get_cookie('my_cookie')
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_cookie(name=name)
+        return await self.current_target.get_cookie(name=name)
 
     async def delete_cookie(self, name: str, url: str = None, domain: str = None,
                             path: str = None, target_id: str = None) -> None:

@@ -48,6 +48,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">webdriver.Chrome</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome"><code class="docutils literal notranslate"><span class="pre">Chrome</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.__init__"><code class="docutils literal notranslate"><span class="pre">Chrome.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.back"><code class="docutils literal notranslate"><span class="pre">Chrome.back()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.base_context"><code class="docutils literal notranslate"><span class="pre">Chrome.base_context</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.base_target"><code class="docutils literal notranslate"><span class="pre">Chrome.base_target</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.close"><code class="docutils literal notranslate"><span class="pre">Chrome.close()</span></code></a></li>
@@ -64,6 +65,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.execute_raw_script"><code class="docutils literal notranslate"><span class="pre">Chrome.execute_raw_script()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.execute_script"><code class="docutils literal notranslate"><span class="pre">Chrome.execute_script()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.focus"><code class="docutils literal notranslate"><span class="pre">Chrome.focus()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.forward"><code class="docutils literal notranslate"><span class="pre">Chrome.forward()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.frame_tree"><code class="docutils literal notranslate"><span class="pre">Chrome.frame_tree</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.fullscreen_window"><code class="docutils literal notranslate"><span class="pre">Chrome.fullscreen_window()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.get"><code class="docutils literal notranslate"><span class="pre">Chrome.get()</span></code></a></li>
@@ -78,7 +80,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.new_window"><code class="docutils literal notranslate"><span class="pre">Chrome.new_window()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.normalize_window"><code class="docutils literal notranslate"><span class="pre">Chrome.normalize_window()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.page_source"><code class="docutils literal notranslate"><span class="pre">Chrome.page_source</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.print_page"><code class="docutils literal notranslate"><span class="pre">Chrome.print_page()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.quit"><code class="docutils literal notranslate"><span class="pre">Chrome.quit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.refresh"><code class="docutils literal notranslate"><span class="pre">Chrome.refresh()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.set_window_state"><code class="docutils literal notranslate"><span class="pre">Chrome.set_window_state()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.targets"><code class="docutils literal notranslate"><span class="pre">Chrome.targets</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.title"><code class="docutils literal notranslate"><span class="pre">Chrome.title</span></code></a></li>
@@ -138,6 +142,17 @@ then creates new instance of chrome target.</p>
 <li><p><strong>timeout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – timeout in seconds to start chrome</p></li>
 <li><p><strong>debug</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – redirect errors from the chromium process output (stderr) to console</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.back">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">back</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.back"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.back" title="Link to this definition"></a></dt>
+<dd><p>Goes one step backward in the browser history on the current target (has to be a tab).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -288,6 +303,17 @@ See <a class="reference external" href="https://developer.chrome.com/docs/extens
 <dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.focus">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">focus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.focus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.focus" title="Link to this definition"></a></dt>
 <dd><p>focuses the current target (only works for tabs)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.forward">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.forward" title="Link to this definition"></a></dt>
+<dd><p>Goes one step forward in the browser history on the current target (has to be a tab).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -486,6 +512,17 @@ see <code class="docutils literal notranslate"><span class="pre">webdriver.Chrom
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.print_page">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">print_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.print_page"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.print_page" title="Link to this definition"></a></dt>
+<dd><p>Prints the page (current target =&gt; tab) to PDF</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.quit">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">quit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clean_dirs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.quit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.quit" title="Link to this definition"></a></dt>
 <dd><p>Closes Chrome
@@ -493,6 +530,17 @@ see <code class="docutils literal notranslate"><span class="pre">webdriver.Chrom
 :param timeout: the maximum time waiting for chrome to quit correctly
 :type clean_dirs: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>
 :param clean_dirs: whether to clean out the user-data-dir directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.refresh">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.refresh" title="Link to this definition"></a></dt>
+<dd><p>Refreshes the current tab (target).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>

@@ -1021,88 +1021,58 @@
 
 
     <span class="c1"># noinspection PyUnusedLocal</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">print_page</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PrintOptions</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Takes PDF of the current page.</span>
-
-<span class="sd">        The target makes the best effort to return a PDF based on the</span>
-<span class="sd">        provided parameters.</span>
+<div class="viewcode-block" id="Chrome.print_page">
+<a class="viewcode-back" href="../../../classes/Chrome/#selenium_driverless.webdriver.Chrome.print_page">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">print_page</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Prints the page (current target =&gt; tab) to PDF</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">print_page</span><span class="p">(</span><span class="n">print_options</span><span class="o">=</span><span class="n">print_options</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">print_page</span><span class="p">()</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">switch_to</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SwitchTo</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        :Returns:</span>
-<span class="sd">            - SwitchTo: an object containing all options to switch focus into</span>
-
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
-
-<span class="sd">                element = target.switch_to.active_element</span>
-<span class="sd">                alert = target.switch_to.alert</span>
-<span class="sd">                target.switch_to.default_content()</span>
-<span class="sd">                target.switch_to.frame(&#39;frame_name&#39;)</span>
-<span class="sd">                target.switch_to.frame(1)</span>
-<span class="sd">                target.switch_to.frame(target.find_elements(By.TAG_NAME, &quot;iframe&quot;)[0])</span>
-<span class="sd">                target.switch_to.parent_frame()</span>
-<span class="sd">                target.switch_to.window(&#39;main&#39;)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;SwitchTo handle</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_context</span><span class="o">.</span><span class="n">switch_to</span>
 
     <span class="c1"># Navigation</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">back</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Goes one step backward in the browser history.</span>
-
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
-
-<span class="sd">                target.back()</span>
+<div class="viewcode-block" id="Chrome.back">
+<a class="viewcode-back" href="../../../classes/Chrome/#selenium_driverless.webdriver.Chrome.back">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">back</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Goes one step backward in the browser history on the current target (has to be a tab).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">)</span>
-        <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">back</span><span class="p">()</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">back</span><span class="p">()</span></div>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Goes one step forward in the browser history.</span>
 
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
-
-<span class="sd">                target.forward()</span>
+<div class="viewcode-block" id="Chrome.forward">
+<a class="viewcode-back" href="../../../classes/Chrome/#selenium_driverless.webdriver.Chrome.forward">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Goes one step forward in the browser history on the current target (has to be a tab).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">)</span>
-        <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span></div>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">refresh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Refreshes the current page.</span>
 
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
-
-<span class="sd">                target.refresh()</span>
+<div class="viewcode-block" id="Chrome.refresh">
+<a class="viewcode-back" href="../../../classes/Chrome/#selenium_driverless.webdriver.Chrome.refresh">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">refresh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Refreshes the current tab (target).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">)</span>
-        <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">refresh</span><span class="p">()</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">refresh</span><span class="p">()</span></div>
+
 
     <span class="c1"># Options</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cookies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cookies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a set of dictionaries, corresponding to cookies visible in</span>
 <span class="sd">        the current target.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">get_cookies</span><span class="p">()</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_cookies</span><span class="p">()</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cookie</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">]:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cookie</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a single cookie by name. Returns the cookie if found, None if</span>
 <span class="sd">        not.</span>
-
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
-
-<span class="sd">                target.get_cookie(&#39;my_cookie&#39;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">get_cookie</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_cookie</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
     <span class="k">async</span> <span class="k">def</span> <span class="nf">delete_cookie</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                             <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>

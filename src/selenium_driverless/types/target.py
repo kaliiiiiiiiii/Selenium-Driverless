@@ -461,17 +461,14 @@ class Target:
         return self._window_id
 
     # noinspection PyUnusedLocal
-    async def print_page(self, print_options: Optional[PrintOptions] = None) -> str:
+    async def print_page(self) -> str:
         """Takes PDF of the current page.
 
         The target makes the best effort to return a PDF based on the
         provided parameters.
-        """
-        options = {}
-        if print_options:
-            options = print_options.to_dict()
-            raise NotImplementedError("Options not yet supported")
 
+        returns Base64-encoded pdf data as a string
+        """
         page = await self.execute_cdp_cmd("Page.printToPDF")
         return page["data"]
 
