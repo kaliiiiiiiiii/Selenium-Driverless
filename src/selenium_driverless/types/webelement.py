@@ -257,8 +257,11 @@ class WebElement(JSRemoteObj):
             elems = await self.find_elements(by=by, value=value)
             if (not timeout) or (time.monotonic() - start) > timeout:
                 break
-        if elems and isinstance(elems, list):
-            return elems[idx]
+        if elems:
+            if isinstance(elems, list):
+                return elems[idx]
+            else:
+                raise Exception("find_elements returned not a list. This possibly is related to https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/84")
         raise NoSuchElementException()
 
     async def find_elements(self, by: str = By.ID, value: str or None = None):

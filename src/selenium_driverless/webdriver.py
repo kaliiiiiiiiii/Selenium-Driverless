@@ -918,14 +918,15 @@ class Chrome:
 
     # Options
     async def get_cookies(self) -> List[dict]:
-        """Returns a set of dictionaries, corresponding to cookies visible in
-        the current target.
+        """list of cookies for the current tab
         """
         return await self.current_target.get_cookies()
 
     async def get_cookie(self, name) -> typing.Optional[typing.Dict]:
         """Get a single cookie by name. Returns the cookie if found, None if
         not.
+
+        :param name: name of the cookie
         """
         return await self.current_target.get_cookie(name=name)
 

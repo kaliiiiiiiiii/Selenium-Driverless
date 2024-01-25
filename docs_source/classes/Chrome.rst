@@ -8,4 +8,5 @@ webdriver.Chrome
         get_target_for_iframe, get_targets_for_iframes, get, title, current_pointer, execute_raw_script,
         execute_script, execute_async_script, current_url, page_source, close,focus, quit, current_target_info,
         current_window_handle, current_window_id, window_handles, new_window, set_window_state, normalize_window,
-        maximize_window, fullscreen_window, minimize_window, print_page, back, forward, refresh
+        maximize_window, fullscreen_window, minimize_window, print_page, back, forward, refresh, get_cookies,
+        get_cookie
