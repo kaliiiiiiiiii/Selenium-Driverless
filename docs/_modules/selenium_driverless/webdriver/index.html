@@ -1064,17 +1064,24 @@
 
 
     <span class="c1"># Options</span>
+<div class="viewcode-block" id="Chrome.get_cookies">
+<a class="viewcode-back" href="../../../classes/Chrome/#selenium_driverless.webdriver.Chrome.get_cookies">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cookies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a set of dictionaries, corresponding to cookies visible in</span>
-<span class="sd">        the current target.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;list of cookies for the current tab</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_cookies</span><span class="p">()</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_cookies</span><span class="p">()</span></div>
 
+
+<div class="viewcode-block" id="Chrome.get_cookie">
+<a class="viewcode-back" href="../../../classes/Chrome/#selenium_driverless.webdriver.Chrome.get_cookie">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cookie</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a single cookie by name. Returns the cookie if found, None if</span>
 <span class="sd">        not.</span>
+
+<span class="sd">        :param name: name of the cookie</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_cookie</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_cookie</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+
 
     <span class="k">async</span> <span class="k">def</span> <span class="nf">delete_cookie</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                             <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
