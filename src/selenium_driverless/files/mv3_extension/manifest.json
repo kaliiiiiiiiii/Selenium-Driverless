@@ -8,9 +8,6 @@
     "service_worker": "driverless_background_mv3_243ffdd55e32a012b4f253b2879af978.js", "type": "module"
   },
   "incognito": "spanning",
-  "content_security_policy": {
-   "extension_pages":"script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
-    },
   "permissions": [
     "activeTab",
     "alarms",
