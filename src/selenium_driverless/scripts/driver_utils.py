@@ -42,10 +42,9 @@ async def get_cookies(target) -> typing.List[dict]:
 
     :Usage:
         ::
-
             target.get_cookies()
     """
-    cookies = await target.execute_cdp_cmd("Page.getCookies")
+    cookies = await target.execute_cdp_cmd("Network.getCookies")
     return cookies["cookies"]
 
 
