@@ -261,7 +261,7 @@ class WebElement(JSRemoteObj):
             if isinstance(elems, list):
                 return elems[idx]
             else:
-                raise Exception("find_elements returned not a list. This possibly is related to https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/84")
+                raise Exception("find_elements returned not a list. This possibly is related to https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/84\n", elems)
         raise NoSuchElementException()
 
     async def find_elements(self, by: str = By.ID, value: str or None = None):
