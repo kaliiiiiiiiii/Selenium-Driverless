@@ -931,50 +931,47 @@ class Chrome:
         return await self.current_target.get_cookie(name=name)
 
     async def delete_cookie(self, name: str, url: str = None, domain: str = None,
-                            path: str = None, target_id: str = None) -> None:
-        """Deletes a single cookie with the given name.
+                            path: str = None) -> None:
+        """Deletes a single cookie with the given name in the current tab.
+
+        :param name: name of the cookie to delete
+        :param url: url of the cookie
+        :param domain: domain of the cookie
+        :param path: path of the cookie
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.delete_cookie(name=name, url=url, domain=domain, path=path)
+        return await self.current_target.delete_cookie(name=name, url=url, domain=domain, path=path)
 
-    async def delete_all_cookies(self, target_id: str = None) -> None:
-        """Delete all cookies in the scope of the session.
-
-        :Usage:
-            ::
-
-                target.delete_all_cookies()
+    async def delete_all_cookies(self) -> None:
+        """Delete all cookies in the current (incognito-) context.
         """
-        target = await self.get_target(target_id=target_id)
-        await target.delete_all_cookies()
+        await self.current_target.delete_all_cookies()
 
     # noinspection GrazieInspection
-    async def add_cookie(self, cookie_dict: dict, target_id: str = None) -> None:
-        """Adds a cookie to your current session.
+    async def add_cookie(self, cookie_dict: dict) -> None:
+        """Adds a cookie in the current (incognito-) context
 
-        :Args:
-         - cookie_dict: A dictionary object, with required keys - "name" and "value";
-            optional keys - "path", "domain", "secure", "httpOnly", "expiry", "sameSite"
-
-        :Usage:
-            ::
-
-                target.add_cookie({'name' : 'foo', 'value' : 'bar'})
-                target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/'})
-                target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/', 'secure' : True})
-                target.add_cookie({'name' : 'foo', 'value' : 'bar', 'sameSite' : 'Strict'})
+        :param cookie_dict: see `Network.CookieParam <https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-CookieParam>`__
         """
-        target = await self.get_target(target_id=target_id)
-        await target.add_cookie(cookie_dict=cookie_dict)
+        await self.current_target.add_cookie(cookie_dict=cookie_dict)
 
     # Timeouts
     @staticmethod
     async def sleep(time_to_wait) -> None:
+        """sleep
+        .. note::
+            use this one instead of time.sleep in the sync version.
+
+        :param time_to_wait: time in seconds to sleep
+        """
         await asyncio.sleep(time_to_wait)
 
     # noinspection PyUnusedLocal
     async def find_element(self, by: str, value: str, parent=None, target_id: str = None,
                            timeout: int or None = None) -> WebElement:
+        """find a element in the current target
+
+        :param by:
+        """
         target = await self.get_target(target_id=target_id)
         return await target.find_element(by=by, value=value, parent=parent, timeout=timeout)
 

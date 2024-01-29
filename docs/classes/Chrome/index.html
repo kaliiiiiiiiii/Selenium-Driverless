@@ -48,6 +48,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">webdriver.Chrome</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome"><code class="docutils literal notranslate"><span class="pre">Chrome</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.__init__"><code class="docutils literal notranslate"><span class="pre">Chrome.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.add_cookie"><code class="docutils literal notranslate"><span class="pre">Chrome.add_cookie()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.back"><code class="docutils literal notranslate"><span class="pre">Chrome.back()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.base_context"><code class="docutils literal notranslate"><span class="pre">Chrome.base_context</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.base_target"><code class="docutils literal notranslate"><span class="pre">Chrome.base_target</span></code></a></li>
@@ -60,6 +61,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.current_url"><code class="docutils literal notranslate"><span class="pre">Chrome.current_url</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.current_window_handle"><code class="docutils literal notranslate"><span class="pre">Chrome.current_window_handle</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.current_window_id"><code class="docutils literal notranslate"><span class="pre">Chrome.current_window_id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.delete_all_cookies"><code class="docutils literal notranslate"><span class="pre">Chrome.delete_all_cookies()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.delete_cookie"><code class="docutils literal notranslate"><span class="pre">Chrome.delete_cookie()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.ensure_extensions_incognito_allowed"><code class="docutils literal notranslate"><span class="pre">Chrome.ensure_extensions_incognito_allowed()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.execute_async_script"><code class="docutils literal notranslate"><span class="pre">Chrome.execute_async_script()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.execute_raw_script"><code class="docutils literal notranslate"><span class="pre">Chrome.execute_raw_script()</span></code></a></li>
@@ -86,6 +89,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.quit"><code class="docutils literal notranslate"><span class="pre">Chrome.quit()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.refresh"><code class="docutils literal notranslate"><span class="pre">Chrome.refresh()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.set_window_state"><code class="docutils literal notranslate"><span class="pre">Chrome.set_window_state()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.sleep"><code class="docutils literal notranslate"><span class="pre">Chrome.sleep()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.targets"><code class="docutils literal notranslate"><span class="pre">Chrome.targets</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.title"><code class="docutils literal notranslate"><span class="pre">Chrome.title</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.window_handles"><code class="docutils literal notranslate"><span class="pre">Chrome.window_handles</span></code></a></li>
@@ -144,6 +148,20 @@ then creates new instance of chrome target.</p>
 <li><p><strong>timeout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – timeout in seconds to start chrome</p></li>
 <li><p><strong>debug</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – redirect errors from the chromium process output (stderr) to console</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.add_cookie">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_cookie</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cookie_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.add_cookie"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.add_cookie" title="Link to this definition"></a></dt>
+<dd><p>Adds a cookie in the current (incognito-) context</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cookie_dict</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – see <a class="reference external" href="https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-CookieParam">Network.CookieParam</a></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -240,6 +258,36 @@ use <code class="docutils literal notranslate"><span class="pre">webdriver.Chrom
 <dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.current_window_id">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_window_id</span></span><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.current_window_id" title="Link to this definition"></a></dt>
 <dd><p><strong>async</strong> the <code class="docutils literal notranslate"><span class="pre">WindowId</span></code> of the window the current Target belongs to</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.delete_all_cookies">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delete_all_cookies</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.delete_all_cookies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.delete_all_cookies" title="Link to this definition"></a></dt>
+<dd><p>Delete all cookies in the current (incognito-) context.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.delete_cookie">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delete_cookie</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.delete_cookie"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.delete_cookie" title="Link to this definition"></a></dt>
+<dd><p>Deletes a single cookie with the given name in the current tab.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of the cookie to delete</p></li>
+<li><p><strong>url</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – url of the cookie</p></li>
+<li><p><strong>domain</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – domain of the cookie</p></li>
+<li><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – path of the cookie</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -582,6 +630,23 @@ see <code class="docutils literal notranslate"><span class="pre">webdriver.Chrom
 <dd><p>sets the window state on the window the current Target belongs to
 :type state: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'normal'</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'minimized'</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'maximized'</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'fullscreen'</span></code>]]</span>
 :param state: the state to set</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.sleep">
+<em class="property"><span class="pre">async</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sleep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_to_wait</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.sleep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.sleep" title="Link to this definition"></a></dt>
+<dd><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>use this one instead of time.sleep in the sync version.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time_to_wait</strong> – time in seconds to sleep</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
