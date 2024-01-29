@@ -1,6 +1,6 @@
 import setuptools
 
-requirements = ['selenium~=4.6', "cdp-socket>=1.1.2", "numpy", "matplotlib~=3.5", "scipy~=1.7", "aiofiles",
+requirements = ['selenium~=4.6', "cdp-socket>=1.2.5", "numpy", "matplotlib~=3.5", "scipy~=1.7", "aiofiles",
                 'platformdirs']
 
 with open('README.md', 'r', encoding='utf-8') as fh:
@@ -22,7 +22,7 @@ setuptools.setup(
         'Source Code': 'https://github.com/kaliiiiiiiiii/Selenium-Driverless',
     },
     package_dir={'': 'src'},
-    packages=setuptools.find_packages(where='src'),
+    packages=setuptools.find_namespace_packages(where='src'),
     classifiers=[
         # see https://pypi.org/classifiers/
         'Development Status :: 2 - Pre-Alpha',

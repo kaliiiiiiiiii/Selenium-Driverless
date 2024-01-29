@@ -8,9 +8,9 @@ def generate_random_values(size, bias, border=0.01):
     """Generate random Gaussian distributed values with bias."""
     values = np.zeros(size)
     for idx in np.ndindex(values.shape):
-        values[idx] = np.random.normal(scale=bias, loc=0.5)**2+0.5
+        values[idx] = np.random.normal(scale=bias, loc=0.5) ** 2 + 0.5
         while not (border <= values[idx] <= 1 - border):
-            values[idx] = np.random.normal(scale=bias, loc=0.5)**2+0.5
+            values[idx] = np.random.normal(scale=bias, loc=0.5) ** 2 + 0.5
 
     return values
 
@@ -66,8 +66,8 @@ if __name__ == "__main__":
     rotated_rectangle_points = rotate_rectangle(original_rectangle_points, rotation_angle, rotation_center)
 
     # Generate random Gaussian distributed values for a and b with biases
-    size = 1000 # Number of random points
-    bias_a = 0.2 # Bias for a
+    size = 1000  # Number of random points
+    bias_a = 0.2  # Bias for a
     bias_b = 0.2  # Bias for b
     point_a = generate_random_values(size, bias_a)
     point_b = generate_random_values(size, bias_b)

@@ -23,17 +23,12 @@ from abc import ABCMeta
 import typing
 from typing import Union, Optional, List
 
-# selenium
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.common.proxy import Proxy
-
 from selenium_driverless.utils.utils import sel_driverless_path
 from selenium_driverless.scripts.prefs import prefs_to_json
 
 
 # noinspection PyUnreachableCode,PyUnusedLocal
 class Options(metaclass=ABCMeta):
-    KEY = "goog:chromeOptions"
 
     def __init__(self) -> None:
 
@@ -41,7 +36,6 @@ class Options(metaclass=ABCMeta):
         from selenium_driverless.utils.utils import find_chrome_executable, IS_POSIX
         super().__init__()
 
-        self._caps = self.default_capabilities
         self._proxy = None
         # self.set_capability("pageLoadStrategy", "normal")
         self.mobile_options = None
@@ -53,14 +47,14 @@ class Options(metaclass=ABCMeta):
         self._debugger_address = None
         self._user_data_dir = None
         self._arguments = []
-        self._prefs = {'devtools':{
-                        'preferences':{
-                            # always open devtools in undocked
-                            'currentDockState': '"undocked"',
-                            # always open devtools with console open
-                            'panel-selectedTab': '"console"'}
-                            }
-                       }
+        self._prefs = {'devtools': {
+            'preferences': {
+                # always open devtools in undocked
+                'currentDockState': '"undocked"',
+                # always open devtools with console open
+                'panel-selectedTab': '"console"'}
+        }
+        }
         self._ignore_local_proxy = False
         self._auto_clean_dirs = True
         self._headless = False
@@ -81,6 +75,7 @@ class Options(metaclass=ABCMeta):
         self.add_argument('--disable-background-networking')
         self.add_argument('--no-pings')
 
+        # noinspection SpellCheckingInspection
         self.add_argument('--disable-infobars')
         self.add_argument('--disable-breakpad')
         self.add_argument("--no-default-browser-check")
@@ -92,139 +87,15 @@ class Options(metaclass=ABCMeta):
         self.add_extension(sel_driverless_path() + "files/mv3_extension")
 
     @property
-    def capabilities(self):
-        return self._caps
-
-    def set_capability(self, name: str, value: dict) -> None:
-        """Sets a capability."""
-        if name == "proxy":
-            proxy = None
-            proxy_keys = ['ftpProxy', 'httpProxy', 'sslProxy']
-            warnings.warn("not started with chromedriver, only applying single proxy")
-            for key, value in value.items():
-                if key in proxy_keys:
-                    self.add_argument(f'--proxy-server={value}')
-                    if not proxy:
-                        proxy = value
-                    value[key] = proxy
-            self._proxy = Proxy(value)
-        else:
-            raise NotImplementedError()
-        self._caps[name] = value
-
-    @property
-    def browser_version(self) -> str:
-        """
-        :returns: the version of the browser if set, otherwise None.
-        """
-        raise NotImplementedError()
-        return self._caps.get("browserVersion")
-
-    @browser_version.setter
-    def browser_version(self, version: str) -> None:
-        """Requires the major version of the browser to match provided value:
-        https://w3c.github.io/webdriver/#dfn-browser-version.
-
-        :param version: The required version of the browser
-        """
-        raise NotImplementedError()
-        self.set_capability("browserVersion", version)
-
-    @property
-    def platform_name(self) -> str:
-        """
-        :returns: The name of the platform
-        """
-        raise NotImplementedError()
-        return self._caps["platformName"]
-
-    @property
     def auto_clean_dirs(self) -> bool or None:
-        """
-        clear userdata directories on exit automatically
+        """if user-data-dir should be cleaned automatically
+        defaults to True
         """
         return self._auto_clean_dirs
 
     @auto_clean_dirs.setter
-    def auto_clean_dirs(self, enabled: bool) -> None:
+    def auto_clean_dirs(self, enabled: bool = True) -> None:
         self._auto_clean_dirs = enabled
-
-    @platform_name.setter
-    def platform_name(self, platform: str) -> None:
-        """Requires the platform to match the provided value:
-        https://w3c.github.io/webdriver/#dfn-platform-name.
-
-        :param platform: the required name of the platform
-        """
-        raise NotImplementedError()
-        self.set_capability("platformName", platform)
-
-    @property
-    def page_load_strategy(self) -> str:
-        """
-        :returns: page load strategy if set, the default is "normal"
-        """
-        raise NotImplementedError()
-        return self._caps["pageLoadStrategy"]
-
-    @page_load_strategy.setter
-    def page_load_strategy(self, strategy: str) -> None:
-        """Determines the point at which a navigation command is returned:
-        https://w3c.github.io/webdriver/#dfn-table-of-page-load-strategies.
-
-        :param strategy: the strategy corresponding to a document readiness state
-        """
-        raise NotImplementedError()
-        if strategy in ["normal", "eager", "none"]:
-            self.set_capability("pageLoadStrategy", strategy)
-        else:
-            raise ValueError("Strategy can only be one of the following: normal, eager, none")
-
-    @property
-    def unhandled_prompt_behavior(self) -> str:
-        """
-        :returns: unhandled prompt behavior if set, the default is "dismiss and notify"
-        """
-        raise NotImplementedError()
-        return self._caps["unhandledPromptBehavior"]
-
-    @unhandled_prompt_behavior.setter
-    def unhandled_prompt_behavior(self, behavior: str) -> None:
-        """How the target should respond when an alert is present and the
-        command sent is not handling the alert:
-        https://w3c.github.io/webdriver/#dfn-table-of-page-load-strategies.
-
-        :param behavior: behavior to use when an alert is encountered
-        """
-        raise NotImplementedError()
-        if behavior in ["dismiss", "accept", "dismiss and notify", "accept and notify", "ignore"]:
-            self.set_capability("unhandledPromptBehavior", behavior)
-        else:
-            raise ValueError(
-                "Behavior can only be one of the following: dismiss, accept, dismiss and notify, "
-                "accept and notify, ignore"
-            )
-
-    @property
-    def timeouts(self) -> dict:
-        """
-        :returns: Values for implicit timeout, pageLoad timeout and script timeout if set (in milliseconds)
-        """
-        raise NotImplementedError()
-        return self._caps["timeouts"]
-
-    @timeouts.setter
-    def timeouts(self, timeouts: dict) -> None:
-        """How long the target should wait for actions to complete before
-        returning an error https://w3c.github.io/webdriver/#timeouts.
-
-        :param timeouts: values in milliseconds for implicit wait, page load and script timeout
-        """
-        raise NotImplementedError()
-        if all(x in ("implicit", "pageLoad", "script") for x in timeouts.keys()):
-            self.set_capability("timeouts", timeouts)
-        else:
-            raise ValueError("Timeout keys can only be one of the following: implicit, pageLoad, script")
 
     def enable_mobile(
             self,
@@ -234,8 +105,9 @@ class Options(metaclass=ABCMeta):
     ) -> None:
         """Enables mobile browser use for browsers that support it.
 
-        :Args:
-            android_activity: The name of the android package to start
+        :param android_activity: The name of the android package to start
+        :param android_package:
+        :param device_serial:
         """
         raise NotImplementedError()
         if not android_package:
@@ -254,62 +126,29 @@ class Options(metaclass=ABCMeta):
         raise NotImplementedError()
         return self._caps.get("acceptInsecureCerts", False)
 
-    @accept_insecure_certs.setter
-    def accept_insecure_certs(self, value: bool) -> None:
-        """Whether untrusted and self-signed TLS certificates are implicitly
-        trusted: https://w3c.github.io/webdriver/#dfn-insecure-tls-
-        certificates.
-
-        :param value: whether to accept insecure certificates
-        """
-        raise NotImplementedError()
-        self._caps["acceptInsecureCerts"] = value
-
-    @property
-    def strict_file_interactability(self) -> bool:
-        """
-        :returns: whether session is strict about file interactability
-        """
-        raise NotImplementedError()
-        return self._caps.get("strictFileInteractability", False)
-
-    @strict_file_interactability.setter
-    def strict_file_interactability(self, value: bool) -> None:
-        """Whether interactability checks will be applied to file type input
-        elements. The default is false.
-
-        :param value: whether file interactability is strict
-        """
-        raise NotImplementedError()
-        self._caps["strictFileInteractability"] = value
-
-    @property
-    def proxy(self) -> Proxy:
-        """
-        :Returns: Proxy if set, otherwise None.
-        """
-        proxy = Proxy(self._proxy)
-        return proxy
-
-    @proxy.setter
-    def proxy(self, value: Proxy) -> None:
-        raise NotImplementedError()
-        if not isinstance(value, Proxy):
-            raise InvalidArgumentException("Only Proxy objects can be passed in.")
-        warnings.warn("not started with chromedriver, only applying single proxy")
-        self.set_capability("proxy", value=value.to_dict())
-
     @property
     def single_proxy(self):
+        """
+        Set a single proxy to be applied.
+
+        .. code-block:: python
+
+            options = webdriver.ChromeOptions()
+            options.single_proxy = "http://user1:passwrd1@example.proxy.com:5001/"
+
+        .. warning::
+
+            - Only supported when Chrome has been started with driverless or the extension at ``selenium_driverless/files/mv3_extension`` has been loaded into the browser.
+
+            - ``Socks5`` doesn't support authentication due to `crbug#1309413 <https://bugs.chromium.org/p/chromium/issues/detail?id=1309413>`__.
+
+        """
+
         return self._single_proxy
 
     @single_proxy.setter
     def single_proxy(self, proxy: str):
         self._single_proxy = proxy
-
-    #
-    # Options(BaseOptions) from here on
-    #
 
     @property
     def prefs(self) -> dict:
@@ -319,19 +158,18 @@ class Options(metaclass=ABCMeta):
         self._prefs.update(prefs_to_json({pref: value}))
 
     @property
-    def arguments(self):
+    def arguments(self) -> typing.List[str]:
         """
-        :Returns: A list of arguments needed for the browser
+        used arguments for the chrome executable
         """
         return self._arguments
 
-    def add_argument(self, argument):
-        import os
-        """Adds an argument to the list.
+    def add_argument(self, argument: str):
+        """Adds an argument for launching chrome
 
-        :Args:
-         - Sets the arguments
+        :param argument: argument to add
         """
+        import os
         if type(argument) is str:
             if argument[:16] == "--user-data-dir=":
                 user_data_dir = argument[16:]
@@ -359,6 +197,9 @@ class Options(metaclass=ABCMeta):
 
     @property
     def user_data_dir(self) -> str:
+        """the directory to save all browser data in.
+        ``None`` (default) will temporarily create a directory in $temp
+        """
         return self._user_data_dir
 
     @user_data_dir.setter
@@ -371,91 +212,50 @@ class Options(metaclass=ABCMeta):
         raise NotImplementedError()
         self._ignore_local_proxy = True
 
-    #
-    #   ChromiumOptions(ArgOptions) form here on
-    #
-
     @property
     def binary_location(self) -> str:
         """
-        :Returns: The location of the binary, otherwise an empty string
+        path to the Chromium binary
         """
         return self._binary_location
 
     @binary_location.setter
     def binary_location(self, value: str) -> None:
-        """
-        Allows you to set where the chromium binary lives
-        :Args:
-         - value: path to the Chromium binary
-        """
         self._binary_location = value
 
     @property
     def debugger_address(self) -> str:
         """
-        :Returns: The address of the remote devtools instance
+        The address of the remote devtools instance
+        Setting this value makes the driver connect to a remote browser instance.
         """
         return self._debugger_address
 
     @debugger_address.setter
     def debugger_address(self, value: str) -> None:
-        """
-        Allows you to set the address of the remote devtools instance
-        that the Chrome instance will try to connect to during an
-        active wait.
-        :Args:
-         - value: address of remote devtools instance if any (hostname[:port])
-        """
         self._debugger_address = value
 
-    @property
-    def extensions(self) -> List[str]:
-        """
-        :Returns: A list of encoded extensions that will be loaded
-        """
-        raise NotImplementedError()
+    def add_extension(self, path: str) -> None:
+        """Adds an extension to Chrome
+        The extension can either be a compressed file (zip, crx, etc.) or extracted in a directory
 
-    def add_extension(self, extension: str) -> None:
-        """Adds the path to the extension to a list that will be used to
-        extract it to the Chrome.
-
-        :Args:
-         - extension: path to the \\*.crx file
+        :param path: path to the extension
         """
-        extension_to_add = os.path.abspath(os.path.expanduser(extension))
+        extension_to_add = os.path.abspath(os.path.expanduser(path))
         if os.path.exists(extension_to_add):
             self._extension_paths.append(extension_to_add)
         else:
             raise OSError("Path to the extension doesn't exist")
 
-    def add_encoded_extension(self, extension: str) -> None:
-        """Adds Base64 encoded string with extension data to a list that will
-        be used to extract it to the Chrome.
-
-        :Args:
-         - extension: Base64 encoded string with extension data
-        """
-        raise NotImplementedError()
-        if extension:
-            self._extensions.append(extension)
-        else:
-            raise ValueError("argument can not be null")
-
-    @property
-    def experimental_options(self) -> dict:
-        """
-        :Returns: A dictionary of experimental options for chromium
-        """
-        raise NotImplementedError()
-        return self._experimental_options
-
     def add_experimental_option(self, name: str, value: Union[str, int, dict, List[str]]) -> None:
         """Adds an experimental option which is passed to chromium.
 
-        :Args:
-          name: The experimental option name.
-          value: The option value.
+        .. warning::
+            only ``name="prefs"`` supported.
+            This method is deprecated and will be removed. Use :obj:`ChromeOptions.update_pref` instead.
+
+        :param name: The experimental option name.
+        :param value: The option value.
         """
         if name == "prefs":
             self.prefs.update(prefs_to_json(value))
@@ -465,56 +265,25 @@ class Options(metaclass=ABCMeta):
     @property
     def headless(self) -> bool:
         """
-        :Returns: True if the headless argument is set, else False
+        Whether chrome starts headless.
+        defaults to ``False``
         """
         return self._headless
 
     @headless.setter
     def headless(self, value: bool) -> None:
-        """Sets the headless argument Old headless uses a non-production
-        browser and is set with `--headless`
-
-        Native headless from v86 - v108 is set with `--headless=chrome`
-        Native headless from v109+ is set with `--headless=new`
-        :Args:
-          value: boolean value indicating to set the headless option
-        """
         self.add_argument("--headless=new")
 
     @property
-    def startup_url(self):
+    def startup_url(self) -> str:
+        """
+        the url the first tab loads.
+        Defaults to ``about:blank``
+        """
         return self._startup_url
 
     @startup_url.setter
-    def startup_url(self, url:typing.Union[str, None]):
+    def startup_url(self, url: typing.Union[str, None]):
         if url is None:
             url = ""
         self._startup_url = url
-
-    def to_capabilities(self) -> dict:
-        """
-        Creates a capabilities with all the options that have been set
-        :Returns: A dictionary with everything
-        """
-        caps = self._caps
-        chrome_options = {}  # self.experimental_options.copy()
-        if self.mobile_options:
-            chrome_options.update(self.mobile_options)
-        # chrome_options["extensions"] = self.extensions
-        if self.binary_location:
-            chrome_options["binary"] = self.binary_location
-        chrome_options["args"] = self._arguments
-        if self.debugger_address:
-            chrome_options["debuggerAddress"] = self.debugger_address
-
-        caps[self.KEY] = chrome_options
-
-        return caps
-
-    #
-    # Options(ChromiumOptions) from here on
-    #
-
-    @property
-    def default_capabilities(self) -> dict:
-        return DesiredCapabilities.CHROME.copy()

@@ -6,12 +6,10 @@ import warnings
 from base64 import b64decode
 import aiofiles
 from typing import List
-from typing import Optional
 
 import websockets
 from cdp_socket.exceptions import CDPError
 from cdp_socket.socket import SingleCDPSocket
-from selenium.webdriver.common.print_page_options import PrintOptions
 
 # pointer
 from selenium_driverless.sync.pointer import Pointer as SyncPointer
@@ -49,7 +47,7 @@ class Target:
         then creates new instance of chrome target.
 
         :Args:
-         - options - this takes an instance of ChromeOptions
+         - options - this takes an instance of ChromeOptions.rst
         """
         self._base_target = None
         self._parent_target = None
@@ -236,11 +234,11 @@ class Target:
         args = {"url": url, "transitionType": "link"}
         if referrer:
             args["referrer"] = referrer
-        get = asyncio.create_task(self.execute_cdp_cmd("Page.navigate", args, timeout=20))
+        get = asyncio.create_task(self.execute_cdp_cmd("Page.navigate", args, timeout=timeout))
         if wait_load:
             try:
                 await wait
-            except asyncio.TimeoutError:
+            except (asyncio.TimeoutError, TimeoutError):
                 raise TimeoutError(f'page: "{url}" didn\'t load within timeout of {timeout}')
         await get
         await self._on_loaded()
@@ -374,7 +372,7 @@ class Target:
 
     @property
     async def page_source(self) -> str:
-        """Gets the source of the current page.
+        """Gets the docs_source of the current page.
 
         :Usage:
             ::
@@ -402,7 +400,7 @@ class Target:
                 pass
             else:
                 raise e
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, TimeoutError):
             pass
 
     async def focus(self):
@@ -461,17 +459,14 @@ class Target:
         return self._window_id
 
     # noinspection PyUnusedLocal
-    async def print_page(self, print_options: Optional[PrintOptions] = None) -> str:
+    async def print_page(self) -> str:
         """Takes PDF of the current page.
 
         The target makes the best effort to return a PDF based on the
         provided parameters.
-        """
-        options = {}
-        if print_options:
-            options = print_options.to_dict()
-            raise NotImplementedError("Options not yet supported")
 
+        returns Base64-encoded pdf data as a string
+        """
         page = await self.execute_cdp_cmd("Page.printToPDF")
         return page["data"]
 

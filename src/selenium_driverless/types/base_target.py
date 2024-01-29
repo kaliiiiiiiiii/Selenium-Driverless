@@ -17,7 +17,7 @@ class BaseTarget:
         then creates new instance of chrome target.
 
         :Args:
-         - options - this takes an instance of ChromeOptions
+         - options - this takes an instance of ChromeOptions.rst
         """
         self._socket = None
 

@@ -1,25 +1,22 @@
-import websockets
-import traceback
 import asyncio
-
 from selenium_driverless import webdriver
+import sys
 
 global driver
+
+handler = (lambda e: print(f'Exception in event-handler:\n{e.__class__.__module__}.{e.__class__.__name__}: {e}',
+                           file=sys.stderr))
+sys.modules["selenium_driverless"].EXC_HANDLER = handler
+sys.modules["cdp_socket"].EXC_HANDLER = handler
 
 
 async def attached_callback(data):
     global driver
-    # noinspection PyBroadException,PyUnresolvedReferences
-    try:
-        target = await driver.get_target(data["targetInfo"]["targetId"])
-        print(data["targetInfo"]["url"])
-        if data['waitingForDebugger']:
-            await target.execute_cdp_cmd("Runtime.runIfWaitingForDebugger", timeout=2)
-    except websockets.exceptions.InvalidMessage:
-        # closed
-        pass
-    except Exception:
-        traceback.print_exc()
+    target = await driver.get_target(data["targetInfo"]["targetId"])
+    print(data["targetInfo"]["url"])
+    if data['waitingForDebugger']:
+        await target.execute_cdp_cmd("Runtime.runIfWaitingForDebugger", timeout=2)
+    raise Exception("testException")
 
 
 async def main():
