@@ -17,7 +17,6 @@
 # edited by kaliiiiiiiiiii
 import asyncio
 import time
-import traceback
 import warnings
 import numpy as np
 import typing
@@ -498,7 +497,8 @@ class WebElement(JSRemoteObj):
                 from selenium_driverless.scripts.geometry import visualize
                 visualize(points, heatmap, vertices)
             if exc:
-                traceback.print_exc()
+                from selenium_driverless import EXC_HANDLER
+                EXC_HANDLER(exc)
                 warnings.warn("couldn't get random point based on heatmap")
                 point = centroid(vertices)
         else:

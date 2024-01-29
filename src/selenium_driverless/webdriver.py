@@ -24,7 +24,6 @@ import subprocess
 import sys
 import tempfile
 import time
-import traceback
 import typing
 import uuid
 import warnings
@@ -717,6 +716,7 @@ class Chrome:
         :param timeout: the maximum time waiting for chrome to quit correctly
         :param clean_dirs: whether to clean out the user-data-dir directory
         """
+        from selenium_driverless import EXC_HANDLER
 
         loop = asyncio.get_running_loop()
 
@@ -727,30 +727,28 @@ class Chrome:
 
         if self._started:
             start = time.monotonic()
-            # noinspection PyUnresolvedReferences,PyBroadException
+            # noinspection PyUnresolvedReferences
             try:
                 # assumption: chrome is still running
                 await self.base_target.execute_cdp_cmd("Browser.close", timeout=2)
             except websockets.ConnectionClosedError:
                 pass
-            except Exception:
+            except Exception as e:
                 import sys
-                print('Ignoring exception at self.base_target.execute_cdp_cmd("Browser.close")', file=sys.stderr)
-                traceback.print_exc()
+                print('Ignoring exception at driver.base_target.execute_cdp_cmd("Browser.close")', file=sys.stderr)
+                EXC_HANDLER(e)
             if not self._is_remote:
                 if self._process is not None:
                     # assumption: chrome is being shutdown manually or programmatically
-                    # noinspection PyBroadException
                     try:
                         await loop.run_in_executor(None, lambda: self._process.wait(timeout))
-                    except Exception:
+                    except Exception as e:
                         import sys
-                        print('Ignoring exception at self.base_target.execute_cdp_cmd("Browser.close")',
+                        print('Ignoring exception at driver._process.wait(timeout)',
                               file=sys.stderr)
-                        traceback.print_exc()
+                        EXC_HANDLER(e)
                     else:
                         self._process = None
-                # noinspection PyBroadException
                 try:
                     # assumption: chrome hasn't closed within timeout, killing with force
                     # wait for process to be killed
@@ -766,17 +764,16 @@ class Chrome:
                                 os.killpg(os.getpgid(self._process.pid), signal.SIGKILL)
                             else:
                                 self._process.kill()
-                except Exception:
-                    traceback.print_exc()
+                except Exception as e:
+                    EXC_HANDLER(e)
                 finally:
                     self._started = False
                     if clean_dirs:
                         if self._stderr_file:
-                            # noinspection PyBroadException
                             try:
                                 self._stderr.close()
-                            except Exception:
-                                traceback.print_exc()
+                            except Exception as e:
+                                EXC_HANDLER(e)
                         try:
                             await asyncio.wait_for(
                                 # wait for

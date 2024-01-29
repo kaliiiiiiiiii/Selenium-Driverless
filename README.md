@@ -333,6 +333,18 @@ asyncio.run(main())
 ```
 </details>
 
+#### Custom exception handling
+You can implement custom exception handling as following
+
+```python
+import selenium_driverless
+import sys
+handler = (lambda e: print(f'Exception in event-handler:\n{e.__class__.__module__}.{e.__class__.__name__}: {e}',
+                           file=sys.stderr))
+sys.modules["selenium_driverless"].EXC_HANDLER = handler
+sys.modules["cdp_socket"].EXC_HANDLER = handler
+```
+
 ## Help
 
 You found a bug? Feel free to open an issue:)

@@ -20,7 +20,6 @@
 """The WebDriver implementation."""
 import inspect
 import time
-import traceback
 import typing
 import warnings
 
@@ -277,6 +276,7 @@ class Context:
 
                 target.quit()
         """
+        from selenium_driverless import EXC_HANDLER
         if not start_monotonic:
             start_monotonic = time.monotonic()
         # noinspection PyBroadException
@@ -288,10 +288,10 @@ class Context:
                                                            {"browserContextId": self.context_id})
                 except websockets.exceptions.ConnectionClosedError:
                     pass
-                except Exception:
+                except Exception as e:
                     import sys
-                    print('Ignoring exception at self.base_target.execute_cdp_cmd("Browser.close")', file=sys.stderr)
-                    traceback.print_exc()
+                    print('Ignoring exception at self.base_target.execute_cdp_cmd("Target.disposeBrowserContext")', file=sys.stderr)
+                    EXC_HANDLER(e)
             else:
                 targets = await self.targets
                 for target in list(targets.values()):
@@ -309,8 +309,8 @@ class Context:
                 res = callback()
                 if inspect.isawaitable(res):
                     await res
-        except Exception:
-            traceback.print_exc()
+        except Exception as e:
+            EXC_HANDLER(e)
 
     @property
     async def current_target_info(self):
