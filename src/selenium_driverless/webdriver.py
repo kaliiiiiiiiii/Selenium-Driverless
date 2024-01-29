@@ -70,7 +70,7 @@ class Chrome:
             options: ChromeOptions = None,
             timeout: float = 30,
             debug: bool = False,
-            max_ws_size: int = 2 ** 20
+            max_ws_size: int = 2 ** 27
     ) -> None:
         """Creates a new instance of the chrome target. Starts the service and
         then creates new instance of chrome target.
@@ -85,6 +85,7 @@ class Chrome:
         :param options: this takes an instance of ChromeOptions.rst
         :param timeout: timeout in seconds to start chrome
         :param debug: redirect errors from the chromium process output (stderr) to console
+        :param max_ws_size: maximum size for websocket messages in bytes. 2^27 ~= 130 MB by default
         """
         self._prefs = {}
         self._auth_interception_enabled = None

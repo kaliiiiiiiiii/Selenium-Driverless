@@ -147,7 +147,7 @@
             <span class="n">options</span><span class="p">:</span> <span class="n">ChromeOptions</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
             <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="n">max_ws_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">20</span>
+            <span class="n">max_ws_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">27</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a new instance of the chrome target. Starts the service and</span>
 <span class="sd">        then creates new instance of chrome target.</span>
@@ -162,6 +162,7 @@
 <span class="sd">        :param options: this takes an instance of ChromeOptions.rst</span>
 <span class="sd">        :param timeout: timeout in seconds to start chrome</span>
 <span class="sd">        :param debug: redirect errors from the chromium process output (stderr) to console</span>
+<span class="sd">        :param max_ws_size: maximum size for websocket messages in bytes. 2^27 ~= 130 MB by default</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_auth_interception_enabled</span> <span class="o">=</span> <span class="kc">None</span>
