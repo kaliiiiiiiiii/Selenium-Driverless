@@ -234,7 +234,7 @@ class Target:
         args = {"url": url, "transitionType": "link"}
         if referrer:
             args["referrer"] = referrer
-        get = asyncio.create_task(self.execute_cdp_cmd("Page.navigate", args, timeout=20))
+        get = asyncio.create_task(self.execute_cdp_cmd("Page.navigate", args, timeout=timeout))
         if wait_load:
             try:
                 await wait
