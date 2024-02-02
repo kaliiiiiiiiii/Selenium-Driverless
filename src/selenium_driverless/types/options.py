@@ -87,77 +87,6 @@ class Options(metaclass=ABCMeta):
         self.add_extension(sel_driverless_path() + "files/mv3_extension")
 
     @property
-    def auto_clean_dirs(self) -> bool or None:
-        """if user-data-dir should be cleaned automatically
-        defaults to True
-        """
-        return self._auto_clean_dirs
-
-    @auto_clean_dirs.setter
-    def auto_clean_dirs(self, enabled: bool = True) -> None:
-        self._auto_clean_dirs = enabled
-
-    def enable_mobile(
-            self,
-            android_package: str = "com.android.chrome",
-            android_activity: Optional[str] = None,
-            device_serial: Optional[str] = None,
-    ) -> None:
-        """Enables mobile browser use for browsers that support it.
-
-        :param android_activity: The name of the android package to start
-        :param android_package:
-        :param device_serial:
-        """
-        raise NotImplementedError()
-        if not android_package:
-            raise AttributeError("android_package must be passed in")
-        self.mobile_options = {"androidPackage": android_package}
-        if android_activity:
-            self.mobile_options["androidActivity"] = android_activity
-        if device_serial:
-            self.mobile_options["androidDeviceSerial"] = device_serial
-
-    @property
-    def accept_insecure_certs(self) -> bool:
-        """
-        :returns: whether the session accepts insecure certificates
-        """
-        raise NotImplementedError()
-        return self._caps.get("acceptInsecureCerts", False)
-
-    @property
-    def single_proxy(self):
-        """
-        Set a single proxy to be applied.
-
-        .. code-block:: python
-
-            options = webdriver.ChromeOptions()
-            options.single_proxy = "http://user1:passwrd1@example.proxy.com:5001/"
-
-        .. warning::
-
-            - Only supported when Chrome has been started with driverless or the extension at ``selenium_driverless/files/mv3_extension`` has been loaded into the browser.
-
-            - ``Socks5`` doesn't support authentication due to `crbug#1309413 <https://bugs.chromium.org/p/chromium/issues/detail?id=1309413>`__.
-
-        """
-
-        return self._single_proxy
-
-    @single_proxy.setter
-    def single_proxy(self, proxy: str):
-        self._single_proxy = proxy
-
-    @property
-    def prefs(self) -> dict:
-        return self._prefs
-
-    def update_pref(self, pref: str, value):
-        self._prefs.update(prefs_to_json({pref: value}))
-
-    @property
     def arguments(self) -> typing.List[str]:
         """
         used arguments for the chrome executable
@@ -196,6 +125,19 @@ class Options(metaclass=ABCMeta):
             raise ValueError("argument has to be str")
 
     @property
+    def prefs(self) -> dict:
+        """the preferences as json"""
+        return self._prefs
+
+    def update_pref(self, pref: str, value):
+        """update a preference
+
+        :param pref: name of the preference ("." dot path)
+        :param value: the value to set the preference to
+        """
+        self._prefs.update(prefs_to_json({pref: value}))
+
+    @property
     def user_data_dir(self) -> str:
         """the directory to save all browser data in.
         ``None`` (default) will temporarily create a directory in $temp
@@ -205,62 +147,6 @@ class Options(metaclass=ABCMeta):
     @user_data_dir.setter
     def user_data_dir(self, _dir: str):
         self.add_argument(f"--user-data-dir={_dir}")
-
-    def ignore_local_proxy_environment_variables(self) -> None:
-        """By calling this you will ignore HTTP_PROXY and HTTPS_PROXY from
-        being picked up and used."""
-        raise NotImplementedError()
-        self._ignore_local_proxy = True
-
-    @property
-    def binary_location(self) -> str:
-        """
-        path to the Chromium binary
-        """
-        return self._binary_location
-
-    @binary_location.setter
-    def binary_location(self, value: str) -> None:
-        self._binary_location = value
-
-    @property
-    def debugger_address(self) -> str:
-        """
-        The address of the remote devtools instance
-        Setting this value makes the driver connect to a remote browser instance.
-        """
-        return self._debugger_address
-
-    @debugger_address.setter
-    def debugger_address(self, value: str) -> None:
-        self._debugger_address = value
-
-    def add_extension(self, path: str) -> None:
-        """Adds an extension to Chrome
-        The extension can either be a compressed file (zip, crx, etc.) or extracted in a directory
-
-        :param path: path to the extension
-        """
-        extension_to_add = os.path.abspath(os.path.expanduser(path))
-        if os.path.exists(extension_to_add):
-            self._extension_paths.append(extension_to_add)
-        else:
-            raise OSError("Path to the extension doesn't exist")
-
-    def add_experimental_option(self, name: str, value: Union[str, int, dict, List[str]]) -> None:
-        """Adds an experimental option which is passed to chromium.
-
-        .. warning::
-            only ``name="prefs"`` supported.
-            This method is deprecated and will be removed. Use :obj:`ChromeOptions.update_pref` instead.
-
-        :param name: The experimental option name.
-        :param value: The option value.
-        """
-        if name == "prefs":
-            self.prefs.update(prefs_to_json(value))
-        else:
-            raise NotImplementedError()
 
     @property
     def headless(self) -> bool:
@@ -287,3 +173,134 @@ class Options(metaclass=ABCMeta):
         if url is None:
             url = ""
         self._startup_url = url
+
+    @property
+    def single_proxy(self):
+        """
+        Set a single proxy to be applied.
+
+        .. code-block:: python
+
+            options = webdriver.ChromeOptions()
+            options.single_proxy = "http://user1:passwrd1@example.proxy.com:5001/"
+
+        .. warning::
+
+            - Only supported when Chrome has been started with driverless or the extension at ``selenium_driverless/files/mv3_extension`` has been loaded into the browser.
+
+            - ``Socks5`` doesn't support authentication due to `crbug#1309413 <https://bugs.chromium.org/p/chromium/issues/detail?id=1309413>`__.
+
+        """
+
+        return self._single_proxy
+
+    @property
+    def binary_location(self) -> str:
+        """
+        path to the Chromium binary
+        """
+        return self._binary_location
+
+    @binary_location.setter
+    def binary_location(self, value: str) -> None:
+        self._binary_location = value
+
+    def add_extension(self, path: str) -> None:
+        """Adds an extension to Chrome
+        The extension can either be a compressed file (zip, crx, etc.) or extracted in a directory
+
+        :param path: path to the extension
+        """
+        extension_to_add = os.path.abspath(os.path.expanduser(path))
+        if os.path.exists(extension_to_add):
+            self._extension_paths.append(extension_to_add)
+        else:
+            raise OSError("Path to the extension doesn't exist")
+
+    @property
+    def debugger_address(self) -> str:
+        """
+        The address of the remote devtools instance
+        Setting this value makes the driver connect to a remote browser instance.
+        """
+        return self._debugger_address
+
+    @debugger_address.setter
+    def debugger_address(self, value: str) -> None:
+        self._debugger_address = value
+
+    @single_proxy.setter
+    def single_proxy(self, proxy: str):
+        self._single_proxy = proxy
+
+    @property
+    def auto_clean_dirs(self) -> bool or None:
+        """if user-data-dir should be cleaned automatically
+        defaults to True
+        """
+        return self._auto_clean_dirs
+
+    @auto_clean_dirs.setter
+    def auto_clean_dirs(self, enabled: bool = True) -> None:
+        self._auto_clean_dirs = enabled
+
+    def enable_mobile(
+            self,
+            android_package: str = "com.android.chrome",
+            android_activity: Optional[str] = None,
+            device_serial: Optional[str] = None,
+    ) -> None:
+        """Enables mobile browser use for browsers that support it.
+
+        :param android_activity: The name of the android package to start
+        :param android_package:
+        :param device_serial:
+
+        .. warning::
+
+            Not Implemented yet
+        """
+        raise NotImplementedError()
+        if not android_package:
+            raise AttributeError("android_package must be passed in")
+        self.mobile_options = {"androidPackage": android_package}
+        if android_activity:
+            self.mobile_options["androidActivity"] = android_activity
+        if device_serial:
+            self.mobile_options["androidDeviceSerial"] = device_serial
+
+    @property
+    def accept_insecure_certs(self) -> bool:
+        """
+        :returns: whether the session accepts insecure certificates
+
+        .. warning::
+            NotImplemented yet
+        """
+        raise NotImplementedError()
+        return self._caps.get("acceptInsecureCerts", False)
+
+    def ignore_local_proxy_environment_variables(self) -> None:
+        """By calling this you will ignore HTTP_PROXY and HTTPS_PROXY from
+        being picked up and used.
+
+        .. warning::
+            NotImplemented yet
+        """
+        raise NotImplementedError()
+        self._ignore_local_proxy = True
+
+    def add_experimental_option(self, name: str, value: Union[str, int, dict, List[str]]) -> None:
+        """Adds an experimental option which is passed to chromium.
+
+        .. warning::
+            only ``name="prefs"`` supported.
+            This method is deprecated and will be removed. Use :obj:`ChromeOptions.update_pref` instead.
+
+        :param name: The experimental option name.
+        :param value: The option value.
+        """
+        if name == "prefs":
+            self.prefs.update(prefs_to_json(value))
+        else:
+            raise NotImplementedError()
