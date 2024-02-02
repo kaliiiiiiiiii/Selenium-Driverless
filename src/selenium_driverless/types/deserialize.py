@@ -243,7 +243,7 @@ class JSRemoteObj:
                                       execution_context_id=exec_context)
         return res
 
-    async def __async_eval__(self, script: str, *args, max_depth: int = 2,
+    async def __eval_async__(self, script: str, *args, max_depth: int = 2,
                              serialization: str = None, timeout: float = 2,
                              obj_id=None, execution_context_id: str = None,
                              unique_context: bool = False):

@@ -15,7 +15,7 @@ async def make_driver():
 
 async def nowsecure(driver):
     async def get_elem():
-        return await driver.find_element(By.XPATH, "/html/body/div[2]/div/main/p[2]/a")
+        return await driver.find_element(By.XPATH, "/html/body/div[2]/div/main/p[2]/a", timeout=2)
     await driver.focus()
 
     await asyncio.sleep(2)

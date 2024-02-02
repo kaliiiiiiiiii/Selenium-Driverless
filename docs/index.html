@@ -21,7 +21,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex/" />
     <link rel="search" title="Search" href="search/" />
-    <link rel="next" title="webdriver.Chrome" href="classes/Chrome/" /> 
+    <link rel="next" title="By Element Locator" href="classes/By/" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,8 +44,10 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="classes/By/">By Element Locator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="classes/Chrome/">webdriver.Chrome</a></li>
 <li class="toctree-l1"><a class="reference internal" href="classes/ChromeOptions/">ChromeOptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="classes/Target/">Target</a></li>
 </ul>
 
         </div>
@@ -78,7 +80,8 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>this is not complete yet at all:)</p>
+<p>this is not complete yet at all:)
+some methods aren’t documented yet properly</p>
 </div>
 </section>
 <section id="indices-and-tables">
@@ -92,9 +95,21 @@
 <h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="classes/By/">By Element Locator</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="classes/By/#selenium_driverless.types.by.By"><code class="docutils literal notranslate"><span class="pre">By</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="classes/By/#selenium_driverless.types.by.By.ID"><code class="docutils literal notranslate"><span class="pre">By.ID</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/By/#selenium_driverless.types.by.By.XPATH"><code class="docutils literal notranslate"><span class="pre">By.XPATH</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/By/#selenium_driverless.types.by.By.NAME"><code class="docutils literal notranslate"><span class="pre">By.NAME</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/By/#selenium_driverless.types.by.By.TAG_NAME"><code class="docutils literal notranslate"><span class="pre">By.TAG_NAME</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/By/#selenium_driverless.types.by.By.CLASS_NAME"><code class="docutils literal notranslate"><span class="pre">By.CLASS_NAME</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/By/#selenium_driverless.types.by.By.CSS_SELECTOR"><code class="docutils literal notranslate"><span class="pre">By.CSS_SELECTOR</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/By/#selenium_driverless.types.by.By.CSS"><code class="docutils literal notranslate"><span class="pre">By.CSS</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="classes/Chrome/">webdriver.Chrome</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome"><code class="docutils literal notranslate"><span class="pre">Chrome</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.__init__"><code class="docutils literal notranslate"><span class="pre">Chrome.__init__()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.frame_tree"><code class="docutils literal notranslate"><span class="pre">Chrome.frame_tree</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.targets"><code class="docutils literal notranslate"><span class="pre">Chrome.targets</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.contexts"><code class="docutils literal notranslate"><span class="pre">Chrome.contexts</span></code></a></li>
@@ -115,6 +130,7 @@
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.execute_raw_script"><code class="docutils literal notranslate"><span class="pre">Chrome.execute_raw_script()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.execute_script"><code class="docutils literal notranslate"><span class="pre">Chrome.execute_script()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.execute_async_script"><code class="docutils literal notranslate"><span class="pre">Chrome.execute_async_script()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.eval_async"><code class="docutils literal notranslate"><span class="pre">Chrome.eval_async()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.current_url"><code class="docutils literal notranslate"><span class="pre">Chrome.current_url</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.page_source"><code class="docutils literal notranslate"><span class="pre">Chrome.page_source</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.close"><code class="docutils literal notranslate"><span class="pre">Chrome.close()</span></code></a></li>
@@ -131,6 +147,7 @@
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.fullscreen_window"><code class="docutils literal notranslate"><span class="pre">Chrome.fullscreen_window()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.minimize_window"><code class="docutils literal notranslate"><span class="pre">Chrome.minimize_window()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.print_page"><code class="docutils literal notranslate"><span class="pre">Chrome.print_page()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.switch_to"><code class="docutils literal notranslate"><span class="pre">Chrome.switch_to</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.back"><code class="docutils literal notranslate"><span class="pre">Chrome.back()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.forward"><code class="docutils literal notranslate"><span class="pre">Chrome.forward()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.refresh"><code class="docutils literal notranslate"><span class="pre">Chrome.refresh()</span></code></a></li>
@@ -140,6 +157,31 @@
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.delete_all_cookies"><code class="docutils literal notranslate"><span class="pre">Chrome.delete_all_cookies()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.add_cookie"><code class="docutils literal notranslate"><span class="pre">Chrome.add_cookie()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.sleep"><code class="docutils literal notranslate"><span class="pre">Chrome.sleep()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.find_element"><code class="docutils literal notranslate"><span class="pre">Chrome.find_element()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.find_elements"><code class="docutils literal notranslate"><span class="pre">Chrome.find_elements()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.search_elements"><code class="docutils literal notranslate"><span class="pre">Chrome.search_elements()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.get_screenshot_as_file"><code class="docutils literal notranslate"><span class="pre">Chrome.get_screenshot_as_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.save_screenshot"><code class="docutils literal notranslate"><span class="pre">Chrome.save_screenshot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.get_screenshot_as_png"><code class="docutils literal notranslate"><span class="pre">Chrome.get_screenshot_as_png()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.get_screenshot_as_base64"><code class="docutils literal notranslate"><span class="pre">Chrome.get_screenshot_as_base64()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.set_window_size"><code class="docutils literal notranslate"><span class="pre">Chrome.set_window_size()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.get_window_size"><code class="docutils literal notranslate"><span class="pre">Chrome.get_window_size()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.set_window_position"><code class="docutils literal notranslate"><span class="pre">Chrome.set_window_position()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.get_window_position"><code class="docutils literal notranslate"><span class="pre">Chrome.get_window_position()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.get_window_rect"><code class="docutils literal notranslate"><span class="pre">Chrome.get_window_rect()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.set_window_rect"><code class="docutils literal notranslate"><span class="pre">Chrome.set_window_rect()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.get_network_conditions"><code class="docutils literal notranslate"><span class="pre">Chrome.get_network_conditions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.set_network_conditions"><code class="docutils literal notranslate"><span class="pre">Chrome.set_network_conditions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.delete_network_conditions"><code class="docutils literal notranslate"><span class="pre">Chrome.delete_network_conditions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.set_permissions"><code class="docutils literal notranslate"><span class="pre">Chrome.set_permissions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.set_proxy"><code class="docutils literal notranslate"><span class="pre">Chrome.set_proxy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.execute_cdp_cmd"><code class="docutils literal notranslate"><span class="pre">Chrome.execute_cdp_cmd()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.get_sinks"><code class="docutils literal notranslate"><span class="pre">Chrome.get_sinks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.get_issue_message"><code class="docutils literal notranslate"><span class="pre">Chrome.get_issue_message()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.set_sink_to_use"><code class="docutils literal notranslate"><span class="pre">Chrome.set_sink_to_use()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.start_desktop_mirroring"><code class="docutils literal notranslate"><span class="pre">Chrome.start_desktop_mirroring()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.start_tab_mirroring"><code class="docutils literal notranslate"><span class="pre">Chrome.start_tab_mirroring()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Chrome/#selenium_driverless.webdriver.Chrome.stop_casting"><code class="docutils literal notranslate"><span class="pre">Chrome.stop_casting()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -148,6 +190,7 @@
 <li class="toctree-l2"><a class="reference internal" href="classes/ChromeOptions/#selenium_driverless.types.options.Options"><code class="docutils literal notranslate"><span class="pre">Options</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="classes/ChromeOptions/#selenium_driverless.types.options.Options.arguments"><code class="docutils literal notranslate"><span class="pre">Options.arguments</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/ChromeOptions/#selenium_driverless.types.options.Options.add_argument"><code class="docutils literal notranslate"><span class="pre">Options.add_argument()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/ChromeOptions/#selenium_driverless.types.options.Options.add_arguments"><code class="docutils literal notranslate"><span class="pre">Options.add_arguments()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/ChromeOptions/#selenium_driverless.types.options.Options.prefs"><code class="docutils literal notranslate"><span class="pre">Options.prefs</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/ChromeOptions/#selenium_driverless.types.options.Options.update_pref"><code class="docutils literal notranslate"><span class="pre">Options.update_pref()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="classes/ChromeOptions/#selenium_driverless.types.options.Options.user_data_dir"><code class="docutils literal notranslate"><span class="pre">Options.user_data_dir</span></code></a></li>
@@ -166,6 +209,56 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="classes/Target/">Target</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target"><code class="docutils literal notranslate"><span class="pre">Target</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.get"><code class="docutils literal notranslate"><span class="pre">Target.get()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.execute_raw_script"><code class="docutils literal notranslate"><span class="pre">Target.execute_raw_script()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.execute_script"><code class="docutils literal notranslate"><span class="pre">Target.execute_script()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.execute_async_script"><code class="docutils literal notranslate"><span class="pre">Target.execute_async_script()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.eval_async"><code class="docutils literal notranslate"><span class="pre">Target.eval_async()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.current_url"><code class="docutils literal notranslate"><span class="pre">Target.current_url</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.page_source"><code class="docutils literal notranslate"><span class="pre">Target.page_source</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.close"><code class="docutils literal notranslate"><span class="pre">Target.close()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.title"><code class="docutils literal notranslate"><span class="pre">Target.title</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.print_page"><code class="docutils literal notranslate"><span class="pre">Target.print_page()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.back"><code class="docutils literal notranslate"><span class="pre">Target.back()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.forward"><code class="docutils literal notranslate"><span class="pre">Target.forward()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.refresh"><code class="docutils literal notranslate"><span class="pre">Target.refresh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.get_cookies"><code class="docutils literal notranslate"><span class="pre">Target.get_cookies()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.get_cookie"><code class="docutils literal notranslate"><span class="pre">Target.get_cookie()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.delete_cookie"><code class="docutils literal notranslate"><span class="pre">Target.delete_cookie()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.delete_all_cookies"><code class="docutils literal notranslate"><span class="pre">Target.delete_all_cookies()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.add_cookie"><code class="docutils literal notranslate"><span class="pre">Target.add_cookie()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.search_elements"><code class="docutils literal notranslate"><span class="pre">Target.search_elements()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.get_screenshot_as_file"><code class="docutils literal notranslate"><span class="pre">Target.get_screenshot_as_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.save_screenshot"><code class="docutils literal notranslate"><span class="pre">Target.save_screenshot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.get_screenshot_as_png"><code class="docutils literal notranslate"><span class="pre">Target.get_screenshot_as_png()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.get_screenshot_as_base64"><code class="docutils literal notranslate"><span class="pre">Target.get_screenshot_as_base64()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.get_network_conditions"><code class="docutils literal notranslate"><span class="pre">Target.get_network_conditions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.set_network_conditions"><code class="docutils literal notranslate"><span class="pre">Target.set_network_conditions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.delete_network_conditions"><code class="docutils literal notranslate"><span class="pre">Target.delete_network_conditions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.execute_cdp_cmd"><code class="docutils literal notranslate"><span class="pre">Target.execute_cdp_cmd()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.get_sinks"><code class="docutils literal notranslate"><span class="pre">Target.get_sinks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.get_issue_message"><code class="docutils literal notranslate"><span class="pre">Target.get_issue_message()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.set_sink_to_use"><code class="docutils literal notranslate"><span class="pre">Target.set_sink_to_use()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.start_desktop_mirroring"><code class="docutils literal notranslate"><span class="pre">Target.start_desktop_mirroring()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.start_tab_mirroring"><code class="docutils literal notranslate"><span class="pre">Target.start_tab_mirroring()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.Target.stop_casting"><code class="docutils literal notranslate"><span class="pre">Target.stop_casting()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.TargetInfo"><code class="docutils literal notranslate"><span class="pre">TargetInfo</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.TargetInfo.Target"><code class="docutils literal notranslate"><span class="pre">TargetInfo.Target</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.TargetInfo.id"><code class="docutils literal notranslate"><span class="pre">TargetInfo.id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.TargetInfo.attached"><code class="docutils literal notranslate"><span class="pre">TargetInfo.attached</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.TargetInfo.opener_id"><code class="docutils literal notranslate"><span class="pre">TargetInfo.opener_id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.TargetInfo.can_access_opener"><code class="docutils literal notranslate"><span class="pre">TargetInfo.can_access_opener</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.TargetInfo.opener_frame_id"><code class="docutils literal notranslate"><span class="pre">TargetInfo.opener_frame_id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.TargetInfo.browser_context_id"><code class="docutils literal notranslate"><span class="pre">TargetInfo.browser_context_id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="classes/Target/#selenium_driverless.types.target.TargetInfo.subtype"><code class="docutils literal notranslate"><span class="pre">TargetInfo.subtype</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
@@ -175,7 +268,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="classes/Chrome/" class="btn btn-neutral float-right" title="webdriver.Chrome" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="classes/By/" class="btn btn-neutral float-right" title="By Element Locator" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

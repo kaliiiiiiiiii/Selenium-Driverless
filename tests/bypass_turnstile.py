@@ -7,7 +7,7 @@ from selenium_driverless.types.webelement import NoSuchElementException
 
 async def main():
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless=new")
+    # options.add_argument("--headless=new")
     async with webdriver.Chrome(options=options) as driver:
         await driver.get("https://nopecha.com/demo/turnstile")
         await asyncio.sleep(0.5)

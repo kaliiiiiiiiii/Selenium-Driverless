@@ -124,6 +124,14 @@ class Options(metaclass=ABCMeta):
         else:
             raise ValueError("argument has to be str")
 
+    def add_arguments(self, *arguments:str):
+        """add multiple arguments
+
+        :param arguments: *arguments to add
+        """
+        for arg in arguments:
+            self.add_argument(arg)
+
     @property
     def prefs(self) -> dict:
         """the preferences as json"""

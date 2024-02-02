@@ -227,6 +227,29 @@ class Context:
                                                  execution_context_id=execution_context_id,
                                                  unique_context=unique_context)
 
+    async def eval_async(self, script: str, *args, max_depth: int = 2,
+                         serialization: str = None, timeout: int = 2,
+                         target_id: str = None, execution_context_id: str = None,
+                         unique_context: bool = False):
+        """executes JavaScript asynchronously on ``GlobalThis`` such as
+
+        .. code-block:: js
+
+            res = await fetch("https://httpbin.org/get");
+            // mind CORS!
+            json = await res.json()
+            return json
+
+        ``this`` refers to ``globalThis`` (=> window)
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
+        """
+        target = await self.get_target(target_id)
+        return await target.eval_async(script, *args, max_depth=max_depth, serialization=serialization,
+                                       timeout=timeout,
+                                       execution_context_id=execution_context_id,
+                                       unique_context=unique_context)
+
     @property
     async def current_url(self) -> str:
         """Gets the URL of the current page.
@@ -729,8 +752,10 @@ class Context:
         target = await self.get_target(target_id=target_id)
         return await target.get_network_conditions()
 
-    async def set_network_conditions(self, offline: bool, latency: int, download_throughput: int,
-                                     upload_throughput: int, connection_type: None, target_id: str = None) -> None:
+    async def set_network_conditions(self, offline: bool, latency: int, download_throughput: int, upload_throughput: int,
+                                     connection_type: typing.Literal[
+                                         "none", "cellular2g", "cellular3g", "cellular4g", "bluetooth", "ethernet", "wifi", "wimax", "other"],
+                                     target_id: str = None) -> None:
         """Sets Chromium network emulation settings.
 
         :Args:

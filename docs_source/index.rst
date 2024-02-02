@@ -7,6 +7,7 @@ Documentation Selenium-Driverless
 
 .. note::
     this is not complete yet at all:)
+    some methods aren't documented yet properly
 
 
 

@@ -286,16 +286,33 @@ class Target:
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
                                  max_depth: int = None, timeout: float = 2, execution_context_id: str = None,
                                  unique_context: bool = False):
+        """executes a JavaScript on ``GlobalThis`` such as
+
+        .. code-block:: js
+
+            function(...arguments){return document}
+
+        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
+
+        :param script: the script as a string
+        :param args: the argument which are passed to the function. Those can be either json-serializable or a RemoteObject such as WebELement
+        :param await_res: whether to await the function or the return value of it
+        :param serialization: can be one of ``deep``, ``json``, ``idOnly``
+        :param max_depth: The maximum depth objects get serialized.
+        :param timeout: the maximum time to wait for the execution to complete
+        :param execution_context_id: the execution context id to run the JavaScript in. Exclusive with unique_context
+        :param unique_context: whether to use a isolated context to run the Script in.
+
+        see `Runtime.callFunctionOn <https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#method-callFunctionOn>`_
         """
-        example:
-        script= "function(...arguments){obj.click()}"
-        "const obj" will be the Object according to obj_id
-        this is by default globalThis (=> window)
-        """
+
         if execution_context_id and unique_context:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
         if unique_context:
             execution_context_id = await self._isolated_context_id
+
+        if timeout is None:
+            timeout = 2
 
         globalthis = await self._global_this(execution_context_id)
         try:
@@ -313,50 +330,99 @@ class Target:
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                              timeout: float = None, execution_context_id: str = None,
                              unique_context: bool = None):
-        """
-        example: script = "return elem.click()"
+        """executes JavaScript synchronously on ``GlobalThis`` such as
+
+        .. code-block:: js
+
+            return document
+
+        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
         if execution_context_id and unique_context:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
         if unique_context:
             execution_context_id = await self._isolated_context_id
+        if timeout is None:
+            timeout = 2
 
-        globalthis = await self._global_this(execution_context_id)
-        try:
-            res = await globalthis.__exec__(script, *args, serialization=serialization,
-                                            max_depth=max_depth, timeout=timeout,
-                                            execution_context_id=execution_context_id)
-        except StaleJSRemoteObjReference:
-            await self.wait_for_cdp("Page.loadEventFired", timeout)
-            globalthis = await self._global_this(execution_context_id)
-            res = await globalthis.__exec__(script, *args, serialization=serialization,
-                                            max_depth=max_depth, timeout=timeout,
-                                            execution_context_id=execution_context_id)
-        return res
+        start = time.monotonic()
+        while (time.monotonic() - start) < timeout:
+            global_this = await self._global_this(execution_context_id)
+            try:
+                res = await global_this.__exec__(script, *args, serialization=serialization,
+                                                 max_depth=max_depth, timeout=timeout,
+                                                 execution_context_id=execution_context_id)
+                return res
+            except StaleJSRemoteObjReference:
+                pass
+        raise asyncio.TimeoutError("Couldn't execute script, possibly due to a reload loop")
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                                    timeout: float = None, execution_context_id: str = None,
                                    unique_context: bool = None):
+        """executes JavaScript asynchronously on ``GlobalThis``
+
+        .. code-block:: js
+
+            resolve = arguments[arguments.length-1]
+
+        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
-        example: script = "return elem.click()"
+        if execution_context_id and unique_context:
+            warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
+        if unique_context:
+            execution_context_id = await self._isolated_context_id
+        if timeout is None:
+            timeout = 2
+
+        start = time.monotonic()
+        while (time.monotonic() - start) < timeout:
+            global_this = await self._global_this(execution_context_id)
+            try:
+                res = await global_this.__exec_async__(script, *args, serialization=serialization,
+                                                       max_depth=max_depth, timeout=timeout,
+                                                       execution_context_id=execution_context_id)
+                return res
+            except StaleJSRemoteObjReference:
+                await asyncio.sleep(0)
+        raise asyncio.TimeoutError("Couldn't execute script, possibly due to a reload loop")
+
+    async def eval_async(self, script: str, *args, max_depth: int = 2, serialization: str = None,
+                         timeout: float = None, execution_context_id: str = None,
+                         unique_context: bool = None):
+        """executes JavaScript asynchronously on ``GlobalThis`` such as
+
+        .. code-block:: js
+
+            res = await fetch("https://httpbin.org/get");
+            // mind CORS!
+            json = await res.json()
+            return json
+
+        ``this`` refers to ``globalThis`` (=> window)
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
         if execution_context_id and unique_context:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
         if unique_context:
             execution_context_id = await self._isolated_context_id
 
-        globalthis = await self._global_this(execution_context_id)
-        try:
-            res = await globalthis.__exec_async__(script, *args, serialization=serialization,
-                                                  max_depth=max_depth, timeout=timeout,
-                                                  execution_context_id=execution_context_id)
-        except StaleJSRemoteObjReference:
-            await self.wait_for_cdp("Page.loadEventFired", timeout)
-            globalthis = await self._global_this(execution_context_id)
-            res = await globalthis.__exec_async__(script, *args, serialization=serialization,
-                                                  max_depth=max_depth, timeout=timeout,
-                                                  execution_context_id=execution_context_id)
-        return res
+        start = time.monotonic()
+        while (time.monotonic() - start) < timeout:
+            global_this = await self._global_this(execution_context_id)
+            try:
+                res = await global_this.__eval_async__(script, *args, serialization=serialization,
+                                                       max_depth=max_depth, timeout=timeout,
+                                                       execution_context_id=execution_context_id)
+                return res
+            except StaleJSRemoteObjReference:
+                await asyncio.sleep(0)
+        raise asyncio.TimeoutError("Couldn't execute script, possibly due to a reload loop")
 
     @property
     async def current_url(self) -> str:
@@ -534,21 +600,9 @@ class Target:
 
     # noinspection GrazieInspection
     async def add_cookie(self, cookie_dict) -> None:
-        """Adds a cookie to your current session.
+        """Adds a cookie in the current (incognito-) context
 
-        :Args:
-         - cookie_dict: A dictionary object, with required keys - "name" and "value";
-            optional keys - "path", "domain", "secure", "httpOnly", "expiry", "sameSite"
-
-        :Usage:
-            ::
-
-                target.add_cookie({'name' : 'foo', 'value' : 'bar'})
-                target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/'})
-                target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/', 'secure' : True})
-                target.add_cookie({'name' : 'foo', 'value' : 'bar', 'sameSite' : 'Strict'})
-            ..etc
-            see https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-CookieParam
+        :param cookie_dict: see `Network.CookieParam <https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-CookieParam>`__
         """
         if not (cookie_dict.get("url") or cookie_dict.get("domain") or cookie_dict.get("path")):
             cookie_dict["url"] = await self.current_url
@@ -714,8 +768,9 @@ class Target:
         """
         raise NotImplementedError("not started with chromedriver")
 
-    async def set_network_conditions(self, offline: bool, latency: int, download_throughput: int,
-                                     upload_throughput: int, connection_type: None) -> None:
+    async def set_network_conditions(self, offline: bool, latency: int, download_throughput: int, upload_throughput: int,
+                                     connection_type: typing.Literal[
+                                         "none", "cellular2g", "cellular3g", "cellular4g", "bluetooth", "ethernet", "wifi", "wimax", "other"]) -> None:
         """Sets Chromium network emulation settings.
 
         :Args:
@@ -852,6 +907,14 @@ class Target:
 
 
 class TargetInfo:
+    """
+    Info for a Target
+
+    .. note::
+
+        the infos are not dynamic
+    """
+
     def __init__(self, target_info: dict, target_getter: asyncio.Future or Target):
         self._id = target_info.get('targetId')
         self._type = target_info.get("type")
@@ -878,46 +941,56 @@ class TargetInfo:
     # noinspection PyPep8Naming
     @property
     def Target(self) -> Target:
+        """
+        the Target itself
+        """
         return self._target
 
     @property
-    def id(self):
+    def id(self) -> str:
+        """the ``Target.TargetID``"""
         return self._id
 
     @property
-    def type(self):
+    def type(self) -> str:
         return self._type
 
     @property
-    def title(self):
+    def title(self) -> str:
         return self._title
 
     @property
-    def url(self):
+    def url(self) -> str:
         return self._url
 
     @property
-    def attached(self):
+    def attached(self) -> str:
+        """Whether the target has an attached client."""
         return self._attached
 
     @property
-    def opener_id(self):
+    def opener_id(self) -> str:
+        """Opener ``Target.TargetId``"""
         return self._opener_id
 
     @property
     def can_access_opener(self):
+        """Whether the target has access to the originating window."""
         return self._can_access_opener
 
     @property
     def opener_frame_id(self):
+        """``Page.FrameId`` of originating window (is only set if target has an opener)."""
         return self._opener_frame_id
 
     @property
     def browser_context_id(self):
+        """``Browser.BrowserContextID``"""
         return self._browser_context_id
 
     @property
     def subtype(self):
+        """Provides additional details for specific target types. For example, for the type of "page", this may be set to "portal" or "prerender"""
         return self._subtype
 
     def __repr__(self):
