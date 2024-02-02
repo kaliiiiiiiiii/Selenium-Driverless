@@ -243,6 +243,39 @@ class JSRemoteObj:
                                       execution_context_id=exec_context)
         return res
 
+    async def __async_eval__(self, script: str, *args, max_depth: int = 2,
+                             serialization: str = None, timeout: float = 2,
+                             obj_id=None, execution_context_id: str = None,
+                             unique_context: bool = False):
+        from selenium_driverless.types.webelement import WebElement
+
+        exec_context = self.__context_id__
+
+        if execution_context_id and unique_context:
+            warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
+        if execution_context_id:
+            exec_context = execution_context_id
+        elif unique_context:
+            # noinspection PyProtectedMember
+            exec_context = await self.__isolated_exec_id__
+
+        if isinstance(self, WebElement):
+            obj_id = await self.__obj_id_for_context__(exec_context)
+
+        if exec_context and obj_id:
+            args = [self, *args]
+            script = """
+                        (async function(...arguments){
+                            const obj = arguments.shift();""" + script + "})"
+        else:
+            script = """(async function(...arguments){
+                                           const obj = this;""" + script + "})"
+        res = await self.__exec_raw__(script, *args, max_depth=max_depth,
+                                      serialization=serialization, timeout=timeout,
+                                      await_res=True,
+                                      execution_context_id=exec_context)
+        return res
+
 
 class JSObject(JSRemoteObj, dict):
     def __init__(self, obj_id: str, target, isolated_exec_id: int, frame_id: int, description: str = None,
