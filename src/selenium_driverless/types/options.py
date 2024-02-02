@@ -220,8 +220,8 @@ class Options(metaclass=ABCMeta):
     @property
     def debugger_address(self) -> str:
         """
-        The address of the remote devtools instance
-        Setting this value makes the driver connect to a remote browser instance.
+        The address of the remote devtools instance in format "host:port"
+        Setting this value makes the driver connect to a remote browser instance (unless you set user-data-dir as well)
         """
         return self._debugger_address
 

@@ -304,8 +304,8 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">debugger_address</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The address of the remote devtools instance</span>
-<span class="sd">        Setting this value makes the driver connect to a remote browser instance.</span>
+<span class="sd">        The address of the remote devtools instance in format &quot;host:port&quot;</span>
+<span class="sd">        Setting this value makes the driver connect to a remote browser instance (unless you set user-data-dir as well)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debugger_address</span>
 

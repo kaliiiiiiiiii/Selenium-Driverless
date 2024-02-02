@@ -9,14 +9,16 @@ loop = asyncio.get_event_loop()
 
 async def make_driver():
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless=new")
+    # options.add_argument("--headless=new")
     return await webdriver.Chrome(options, debug=True)
 
 
 async def nowsecure(driver):
     async def get_elem():
         return await driver.find_element(By.XPATH, "/html/body/div[2]/div/main/p[2]/a")
+    await driver.focus()
 
+    await asyncio.sleep(2)
     await driver.get("https://nowsecure.nl#relax", wait_load=True)
     await asyncio.sleep(0.5)
     await driver.wait_for_cdp("Page.domContentEventFired")
@@ -48,7 +50,7 @@ async def unique_execution_context(driver):
 
 async def bet365(driver):
     async def click_login():
-        login_button = await driver.find_element(By.XPATH, value='//div[contains(@class, "ovm-ParticipantOddsOnly")]', timeout=30)
+        login_button = await driver.find_element(By.XPATH, value='/html/body/div[1]/div/div[4]/div[1]/div/div[2]/div[4]/div[2]/div', timeout=30)
         await login_button.click()
 
     await driver.focus()
@@ -105,7 +107,6 @@ class Driver(unittest.TestCase):
             prompt,
             bet365,
             unique_execution_context,
-            nowsecure,
             selenium_detector
         ]
         driver = await make_driver()
@@ -117,6 +118,12 @@ class Driver(unittest.TestCase):
                 coros.append(test(target))
 
             await asyncio.gather(*coros)
+        except Exception as e:
+            await driver.quit()
+            raise e
+
+        try:
+            await nowsecure(driver)
         except Exception as e:
             await driver.quit()
             raise e
