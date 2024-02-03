@@ -313,7 +313,6 @@ class Context:
                     pass
                 except Exception as e:
                     import sys
-                    print('Ignoring exception at self.base_target.execute_cdp_cmd("Target.disposeBrowserContext")', file=sys.stderr)
                     EXC_HANDLER(e)
             else:
                 targets = await self.targets

@@ -757,8 +757,6 @@ class Chrome:
             except websockets.ConnectionClosedError:
                 pass
             except Exception as e:
-                import sys
-                print('Ignoring exception at driver.base_target.execute_cdp_cmd("Browser.close")', file=sys.stderr)
                 EXC_HANDLER(e)
             if not self._is_remote:
                 if self._process is not None:
@@ -766,9 +764,6 @@ class Chrome:
                     try:
                         await loop.run_in_executor(None, lambda: self._process.wait(timeout))
                     except Exception as e:
-                        import sys
-                        print('Ignoring exception at driver._process.wait(timeout)',
-                              file=sys.stderr)
                         EXC_HANDLER(e)
                     else:
                         self._process = None
