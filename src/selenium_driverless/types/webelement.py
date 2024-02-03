@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 # edited by kaliiiiiiiiiii
+from __future__ import annotations
+
 import asyncio
 import time
 import warnings
@@ -490,6 +492,8 @@ class WebElement(JSRemoteObj):
         """
         returns random location in element with probability close to the middle
 
+        :param bias: a (positive) bias on how probable it is to click at the centre of the element. Scale unknown:/
+        :param resolution: the resolution to calculate probabilities for each pixel on, affects timing performance
         :param debug: plots a visualization of the point in the element
         """
 
@@ -785,8 +789,8 @@ class WebElement(JSRemoteObj):
         return True
 
     @property
-    async def parent(self):
-        """The parent of this element"""
+    async def parent(self) -> WebElement:
+        """The parent element this element"""
         args = {}
         if self._node_id:
             args["nodeId"] = self._node_id
