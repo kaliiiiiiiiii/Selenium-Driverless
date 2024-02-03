@@ -506,12 +506,12 @@ class Chrome:
         """
         if not self._extensions_incognito_allowed:
             self._extensions_incognito_allowed = True
+            # noinspection PyTypeChecker
             page = None
             try:
                 base_ctx = self._base_context
-                page = await base_ctx.new_window("tab", "chrome://extensions", activate=False)
+                page:Context = await base_ctx.new_window("tab", "chrome://extensions", activate=False)
                 script = """
-                    var callback = arguments[arguments.length -1]
                     async function make_global(){
                         const extensions = await chrome.developerPrivate.getExtensionsInfo();
                         extensions.forEach( async function(extension)  {
@@ -520,12 +520,11 @@ class Chrome:
                                 incognitoAccess: true
                             })
                         });
-                        callback()
-                    }
-                    make_global()
+                    };
+                    await make_global()
                 """
                 await asyncio.sleep(0.1)
-                await page.execute_async_script(script, timeout=5)
+                await page.eval_async(script, timeout=5)
             except Exception as e:
                 EXC_HANDLER(e)
                 self._extensions_incognito_allowed = False
@@ -1224,7 +1223,7 @@ class Chrome:
         :param proxy_config: see `developer.chrome.com/docs/extensions/reference/proxy <https://developer.chrome.com/docs/extensions/reference/proxy/>`__ for reference
         """
         extension = await self.mv3_extension
-        await extension.execute_async_script("chrome.proxy.settings.set(arguments[0], arguments[arguments.length -1])",
+        await extension.eval_async("await chrome.proxy.settings.set(arguments[0])",
                                              {"value": proxy_config, "scope": 'regular'})
 
     async def set_single_proxy(self, proxy: str, bypass_list=None):
@@ -1277,10 +1276,9 @@ class Chrome:
 
     async def clear_proxy(self):
         extension = await self.mv3_extension
-        await extension.execute_async_script("""
-            chrome.proxy.settings.set(
-              {value: {mode: "direct"}, scope: 'regular'},
-              arguments[arguments.length -1]
+        await extension.eval_async("""
+            await chrome.proxy.settings.set(
+              {value: {mode: "direct"}, scope: 'regular'}
             );
         """)
 
