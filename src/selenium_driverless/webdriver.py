@@ -560,6 +560,10 @@ class Chrome:
 
         :param behaviour: the behaviour to set the downloading to
         :param path: the path to the default download directory
+
+        .. warning::
+            setting ``behaviour=allow`` instead of ``allowAndName``
+
         """
         await self.current_context.set_download_behaviour(behaviour, path)
 

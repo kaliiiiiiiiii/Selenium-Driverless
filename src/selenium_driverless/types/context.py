@@ -181,6 +181,10 @@ class Context:
 
         :param behavior: the behaviour to set the downloading to
         :param path: the path to the default download directory
+
+        .. warning::
+            setting ``behaviour=allow`` instead of ``allowAndName``
+
         """
         params = {"behavior":behavior, "eventsEnabled":True}
         if path:

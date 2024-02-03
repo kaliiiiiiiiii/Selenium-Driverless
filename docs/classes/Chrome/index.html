@@ -141,6 +141,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../ChromeOptions/">ChromeOptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Context/">Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Target/">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../WebELement/">WebElement</a></li>
 </ul>
 
         </div>
@@ -296,6 +297,10 @@ See <a class="reference external" href="https://developer.chrome.com/docs/extens
 </ul>
 </dd>
 </dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>setting <code class="docutils literal notranslate"><span class="pre">behaviour=allow</span></code> instead of <code class="docutils literal notranslate"><span class="pre">allowAndName</span></code></p>
+</div>
 </dd></dl>
 
 <dl class="py property">
@@ -330,7 +335,7 @@ For a general solution, have a look at <code class="docutils literal notranslate
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>iframe</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></span>) – the iframe to get the Target for</p>
+<dd class="field-odd"><p><strong>iframe</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../WebELement/#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></a></span>) – the iframe to get the Target for</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../Target/#selenium_driverless.types.target.Target" title="selenium_driverless.types.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target</span></code></a></span></p>
@@ -345,7 +350,7 @@ For a general solution, have a look at <code class="docutils literal notranslate
 see <code class="docutils literal notranslate"><span class="pre">webdriver.Chrome.get_target_for_iframe</span></code> for more information</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>iframes</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code>]</span>) – the iframe to get the targets for</p>
+<dd class="field-odd"><p><strong>iframes</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="../WebELement/#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></a>]</span>) – the iframe to get the targets for</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="../Target/#selenium_driverless.types.target.Target" title="selenium_driverless.types.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target</span></code></a>]</span></p>
@@ -778,7 +783,7 @@ not.</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../WebELement/#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -795,7 +800,7 @@ not.</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="../WebELement/#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -809,7 +814,7 @@ not.</p>
 <dd class="field-odd"><p><strong>query</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Plain text to find elements with</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="../WebELement/#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1281,7 +1286,7 @@ webelement.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>target_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <a class="reference internal" href="../Target/#selenium_driverless.types.target.TargetInfo" title="selenium_driverless.types.target.TargetInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">TargetInfo</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code>]</span>) – the target to switch to</p></li>
+<li><p><strong>target_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <a class="reference internal" href="../Target/#selenium_driverless.types.target.TargetInfo" title="selenium_driverless.types.target.TargetInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">TargetInfo</span></code></a>, <a class="reference internal" href="../WebELement/#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></a>]</span>) – the target to switch to</p></li>
 <li><p><strong>activate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to activate the target</p></li>
 </ul>
 </dd>
