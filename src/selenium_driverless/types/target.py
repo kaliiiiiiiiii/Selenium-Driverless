@@ -3,6 +3,7 @@ import asyncio
 import os.path
 import time
 import typing
+from typing_extensions import TypedDict
 import warnings
 from base64 import b64decode
 import aiofiles
@@ -612,7 +613,7 @@ class Target:
         page = await self.execute_cdp_cmd("Page.printToPDF")
         return page["data"]
 
-    async def get_history(self) -> dict:
+    async def get_history(self) -> TypedDict('NavigationHistory', {'currentIndex': int, 'entries': list}):
         """returns the history data
 
         see `Page.getNavigationHistory <https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-getNavigationHistory>`__
@@ -624,7 +625,7 @@ class Target:
         """Goes one step backward in the browser history.
         """
         history = await self.get_history()
-        entry = history["entries"][history["currentIndex"] - 1]["id"]
+        entry = history["entries"][history['currentIndex'] - 1]["id"]
         await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": entry})
         await self._on_loaded()
 
