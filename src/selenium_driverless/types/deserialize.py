@@ -593,10 +593,7 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
     if class_name == 'NodeList' or _type == 'htmlcollection':
         elems = JSNodeList(obj_id=obj_id, target=target, class_name=class_name, isolated_exec_id=isolated_exec_id,
                            frame_id=frame_id)
-        if _type == 'htmlcollection':
-            _len = int(description[15:-1])
-        else:
-            _len = _len = int(description[9:-1])
+        _len = int(description[len(class_name)+1:-1])
         for idx in range(_len):
             elems.append(await elems.__exec__("return obj[arguments[0]]", idx, serialization="deep",
                                               execution_context_id=context_id))
