@@ -626,7 +626,9 @@ class Target:
 
                 target.back()
         """
-        await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": await self._current_history_idx - 1})
+        history = await self.execute_cdp_cmd("Page.getNavigationHistory")
+        entry = history["entries"][history["currentIndex"] - 1]["id"]
+        await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": entry})
         await self._on_loaded()
 
     async def forward(self) -> None:
@@ -637,7 +639,9 @@ class Target:
 
                 target.forward()
         """
-        await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": await self._current_history_idx + 1})
+        history = await self.execute_cdp_cmd("Page.getNavigationHistory")
+        entry = history["entries"][history["currentIndex"] + 1]["id"]
+        await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": entry})
         await self._on_loaded()
 
     async def refresh(self) -> None:
