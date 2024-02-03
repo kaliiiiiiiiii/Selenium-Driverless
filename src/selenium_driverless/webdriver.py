@@ -264,7 +264,7 @@ class Chrome:
                     target_id = target["id"]
                     self._current_target = await get_target(target_id=target_id, host=self._host,
                                                             loop=self._loop, is_remote=self._is_remote, timeout=2,
-                                                            max_ws_size=self._max_ws_size, driver=self)
+                                                            max_ws_size=self._max_ws_size, driver=self, context=None)
 
                     # handle the context
                     if self._loop:
@@ -274,6 +274,7 @@ class Chrome:
                         context = await Context(base_target=self._current_target, driver=self, loop=self._loop,
                                                 max_ws_size=self._max_ws_size)
                     _id = context.context_id
+                    self._current_target._context = context
 
                     def remove_context():
                         if _id in self._contexts:
@@ -294,12 +295,9 @@ class Chrome:
             downloads_dir = self._options.downloads_dir
             if self._options.downloads_dir:
                 # ensure download events are dispatched
-                await self.base_target.execute_cdp_cmd("Browser.setDownloadBehavior",
-                                                       {"behavior": "allowAndName", "downloadPath": downloads_dir,
-                                                        "eventsEnabled":True})
+                await self.set_download_behaviour("allowAndName", downloads_dir)
             else:
-                await self.base_target.execute_cdp_cmd("Browser.setDownloadBehavior",
-                                                       {"behavior": "default", "eventsEnabled": True})
+                await self.set_download_behaviour("default")
             self._started = True
         return self
 
@@ -550,6 +548,20 @@ class Chrome:
         the Context which isn't incognito
         """
         return self._base_context
+
+    @property
+    def downloads_dir(self):
+        """the current downloads directory for the current context"""
+        return self.base_target.downloads_dir_for_context(context_id="DEFAULT")
+
+    async def set_download_behaviour(self,behaviour:typing.Literal["deny", "allow", "allowAndName", "default"],
+                                     path:str=None):
+        """set the download behaviour
+
+        :param behaviour: the behaviour to set the downloading to
+        :param path: the path to the default download directory
+        """
+        await self.current_context.set_download_behaviour(behaviour, path)
 
     @property
     def current_context(self) -> Context:

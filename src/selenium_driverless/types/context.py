@@ -20,8 +20,10 @@
 """The WebDriver implementation."""
 import inspect
 import time
+import os
 import typing
 import warnings
+import pathlib
 
 from typing import List
 from typing import Optional
@@ -158,7 +160,7 @@ class Context:
         if not target:
             target: Target = await get_target(target_id=target_id, host=self._host,
                                               loop=self._loop, is_remote=self._is_remote, timeout=timeout,
-                                              max_ws_size=max_ws_size, driver=self._driver)
+                                              max_ws_size=max_ws_size, driver=self._driver, context=self)
             self._targets[target_id] = target
 
             # noinspection PyUnusedLocal
@@ -172,6 +174,32 @@ class Context:
 
     async def get_target_for_iframe(self, iframe: WebElement):
         return await self.current_target.get_target_for_iframe(iframe=iframe)
+
+    async def set_download_behaviour(self,behavior:typing.Literal["deny", "allow", "allowAndName", "default"],
+                                     path:str=None):
+        """set the download behaviour
+
+        :param behavior: the behaviour to set the downloading to
+        :param path: the path to the default download directory
+        """
+        params = {"behavior":behavior, "eventsEnabled":True}
+        if path:
+            _dir = str(pathlib.Path(path))
+            if os.path.isfile(_dir):
+                raise OSError("path can't point to a file")
+            params["downloadPath"] = _dir
+        if self._is_incognito:
+            params["browserContextId"] = self.context_id
+        await self.base_target.execute_cdp_cmd("Browser.setDownloadBehavior", params)
+
+    @property
+    def downloads_dir(self):
+        """the current downloads directory"""
+        if self._is_incognito:
+            return self.base_target.downloads_dir_for_context(context_id=self.context_id)
+        else:
+            return self.base_target.downloads_dir_for_context(context_id="DEFAULT")
+
 
     async def wait_download(self, timeout: float or None = 30) -> dict:
         """

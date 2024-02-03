@@ -61,6 +61,10 @@ class Options(metaclass=ABCMeta):
                 #  don't open PDF with pdf plugin
                 'always_open_pdf_externally': True
             },
+            "download_bubble": {
+                # don't Show downloads when they're done
+                "partial_view_enabled": False,
+            },
             "in_product_help": {
                 "snoozed_feature": {
                     "IPH_HighEfficiencyMode": {
@@ -93,6 +97,7 @@ class Options(metaclass=ABCMeta):
             '--disable-infobars', '--disable-breakpad',  # some bars tweak
             "--no-default-browser-check",  # disable default browser message
             '--homepage=about:blank'  # set homepage
+            "--wm-window-animations-disabled", "--animation-duration-scale=0"  # disable animations
         )
         if IS_POSIX:
             self.add_argument("--password-store=basic")

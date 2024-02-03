@@ -1,5 +1,6 @@
 # io
 import asyncio
+import os.path
 import time
 import typing
 import warnings
@@ -41,7 +42,7 @@ class Target:
     """Allows you to drive the browser without chromedriver."""
 
     # noinspection PyShadowingBuiltins
-    def __init__(self, host: str, target_id: str, driver, is_remote: bool = False,
+    def __init__(self, host: str, target_id: str, driver, context, is_remote: bool = False,
                  loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
                  type: str = None, start_socket: bool = False, max_ws_size: int = 2 ** 20) -> None:
         """Creates a new instance of the chrome target. Starts the service and
@@ -50,7 +51,9 @@ class Target:
         :Args:
          - options - this takes an instance of ChromeOptions.rst
         """
+        from selenium_driverless.types.context import Context
         self._parent_target = None
+        self._context:Context = context
         self._window_id = None
         self._pointer = None
         self._page_enabled = None
@@ -179,7 +182,7 @@ class Target:
 
         async def target_getter(target_id: str, timeout: float = 2, max_ws_size: int = 2 ** 20):
             return await get_target(target_id=target_id, host=self._host, loop=self._loop, is_remote=self._is_remote,
-                                    timeout=timeout, max_ws_size=max_ws_size, driver=self._driver)
+                                    timeout=timeout, max_ws_size=max_ws_size, driver=self._driver, context=self._context)
 
         _targets = await get_targets(cdp_exec=self.execute_cdp_cmd, target_getter=target_getter,
                                      _type="iframe", context_id=self._context_id, max_ws_size=self._max_ws_size)
@@ -239,7 +242,7 @@ class Target:
         async def _wait_download():
             base_frame = await self.base_frame
             _id = base_frame.get("id")
-            _dir = self._driver._options.downloads_dir
+            _dir = [self._context.downloads_dir][0]
             async for data in await self.base_target.get_cdp_event_iter("Browser.downloadWillBegin"):
                 base_frame = await self.base_frame
                 curr_id = base_frame.get("id")
@@ -280,9 +283,10 @@ class Target:
                 await self.execute_cdp_cmd("Page.enable")
             wait = asyncio.ensure_future(asyncio.wait([
                 # wait for download or loadEventFired
-                self.wait_for_cdp("Page.loadEventFired", timeout=None),
-                self.wait_download(timeout=None)
+                asyncio.ensure_future(self.wait_for_cdp("Page.loadEventFired", timeout=None)),
+                asyncio.ensure_future(self.wait_download(timeout=None))
             ], timeout=timeout, return_when=asyncio.FIRST_COMPLETED))
+        await asyncio.sleep(0.01)
         args = {"url": url, "transitionType": "link"}
         if referrer:
             args["referrer"] = referrer
@@ -297,6 +301,10 @@ class Target:
             result = done.pop().result()  # data of the event waited for
         await get
         await self._on_loaded()
+        guid_file = result.get("guid_file")
+        if guid_file:
+            while not os.path.exists(guid_file):
+                await asyncio.sleep(0.01)
         return result
 
     async def _global_this(self, context_id: str = None):
