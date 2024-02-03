@@ -1,6 +1,7 @@
 # Selenium-Driverless (Non-commercial use only!)
 
 [![Downloads](https://static.pepy.tech/badge/selenium-driverless)](https://pepy.tech/project/selenium-driverless) [![](https://img.shields.io/pypi/v/selenium-driverless.svg?color=3399EE)](https://pypi.org/project/selenium-driverless/)
+[Documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/#)
 
 
 - Use Selenium __without chromedriver__
