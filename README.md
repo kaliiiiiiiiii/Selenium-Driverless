@@ -20,7 +20,10 @@ Also, see [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree
 <details>
 <summary>dev-installation (click to expand)</summary>
 
-`pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/heads/dev.zip`
+```shell
+pip uninstall -y selenium-driverless
+pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/heads/dev.zip
+```
 </details>
 
 ### Still getting detected?
