@@ -412,6 +412,8 @@ class Target:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
         if unique_context:
             execution_context_id = await self._isolated_context_id
+        if timeout is None:
+            timeout = 2
 
         start = time.monotonic()
         while (time.monotonic() - start) < timeout:
