@@ -13,9 +13,6 @@ Documentation Selenium-Driverless
 
 Indices and tables
 ==================
-
-* :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
 Classes
@@ -23,6 +20,7 @@ Classes
 
 .. toctree::
     :glob:
+    :maxdepth: 2
 
     classes/*
 

@@ -415,7 +415,17 @@ class WebElement(JSRemoteObj):
     async def click(self, timeout: float = None, visible_timeout: float = 30, bias: float = 5, resolution: int = 50,
                     debug: bool = False, scroll_to=True, move_to: bool = True,
                     ensure_clickable: bool or int = False) -> None:
-        """Clicks the element."""
+        """Clicks the element.
+
+        :param timeout: the time in seconds to take for clicking on the element
+        :param visible_timeout: the time in seconds to wait for being able to compute the elements box model
+        :param bias: a (positive) bias on how probable it is to click at the centre of the element. Scale unknown:/
+        :param resolution: the resolution to calculate probabilities for each pixel on, affects timing performance
+        :param debug: plots a visualization of the point in the element
+        :param scroll_to: whether to scroll to the element
+        :param move_to: whether to move the mouse to the element
+        :param ensure_clickable: whether to ensure that the element is clickable. Not reliable in on every webpage
+        """
         if scroll_to:
             await self.scroll_to()
         cords = None
@@ -439,40 +449,39 @@ class WebElement(JSRemoteObj):
         await self.__target__.pointer.click(x, y=y, click_kwargs={"timeout": timeout}, move_to=move_to)
 
     async def write(self, text: str):
+        """
+        inserts literal text to the element
+
+        :param text: the text to send
+        """
         await self.focus()
         await self.__target__.execute_cdp_cmd("Input.insertText", {"text": text})
 
     async def set_file(self, path: str):
+        """
+        sets the file on the current element (has to accept files)
+
+        :param path: the absolute path to the file
+        """
         await self.set_files([path])
 
     async def set_files(self, paths: typing.List[str]):
+        """
+        sets files on the current element (has to accept files)
+
+        :param paths: the absolute paths to the files
+        """
         args = {"files": paths}
         args.update(self._args_builder)
         await self.__target__.execute_cdp_cmd("DOM.setFileInputFiles", args)
 
     async def send_keys(self, value: str) -> None:
         # noinspection GrazieInspections
-        """Simulates typing into the element.
+        """
+        .. warning::
+            NotImplemented
 
-                :Args:
-                    - value - A string for typing, or setting form fields.  For setting
-                      file inputs, this could be a local file path.
-
-                Use this to send simple key events or to fill out form fields::
-
-                    form_textfield = target.find_element(By.NAME, 'username')
-                    form_textfield.send_keys("admin")
-
-                This can also be used to set file inputs.
-
-                ::
-
-                    file_input = target.find_element(By.NAME, 'profilePic')
-                    file_input.send_keys("path/to/profilepic.gif")
-                    # Generally it's better to wrap the file path in one of the methods
-                    # in os.path to return the actual path to support cross OS testing.
-                    # file_input.send_keys(os.path.abspath("path/to/profilepic.gif"))
-                """
+        """
         # transfer file to another machine only if remote target is used
         # the same behaviour as for java binding
         raise NotImplementedError("you might use elem.write() for inputs instead")
@@ -480,6 +489,8 @@ class WebElement(JSRemoteObj):
     async def mid_location(self, bias: float = 5, resolution: int = 50, debug: bool = False):
         """
         returns random location in element with probability close to the middle
+
+        :param debug: plots a visualization of the point in the element
         """
 
         box = await self.box_model
@@ -652,7 +663,11 @@ class WebElement(JSRemoteObj):
         return {"height": box_model["height"], "width": box_model["width"]}
 
     async def value_of_css_property(self, property_name) -> str:
-        """The value of a CSS property."""
+        """
+        .. warning::
+            NotImplemented
+
+        """
         raise NotImplementedError("you might use get_attribute instead")
 
     @property
@@ -722,13 +737,9 @@ class WebElement(JSRemoteObj):
 
     @property
     async def screenshot_as_base64(self) -> str:
-        """Gets the screenshot of the current element as a base64 encoded
-        string.
-
-        :Usage:
-            ::
-
-                img_b64 = element.screenshot_as_base64
+        """
+        .. warning::
+            NotImplemented
         """
         raise NotImplementedError()
 
