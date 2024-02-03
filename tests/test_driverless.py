@@ -21,8 +21,10 @@ async def nowsecure(driver):
     await asyncio.sleep(2)
     await driver.get("https://nowsecure.nl#relax", wait_load=True)
     await asyncio.sleep(0.5)
-    await driver.wait_for_cdp("Page.domContentEventFired")
-    await get_elem()
+
+    # nowsecure.nl is broken:(
+    # await driver.wait_for_cdp("Page.domContentEventFired")
+    # await get_elem()
 
 
 async def unique_execution_context(driver):
