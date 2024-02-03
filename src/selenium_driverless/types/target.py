@@ -600,7 +600,7 @@ class Target:
             self._window_id = result["windowId"]
         return self._window_id
 
-    # noinspection PyUnusedLocal
+
     async def print_page(self) -> str:
         """Takes PDF of the current page.
 
@@ -612,45 +612,32 @@ class Target:
         page = await self.execute_cdp_cmd("Page.printToPDF")
         return page["data"]
 
-    @property
-    async def _current_history_idx(self):
-        res = await self.execute_cdp_cmd("Page.getNavigationHistory")
-        return res["currentIndex"]
+    async def get_history(self) -> dict:
+        """returns the history data
+
+        see `Page.getNavigationHistory <https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-getNavigationHistory>`__
+        """
+        return await self.execute_cdp_cmd("Page.getNavigationHistory")
 
     # Navigation
     async def back(self) -> None:
         """Goes one step backward in the browser history.
-
-        :Usage:
-            ::
-
-                target.back()
         """
-        history = await self.execute_cdp_cmd("Page.getNavigationHistory")
+        history = await self.get_history()
         entry = history["entries"][history["currentIndex"] - 1]["id"]
         await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": entry})
         await self._on_loaded()
 
     async def forward(self) -> None:
         """Goes one step forward in the browser history.
-
-        :Usage:
-            ::
-
-                target.forward()
         """
-        history = await self.execute_cdp_cmd("Page.getNavigationHistory")
+        history = await self.get_history()
         entry = history["entries"][history["currentIndex"] + 1]["id"]
         await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": entry})
         await self._on_loaded()
 
     async def refresh(self) -> None:
-        """Refreshes the current page.
-
-        :Usage:
-            ::
-
-                target.refresh()
+        """Refreshes the page.
         """
         await self.execute_cdp_cmd("Page.reload")
         await self._on_loaded()
