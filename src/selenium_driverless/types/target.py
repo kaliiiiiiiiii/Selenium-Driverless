@@ -230,15 +230,16 @@ class Target:
         if wait_load:
             if not self._page_enabled:
                 await self.execute_cdp_cmd("Page.enable")
-            wait = asyncio.create_task(self.wait_for_cdp("Page.loadEventFired", timeout=timeout))
+            wait = asyncio.ensure_future(self.wait_for_cdp("Page.loadEventFired", timeout=timeout))
         args = {"url": url, "transitionType": "link"}
         if referrer:
             args["referrer"] = referrer
-        get = asyncio.create_task(self.execute_cdp_cmd("Page.navigate", args, timeout=timeout))
+        get = asyncio.ensure_future(self.execute_cdp_cmd("Page.navigate", args, timeout=timeout))
         if wait_load:
             try:
                 await wait
             except (asyncio.TimeoutError, TimeoutError):
+                await get  # ensure get is awaited in every case
                 raise TimeoutError(f'page: "{url}" didn\'t load within timeout of {timeout}')
         await get
         await self._on_loaded()
