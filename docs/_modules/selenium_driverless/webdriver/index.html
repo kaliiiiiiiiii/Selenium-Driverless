@@ -368,6 +368,15 @@
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Emulation.setFocusEmulationEnabled&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">single_proxy</span><span class="p">:</span>
                 <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_single_proxy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">single_proxy</span><span class="p">)</span>
+            <span class="n">downloads_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">downloads_dir</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">downloads_dir</span><span class="p">:</span>
+                <span class="c1"># ensure download events are dispatched</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Browser.setDownloadBehavior&quot;</span><span class="p">,</span>
+                                                       <span class="p">{</span><span class="s2">&quot;behavior&quot;</span><span class="p">:</span> <span class="s2">&quot;allowAndName&quot;</span><span class="p">,</span> <span class="s2">&quot;downloadPath&quot;</span><span class="p">:</span> <span class="n">downloads_dir</span><span class="p">,</span>
+                                                        <span class="s2">&quot;eventsEnabled&quot;</span><span class="p">:</span><span class="kc">True</span><span class="p">})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Browser.setDownloadBehavior&quot;</span><span class="p">,</span>
+                                                       <span class="p">{</span><span class="s2">&quot;behavior&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;eventsEnabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_started</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="bp">self</span>
 
@@ -502,7 +511,8 @@
 
 <div class="viewcode-block" id="Chrome.get_targets">
 <a class="viewcode-back" href="../../../classes/Chrome/#selenium_driverless.webdriver.Chrome.get_targets">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_type</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;page&quot;</span><span class="p">,</span> <span class="s2">&quot;background_page&quot;</span><span class="p">,</span> <span class="s2">&quot;service_worker&quot;</span><span class="p">,</span> <span class="s2">&quot;browser&quot;</span><span class="p">,</span> <span class="s2">&quot;other&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                          <span class="n">_type</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;page&quot;</span><span class="p">,</span> <span class="s2">&quot;background_page&quot;</span><span class="p">,</span> <span class="s2">&quot;service_worker&quot;</span><span class="p">,</span> <span class="s2">&quot;browser&quot;</span><span class="p">,</span> <span class="s2">&quot;other&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                           <span class="n">context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;self&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TargetInfo</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        get all targets within the current context</span>
@@ -591,12 +601,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extensions_incognito_allowed</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_extensions_incognito_allowed</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="c1"># noinspection PyTypeChecker</span>
             <span class="n">page</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">base_ctx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_context</span>
-                <span class="n">page</span> <span class="o">=</span> <span class="k">await</span> <span class="n">base_ctx</span><span class="o">.</span><span class="n">new_window</span><span class="p">(</span><span class="s2">&quot;tab&quot;</span><span class="p">,</span> <span class="s2">&quot;chrome://extensions&quot;</span><span class="p">,</span> <span class="n">activate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">page</span><span class="p">:</span> <span class="n">Context</span> <span class="o">=</span> <span class="k">await</span> <span class="n">base_ctx</span><span class="o">.</span><span class="n">new_window</span><span class="p">(</span><span class="s2">&quot;tab&quot;</span><span class="p">,</span> <span class="s2">&quot;chrome://extensions&quot;</span><span class="p">,</span> <span class="n">activate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">                    var callback = arguments[arguments.length -1]</span>
 <span class="s2">                    async function make_global(){</span>
 <span class="s2">                        const extensions = await chrome.developerPrivate.getExtensionsInfo();</span>
 <span class="s2">                        extensions.forEach( async function(extension)  {</span>
@@ -605,12 +615,11 @@
 <span class="s2">                                incognitoAccess: true</span>
 <span class="s2">                            })</span>
 <span class="s2">                        });</span>
-<span class="s2">                        callback()</span>
-<span class="s2">                    }</span>
-<span class="s2">                    make_global()</span>
+<span class="s2">                    };</span>
+<span class="s2">                    await make_global()</span>
 <span class="s2">                &quot;&quot;&quot;</span>
                 <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-                <span class="k">await</span> <span class="n">page</span><span class="o">.</span><span class="n">execute_async_script</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+                <span class="k">await</span> <span class="n">page</span><span class="o">.</span><span class="n">eval_async</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">EXC_HANDLER</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_extensions_incognito_allowed</span> <span class="o">=</span> <span class="kc">False</span>
@@ -683,9 +692,38 @@
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_targets_for_iframes</span><span class="p">(</span><span class="n">iframes</span><span class="o">=</span><span class="n">iframes</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="Chrome.wait_download">
+<a class="viewcode-back" href="../../../classes/Chrome/#selenium_driverless.webdriver.Chrome.wait_download">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">wait_download</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span><span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        wait for a download on the current tab</span>
+
+<span class="sd">        returns something like</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            {</span>
+<span class="sd">                &quot;frameId&quot;: &quot;2D543B5E8B14945B280C537A4882A695&quot;,</span>
+<span class="sd">                &quot;guid&quot;: &quot;c91df4d5-9b45-4962-84df-3749bd3f926d&quot;,</span>
+<span class="sd">                &quot;url&quot;: &quot;https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf&quot;,</span>
+<span class="sd">                &quot;suggestedFilename&quot;: &quot;dummy.pdf&quot;,</span>
+
+<span class="sd">                # only if options.downloads_dir specified</span>
+<span class="sd">                &quot;guid_file&quot;: &quot;D:\\System\\AppData\\PyCharm\\scratches\\downloads\\c91df4d5-9b45-4962-84df-3749bd3f926d&quot;</span>
+<span class="sd">            }</span>
+
+<span class="sd">        :param timeout: time in seconds to wait for a download</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            downloads from iframes not supported yet</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">wait_download</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="Chrome.get">
 <a class="viewcode-back" href="../../../classes/Chrome/#selenium_driverless.webdriver.Chrome.get">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">referrer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wait_load</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">referrer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wait_load</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Loads a web page in the current Target</span>
 
 <span class="sd">        :param url: the url to load.</span>
@@ -693,10 +731,9 @@
 <span class="sd">        :param wait_load: whether to wait for the webpage to load</span>
 <span class="sd">        :param timeout: the maximum time in seconds for waiting on load</span>
 
-<span class="sd">        .. warning::</span>
-<span class="sd">            loading pages which initiate a download requires to set ``wait_load=False`` for now. see `issues#140 &lt;https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/140&gt;`__</span>
+<span class="sd">        returns the same as :func:`Target.wait_download &lt;selenium_driverless.types.target.Target.wait_download&gt;` if the url initiates a download</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">referrer</span><span class="o">=</span><span class="n">referrer</span><span class="p">,</span> <span class="n">wait_load</span><span class="o">=</span><span class="n">wait_load</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">referrer</span><span class="o">=</span><span class="n">referrer</span><span class="p">,</span> <span class="n">wait_load</span><span class="o">=</span><span class="n">wait_load</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
 
 
     <span class="nd">@property</span>
@@ -875,8 +912,6 @@
             <span class="k">except</span> <span class="n">websockets</span><span class="o">.</span><span class="n">ConnectionClosedError</span><span class="p">:</span>
                 <span class="k">pass</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="kn">import</span> <span class="nn">sys</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Ignoring exception at driver.base_target.execute_cdp_cmd(&quot;Browser.close&quot;)&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
                 <span class="n">EXC_HANDLER</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_remote</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -884,9 +919,6 @@
                     <span class="k">try</span><span class="p">:</span>
                         <span class="k">await</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">timeout</span><span class="p">))</span>
                     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                        <span class="kn">import</span> <span class="nn">sys</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Ignoring exception at driver._process.wait(timeout)&#39;</span><span class="p">,</span>
-                              <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
                         <span class="n">EXC_HANDLER</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="o">=</span> <span class="kc">None</span>
@@ -982,7 +1014,7 @@
 
 <div class="viewcode-block" id="Chrome.new_window">
 <a class="viewcode-back" href="../../../classes/Chrome/#selenium_driverless.webdriver.Chrome.new_window">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">new_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">type_hint</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;tab&quot;</span><span class="p">,</span><span class="s2">&quot;window&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tab&quot;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">new_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">type_hint</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;tab&quot;</span><span class="p">,</span> <span class="s2">&quot;window&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tab&quot;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
                          <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a new window or tab in the current context</span>
 
@@ -1449,8 +1481,8 @@
 <span class="sd">        :param proxy_config: see `developer.chrome.com/docs/extensions/reference/proxy &lt;https://developer.chrome.com/docs/extensions/reference/proxy/&gt;`__ for reference</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">extension</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">mv3_extension</span>
-        <span class="k">await</span> <span class="n">extension</span><span class="o">.</span><span class="n">execute_async_script</span><span class="p">(</span><span class="s2">&quot;chrome.proxy.settings.set(arguments[0], arguments[arguments.length -1])&quot;</span><span class="p">,</span>
-                                             <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">proxy_config</span><span class="p">,</span> <span class="s2">&quot;scope&quot;</span><span class="p">:</span> <span class="s1">&#39;regular&#39;</span><span class="p">})</span></div>
+        <span class="k">await</span> <span class="n">extension</span><span class="o">.</span><span class="n">eval_async</span><span class="p">(</span><span class="s2">&quot;await chrome.proxy.settings.set(arguments[0])&quot;</span><span class="p">,</span>
+                                   <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">proxy_config</span><span class="p">,</span> <span class="s2">&quot;scope&quot;</span><span class="p">:</span> <span class="s1">&#39;regular&#39;</span><span class="p">})</span></div>
 
 
     <span class="k">async</span> <span class="k">def</span> <span class="nf">set_single_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">bypass_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1503,10 +1535,9 @@
 
     <span class="k">async</span> <span class="k">def</span> <span class="nf">clear_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">extension</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">mv3_extension</span>
-        <span class="k">await</span> <span class="n">extension</span><span class="o">.</span><span class="n">execute_async_script</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">            chrome.proxy.settings.set(</span>
-<span class="s2">              {value: {mode: &quot;direct&quot;}, scope: &#39;regular&#39;},</span>
-<span class="s2">              arguments[arguments.length -1]</span>
+        <span class="k">await</span> <span class="n">extension</span><span class="o">.</span><span class="n">eval_async</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            await chrome.proxy.settings.set(</span>
+<span class="s2">              {value: {mode: &quot;direct&quot;}, scope: &#39;regular&#39;}</span>
 <span class="s2">            );</span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
 

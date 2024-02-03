@@ -291,6 +291,15 @@ class Chrome:
             await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
             if self._options.single_proxy:
                 await self.set_single_proxy(self._options.single_proxy)
+            downloads_dir = self._options.downloads_dir
+            if self._options.downloads_dir:
+                # ensure download events are dispatched
+                await self.base_target.execute_cdp_cmd("Browser.setDownloadBehavior",
+                                                       {"behavior": "allowAndName", "downloadPath": downloads_dir,
+                                                        "eventsEnabled":True})
+            else:
+                await self.base_target.execute_cdp_cmd("Browser.setDownloadBehavior",
+                                                       {"behavior": "default", "eventsEnabled": True})
             self._started = True
         return self
 
@@ -420,7 +429,8 @@ class Chrome:
                     return context
         return context
 
-    async def get_targets(self, _type: typing.Literal["page", "background_page", "service_worker", "browser", "other"] = None,
+    async def get_targets(self,
+                          _type: typing.Literal["page", "background_page", "service_worker", "browser", "other"] = None,
                           context_id: str or None = "self") -> typing.Dict[str, TargetInfo]:
         """
         get all targets within the current context
@@ -510,7 +520,7 @@ class Chrome:
             page = None
             try:
                 base_ctx = self._base_context
-                page:Context = await base_ctx.new_window("tab", "chrome://extensions", activate=False)
+                page: Context = await base_ctx.new_window("tab", "chrome://extensions", activate=False)
                 script = """
                     async function make_global(){
                         const extensions = await chrome.developerPrivate.getExtensionsInfo();
@@ -587,7 +597,33 @@ class Chrome:
         """
         return await self.current_target.get_targets_for_iframes(iframes=iframes)
 
-    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
+    async def wait_download(self, timeout:float or None=30) -> dict:
+        """
+        wait for a download on the current tab
+
+        returns something like
+
+        .. code-block:: python
+
+            {
+                "frameId": "2D543B5E8B14945B280C537A4882A695",
+                "guid": "c91df4d5-9b45-4962-84df-3749bd3f926d",
+                "url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                "suggestedFilename": "dummy.pdf",
+
+                # only if options.downloads_dir specified
+                "guid_file": "D:\\System\\AppData\\PyCharm\\scratches\\downloads\\c91df4d5-9b45-4962-84df-3749bd3f926d"
+            }
+
+        :param timeout: time in seconds to wait for a download
+
+        .. warning::
+            downloads from iframes not supported yet
+
+        """
+        return await self.current_target.wait_download(timeout=timeout)
+
+    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> typing.Union[None, dict]:
         """Loads a web page in the current Target
 
         :param url: the url to load.
@@ -595,10 +631,9 @@ class Chrome:
         :param wait_load: whether to wait for the webpage to load
         :param timeout: the maximum time in seconds for waiting on load
 
-        .. warning::
-            loading pages which initiate a download requires to set ``wait_load=False`` for now. see `issues#140 <https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/140>`__
+        returns the same as :func:`Target.wait_download <selenium_driverless.types.target.Target.wait_download>` if the url initiates a download
         """
-        await self.current_target.get(url=url, referrer=referrer, wait_load=wait_load, timeout=timeout)
+        return await self.current_target.get(url=url, referrer=referrer, wait_load=wait_load, timeout=timeout)
 
     @property
     async def title(self) -> str:
@@ -855,7 +890,7 @@ class Chrome:
                 tabs.append(info)
         return tabs
 
-    async def new_window(self, type_hint: typing.Literal["tab","window"] = "tab", url="",
+    async def new_window(self, type_hint: typing.Literal["tab", "window"] = "tab", url="",
                          activate: bool = True) -> Target:
         """Creates a new window or tab in the current context
 
@@ -1224,7 +1259,7 @@ class Chrome:
         """
         extension = await self.mv3_extension
         await extension.eval_async("await chrome.proxy.settings.set(arguments[0])",
-                                             {"value": proxy_config, "scope": 'regular'})
+                                   {"value": proxy_config, "scope": 'regular'})
 
     async def set_single_proxy(self, proxy: str, bypass_list=None):
 

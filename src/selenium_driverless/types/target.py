@@ -6,6 +6,7 @@ import warnings
 from base64 import b64decode
 import aiofiles
 from typing import List
+import pathlib
 
 import websockets
 from cdp_socket.exceptions import CDPError
@@ -49,7 +50,6 @@ class Target:
         :Args:
          - options - this takes an instance of ChromeOptions.rst
         """
-        self._base_target = None
         self._parent_target = None
         self._window_id = None
         self._pointer = None
@@ -96,7 +96,7 @@ class Target:
 
     @property
     def base_target(self):
-        return self._base_target
+        return self._driver.base_target
 
     @property
     def socket(self) -> SingleCDPSocket:
@@ -211,11 +211,59 @@ class Target:
             raise NoSuchIframe(iframe, "no target for iframe found")
         return targets[0]
 
+    async def wait_download(self, timeout:float or None=30) -> dict:
+        """
+        wait for a download on the current tab
+
+        returns something like
+
+        .. code-block:: python
+
+            {
+                "frameId": "2D543B5E8B14945B280C537A4882A695",
+                "guid": "c91df4d5-9b45-4962-84df-3749bd3f926d",
+                "url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                "suggestedFilename": "dummy.pdf",
+
+                # only if options.downloads_dir specified
+                "guid_file": "D:\\System\\AppData\\PyCharm\\scratches\\downloads\\c91df4d5-9b45-4962-84df-3749bd3f926d"
+            }
+
+        :param timeout: time in seconds to wait for a download
+
+        .. warning::
+            downloads from iframes not supported yet
+
+        """
+        # todo: support downloads from iframes
+        async def _wait_download():
+            base_frame = await self.base_frame
+            _id = base_frame.get("id")
+            _dir = self._driver._options.downloads_dir
+            async for data in await self.base_target.get_cdp_event_iter("Browser.downloadWillBegin"):
+                base_frame = await self.base_frame
+                curr_id = base_frame.get("id")
+                if data["frameId"] in [_id, curr_id]:
+                    if _dir:
+                        # noinspection PyProtectedMember
+                        data["guid_file"] = str(pathlib.Path(_dir + "/" + data["guid"]))
+                    return data
+        return await asyncio.wait_for(_wait_download(), timeout=timeout)
+
     # noinspection PyUnboundLocalVariable,PyProtectedMember
-    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
-        """Loads a web page in the current browser session."""
+    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> dict:
+        """Loads a web page
+
+        :param url: the url to load.
+        :param referrer: the referrer to load the page with
+        :param wait_load: whether to wait for the webpage to load
+        :param timeout: the maximum time in seconds for waiting on load
+
+        returns the same as :func:`Target.wait_download <selenium_driverless.types.target.Target.wait_download>` if the url initiates a download
+        """
         if url == "about:blank":
             wait_load = False
+        result = {}
 
         if "#" in url:
             # thanks to https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/139#issuecomment-1877197974
@@ -230,19 +278,26 @@ class Target:
         if wait_load:
             if not self._page_enabled:
                 await self.execute_cdp_cmd("Page.enable")
-            wait = asyncio.ensure_future(self.wait_for_cdp("Page.loadEventFired", timeout=timeout))
+            wait = asyncio.ensure_future(asyncio.wait([
+                # wait for download or loadEventFired
+                self.wait_for_cdp("Page.loadEventFired", timeout=None),
+                self.wait_download(timeout=None)
+            ], timeout=timeout, return_when=asyncio.FIRST_COMPLETED))
         args = {"url": url, "transitionType": "link"}
         if referrer:
             args["referrer"] = referrer
         get = asyncio.ensure_future(self.execute_cdp_cmd("Page.navigate", args, timeout=timeout))
         if wait_load:
-            try:
-                await wait
-            except (asyncio.TimeoutError, TimeoutError):
+            done, pending = await wait
+            pending.pop().cancel()
+            if not done:
+                pending.pop().cancel()
                 await get  # ensure get is awaited in every case
-                raise TimeoutError(f'page: "{url}" didn\'t load within timeout of {timeout}')
+                raise asyncio.TimeoutError(f'page: "{url}" didn\'t load within timeout of {timeout}')
+            result = done.pop().result()  # data of the event waited for
         await get
         await self._on_loaded()
+        return result
 
     async def _global_this(self, context_id: str = None):
         if not context_id:

@@ -62,6 +62,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.get_target"><code class="docutils literal notranslate"><span class="pre">Chrome.get_target()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.get_target_for_iframe"><code class="docutils literal notranslate"><span class="pre">Chrome.get_target_for_iframe()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.get_targets_for_iframes"><code class="docutils literal notranslate"><span class="pre">Chrome.get_targets_for_iframes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.wait_download"><code class="docutils literal notranslate"><span class="pre">Chrome.wait_download()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.get"><code class="docutils literal notranslate"><span class="pre">Chrome.get()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.title"><code class="docutils literal notranslate"><span class="pre">Chrome.title</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.current_pointer"><code class="docutils literal notranslate"><span class="pre">Chrome.current_pointer</span></code></a></li>
@@ -319,6 +320,36 @@ see <code class="docutils literal notranslate"><span class="pre">webdriver.Chrom
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.wait_download">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wait_download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.wait_download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.wait_download" title="Link to this definition"></a></dt>
+<dd><p>wait for a download on the current tab</p>
+<p>returns something like</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;frameId&quot;</span><span class="p">:</span> <span class="s2">&quot;2D543B5E8B14945B280C537A4882A695&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;guid&quot;</span><span class="p">:</span> <span class="s2">&quot;c91df4d5-9b45-4962-84df-3749bd3f926d&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;suggestedFilename&quot;</span><span class="p">:</span> <span class="s2">&quot;dummy.pdf&quot;</span><span class="p">,</span>
+
+    <span class="c1"># only if options.downloads_dir specified</span>
+    <span class="s2">&quot;guid_file&quot;</span><span class="p">:</span> <span class="s2">&quot;D:\System\AppData\PyCharm\scratches\downloads\c91df4d5-9b45-4962-84df-3749bd3f926d&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timeout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – time in seconds to wait for a download</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>downloads from iframes not supported yet</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.get">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">referrer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait_load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.get" title="Link to this definition"></a></dt>
 <dd><p>Loads a web page in the current Target</p>
@@ -332,13 +363,10 @@ see <code class="docutils literal notranslate"><span class="pre">webdriver.Chrom
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>loading pages which initiate a download requires to set <code class="docutils literal notranslate"><span class="pre">wait_load=False</span></code> for now. see <a class="reference external" href="https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/140">issues#140</a></p>
-</div>
+<p>returns the same as <a class="reference internal" href="../Target/#selenium_driverless.types.target.Target.wait_download" title="selenium_driverless.types.target.Target.wait_download"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.wait_download</span></code></a> if the url initiates a download</p>
 </dd></dl>
 
 <dl class="py property">

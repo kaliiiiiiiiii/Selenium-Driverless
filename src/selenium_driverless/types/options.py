@@ -18,6 +18,7 @@
 # modified by kaliiiiiiiiii | Aurin Aegerter
 
 import os
+import pathlib
 import warnings
 from abc import ABCMeta
 import typing
@@ -46,40 +47,55 @@ class Options(metaclass=ABCMeta):
         self._experimental_options = {}
         self._debugger_address = None
         self._user_data_dir = None
+        self._downloads_dir = None
         self._arguments = []
-        self._prefs = {'devtools': {
-            'preferences': {
-                # always open devtools in undocked
-                'currentDockState': '"undocked"',
-                # always open devtools with console open
-                'panel-selectedTab': '"console"'}
-        }
+        self._prefs = {
+            'devtools': {
+                'preferences': {
+                    # always open devtools in undocked
+                    'currentDockState': '"undocked"',
+                    # always open devtools with console open
+                    'panel-selectedTab': '"console"'}
+            },
+            'plugins': {
+                #  don't open PDF with pdf plugin
+                'always_open_pdf_externally': True
+            },
+            "in_product_help": {
+                "snoozed_feature": {
+                    "IPH_HighEfficiencyMode": {
+                        # disable "memory saver"
+                        # instead, limit number of open tabs
+                        # https://github.com/milahu/aiohttp_chromium/blob/61fe3150ed032ef8aa99b23dddbedaa1929c229c/src/aiohttp_chromium/client.py#L1017-L1025
+                        "is_dismissed": True,
+                    }
+                }
+            },
+            # disable password manager popup https://stackoverflow.com/a/46602329/20443541
+            "credentials_enable_service": False,
+            "profile": {"password_manager_enabled": False}
         }
         self._ignore_local_proxy = False
         self._auto_clean_dirs = True
         self._headless = False
         self._startup_url = "about:blank"
 
-        self.add_argument("--no-first-run")
-        self.add_argument('--disable-component-update')
-        self.add_argument('--no-service-autorun')
+        self.add_arguments(
+            "--no-first-run",  # disable first run page
+            '--disable-component-update',  # disable updates
+            '--no-service-autorun',  # don't start a service
+            # don't auto-reload pages on network errors, https://github.com/milahu/aiohttp_chromium/blob/61fe3150ed032ef8aa99b23dddbedaa1929c229c/src/aiohttp_chromium/client.py#L1116C9-L1118
+            "--disable-auto-reload",
+            # some backgrounding tweaking
+            '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding',
+            '--disable-background-timer-throttling', '--disable-renderer-backgrounding',
+            '--disable-background-networking', '--no-pings',
+            '--disable-infobars', '--disable-breakpad',  # some bars tweak
+            "--no-default-browser-check",  # disable default browser message
+            '--homepage=about:blank'  # set homepage
+        )
         if IS_POSIX:
             self.add_argument("--password-store=basic")
-
-        # to support multiple instances
-        self.add_argument('--disable-backgrounding-occluded-windows')
-        self.add_argument('--disable-renderer-backgrounding')
-
-        self.add_argument('--disable-background-timer-throttling')
-        self.add_argument('--disable-renderer-backgrounding')
-        self.add_argument('--disable-background-networking')
-        self.add_argument('--no-pings')
-
-        # noinspection SpellCheckingInspection
-        self.add_argument('--disable-infobars')
-        self.add_argument('--disable-breakpad')
-        self.add_argument("--no-default-browser-check")
-        self.add_argument('--homepage=about:blank')
 
         self._is_remote = True
 
@@ -124,10 +140,10 @@ class Options(metaclass=ABCMeta):
         else:
             raise ValueError("argument has to be str")
 
-    def add_arguments(self, *arguments:str):
+    def add_arguments(self, *arguments: str):
         """add multiple arguments
 
-        :param arguments: *arguments to add
+        :param arguments: arguments to add
         """
         for arg in arguments:
             self.add_argument(arg)
@@ -155,6 +171,40 @@ class Options(metaclass=ABCMeta):
     @user_data_dir.setter
     def user_data_dir(self, _dir: str):
         self.add_argument(f"--user-data-dir={_dir}")
+
+    @property
+    def downloads_dir(self):
+        """the default directory to download files to.
+
+        .. code-block:: python
+
+            _dir = os.getcwd()+"/downloads"
+            if not os.path.isdir(_dir):
+                os.mkdir(_dir)
+            options = webdriver.ChromeOptions()
+            options.downloads_dir = _dir
+            async with webdriver.Chrome(options=options) as driver:
+                download_data = await driver.get('https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', timeout=5)
+                print(download_data.get("guid_file"))
+
+        .. warning::
+            path has to be absolute
+        """
+        return self._downloads_dir
+
+    @downloads_dir.setter
+    def downloads_dir(self, directory_path: str):
+        if directory_path is None:
+            self._downloads_dir = None
+        else:
+            _dir = str(pathlib.Path(directory_path))
+            if os.path.isfile(_dir):
+                raise OSError("path can't point to a file")
+            elif os.path.isdir(_dir):
+                pass
+            else:
+                os.mkdir(_dir)
+            self._downloads_dir = _dir
 
     @property
     def headless(self) -> bool:

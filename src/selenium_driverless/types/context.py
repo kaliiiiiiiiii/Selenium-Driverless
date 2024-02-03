@@ -173,12 +173,46 @@ class Context:
     async def get_target_for_iframe(self, iframe: WebElement):
         return await self.current_target.get_target_for_iframe(iframe=iframe)
 
-    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
-        """Loads a web page in the current browser session."""
+    async def wait_download(self, timeout: float or None = 30) -> dict:
+        """
+        wait for a download on the current tab
+
+        returns something like
+
+        .. code-block:: python
+
+            {
+                "frameId": "2D543B5E8B14945B280C537A4882A695",
+                "guid": "c91df4d5-9b45-4962-84df-3749bd3f926d",
+                "url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                "suggestedFilename": "dummy.pdf",
+
+                # only if options.downloads_dir specified
+                "guid_file": "D:\\System\\AppData\\PyCharm\\scratches\\downloads\\c91df4d5-9b45-4962-84df-3749bd3f926d"
+            }
+
+        :param timeout: time in seconds to wait for a download
+
+        .. warning::
+            downloads from iframes not supported yet
+
+        """
+        return await self.current_target.wait_download(timeout=timeout)
+
+    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> dict:
+        """Loads a web page in the current Target
+
+        :param url: the url to load.
+        :param referrer: the referrer to load the page with
+        :param wait_load: whether to wait for the webpage to load
+        :param timeout: the maximum time in seconds for waiting on load
+
+        returns the same as :func:`Target.wait_download <selenium_driverless.types.target.Target.wait_download>` if the url initiates a download
+        """
         if self._is_incognito and url in ["chrome://extensions"]:
             raise ValueError(f"{url} only supported in non-incognito contexts")
         target = self.current_target
-        await target.get(url=url, referrer=referrer, wait_load=wait_load, timeout=timeout)
+        return await target.get(url=url, referrer=referrer, wait_load=wait_load, timeout=timeout)
 
     @property
     async def title(self) -> str:
@@ -751,7 +785,8 @@ class Context:
         target = await self.get_target(target_id=target_id)
         return await target.get_network_conditions()
 
-    async def set_network_conditions(self, offline: bool, latency: int, download_throughput: int, upload_throughput: int,
+    async def set_network_conditions(self, offline: bool, latency: int, download_throughput: int,
+                                     upload_throughput: int,
                                      connection_type: typing.Literal[
                                          "none", "cellular2g", "cellular3g", "cellular4g", "bluetooth", "ethernet", "wifi", "wimax", "other"],
                                      target_id: str = None) -> None:
