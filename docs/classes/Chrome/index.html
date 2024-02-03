@@ -58,6 +58,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.mv3_extension"><code class="docutils literal notranslate"><span class="pre">Chrome.mv3_extension</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.ensure_extensions_incognito_allowed"><code class="docutils literal notranslate"><span class="pre">Chrome.ensure_extensions_incognito_allowed()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.base_context"><code class="docutils literal notranslate"><span class="pre">Chrome.base_context</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.downloads_dir"><code class="docutils literal notranslate"><span class="pre">Chrome.downloads_dir</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.set_download_behaviour"><code class="docutils literal notranslate"><span class="pre">Chrome.set_download_behaviour()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.current_context"><code class="docutils literal notranslate"><span class="pre">Chrome.current_context</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.get_target"><code class="docutils literal notranslate"><span class="pre">Chrome.get_target()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.get_target_for_iframe"><code class="docutils literal notranslate"><span class="pre">Chrome.get_target_for_iframe()</span></code></a></li>
@@ -262,6 +264,26 @@ See <a class="reference external" href="https://developer.chrome.com/docs/extens
 <dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.base_context">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">base_context</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Context</span></em><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.base_context" title="Link to this definition"></a></dt>
 <dd><p>the Context which isn’t incognito</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.downloads_dir">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">downloads_dir</span></span><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.downloads_dir" title="Link to this definition"></a></dt>
+<dd><p>the current downloads directory for the current context</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.set_download_behaviour">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_download_behaviour</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">behaviour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.set_download_behaviour"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.set_download_behaviour" title="Link to this definition"></a></dt>
+<dd><p>set the download behaviour</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>behaviour</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'deny'</span></code>, <code class="docutils literal notranslate"><span class="pre">'allow'</span></code>, <code class="docutils literal notranslate"><span class="pre">'allowAndName'</span></code>, <code class="docutils literal notranslate"><span class="pre">'default'</span></code>]</span>) – the behaviour to set the downloading to</p></li>
+<li><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – the path to the default download directory</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">

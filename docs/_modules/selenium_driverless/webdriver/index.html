@@ -341,7 +341,7 @@
                     <span class="n">target_id</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_current_target</span> <span class="o">=</span> <span class="k">await</span> <span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_host</span><span class="p">,</span>
                                                             <span class="n">loop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">,</span> <span class="n">is_remote</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_is_remote</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                                                            <span class="n">max_ws_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_ws_size</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+                                                            <span class="n">max_ws_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_ws_size</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
                     <span class="c1"># handle the context</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">:</span>
@@ -351,6 +351,7 @@
                         <span class="n">context</span> <span class="o">=</span> <span class="k">await</span> <span class="n">Context</span><span class="p">(</span><span class="n">base_target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_target</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">,</span>
                                                 <span class="n">max_ws_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_ws_size</span><span class="p">)</span>
                     <span class="n">_id</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">context_id</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_current_target</span><span class="o">.</span><span class="n">_context</span> <span class="o">=</span> <span class="n">context</span>
 
                     <span class="k">def</span> <span class="nf">remove_context</span><span class="p">():</span>
                         <span class="k">if</span> <span class="n">_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contexts</span><span class="p">:</span>
@@ -371,12 +372,9 @@
             <span class="n">downloads_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">downloads_dir</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">downloads_dir</span><span class="p">:</span>
                 <span class="c1"># ensure download events are dispatched</span>
-                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Browser.setDownloadBehavior&quot;</span><span class="p">,</span>
-                                                       <span class="p">{</span><span class="s2">&quot;behavior&quot;</span><span class="p">:</span> <span class="s2">&quot;allowAndName&quot;</span><span class="p">,</span> <span class="s2">&quot;downloadPath&quot;</span><span class="p">:</span> <span class="n">downloads_dir</span><span class="p">,</span>
-                                                        <span class="s2">&quot;eventsEnabled&quot;</span><span class="p">:</span><span class="kc">True</span><span class="p">})</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_download_behaviour</span><span class="p">(</span><span class="s2">&quot;allowAndName&quot;</span><span class="p">,</span> <span class="n">downloads_dir</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Browser.setDownloadBehavior&quot;</span><span class="p">,</span>
-                                                       <span class="p">{</span><span class="s2">&quot;behavior&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;eventsEnabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_download_behaviour</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_started</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="bp">self</span>
 
@@ -636,6 +634,23 @@
 <span class="sd">        the Context which isn&#39;t incognito</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_context</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">downloads_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the current downloads directory for the current context&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">downloads_dir_for_context</span><span class="p">(</span><span class="n">context_id</span><span class="o">=</span><span class="s2">&quot;DEFAULT&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Chrome.set_download_behaviour">
+<a class="viewcode-back" href="../../../classes/Chrome/#selenium_driverless.webdriver.Chrome.set_download_behaviour">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_download_behaviour</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">behaviour</span><span class="p">:</span><span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;deny&quot;</span><span class="p">,</span> <span class="s2">&quot;allow&quot;</span><span class="p">,</span> <span class="s2">&quot;allowAndName&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">],</span>
+                                     <span class="n">path</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;set the download behaviour</span>
+
+<span class="sd">        :param behaviour: the behaviour to set the downloading to</span>
+<span class="sd">        :param path: the path to the default download directory</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_context</span><span class="o">.</span><span class="n">set_download_behaviour</span><span class="p">(</span><span class="n">behaviour</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">current_context</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Context</span><span class="p">:</span>

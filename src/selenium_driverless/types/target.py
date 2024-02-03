@@ -53,7 +53,7 @@ class Target:
         """
         from selenium_driverless.types.context import Context
         self._parent_target = None
-        self._context:Context = context
+        self._context: Context = context
         self._window_id = None
         self._pointer = None
         self._page_enabled = None
@@ -182,7 +182,8 @@ class Target:
 
         async def target_getter(target_id: str, timeout: float = 2, max_ws_size: int = 2 ** 20):
             return await get_target(target_id=target_id, host=self._host, loop=self._loop, is_remote=self._is_remote,
-                                    timeout=timeout, max_ws_size=max_ws_size, driver=self._driver, context=self._context)
+                                    timeout=timeout, max_ws_size=max_ws_size, driver=self._driver,
+                                    context=self._context)
 
         _targets = await get_targets(cdp_exec=self.execute_cdp_cmd, target_getter=target_getter,
                                      _type="iframe", context_id=self._context_id, max_ws_size=self._max_ws_size)
@@ -214,7 +215,7 @@ class Target:
             raise NoSuchIframe(iframe, "no target for iframe found")
         return targets[0]
 
-    async def wait_download(self, timeout:float or None=30) -> dict:
+    async def wait_download(self, timeout: float or None = 30) -> dict:
         """
         wait for a download on the current tab
 
@@ -238,6 +239,7 @@ class Target:
             downloads from iframes not supported yet
 
         """
+
         # todo: support downloads from iframes
         async def _wait_download():
             base_frame = await self.base_frame
@@ -248,9 +250,15 @@ class Target:
                 curr_id = base_frame.get("id")
                 if data["frameId"] in [_id, curr_id]:
                     if _dir:
-                        # noinspection PyProtectedMember
-                        data["guid_file"] = str(pathlib.Path(_dir + "/" + data["guid"]))
+                        guid_file = str(pathlib.Path(_dir + "/" + data["guid"]))
+                        named_file = str(pathlib.Path(_dir + "/" + "suggestedFilename"))
+                        data["guid_file"] = guid_file
+                        data["named_file"] = named_file
+                        while not (os.path.exists(guid_file) or os.path.exists(named_file)):
+                            # wait for file to exist
+                            await asyncio.sleep(0.01)
                     return data
+
         return await asyncio.wait_for(_wait_download(), timeout=timeout)
 
     # noinspection PyUnboundLocalVariable,PyProtectedMember
@@ -281,16 +289,21 @@ class Target:
         if wait_load:
             if not self._page_enabled:
                 await self.execute_cdp_cmd("Page.enable")
+
+            # wait for download or loadEventFired
             wait = asyncio.ensure_future(asyncio.wait([
-                # wait for download or loadEventFired
                 asyncio.ensure_future(self.wait_for_cdp("Page.loadEventFired", timeout=None)),
                 asyncio.ensure_future(self.wait_download(timeout=None))
             ], timeout=timeout, return_when=asyncio.FIRST_COMPLETED))
-        await asyncio.sleep(0.01)
+
+            await asyncio.sleep(0.01)  # ensure listening for events has already started
+
+        # send navigate cmd
         args = {"url": url, "transitionType": "link"}
         if referrer:
             args["referrer"] = referrer
         get = asyncio.ensure_future(self.execute_cdp_cmd("Page.navigate", args, timeout=timeout))
+
         if wait_load:
             done, pending = await wait
             pending.pop().cancel()
@@ -299,12 +312,9 @@ class Target:
                 await get  # ensure get is awaited in every case
                 raise asyncio.TimeoutError(f'page: "{url}" didn\'t load within timeout of {timeout}')
             result = done.pop().result()  # data of the event waited for
-        await get
+
+        await get  # wait for navigate cmd response
         await self._on_loaded()
-        guid_file = result.get("guid_file")
-        if guid_file:
-            while not os.path.exists(guid_file):
-                await asyncio.sleep(0.01)
         return result
 
     async def _global_this(self, context_id: str = None):
@@ -834,7 +844,8 @@ class Target:
         """
         raise NotImplementedError("not started with chromedriver")
 
-    async def set_network_conditions(self, offline: bool, latency: int, download_throughput: int, upload_throughput: int,
+    async def set_network_conditions(self, offline: bool, latency: int, download_throughput: int,
+                                     upload_throughput: int,
                                      connection_type: typing.Literal[
                                          "none", "cellular2g", "cellular3g", "cellular4g", "bluetooth", "ethernet", "wifi", "wimax", "other"]) -> None:
         """Sets Chromium network emulation settings.
