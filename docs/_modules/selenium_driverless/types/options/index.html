@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>selenium_driverless.types.options &mdash; Selenium-Driverless 1.7.3 documentation</title>
+  <title>selenium_driverless.types.options &mdash; Selenium-Driverless 1.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=0c9882db"></script>
+        <script src="../../../../_static/documentation_options.js?v=02d11055"></script>
         <script src="../../../../_static/doctools.js?v=888ff710"></script>
         <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -42,8 +42,12 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../classes/By/">By Element Locator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../classes/Chrome/">webdriver.Chrome</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../classes/ChromeOptions/">ChromeOptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../classes/Context/">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../classes/Target/">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../classes/WebELement/">WebElement</a></li>
 </ul>
 
         </div>
@@ -91,6 +95,7 @@
 <span class="c1"># modified by kaliiiiiiiiii | Aurin Aegerter</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span>
 <span class="kn">import</span> <span class="nn">typing</span>
@@ -121,116 +126,65 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_experimental_options</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_debugger_address</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_user_data_dir</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_downloads_dir</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_arguments</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;devtools&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">&#39;preferences&#39;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="c1"># always open devtools in undocked</span>
-                <span class="s1">&#39;currentDockState&#39;</span><span class="p">:</span> <span class="s1">&#39;&quot;undocked&quot;&#39;</span><span class="p">,</span>
-                <span class="c1"># always open devtools with console open</span>
-                <span class="s1">&#39;panel-selectedTab&#39;</span><span class="p">:</span> <span class="s1">&#39;&quot;console&quot;&#39;</span><span class="p">}</span>
-        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;devtools&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;preferences&#39;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="c1"># always open devtools in undocked</span>
+                    <span class="s1">&#39;currentDockState&#39;</span><span class="p">:</span> <span class="s1">&#39;&quot;undocked&quot;&#39;</span><span class="p">,</span>
+                    <span class="c1"># always open devtools with console open</span>
+                    <span class="s1">&#39;panel-selectedTab&#39;</span><span class="p">:</span> <span class="s1">&#39;&quot;console&quot;&#39;</span><span class="p">}</span>
+            <span class="p">},</span>
+            <span class="s1">&#39;plugins&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="c1">#  don&#39;t open PDF with pdf plugin</span>
+                <span class="s1">&#39;always_open_pdf_externally&#39;</span><span class="p">:</span> <span class="kc">True</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;download_bubble&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="c1"># don&#39;t Show downloads when they&#39;re done</span>
+                <span class="s2">&quot;partial_view_enabled&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;in_product_help&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;snoozed_feature&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;IPH_HighEfficiencyMode&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="c1"># disable &quot;memory saver&quot;</span>
+                        <span class="c1"># instead, limit number of open tabs</span>
+                        <span class="c1"># https://github.com/milahu/aiohttp_chromium/blob/61fe3150ed032ef8aa99b23dddbedaa1929c229c/src/aiohttp_chromium/client.py#L1017-L1025</span>
+                        <span class="s2">&quot;is_dismissed&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="c1"># disable password manager popup https://stackoverflow.com/a/46602329/20443541</span>
+            <span class="s2">&quot;credentials_enable_service&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;profile&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;password_manager_enabled&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ignore_local_proxy</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_auto_clean_dirs</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_headless</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_startup_url</span> <span class="o">=</span> <span class="s2">&quot;about:blank&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--no-first-run&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--disable-component-update&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--no-service-autorun&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_arguments</span><span class="p">(</span>
+            <span class="s2">&quot;--no-first-run&quot;</span><span class="p">,</span>  <span class="c1"># disable first run page</span>
+            <span class="s1">&#39;--disable-component-update&#39;</span><span class="p">,</span>  <span class="c1"># disable updates</span>
+            <span class="s1">&#39;--no-service-autorun&#39;</span><span class="p">,</span>  <span class="c1"># don&#39;t start a service</span>
+            <span class="c1"># don&#39;t auto-reload pages on network errors, https://github.com/milahu/aiohttp_chromium/blob/61fe3150ed032ef8aa99b23dddbedaa1929c229c/src/aiohttp_chromium/client.py#L1116C9-L1118</span>
+            <span class="s2">&quot;--disable-auto-reload&quot;</span><span class="p">,</span>
+            <span class="c1"># some backgrounding tweaking</span>
+            <span class="s1">&#39;--disable-backgrounding-occluded-windows&#39;</span><span class="p">,</span> <span class="s1">&#39;--disable-renderer-backgrounding&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;--disable-background-timer-throttling&#39;</span><span class="p">,</span> <span class="s1">&#39;--disable-renderer-backgrounding&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;--disable-background-networking&#39;</span><span class="p">,</span> <span class="s1">&#39;--no-pings&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;--disable-infobars&#39;</span><span class="p">,</span> <span class="s1">&#39;--disable-breakpad&#39;</span><span class="p">,</span>  <span class="c1"># some bars tweak</span>
+            <span class="s2">&quot;--no-default-browser-check&quot;</span><span class="p">,</span>  <span class="c1"># disable default browser message</span>
+            <span class="s1">&#39;--homepage=about:blank&#39;</span>  <span class="c1"># set homepage</span>
+            <span class="s2">&quot;--wm-window-animations-disabled&quot;</span><span class="p">,</span> <span class="s2">&quot;--animation-duration-scale=0&quot;</span>  <span class="c1"># disable animations</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="n">IS_POSIX</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--password-store=basic&quot;</span><span class="p">)</span>
-
-        <span class="c1"># to support multiple instances</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--disable-backgrounding-occluded-windows&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--disable-renderer-backgrounding&#39;</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--disable-background-timer-throttling&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--disable-renderer-backgrounding&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--disable-background-networking&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--no-pings&#39;</span><span class="p">)</span>
-
-        <span class="c1"># noinspection SpellCheckingInspection</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--disable-infobars&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--disable-breakpad&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--no-default-browser-check&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--homepage=about:blank&#39;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_remote</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="c1"># extension</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">add_extension</span><span class="p">(</span><span class="n">sel_driverless_path</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;files/mv3_extension&quot;</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">auto_clean_dirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;if user-data-dir should be cleaned automatically</span>
-<span class="sd">        defaults to True</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_clean_dirs</span>
-
-    <span class="nd">@auto_clean_dirs</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">auto_clean_dirs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_auto_clean_dirs</span> <span class="o">=</span> <span class="n">enabled</span>
-
-    <span class="k">def</span> <span class="nf">enable_mobile</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">android_package</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;com.android.chrome&quot;</span><span class="p">,</span>
-            <span class="n">android_activity</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">device_serial</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enables mobile browser use for browsers that support it.</span>
-
-<span class="sd">        :param android_activity: The name of the android package to start</span>
-<span class="sd">        :param android_package:</span>
-<span class="sd">        :param device_serial:</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">android_package</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;android_package must be passed in&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mobile_options</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;androidPackage&quot;</span><span class="p">:</span> <span class="n">android_package</span><span class="p">}</span>
-        <span class="k">if</span> <span class="n">android_activity</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mobile_options</span><span class="p">[</span><span class="s2">&quot;androidActivity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">android_activity</span>
-        <span class="k">if</span> <span class="n">device_serial</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mobile_options</span><span class="p">[</span><span class="s2">&quot;androidDeviceSerial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">device_serial</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">accept_insecure_certs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        :returns: whether the session accepts insecure certificates</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_caps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;acceptInsecureCerts&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">single_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Set a single proxy to be applied.</span>
-
-<span class="sd">        .. code-block:: python</span>
-
-<span class="sd">            options = webdriver.ChromeOptions()</span>
-<span class="sd">            options.single_proxy = &quot;http://user1:passwrd1@example.proxy.com:5001/&quot;</span>
-
-<span class="sd">        .. warning::</span>
-
-<span class="sd">            - Only supported when Chrome has been started with driverless or the extension at ``selenium_driverless/files/mv3_extension`` has been loaded into the browser.</span>
-
-<span class="sd">            - ``Socks5`` doesn&#39;t support authentication due to `crbug#1309413 &lt;https://bugs.chromium.org/p/chromium/issues/detail?id=1309413&gt;`__.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_proxy</span>
-
-    <span class="nd">@single_proxy</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">single_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_single_proxy</span> <span class="o">=</span> <span class="n">proxy</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">prefs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span>
-
-    <span class="k">def</span> <span class="nf">update_pref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">prefs_to_json</span><span class="p">({</span><span class="n">pref</span><span class="p">:</span> <span class="n">value</span><span class="p">}))</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -273,6 +227,33 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;argument has to be str&quot;</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="Options.add_arguments">
+<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.add_arguments">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">arguments</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;add multiple arguments</span>
+
+<span class="sd">        :param arguments: arguments to add</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">arguments</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">prefs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the preferences as json&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span>
+
+<div class="viewcode-block" id="Options.update_pref">
+<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.update_pref">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_pref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;update a preference</span>
+
+<span class="sd">        :param pref: name of the preference (&quot;.&quot; dot path)</span>
+<span class="sd">        :param value: the value to set the preference to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">prefs_to_json</span><span class="p">({</span><span class="n">pref</span><span class="p">:</span> <span class="n">value</span><span class="p">}))</span></div>
+
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">user_data_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;the directory to save all browser data in.</span>
@@ -284,67 +265,39 @@
     <span class="k">def</span> <span class="nf">user_data_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--user-data-dir=</span><span class="si">{</span><span class="n">_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">ignore_local_proxy_environment_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;By calling this you will ignore HTTP_PROXY and HTTPS_PROXY from</span>
-<span class="sd">        being picked up and used.&quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ignore_local_proxy</span> <span class="o">=</span> <span class="kc">True</span>
-
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">binary_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        path to the Chromium binary</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_location</span>
+    <span class="k">def</span> <span class="nf">downloads_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the default directory to download files to.</span>
 
-    <span class="nd">@binary_location</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">binary_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_binary_location</span> <span class="o">=</span> <span class="n">value</span>
+<span class="sd">        .. code-block:: python</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">debugger_address</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The address of the remote devtools instance</span>
-<span class="sd">        Setting this value makes the driver connect to a remote browser instance.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debugger_address</span>
-
-    <span class="nd">@debugger_address</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">debugger_address</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_debugger_address</span> <span class="o">=</span> <span class="n">value</span>
-
-<div class="viewcode-block" id="Options.add_extension">
-<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.add_extension">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_extension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds an extension to Chrome</span>
-<span class="sd">        The extension can either be a compressed file (zip, crx, etc.) or extracted in a directory</span>
-
-<span class="sd">        :param path: path to the extension</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">extension_to_add</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">extension_to_add</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_extension_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extension_to_add</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Path to the extension doesn&#39;t exist&quot;</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Options.add_experimental_option">
-<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.add_experimental_option">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_experimental_option</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds an experimental option which is passed to chromium.</span>
+<span class="sd">            _dir = os.getcwd()+&quot;/downloads&quot;</span>
+<span class="sd">            if not os.path.isdir(_dir):</span>
+<span class="sd">                os.mkdir(_dir)</span>
+<span class="sd">            options = webdriver.ChromeOptions()</span>
+<span class="sd">            options.downloads_dir = _dir</span>
+<span class="sd">            async with webdriver.Chrome(options=options) as driver:</span>
+<span class="sd">                download_data = await driver.get(&#39;https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf&#39;, timeout=5)</span>
+<span class="sd">                print(download_data.get(&quot;guid_file&quot;))</span>
 
 <span class="sd">        .. warning::</span>
-<span class="sd">            only ``name=&quot;prefs&quot;`` supported.</span>
-<span class="sd">            This method is deprecated and will be removed. Use :obj:`ChromeOptions.update_pref` instead.</span>
-
-<span class="sd">        :param name: The experimental option name.</span>
-<span class="sd">        :param value: The option value.</span>
+<span class="sd">            path has to be absolute</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;prefs&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">prefs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">prefs_to_json</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_downloads_dir</span>
 
+    <span class="nd">@downloads_dir</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">downloads_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">directory_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_downloads_dir</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_dir</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">directory_path</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">_dir</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;path can&#39;t point to a file&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">_dir</span><span class="p">):</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">_dir</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_downloads_dir</span> <span class="o">=</span> <span class="n">_dir</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">headless</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -370,7 +323,150 @@
     <span class="k">def</span> <span class="nf">startup_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]):</span>
         <span class="k">if</span> <span class="n">url</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_startup_url</span> <span class="o">=</span> <span class="n">url</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_startup_url</span> <span class="o">=</span> <span class="n">url</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">single_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a single proxy to be applied.</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            options = webdriver.ChromeOptions()</span>
+<span class="sd">            options.single_proxy = &quot;http://user1:passwrd1@example.proxy.com:5001/&quot;</span>
+
+<span class="sd">        .. warning::</span>
+
+<span class="sd">            - Only supported when Chrome has been started with driverless or the extension at ``selenium_driverless/files/mv3_extension`` has been loaded into the browser.</span>
+
+<span class="sd">            - ``Socks5`` doesn&#39;t support authentication due to `crbug#1309413 &lt;https://bugs.chromium.org/p/chromium/issues/detail?id=1309413&gt;`__.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_proxy</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">binary_location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        path to the Chromium binary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_location</span>
+
+    <span class="nd">@binary_location</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">binary_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_binary_location</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="Options.add_extension">
+<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.add_extension">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_extension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds an extension to Chrome</span>
+<span class="sd">        The extension can either be a compressed file (zip, crx, etc.) or extracted in a directory</span>
+
+<span class="sd">        :param path: path to the extension</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">extension_to_add</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">extension_to_add</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_extension_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extension_to_add</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Path to the extension doesn&#39;t exist&quot;</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">debugger_address</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The address of the remote devtools instance in format &quot;host:port&quot;</span>
+<span class="sd">        Setting this value makes the driver connect to a remote browser instance (unless you set user-data-dir as well)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debugger_address</span>
+
+    <span class="nd">@debugger_address</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">debugger_address</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_debugger_address</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@single_proxy</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">single_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_single_proxy</span> <span class="o">=</span> <span class="n">proxy</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">auto_clean_dirs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;if user-data-dir should be cleaned automatically</span>
+<span class="sd">        defaults to True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_clean_dirs</span>
+
+    <span class="nd">@auto_clean_dirs</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">auto_clean_dirs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_auto_clean_dirs</span> <span class="o">=</span> <span class="n">enabled</span>
+
+<div class="viewcode-block" id="Options.enable_mobile">
+<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.enable_mobile">[docs]</a>
+    <span class="k">def</span> <span class="nf">enable_mobile</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">android_package</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;com.android.chrome&quot;</span><span class="p">,</span>
+            <span class="n">android_activity</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">device_serial</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enables mobile browser use for browsers that support it.</span>
+
+<span class="sd">        :param android_activity: The name of the android package to start</span>
+<span class="sd">        :param android_package:</span>
+<span class="sd">        :param device_serial:</span>
+
+<span class="sd">        .. warning::</span>
+
+<span class="sd">            Not Implemented yet</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">android_package</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;android_package must be passed in&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mobile_options</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;androidPackage&quot;</span><span class="p">:</span> <span class="n">android_package</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">android_activity</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mobile_options</span><span class="p">[</span><span class="s2">&quot;androidActivity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">android_activity</span>
+        <span class="k">if</span> <span class="n">device_serial</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mobile_options</span><span class="p">[</span><span class="s2">&quot;androidDeviceSerial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">device_serial</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">accept_insecure_certs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :returns: whether the session accepts insecure certificates</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            NotImplemented yet</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_caps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;acceptInsecureCerts&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Options.ignore_local_proxy_environment_variables">
+<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.ignore_local_proxy_environment_variables">[docs]</a>
+    <span class="k">def</span> <span class="nf">ignore_local_proxy_environment_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;By calling this you will ignore HTTP_PROXY and HTTPS_PROXY from</span>
+<span class="sd">        being picked up and used.</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            NotImplemented yet</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ignore_local_proxy</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="Options.add_experimental_option">
+<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.add_experimental_option">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_experimental_option</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds an experimental option which is passed to chromium.</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            only ``name=&quot;prefs&quot;`` supported.</span>
+<span class="sd">            This method is deprecated and will be removed. Use :obj:`ChromeOptions.update_pref` instead.</span>
+
+<span class="sd">        :param name: The experimental option name.</span>
+<span class="sd">        :param value: The option value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;prefs&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prefs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">prefs_to_json</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+</div>
 
 </pre></div>
 

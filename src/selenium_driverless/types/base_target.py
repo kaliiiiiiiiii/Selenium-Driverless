@@ -29,6 +29,7 @@ class BaseTarget:
         self._started = False
         self._timeout = timeout
         self._max_ws_size = max_ws_size
+        self._downloads_paths = {}
 
     def __repr__(self):
         return f'<{type(self).__module__}.{type(self).__name__} (target_id="{self.id}", host="{self._host}")>'
@@ -135,5 +136,16 @@ class BaseTarget:
         """
         if not self.socket:
             await self._init()
+        if cmd == "Browser.setDownloadBehavior":
+            path = cmd_args.get("downloadPath")
+            if path:
+                self._downloads_paths[cmd_args.get("browserContextId", "DEFAULT")] = path
         result = await self.socket.exec(method=cmd, params=cmd_args, timeout=timeout)
         return result
+
+    def downloads_dir_for_context(self, context_id:str="DEFAULT") -> str:
+        """get the default download directory for a specific context
+
+        :param context_id: the id of the context to get the directory for
+        """
+        return self._downloads_paths.get(context_id)

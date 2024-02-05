@@ -28,8 +28,6 @@ import typing
 import uuid
 import warnings
 import signal
-from contextlib import asynccontextmanager
-from importlib import import_module
 from typing import List
 
 # io
@@ -37,9 +35,6 @@ import asyncio
 
 import cdp_socket.exceptions
 import websockets
-
-# selenium
-from selenium.webdriver.remote.bidi_connection import BidiConnection
 
 # interactions
 from selenium_driverless.input.pointer import Pointer
@@ -60,6 +55,7 @@ from selenium_driverless.sync.base_target import BaseTarget as SyncBaseTarget
 from cdp_socket.utils.conn import get_json
 from selenium_driverless.types.options import Options as ChromeOptions
 from selenium_driverless.types import JSEvalException
+from selenium_driverless import EXC_HANDLER
 
 
 class Chrome:
@@ -72,21 +68,22 @@ class Chrome:
             debug: bool = False,
             max_ws_size: int = 2 ** 27
     ) -> None:
+        # noinspection GrazieInspection
         """Creates a new instance of the chrome target. Starts the service and
-        then creates new instance of chrome target.
+                then creates new instance of chrome target.
 
-        .. code-block:: python
+                .. code-block:: python
 
-            options = webdriver.ChromeOptions.rst()
-            async with webdriver.Chrome(options=options) as driver:
-                await driver.get('https://abrahamjuliot.github.io/creepjs/', wait_load=True)
-                print(await driver.title)
+                    options = webdriver.ChromeOptions.rst()
+                    async with webdriver.Chrome(options=options) as driver:
+                        await driver.get('https://abrahamjuliot.github.io/creepjs/', wait_load=True)
+                        print(await driver.title)
 
-        :param options: this takes an instance of ChromeOptions.rst
-        :param timeout: timeout in seconds to start chrome
-        :param debug: redirect errors from the chromium process output (stderr) to console
-        :param max_ws_size: maximum size for websocket messages in bytes. 2^27 ~= 130 MB by default
-        """
+                :param options: this takes an instance of ChromeOptions.rst
+                :param timeout: timeout in seconds to start chrome
+                :param debug: redirect errors from the chromium process output (stderr) to console
+                :param max_ws_size: maximum size for websocket messages in bytes. 2^27 ~= 130 MB by default
+                """
         self._prefs = {}
         self._auth_interception_enabled = None
         self._mv3_extension = None
@@ -267,7 +264,7 @@ class Chrome:
                     target_id = target["id"]
                     self._current_target = await get_target(target_id=target_id, host=self._host,
                                                             loop=self._loop, is_remote=self._is_remote, timeout=2,
-                                                            max_ws_size=self._max_ws_size, driver=self)
+                                                            max_ws_size=self._max_ws_size, driver=self, context=None)
 
                     # handle the context
                     if self._loop:
@@ -277,6 +274,7 @@ class Chrome:
                         context = await Context(base_target=self._current_target, driver=self, loop=self._loop,
                                                 max_ws_size=self._max_ws_size)
                     _id = context.context_id
+                    self._current_target._context = context
 
                     def remove_context():
                         if _id in self._contexts:
@@ -294,6 +292,12 @@ class Chrome:
             await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
             if self._options.single_proxy:
                 await self.set_single_proxy(self._options.single_proxy)
+            downloads_dir = self._options.downloads_dir
+            if self._options.downloads_dir:
+                # ensure download events are dispatched
+                await self.set_download_behaviour("allowAndName", downloads_dir)
+            else:
+                await self.set_download_behaviour("default")
             self._started = True
         return self
 
@@ -424,8 +428,7 @@ class Chrome:
         return context
 
     async def get_targets(self,
-                          _type: typing.Union[typing.Literal["page"], typing.Literal["background_page"],
-                          typing.Literal["service_worker"], typing.Literal["browser"], typing.Literal["other"]] = None,
+                          _type: typing.Literal["page", "background_page", "service_worker", "browser", "other"] = None,
                           context_id: str or None = "self") -> typing.Dict[str, TargetInfo]:
         """
         get all targets within the current context
@@ -511,12 +514,12 @@ class Chrome:
         """
         if not self._extensions_incognito_allowed:
             self._extensions_incognito_allowed = True
+            # noinspection PyTypeChecker
             page = None
             try:
                 base_ctx = self._base_context
-                page = await base_ctx.new_window("tab", "chrome://extensions", activate=False)
+                page: Context = await base_ctx.new_window("tab", "chrome://extensions", activate=False)
                 script = """
-                    var callback = arguments[arguments.length -1]
                     async function make_global(){
                         const extensions = await chrome.developerPrivate.getExtensionsInfo();
                         extensions.forEach( async function(extension)  {
@@ -525,13 +528,13 @@ class Chrome:
                                 incognitoAccess: true
                             })
                         });
-                        callback()
-                    }
-                    make_global()
+                    };
+                    await make_global()
                 """
                 await asyncio.sleep(0.1)
-                await page.execute_async_script(script, timeout=5)
-            except Exception:
+                await page.eval_async(script, timeout=5)
+            except Exception as e:
+                EXC_HANDLER(e)
                 self._extensions_incognito_allowed = False
                 if page:
                     await page.close()
@@ -545,6 +548,24 @@ class Chrome:
         the Context which isn't incognito
         """
         return self._base_context
+
+    @property
+    def downloads_dir(self):
+        """the current downloads directory for the current context"""
+        return self.base_target.downloads_dir_for_context(context_id="DEFAULT")
+
+    async def set_download_behaviour(self,behaviour:typing.Literal["deny", "allow", "allowAndName", "default"],
+                                     path:str=None):
+        """set the download behaviour
+
+        :param behaviour: the behaviour to set the downloading to
+        :param path: the path to the default download directory
+
+        .. warning::
+            setting ``behaviour=allow`` instead of ``allowAndName`` can cause some bugs
+
+        """
+        await self.current_context.set_download_behaviour(behaviour, path)
 
     @property
     def current_context(self) -> Context:
@@ -592,7 +613,33 @@ class Chrome:
         """
         return await self.current_target.get_targets_for_iframes(iframes=iframes)
 
-    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
+    async def wait_download(self, timeout:float or None=30) -> dict:
+        """
+        wait for a download on the current tab
+
+        returns something like
+
+        .. code-block:: python
+
+            {
+                "frameId": "2D543B5E8B14945B280C537A4882A695",
+                "guid": "c91df4d5-9b45-4962-84df-3749bd3f926d",
+                "url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                "suggestedFilename": "dummy.pdf",
+
+                # only if options.downloads_dir specified
+                "guid_file": "D:\\System\\AppData\\PyCharm\\scratches\\downloads\\c91df4d5-9b45-4962-84df-3749bd3f926d"
+            }
+
+        :param timeout: time in seconds to wait for a download
+
+        .. warning::
+            downloads from iframes not supported yet
+
+        """
+        return await self.current_target.wait_download(timeout=timeout)
+
+    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> typing.Union[None, dict]:
         """Loads a web page in the current Target
 
         :param url: the url to load.
@@ -600,10 +647,9 @@ class Chrome:
         :param wait_load: whether to wait for the webpage to load
         :param timeout: the maximum time in seconds for waiting on load
 
-        .. warning::
-            loading pages which initiate a download requires to set ``wait_load=False`` for now. see `issues#140 <https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/140>`__
+        returns the same as :func:`Target.wait_download <selenium_driverless.types.target.Target.wait_download>` if the url initiates a download
         """
-        await self.current_target.get(url=url, referrer=referrer, wait_load=wait_load, timeout=timeout)
+        return await self.current_target.get(url=url, referrer=referrer, wait_load=wait_load, timeout=timeout)
 
     @property
     async def title(self) -> str:
@@ -620,8 +666,7 @@ class Chrome:
         return target.pointer
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False,
-                                 serialization: typing.Union[
-                                     typing.Literal["deep"], typing.Literal["json"], typing.Literal["idOnly"]] = "deep",
+                                 serialization: typing.Literal["deep", "json", "idOnly"] = "deep",
                                  max_depth: int = None, timeout: int = 2, execution_context_id: str = None,
                                  unique_context: bool = False):
         """executes a JavaScript on ``GlobalThis`` such as
@@ -630,16 +675,16 @@ class Chrome:
 
             function(...arguments){return document}
 
-        ``this`` refers to ``globalThis`` (=> window)
+        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
 
         :param script: the script as a string
-        :param args: the argument which are passed to the function. Those can be either json-serializable or a RemoteObject such as WebELement
+        :param args: the argument which are passed to the function. Those can be either json-serializable or a RemoteObject such as WebElement
         :param await_res: whether to await the function or the return value of it
         :param serialization: can be one of ``deep``, ``json``, ``idOnly``
         :param max_depth: The maximum depth objects get serialized.
         :param timeout: the maximum time to wait for the execution to complete
         :param execution_context_id: the execution context id to run the JavaScript in. Exclusive with unique_context
-        :param unique_context: whether to use a isolated context to run the Script in.
+        :param unique_context: whether to use an isolated context to run the Script in.
 
         see `Runtime.callFunctionOn <https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#method-callFunctionOn>`_
         """
@@ -654,13 +699,13 @@ class Chrome:
                              unique_context: bool = False):
         """executes JavaScript synchronously on ``GlobalThis`` such as
 
-                .. code-block:: js
+        .. code-block:: js
 
-                    return document
+            return document
 
-                ``this`` refers to ``globalThis`` (=> window)
+        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
 
-                see :func:`Chrome.execute_raw_script <selenium_driverless.webdriver.Chrome.execute_raw_script>` for argument descriptions
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
                 """
         target = await self.get_target(target_id)
         return await target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
@@ -673,19 +718,46 @@ class Chrome:
                                    unique_context: bool = False):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
 
-                        .. code-block:: js
+        .. warning::
+            using execute_async_script is not recommended as it doesn't handle exceptions correctly.
+            Use :func:`Chrome.eval_async <selenium_driverless.webdriver.Chrome.eval_async>`
 
-                            resolve = arguments[arguments.length-1]
+        .. code-block:: js
 
-                        ``this`` refers to ``globalThis`` (=> window)
+            resolve = arguments[arguments.length-1]
 
-                        see :func:`Chrome.execute_raw_script <selenium_driverless.webdriver.Chrome.execute_raw_script>` for argument descriptions
-                        """
+        ``this`` refers to ``globalThis`` (=> window)
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
+        """
         target = await self.get_target(target_id)
         return await target.execute_async_script(script, *args, max_depth=max_depth, serialization=serialization,
                                                  timeout=timeout,
                                                  execution_context_id=execution_context_id,
                                                  unique_context=unique_context)
+
+    async def eval_async(self, script: str, *args, max_depth: int = 2,
+                         serialization: str = None, timeout: int = 2,
+                         target_id: str = None, execution_context_id: str = None,
+                         unique_context: bool = False):
+        """executes JavaScript asynchronously on ``GlobalThis`` such as
+
+        .. code-block:: js
+
+            res = await fetch("https://httpbin.org/get");
+            // mind CORS!
+            json = await res.json()
+            return json
+
+        ``this`` refers to ``globalThis`` (=> window)
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
+        """
+        target = await self.get_target(target_id)
+        return await target.eval_async(script, *args, max_depth=max_depth, serialization=serialization,
+                                       timeout=timeout,
+                                       execution_context_id=execution_context_id,
+                                       unique_context=unique_context)
 
     @property
     async def current_url(self) -> str:
@@ -735,8 +807,6 @@ class Chrome:
             except websockets.ConnectionClosedError:
                 pass
             except Exception as e:
-                import sys
-                print('Ignoring exception at driver.base_target.execute_cdp_cmd("Browser.close")', file=sys.stderr)
                 EXC_HANDLER(e)
             if not self._is_remote:
                 if self._process is not None:
@@ -744,9 +814,6 @@ class Chrome:
                     try:
                         await loop.run_in_executor(None, lambda: self._process.wait(timeout))
                     except Exception as e:
-                        import sys
-                        print('Ignoring exception at driver._process.wait(timeout)',
-                              file=sys.stderr)
                         EXC_HANDLER(e)
                     else:
                         self._process = None
@@ -781,7 +848,7 @@ class Chrome:
                                 loop.run_in_executor(None,
                                                      lambda: clean_dirs_sync(
                                                          [self._temp_dir, self._options.user_data_dir])),
-                                timeout=timeout - (time.monotonic() - start))
+                                timeout=max(5,int(timeout - (time.monotonic() - start))))
                         except Exception as e:
                             warnings.warn(
                                 "driver hasn't quit correctly, "
@@ -839,7 +906,7 @@ class Chrome:
                 tabs.append(info)
         return tabs
 
-    async def new_window(self, type_hint: typing.Union[typing.Literal["tab"], typing.Literal["window"]] = "tab", url="",
+    async def new_window(self, type_hint: typing.Literal["tab", "window"] = "tab", url="",
                          activate: bool = True) -> Target:
         """Creates a new window or tab in the current context
 
@@ -853,9 +920,7 @@ class Chrome:
         """
         return await self.current_context.new_window(type_hint=type_hint, url=url, activate=activate)
 
-    async def set_window_state(self, state: typing.Union[
-        typing.Literal["normal"], typing.Literal["minimized"], typing.Literal["maximized"], typing.Literal[
-            "fullscreen"]]):
+    async def set_window_state(self, state: typing.Literal["normal", "minimized", "maximized", "fullscreen"]):
         """sets the window state on the window the current Target belongs to
         :param state: the state to set
         """
@@ -955,171 +1020,127 @@ class Chrome:
     # Timeouts
     @staticmethod
     async def sleep(time_to_wait) -> None:
+        # noinspection GrazieInspection
         """sleep
-        .. note::
-            use this one instead of time.sleep in the sync version.
+                .. note::
+                    use this one instead of time.sleep in the sync version.
 
-        :param time_to_wait: time in seconds to sleep
-        """
+                :param time_to_wait: time in seconds to sleep
+                """
         await asyncio.sleep(time_to_wait)
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, parent=None, target_id: str = None,
-                           timeout: int or None = None) -> WebElement:
-        """find a element in the current target
+    async def find_element(self, by: str, value: str, timeout: int or None = None) -> WebElement:
+        """find an element in the current target
 
-        :param by:
+        :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
+        :param value: the actual query to find the element by
+        :param timeout: how long to wait for the element to exist
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.find_element(by=by, value=value, parent=parent, timeout=timeout)
+        return await self.current_target.find_element(by=by, value=value, timeout=timeout)
 
-    async def find_elements(self, by: str, value: str, parent=None, target_id: str = None) -> typing.List[WebElement]:
-        target = await self.get_target(target_id=target_id)
-        return await target.find_elements(by=by, value=value, parent=parent)
+    async def find_elements(self, by: str, value: str) -> typing.List[WebElement]:
+        """find multiple elements in the current target
 
-    async def search_elements(self, query: str, target_id: str = None) -> typing.List[WebElement]:
+        :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
+        :param value: the actual query to find the elements by
         """
-        query:str | Plain text or query selector or XPath search query.
+        return await self.current_target.find_elements(by=by, value=value)
+
+    async def search_elements(self, query: str) -> typing.List[WebElement]:
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.search_elements(query=query)
+        find elements similarly to how "CTRL+F" in the DevTools Console works
 
-    async def get_screenshot_as_file(self, filename: str, target_id: str = None) -> bool:
-        # noinspection GrazieInspection
-        """Saves a screenshot of the current window to a PNG image file.
-                Returns False if there is any IOError, else returns True. Use full
-                paths in your filename.
-
-                :Args:
-                 - filename: The full path you wish to save your screenshot to. This
-                   should end with a `.png` extension.
-
-                :Usage:
-                    ::
-
-                        target.get_screenshot_as_file('/Screenshots/foo.png')
-                """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_screenshot_as_file(filename=filename)
-
-    async def save_screenshot(self, filename, target_id: str = None) -> bool:
-        # noinspection GrazieInspection
-        """Saves a screenshot of the current window to a PNG image file.
-                Returns False if there is any IOError, else returns True. Use full
-                paths in your filename.
-
-                :Args:
-                 - filename: The full path you wish to save your screenshot to. This
-                   should end with a `.png` extension.
-
-                :Usage:
-                    ::
-
-                        target.save_screenshot('/Screenshots/foo.png')
-                """
-        target = await self.get_target(target_id=target_id)
-        return await target.save_screenshot(filename=filename)
-
-    async def get_screenshot_as_png(self, target_id: str = None) -> bytes:
-        """Gets the screenshot of the current window as a binary data.
-
-        :Usage:
-            ::
-
-                target.get_screenshot_as_png()
+        :param query: Plain text to find elements with
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_screenshot_as_png()
+        return await self.current_target.search_elements(query=query)
 
-    async def get_screenshot_as_base64(self, target_id: str = None) -> str:
-        """Gets the screenshot of the current window as a base64 encoded string
+    async def get_screenshot_as_file(self, filename: str) -> bool:
+        """Saves a screenshot of the current tab to a PNG image file.
+        :param filename: The path you wish to save your screenshot to. should end with a `.png` extension.
+
+        .. code-block:: python
+
+            driver.get_screenshot_as_file('screenshots/test.png')
+        """
+        return await self.current_target.get_screenshot_as_file(filename=filename)
+
+    async def save_screenshot(self, filename) -> bool:
+        """alias to :func: `driver.get_screenshot_as_file <selenium_driverless.webdriver.Chrome.get_screenshot_as_file>`"""
+        return await self.get_screenshot_as_file(filename)
+
+    async def get_screenshot_as_png(self) -> bytes:
+        """Gets the screenshot of the current tab as a binary data.
+        """
+        return await self.current_target.get_screenshot_as_png()
+
+    async def get_screenshot_as_base64(self) -> str:
+        """Gets the screenshot of the current tab as a base64 encoded string
         which is useful in embedded images in HTML.
-
-        :Usage:
-            ::
-
-                target.get_screenshot_as_base64()
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_screenshot_as_base64()
+        return await self.current_target.get_screenshot_as_base64()
 
     # noinspection PyPep8Naming
-    async def set_window_size(self, width, height, windowHandle: str = "current") -> None:
-        """Sets the width and height of the current window. (window.resizeTo)
+    async def set_window_size(self, width: int, height: int) -> None:
+        """Sets the width and height of the window, the current tab is within (unless ``windowHandle`` specified)
 
-        :Args:
-         - width: the width in pixels to set the window to
-         - height: the height in pixels to set the window to
-
-        :Usage:
-            ::
-
-                target.set_window_size(800,600)
+        :param width: the width in pixels to set the window to
+        :param height: the height in pixels to set the window to
         """
-        if windowHandle != "current":
-            warnings.warn("Only 'current' window is supported for W3C compatible browsers.")
         await self.set_window_rect(width=int(width), height=int(height))
 
     # noinspection PyPep8Naming
-    async def get_window_size(self, windowHandle: str = "current") -> dict:
+    async def get_window_size(self) -> dict:
         """Gets the width and height of the current window.
 
-        :Usage:
-            ::
+        returns something like:
+        .. code-block: json
 
-                target.get_window_size()
+            {"width":1280, "height":720}
         """
-
-        if windowHandle != "current":
-            warnings.warn("Only 'current' window is supported for W3C compatible browsers.")
         size = await self.get_window_rect()
 
-        if size.get("value", None):
+        if size.get("value"):
             size = size["value"]
 
         return {k: size[k] for k in ("width", "height")}
 
     # noinspection PyPep8Naming
-    async def set_window_position(self, x, y, windowHandle: str = "current") -> dict:
-        """Sets the x,y position of the current window. (window.moveTo)
+    async def set_window_position(self, x: int, y: int) -> dict:
+        """Sets the x,y position of the window, the current tab is in.
 
-        :Args:
-         - x: the x-coordinate in pixels to set the window position
-         - y: the y-coordinate in pixels to set the window position
-
-        :Usage:
-            ::
-
-                target.set_window_position(0,0)
+        :param x: the x-coordinate in pixels to set the window position
+        :param y: the y-coordinate in pixels to set the window position
         """
-        if windowHandle != "current":
-            warnings.warn("Only 'current' window is supported for W3C compatible browsers.")
         return await self.set_window_rect(x=int(x), y=int(y))
 
     # noinspection PyPep8Naming
-    async def get_window_position(self, windowHandle="current") -> dict:
-        """Gets the x,y position of the current window.
+    async def get_window_position(self) -> dict:
+        """Gets the x,y position of the window, the current tab is in.
 
-        :Usage:
-            ::
+        returns something like:
+        .. code-block: json
 
-                target.get_window_position()
+            {"x":0, "y":0}
         """
-
-        if windowHandle != "current":
-            warnings.warn("Only 'current' window is supported for W3C compatible browsers.")
         position = await self.get_window_rect()
 
         return {k: position[k] for k in ("x", "y")}
 
     async def get_window_rect(self) -> dict:
-        """Gets the x, y coordinates of the window as well as height and width
-        of the current window.
+        """Gets the x, y, with and height coordinates of the window, the current tab is in.
 
-        :Usage:
-            ::
+        returns something like:
+        .. code-block: json
 
-                target.get_window_rect()
+            {"x":0, "y":0,
+            "width":1280, "height":720,
+            "windowState":"normal"
+            }
+
+        .. note::
+
+            ``windowState`` can be one of "normal", "minimized", "maximized", "fullscreen"
         """
         json = await self.execute_cdp_cmd("Browser.getWindowBounds", {"windowId": await self.current_window_id})
         json = json["bounds"]
@@ -1130,20 +1151,19 @@ class Chrome:
         return json
 
     async def set_window_rect(self, x=None, y=None, width=None, height=None) -> dict:
-        """Sets the x, y coordinates of the window as well as height and width
-        of the current window. This method is only supported for W3C compatible
-        browsers; other browsers should use `set_window_position` and
-        `set_window_size`.
+        """Sets the x, y, width and height coordinates of the window the current target is in.
 
-        :Usage:
-            ::
+        :param x: the x-coordinate in pixels to set the window position
+        :param y: the y-coordinate in pixels to set the window position
+        :param width: the width in pixels to set the window to
+        :param height: the height in pixels to set the window to
 
-                target.set_window_rect(x=10, y=10)
-                target.set_window_rect(width=100, height=200)
-                target.set_window_rect(x=10, y=10, width=100, height=200)
+        .. note::
+
+            either x and y or with and height have to be specified
         """
 
-        if (x is None and y is None) and (not height and not width):
+        if (x is None and y is None) and (height is None and width is None):
             raise ValueError("x and y or height and width need values")
 
         bounds = {"left": x, "top": y, "width": width, 'height': height}
@@ -1156,91 +1176,56 @@ class Chrome:
 
         return bounds
 
-    @asynccontextmanager
-    async def bidi_connection(self):
-        warnings.warn("bidi connection for driverless is deprecated, use the direct APIs instead", DeprecationWarning)
-        cdp = import_module("selenium.webdriver.common.bidi.cdp")
-
-        version, ws_url = self._get_cdp_details()
-
-        devtools = cdp.import_devtools(version)
-        async with cdp.open_cdp(ws_url) as conn:
-            targets = await conn.execute(devtools.Target.get_targets())
-            target_id = targets[0].target_id
-            async with conn.open_session(target_id) as session:
-                yield BidiConnection(session, cdp, devtools)
-
-    def _get_cdp_details(self):
-        import json
-
-        # noinspection PyPackageRequirements
-        import urllib3
-
-        http = urllib3.PoolManager()
-        debugger_address = self._host
-        res = http.request("GET", f"http://{debugger_address}/json/version")
-        data = json.loads(res.data)
-
-        browser_version = data.get("Browser")
-        websocket_url = data.get("webSocketDebuggerUrl")
-
-        import re
-
-        version = re.search(r".*/(\d+)\.", browser_version).group(1)
-
-        return version, websocket_url
-
-    async def get_network_conditions(self, target_id: str = None):
+    async def get_network_conditions(self):
         """Gets Chromium network emulation settings.
 
-        :Returns:
-            A dict. For example:
-            {'latency': 4, 'download_throughput': 2, 'upload_throughput': 2,
-            'offline': False}
-        """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_network_conditions()
+        returns a dict like:
 
+        .. code-block:: python
+
+            {"latency": 4, "download_throughput": 2, "upload_throughput": 2,
+            "offline": False}
+        """
+        return await self.current_target.get_network_conditions()
+
+    # noinspection SpellCheckingInspection
     async def set_network_conditions(self, offline: bool, latency: int, download_throughput: int,
-                                     upload_throughput: int, connection_type: None, target_id: str = None) -> None:
+                                     upload_throughput: int,
+                                     connection_type: typing.Literal[
+                                         "none", "cellular2g", "cellular3g", "cellular4g", "bluetooth", "ethernet", "wifi", "wimax", "other"]) -> None:
+        # noinspection GrazieInspection
         """Sets Chromium network emulation settings.
 
-        :Args:
-         - network_conditions: A dict with conditions specification.
+        :param offline:
+        :param latency:  additional latency in ms
+        :param download_throughput: maximum throughput, 500 * 1024 for example
+        :param upload_throughput: maximum throughput, 500 * 1024 for example
+        :param connection_type: the connection type
 
-        :Usage:
-            ::
+        .. note::
 
-                target.set_network_conditions(
-                    offline=False,
-                    latency=5,  # additional latency (ms)
-                    download_throughput=500 * 1024,  # maximal throughput
-                    upload_throughput=500 * 1024,  # maximal throughput
-                    connection_type="wifi")
-
-            Note: 'throughput' can be used to set both (for download and upload).
+            'throughput' can be used to set both (for download and upload).
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.set_network_conditions(offline=offline, latency=latency,
-                                                   download_throughput=download_throughput,
-                                                   upload_throughput=upload_throughput, connection_type=connection_type)
+        return await self.current_target.set_network_conditions(offline=offline, latency=latency,
+                                                                download_throughput=download_throughput,
+                                                                upload_throughput=upload_throughput,
+                                                                connection_type=connection_type)
 
-    async def delete_network_conditions(self, target_id: str = None) -> None:
+    async def delete_network_conditions(self) -> None:
         """Resets Chromium network emulation settings."""
-        target = await self.get_target(target_id=target_id)
-        await target.delete_network_conditions()
+        await self.current_target.delete_network_conditions()
 
-    async def set_permissions(self, name: str, value: str, origin: str = None) -> None:
-        """Sets Applicable Permission.
+    async def set_permissions(self, name: str, value: typing.Literal["granted", "denied", "prompt"],
+                              origin: str = None) -> None:
+        """Sets Applicable Permission
 
-        :Args:
-         - name: The item to set the permission on.
-         - value: The value to set on the item
+        :param name: The item to set the permission on.
+        :param value: The value to set on the item
+        :param origin: the origin the permission for. Applies to any origin if not set
 
-        :Usage:
-            ::
+        .. code-block:: python
 
-                target.set_permissions('clipboard-read', 'denied')
+            target.set_permissions('clipboard-read', 'denied')
         """
         settings = ["granted", "denied", "prompt"]
         if value not in settings:
@@ -1251,39 +1236,46 @@ class Chrome:
         await self.execute_cdp_cmd("Browser.setPermission", args)
 
     async def set_proxy(self, proxy_config):
+        # TODO: documentation from here on
         # noinspection GrazieInspection
-        """
-                see https://developer.chrome.com/docs/extensions/reference/proxy/
-                proxy_config = {
-                    "mode": "fixed_servers",
-                    "rules": {
-                        "proxyForHttp": {
-                            "scheme": scheme,
-                            "host": host,
-                            "port": port
-                        },
-                        "proxyForHttps": {
-                            "scheme": scheme,
-                            "host": host,
-                            "port": port
-                        },
-                        "proxyForFtp": {
-                            "scheme": scheme,
-                            "host": host,
-                            "port": port
-                        },
-                        "fallbackProxy": {
-                            "scheme": scheme,
-                            "host": host,
-                            "port": port
-                        },
-                        "bypassList": ["<local>"]
-                    }
+        """ set a proxy dynamically
+
+        Example parameters:
+
+        .. code-block:: python
+
+            proxy_config = {
+                "mode": "fixed_servers",
+                "rules": {
+                    "proxyForHttp": {
+                        "scheme": scheme,
+                        "host": host,
+                        "port": port
+                    },
+                    "proxyForHttps": {
+                        "scheme": scheme,
+                        "host": host,
+                        "port": port
+                    },
+                    "proxyForFtp": {
+                        "scheme": scheme,
+                        "host": host,
+                        "port": port
+                    },
+                    "fallbackProxy": {
+                        "scheme": scheme,
+                        "host": host,
+                        "port": port
+                    },
+                    "bypassList": ["<local>"]
                 }
-                """
+            }
+
+        :param proxy_config: see `developer.chrome.com/docs/extensions/reference/proxy <https://developer.chrome.com/docs/extensions/reference/proxy/>`__ for reference
+        """
         extension = await self.mv3_extension
-        await extension.execute_async_script("chrome.proxy.settings.set(arguments[0], arguments[arguments.length -1])",
-                                             {"value": proxy_config, "scope": 'regular'})
+        await extension.eval_async("await chrome.proxy.settings.set(arguments[0])",
+                                   {"value": proxy_config, "scope": 'regular'})
 
     async def set_single_proxy(self, proxy: str, bypass_list=None):
 
@@ -1335,10 +1327,9 @@ class Chrome:
 
     async def clear_proxy(self):
         extension = await self.mv3_extension
-        await extension.execute_async_script("""
-            chrome.proxy.settings.set(
-              {value: {mode: "direct"}, scope: 'regular'},
-              arguments[arguments.length -1]
+        await extension.eval_async("""
+            await chrome.proxy.settings.set(
+              {value: {mode: "direct"}, scope: 'regular'}
             );
         """)
 

@@ -20,8 +20,10 @@
 """The WebDriver implementation."""
 import inspect
 import time
+import os
 import typing
 import warnings
+import pathlib
 
 from typing import List
 from typing import Optional
@@ -158,7 +160,7 @@ class Context:
         if not target:
             target: Target = await get_target(target_id=target_id, host=self._host,
                                               loop=self._loop, is_remote=self._is_remote, timeout=timeout,
-                                              max_ws_size=max_ws_size, driver=self._driver)
+                                              max_ws_size=max_ws_size, driver=self._driver, context=self)
             self._targets[target_id] = target
 
             # noinspection PyUnusedLocal
@@ -173,12 +175,76 @@ class Context:
     async def get_target_for_iframe(self, iframe: WebElement):
         return await self.current_target.get_target_for_iframe(iframe=iframe)
 
-    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
-        """Loads a web page in the current browser session."""
+    async def set_download_behaviour(self,behavior:typing.Literal["deny", "allow", "allowAndName", "default"],
+                                     path:str=None):
+        """set the download behaviour
+
+        :param behavior: the behaviour to set the downloading to
+        :param path: the path to the default download directory
+
+        .. warning::
+            setting ``behaviour=allow`` instead of ``allowAndName`` can cause some bugs
+
+        """
+        params = {"behavior":behavior, "eventsEnabled":True}
+        if path:
+            _dir = str(pathlib.Path(path))
+            if os.path.isfile(_dir):
+                raise OSError("path can't point to a file")
+            params["downloadPath"] = _dir
+        if self._is_incognito:
+            params["browserContextId"] = self.context_id
+        await self.base_target.execute_cdp_cmd("Browser.setDownloadBehavior", params)
+
+    @property
+    def downloads_dir(self):
+        """the current downloads directory"""
+        if self._is_incognito:
+            return self.base_target.downloads_dir_for_context(context_id=self.context_id)
+        else:
+            return self.base_target.downloads_dir_for_context(context_id="DEFAULT")
+
+
+    async def wait_download(self, timeout: float or None = 30) -> dict:
+        """
+        wait for a download on the current tab
+
+        returns something like
+
+        .. code-block:: python
+
+            {
+                "frameId": "2D543B5E8B14945B280C537A4882A695",
+                "guid": "c91df4d5-9b45-4962-84df-3749bd3f926d",
+                "url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                "suggestedFilename": "dummy.pdf",
+
+                # only if options.downloads_dir specified
+                "guid_file": "D:\\System\\AppData\\PyCharm\\scratches\\downloads\\c91df4d5-9b45-4962-84df-3749bd3f926d"
+            }
+
+        :param timeout: time in seconds to wait for a download
+
+        .. warning::
+            downloads from iframes not supported yet
+
+        """
+        return await self.current_target.wait_download(timeout=timeout)
+
+    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> dict:
+        """Loads a web page in the current Target
+
+        :param url: the url to load.
+        :param referrer: the referrer to load the page with
+        :param wait_load: whether to wait for the webpage to load
+        :param timeout: the maximum time in seconds for waiting on load
+
+        returns the same as :func:`Target.wait_download <selenium_driverless.types.target.Target.wait_download>` if the url initiates a download
+        """
         if self._is_incognito and url in ["chrome://extensions"]:
             raise ValueError(f"{url} only supported in non-incognito contexts")
         target = self.current_target
-        await target.get(url=url, referrer=referrer, wait_load=wait_load, timeout=timeout)
+        return await target.get(url=url, referrer=referrer, wait_load=wait_load, timeout=timeout)
 
     @property
     async def title(self) -> str:
@@ -226,6 +292,29 @@ class Context:
                                                  timeout=timeout,
                                                  execution_context_id=execution_context_id,
                                                  unique_context=unique_context)
+
+    async def eval_async(self, script: str, *args, max_depth: int = 2,
+                         serialization: str = None, timeout: int = 2,
+                         target_id: str = None, execution_context_id: str = None,
+                         unique_context: bool = False):
+        """executes JavaScript asynchronously on ``GlobalThis`` such as
+
+        .. code-block:: js
+
+            res = await fetch("https://httpbin.org/get");
+            // mind CORS!
+            json = await res.json()
+            return json
+
+        ``this`` refers to ``globalThis`` (=> window)
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
+        """
+        target = await self.get_target(target_id)
+        return await target.eval_async(script, *args, max_depth=max_depth, serialization=serialization,
+                                       timeout=timeout,
+                                       execution_context_id=execution_context_id,
+                                       unique_context=unique_context)
 
     @property
     async def current_url(self) -> str:
@@ -290,7 +379,6 @@ class Context:
                     pass
                 except Exception as e:
                     import sys
-                    print('Ignoring exception at self.base_target.execute_cdp_cmd("Target.disposeBrowserContext")', file=sys.stderr)
                     EXC_HANDLER(e)
             else:
                 targets = await self.targets
@@ -730,7 +818,10 @@ class Context:
         return await target.get_network_conditions()
 
     async def set_network_conditions(self, offline: bool, latency: int, download_throughput: int,
-                                     upload_throughput: int, connection_type: None, target_id: str = None) -> None:
+                                     upload_throughput: int,
+                                     connection_type: typing.Literal[
+                                         "none", "cellular2g", "cellular3g", "cellular4g", "bluetooth", "ethernet", "wifi", "wimax", "other"],
+                                     target_id: str = None) -> None:
         """Sets Chromium network emulation settings.
 
         :Args:

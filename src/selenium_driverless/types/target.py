@@ -1,11 +1,14 @@
 # io
 import asyncio
+import os.path
 import time
 import typing
+from typing_extensions import TypedDict
 import warnings
 from base64 import b64decode
 import aiofiles
 from typing import List
+import pathlib
 
 import websockets
 from cdp_socket.exceptions import CDPError
@@ -40,7 +43,7 @@ class Target:
     """Allows you to drive the browser without chromedriver."""
 
     # noinspection PyShadowingBuiltins
-    def __init__(self, host: str, target_id: str, driver, is_remote: bool = False,
+    def __init__(self, host: str, target_id: str, driver, context, is_remote: bool = False,
                  loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
                  type: str = None, start_socket: bool = False, max_ws_size: int = 2 ** 20) -> None:
         """Creates a new instance of the chrome target. Starts the service and
@@ -49,8 +52,9 @@ class Target:
         :Args:
          - options - this takes an instance of ChromeOptions.rst
         """
-        self._base_target = None
+        from selenium_driverless.types.context import Context
         self._parent_target = None
+        self._context: Context = context
         self._window_id = None
         self._pointer = None
         self._page_enabled = None
@@ -96,7 +100,7 @@ class Target:
 
     @property
     def base_target(self):
-        return self._base_target
+        return self._driver.base_target
 
     @property
     def socket(self) -> SingleCDPSocket:
@@ -179,7 +183,8 @@ class Target:
 
         async def target_getter(target_id: str, timeout: float = 2, max_ws_size: int = 2 ** 20):
             return await get_target(target_id=target_id, host=self._host, loop=self._loop, is_remote=self._is_remote,
-                                    timeout=timeout, max_ws_size=max_ws_size, driver=self._driver)
+                                    timeout=timeout, max_ws_size=max_ws_size, driver=self._driver,
+                                    context=self._context)
 
         _targets = await get_targets(cdp_exec=self.execute_cdp_cmd, target_getter=target_getter,
                                      _type="iframe", context_id=self._context_id, max_ws_size=self._max_ws_size)
@@ -211,11 +216,66 @@ class Target:
             raise NoSuchIframe(iframe, "no target for iframe found")
         return targets[0]
 
+    async def wait_download(self, timeout: float or None = 30) -> dict:
+        """
+        wait for a download on the current tab
+
+        returns something like
+
+        .. code-block:: python
+
+            {
+                "frameId": "2D543B5E8B14945B280C537A4882A695",
+                "guid": "c91df4d5-9b45-4962-84df-3749bd3f926d",
+                "url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                "suggestedFilename": "dummy.pdf",
+
+                # only if options.downloads_dir specified
+                "guid_file": "D:\\System\\AppData\\PyCharm\\scratches\\downloads\\c91df4d5-9b45-4962-84df-3749bd3f926d"
+            }
+
+        :param timeout: time in seconds to wait for a download
+
+        .. warning::
+            downloads from iframes not supported yet
+
+        """
+
+        # todo: support downloads from iframes
+        async def _wait_download():
+            base_frame = await self.base_frame
+            _id = base_frame.get("id")
+            _dir = [self._context.downloads_dir][0]
+            async for data in await self.base_target.get_cdp_event_iter("Browser.downloadWillBegin"):
+                base_frame = await self.base_frame
+                curr_id = base_frame.get("id")
+                if data["frameId"] in [_id, curr_id]:
+                    if _dir:
+                        guid_file = str(pathlib.Path(_dir + "/" + data["guid"]))
+                        named_file = str(pathlib.Path(_dir + "/" + "suggestedFilename"))
+                        data["guid_file"] = guid_file
+                        data["named_file"] = named_file
+                        while not (os.path.exists(guid_file) or os.path.exists(named_file)):
+                            # wait for file to exist
+                            await asyncio.sleep(0.01)
+                    return data
+
+        return await asyncio.wait_for(_wait_download(), timeout=timeout)
+
     # noinspection PyUnboundLocalVariable,PyProtectedMember
-    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> None:
-        """Loads a web page in the current browser session."""
+    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> dict:
+        """Loads a web page
+
+        :param url: the url to load.
+        :param referrer: the referrer to load the page with
+        :param wait_load: whether to wait for the webpage to load
+        :param timeout: the maximum time in seconds for waiting on load
+
+        returns the same as :func:`Target.wait_download <selenium_driverless.types.target.Target.wait_download>` if the url initiates a download
+        """
         if url == "about:blank":
             wait_load = False
+        result = {}
 
         if "#" in url:
             # thanks to https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/139#issuecomment-1877197974
@@ -230,18 +290,33 @@ class Target:
         if wait_load:
             if not self._page_enabled:
                 await self.execute_cdp_cmd("Page.enable")
-            wait = asyncio.create_task(self.wait_for_cdp("Page.loadEventFired", timeout=timeout))
+
+            # wait for download or loadEventFired
+            wait = asyncio.ensure_future(asyncio.wait([
+                asyncio.ensure_future(self.wait_for_cdp("Page.loadEventFired", timeout=None)),
+                asyncio.ensure_future(self.wait_download(timeout=None))
+            ], timeout=timeout, return_when=asyncio.FIRST_COMPLETED))
+
+            await asyncio.sleep(0.01)  # ensure listening for events has already started
+
+        # send navigate cmd
         args = {"url": url, "transitionType": "link"}
         if referrer:
             args["referrer"] = referrer
-        get = asyncio.create_task(self.execute_cdp_cmd("Page.navigate", args, timeout=timeout))
+        get = asyncio.ensure_future(self.execute_cdp_cmd("Page.navigate", args, timeout=timeout))
+
         if wait_load:
-            try:
-                await wait
-            except (asyncio.TimeoutError, TimeoutError):
-                raise TimeoutError(f'page: "{url}" didn\'t load within timeout of {timeout}')
-        await get
+            done, pending = await wait
+            pending.pop().cancel()
+            if not done:
+                pending.pop().cancel()
+                await get  # ensure get is awaited in every case
+                raise asyncio.TimeoutError(f'page: "{url}" didn\'t load within timeout of {timeout}')
+            result = done.pop().result()  # data of the event waited for
+
+        await get  # wait for navigate cmd response
         await self._on_loaded()
+        return result
 
     async def _global_this(self, context_id: str = None):
         if not context_id:
@@ -286,16 +361,33 @@ class Target:
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
                                  max_depth: int = None, timeout: float = 2, execution_context_id: str = None,
                                  unique_context: bool = False):
+        """executes a JavaScript on ``GlobalThis`` such as
+
+        .. code-block:: js
+
+            function(...arguments){return document}
+
+        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
+
+        :param script: the script as a string
+        :param args: the argument which are passed to the function. Those can be either json-serializable or a RemoteObject such as WebELement
+        :param await_res: whether to await the function or the return value of it
+        :param serialization: can be one of ``deep``, ``json``, ``idOnly``
+        :param max_depth: The maximum depth objects get serialized.
+        :param timeout: the maximum time to wait for the execution to complete
+        :param execution_context_id: the execution context id to run the JavaScript in. Exclusive with unique_context
+        :param unique_context: whether to use a isolated context to run the Script in.
+
+        see `Runtime.callFunctionOn <https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#method-callFunctionOn>`_
         """
-        example:
-        script= "function(...arguments){obj.click()}"
-        "const obj" will be the Object according to obj_id
-        this is by default globalThis (=> window)
-        """
+
         if execution_context_id and unique_context:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
         if unique_context:
             execution_context_id = await self._isolated_context_id
+
+        if timeout is None:
+            timeout = 2
 
         globalthis = await self._global_this(execution_context_id)
         try:
@@ -313,50 +405,101 @@ class Target:
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                              timeout: float = None, execution_context_id: str = None,
                              unique_context: bool = None):
-        """
-        example: script = "return elem.click()"
+        """executes JavaScript synchronously on ``GlobalThis`` such as
+
+        .. code-block:: js
+
+            return document
+
+        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
         if execution_context_id and unique_context:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
         if unique_context:
             execution_context_id = await self._isolated_context_id
+        if timeout is None:
+            timeout = 2
 
-        globalthis = await self._global_this(execution_context_id)
-        try:
-            res = await globalthis.__exec__(script, *args, serialization=serialization,
-                                            max_depth=max_depth, timeout=timeout,
-                                            execution_context_id=execution_context_id)
-        except StaleJSRemoteObjReference:
-            await self.wait_for_cdp("Page.loadEventFired", timeout)
-            globalthis = await self._global_this(execution_context_id)
-            res = await globalthis.__exec__(script, *args, serialization=serialization,
-                                            max_depth=max_depth, timeout=timeout,
-                                            execution_context_id=execution_context_id)
-        return res
+        start = time.monotonic()
+        while (time.monotonic() - start) < timeout:
+            global_this = await self._global_this(execution_context_id)
+            try:
+                res = await global_this.__exec__(script, *args, serialization=serialization,
+                                                 max_depth=max_depth, timeout=timeout,
+                                                 execution_context_id=execution_context_id)
+                return res
+            except StaleJSRemoteObjReference:
+                pass
+        raise asyncio.TimeoutError("Couldn't execute script, possibly due to a reload loop")
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                                    timeout: float = None, execution_context_id: str = None,
                                    unique_context: bool = None):
-        """
-        example: script = "return elem.click()"
+        """executes JavaScript asynchronously on ``GlobalThis``
+
+        .. code-block:: js
+
+            resolve = arguments[arguments.length-1]
+
+        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
         if execution_context_id and unique_context:
             warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
         if unique_context:
             execution_context_id = await self._isolated_context_id
+        if timeout is None:
+            timeout = 2
 
-        globalthis = await self._global_this(execution_context_id)
-        try:
-            res = await globalthis.__exec_async__(script, *args, serialization=serialization,
-                                                  max_depth=max_depth, timeout=timeout,
-                                                  execution_context_id=execution_context_id)
-        except StaleJSRemoteObjReference:
-            await self.wait_for_cdp("Page.loadEventFired", timeout)
-            globalthis = await self._global_this(execution_context_id)
-            res = await globalthis.__exec_async__(script, *args, serialization=serialization,
-                                                  max_depth=max_depth, timeout=timeout,
-                                                  execution_context_id=execution_context_id)
-        return res
+        start = time.monotonic()
+        while (time.monotonic() - start) < timeout:
+            global_this = await self._global_this(execution_context_id)
+            try:
+                res = await global_this.__exec_async__(script, *args, serialization=serialization,
+                                                       max_depth=max_depth, timeout=timeout,
+                                                       execution_context_id=execution_context_id)
+                return res
+            except StaleJSRemoteObjReference:
+                await asyncio.sleep(0)
+        raise asyncio.TimeoutError("Couldn't execute script, possibly due to a reload loop")
+
+    async def eval_async(self, script: str, *args, max_depth: int = 2, serialization: str = None,
+                         timeout: float = None, execution_context_id: str = None,
+                         unique_context: bool = None):
+        """executes JavaScript asynchronously on ``GlobalThis`` such as
+
+        .. code-block:: js
+
+            res = await fetch("https://httpbin.org/get");
+            // mind CORS!
+            json = await res.json()
+            return json
+
+        ``this`` refers to ``globalThis`` (=> window)
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
+        """
+        if execution_context_id and unique_context:
+            warnings.warn("got execution_context_id and unique_context=True, defaulting to execution_context_id")
+        if unique_context:
+            execution_context_id = await self._isolated_context_id
+        if timeout is None:
+            timeout = 2
+
+        start = time.monotonic()
+        while (time.monotonic() - start) < timeout:
+            global_this = await self._global_this(execution_context_id)
+            try:
+                res = await global_this.__eval_async__(script, *args, serialization=serialization,
+                                                       max_depth=max_depth, timeout=timeout,
+                                                       execution_context_id=execution_context_id)
+                return res
+            except StaleJSRemoteObjReference:
+                await asyncio.sleep(0)
+        raise asyncio.TimeoutError("Couldn't execute script, possibly due to a reload loop")
 
     @property
     async def current_url(self) -> str:
@@ -458,7 +601,7 @@ class Target:
             self._window_id = result["windowId"]
         return self._window_id
 
-    # noinspection PyUnusedLocal
+
     async def print_page(self) -> str:
         """Takes PDF of the current page.
 
@@ -470,41 +613,32 @@ class Target:
         page = await self.execute_cdp_cmd("Page.printToPDF")
         return page["data"]
 
-    @property
-    async def _current_history_idx(self):
-        res = await self.execute_cdp_cmd("Page.getNavigationHistory")
-        return res["currentIndex"]
+    async def get_history(self) -> TypedDict('NavigationHistory', {'currentIndex': int, 'entries': list}):
+        """returns the history data
+
+        see `Page.getNavigationHistory <https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-getNavigationHistory>`__
+        """
+        return await self.execute_cdp_cmd("Page.getNavigationHistory")
 
     # Navigation
     async def back(self) -> None:
         """Goes one step backward in the browser history.
-
-        :Usage:
-            ::
-
-                target.back()
         """
-        await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": await self._current_history_idx - 1})
+        history = await self.get_history()
+        entry = history["entries"][history['currentIndex'] - 1]["id"]
+        await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": entry})
         await self._on_loaded()
 
     async def forward(self) -> None:
         """Goes one step forward in the browser history.
-
-        :Usage:
-            ::
-
-                target.forward()
         """
-        await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": await self._current_history_idx + 1})
+        history = await self.get_history()
+        entry = history["entries"][history["currentIndex"] + 1]["id"]
+        await self.execute_cdp_cmd("Page.navigateToHistoryEntry", {"entryId": entry})
         await self._on_loaded()
 
     async def refresh(self) -> None:
-        """Refreshes the current page.
-
-        :Usage:
-            ::
-
-                target.refresh()
+        """Refreshes the page.
         """
         await self.execute_cdp_cmd("Page.reload")
         await self._on_loaded()
@@ -534,21 +668,9 @@ class Target:
 
     # noinspection GrazieInspection
     async def add_cookie(self, cookie_dict) -> None:
-        """Adds a cookie to your current session.
+        """Adds a cookie in the current (incognito-) context
 
-        :Args:
-         - cookie_dict: A dictionary object, with required keys - "name" and "value";
-            optional keys - "path", "domain", "secure", "httpOnly", "expiry", "sameSite"
-
-        :Usage:
-            ::
-
-                target.add_cookie({'name' : 'foo', 'value' : 'bar'})
-                target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/'})
-                target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/', 'secure' : True})
-                target.add_cookie({'name' : 'foo', 'value' : 'bar', 'sameSite' : 'Strict'})
-            ..etc
-            see https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-CookieParam
+        :param cookie_dict: see `Network.CookieParam <https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-CookieParam>`__
         """
         if not (cookie_dict.get("url") or cookie_dict.get("domain") or cookie_dict.get("path")):
             cookie_dict["url"] = await self.current_url
@@ -715,7 +837,9 @@ class Target:
         raise NotImplementedError("not started with chromedriver")
 
     async def set_network_conditions(self, offline: bool, latency: int, download_throughput: int,
-                                     upload_throughput: int, connection_type: None) -> None:
+                                     upload_throughput: int,
+                                     connection_type: typing.Literal[
+                                         "none", "cellular2g", "cellular3g", "cellular4g", "bluetooth", "ethernet", "wifi", "wimax", "other"]) -> None:
         """Sets Chromium network emulation settings.
 
         :Args:
@@ -852,6 +976,14 @@ class Target:
 
 
 class TargetInfo:
+    """
+    Info for a Target
+
+    .. note::
+
+        the infos are not dynamic
+    """
+
     def __init__(self, target_info: dict, target_getter: asyncio.Future or Target):
         self._id = target_info.get('targetId')
         self._type = target_info.get("type")
@@ -878,46 +1010,56 @@ class TargetInfo:
     # noinspection PyPep8Naming
     @property
     def Target(self) -> Target:
+        """
+        the Target itself
+        """
         return self._target
 
     @property
-    def id(self):
+    def id(self) -> str:
+        """the ``Target.TargetID``"""
         return self._id
 
     @property
-    def type(self):
+    def type(self) -> str:
         return self._type
 
     @property
-    def title(self):
+    def title(self) -> str:
         return self._title
 
     @property
-    def url(self):
+    def url(self) -> str:
         return self._url
 
     @property
-    def attached(self):
+    def attached(self) -> str:
+        """Whether the target has an attached client."""
         return self._attached
 
     @property
-    def opener_id(self):
+    def opener_id(self) -> str:
+        """Opener ``Target.TargetId``"""
         return self._opener_id
 
     @property
     def can_access_opener(self):
+        """Whether the target has access to the originating window."""
         return self._can_access_opener
 
     @property
     def opener_frame_id(self):
+        """``Page.FrameId`` of originating window (is only set if target has an opener)."""
         return self._opener_frame_id
 
     @property
     def browser_context_id(self):
+        """``Browser.BrowserContextID``"""
         return self._browser_context_id
 
     @property
     def subtype(self):
+        """Provides additional details for specific target types. For example, for the type of "page", this may be set to "portal" or "prerender"""
         return self._subtype
 
     def __repr__(self):

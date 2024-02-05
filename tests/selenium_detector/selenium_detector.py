@@ -11,7 +11,7 @@ async def main():
         elem = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-token")
         await elem.write(await driver.execute_script('return window.token'))
         elem2 = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-asynctoken")
-        async_token = await driver.execute_async_script('window.getAsyncToken().then(arguments[0])')
+        async_token = await driver.eval_async('return await window.getAsyncToken()')
         await elem2.write(async_token)
         elem3 = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-test")
         await elem3.click()

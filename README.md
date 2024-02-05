@@ -1,6 +1,7 @@
 # Selenium-Driverless (Non-commercial use only!)
 
 [![Downloads](https://static.pepy.tech/badge/selenium-driverless)](https://pepy.tech/project/selenium-driverless) [![](https://img.shields.io/pypi/v/selenium-driverless.svg?color=3399EE)](https://pypi.org/project/selenium-driverless/)
+[Documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/#)
 
 
 - Use Selenium __without chromedriver__
@@ -19,7 +20,10 @@ Also, see [dev-branch](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree
 <details>
 <summary>dev-installation (click to expand)</summary>
 
-`pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/heads/dev.zip`
+```shell
+pip uninstall -y selenium-driverless
+pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/heads/dev.zip
+```
 </details>
 
 ### Still getting detected?

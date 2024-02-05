@@ -18,6 +18,7 @@
 # modified by kaliiiiiiiiii | Aurin Aegerter
 
 import asyncio
+import typing
 from typing import Optional
 from typing import Union
 import warnings
@@ -32,6 +33,12 @@ from selenium_driverless.types.webelement import WebElement, NoSuchElementExcept
 
 
 class SwitchTo:
+    """
+    the SwitchTo class
+
+    .. warning::
+        except for switching to targets, do not use this class
+    """
     def __init__(self, context, context_id: str = None, loop: asyncio.AbstractEventLoop = None) -> None:
         from selenium_driverless.types.context import Context
         self._context: Context = context
@@ -49,17 +56,6 @@ class SwitchTo:
         if not self._started:
             self._started = True
         return self
-
-    @property
-    def active_element(self) -> WebElement:
-        """Returns the element with focus, or BODY if nothing has focus.
-
-        :Usage:
-            ::
-
-                element = target.switch_to.active_element
-        """
-        raise NotImplementedError()
 
     @property
     async def alert(self) -> Alert:
@@ -99,6 +95,10 @@ class SwitchTo:
         """Switches focus to the specified frame, by index, name, or
         webelement.
 
+        .. warning::
+
+            this is deprecated and should not be used
+
         :Args:
          - frame_reference: The name of the window to switch to, an integer representing the index,
                             or a webelement that is an (i)frame to switch to.
@@ -126,7 +126,13 @@ class SwitchTo:
             await target.focus()
         return target
 
-    async def target(self, target_id: str or TargetInfo or WebElement, activate: bool = True) -> Target:
+    async def target(self, target_id: typing.Union[str, TargetInfo, WebElement], activate: bool = True) -> Target:
+        """
+        switches to a target
+
+        :param target_id: the target to switch to
+        :param activate: whether to activate the target
+        """
         if isinstance(target_id, TargetInfo):
             self._context._current_target = target_id.Target
         elif isinstance(target_id, Target):
@@ -141,16 +147,10 @@ class SwitchTo:
             await self._context.current_target.focus()
         return self._context.current_target
 
-    async def new_window(self, type_hint: Optional[str] = "tab", url="", activate: bool = True) -> Target:
-        """Switches to a new top-level browsing context.
+    async def new_window(self, type_hint: typing.Literal["tab", "window"] = "tab", url="", activate: bool = True) -> Target:
+        """Switches to a new window
 
-        The type hint can be one of "tab" or "window". If not specified the
-        browser will automatically select it.
-
-        :Usage:
-            ::
-
-                target.switch_to.new_window('tab')
+        :param type_hint: what kind of window to switch to
         """
         target = await self._context.new_window(type_hint=type_hint, url=url, activate=activate)
         return await self.target(target, activate=activate)
