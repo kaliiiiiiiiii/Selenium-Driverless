@@ -848,7 +848,7 @@ class Chrome:
                                 loop.run_in_executor(None,
                                                      lambda: clean_dirs_sync(
                                                          [self._temp_dir, self._options.user_data_dir])),
-                                timeout=max(5,timeout - (time.monotonic() - start)))
+                                timeout=max(5,int(timeout - (time.monotonic() - start))))
                         except Exception as e:
                             warnings.warn(
                                 "driver hasn't quit correctly, "
