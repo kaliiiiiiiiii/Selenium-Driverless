@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>selenium_driverless.types.webelement &mdash; Selenium-Driverless 1.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=02d11055"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex/" />
+    <link rel="search" title="Search" href="../../../../search/" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../" class="icon icon-home">
+            Selenium-Driverless
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../classes/By/">By Element Locator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../classes/Chrome/">webdriver.Chrome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../classes/ChromeOptions/">ChromeOptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../classes/Context/">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../classes/Target/">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../classes/WebELement/">WebElement</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../">Selenium-Driverless</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../">Module code</a></li>
+      <li class="breadcrumb-item active">selenium_driverless.types.webelement</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for selenium_driverless.types.webelement</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Licensed to the Software Freedom Conservancy (SFC) under one</span>
+<span class="c1"># or more contributor license agreements.  See the NOTICE file</span>
+<span class="c1"># distributed with this work for additional information</span>
+<span class="c1"># regarding copyright ownership.  The SFC licenses this file</span>
+<span class="c1"># to you under the Apache License, Version 2.0 (the</span>
+<span class="c1"># &quot;License&quot;); you may not use this file except in compliance</span>
+<span class="c1"># with the License.  You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing,</span>
+<span class="c1"># software distributed under the License is distributed on an</span>
+<span class="c1"># &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="c1"># KIND, either express or implied.  See the License for the</span>
+<span class="c1"># specific language governing permissions and limitations</span>
+<span class="c1"># under the License.</span>
+<span class="c1"># edited by kaliiiiiiiiiii</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+
+<span class="kn">from</span> <span class="nn">base64</span> <span class="kn">import</span> <span class="n">b64decode</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">cdp_socket.exceptions</span> <span class="kn">import</span> <span class="n">CDPError</span>
+
+<span class="c1"># driverless</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.types.by</span> <span class="kn">import</span> <span class="n">By</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.types.deserialize</span> <span class="kn">import</span> <span class="n">JSRemoteObj</span><span class="p">,</span> <span class="n">StaleJSRemoteObjReference</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.scripts.geometry</span> <span class="kn">import</span> <span class="n">gen_heatmap</span><span class="p">,</span> <span class="n">gen_rand_point</span><span class="p">,</span> <span class="n">centroid</span>
+
+
+<span class="k">class</span> <span class="nc">NoSuchElementException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">StaleElementReferenceException</span><span class="p">(</span><span class="n">StaleJSRemoteObjReference</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Page or Frame has been reloaded, or the element removed, </span><span class="si">{</span><span class="n">elem</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">_object</span><span class="o">=</span><span class="n">elem</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ElementNotVisible</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">ElementNotInteractable</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;interactable&quot;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;element not </span><span class="si">{</span><span class="n">_type</span><span class="si">}</span><span class="s2"> at x:</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">, y:</span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">, it might be hidden under another one&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ElementNotClickable</span><span class="p">(</span><span class="n">ElementNotInteractable</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">_type</span><span class="o">=</span><span class="s2">&quot;clickable&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># noinspection PyProtectedMember</span>
+<div class="viewcode-block" id="WebElement">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement">[docs]</a>
+<span class="k">class</span> <span class="nc">WebElement</span><span class="p">(</span><span class="n">JSRemoteObj</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a DOM element.</span>
+
+<span class="sd">    Generally, all interesting operations that interact with a document will be</span>
+<span class="sd">    performed through this interface.</span>
+
+<span class="sd">    All method calls will do a freshness check to ensure that the element</span>
+<span class="sd">    reference is still valid.  This essentially determines whether the</span>
+<span class="sd">    element is still attached to the DOM.  If this test fails, then an</span>
+<span class="sd">    ``StaleElementReferenceException`` is thrown, and all future calls to this</span>
+<span class="sd">    instance will fail.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">frame_id</span><span class="p">:</span> <span class="nb">int</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span> <span class="n">isolated_exec_id</span><span class="p">:</span> <span class="nb">int</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span> <span class="n">obj_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">node_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">backend_node_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">class_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">context_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_iframe</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span> <span class="o">=</span> <span class="n">loop</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">obj_id</span> <span class="ow">or</span> <span class="n">node_id</span> <span class="ow">or</span> <span class="n">backend_node_id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;either js, obj_id or node_id need to be specified&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span> <span class="o">=</span> <span class="n">node_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backend_node_id</span> <span class="o">=</span> <span class="n">backend_node_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_class_name</span> <span class="o">=</span> <span class="n">class_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_started</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">___context_id__</span> <span class="o">=</span> <span class="n">context_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj_ids</span> <span class="o">=</span> <span class="p">{</span><span class="n">context_id</span><span class="p">:</span> <span class="n">obj_id</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">___frame_id__</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_iframe</span> <span class="o">=</span> <span class="n">is_iframe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stale</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">obj_id</span> <span class="ow">and</span> <span class="n">context_id</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_obj_ids</span><span class="p">[</span><span class="n">context_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">___obj_id__</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">frame_id</span><span class="o">=</span><span class="n">frame_id</span><span class="p">,</span> <span class="n">obj_id</span><span class="o">=</span><span class="n">obj_id</span><span class="p">,</span> <span class="n">isolated_exec_id</span><span class="o">=</span><span class="n">isolated_exec_id</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__await__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__aenter__</span><span class="p">()</span><span class="o">.</span><span class="fm">__await__</span><span class="p">()</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="fm">__aenter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_started</span><span class="p">:</span>
+            <span class="k">async</span> <span class="k">def</span> <span class="nf">set_stale_frame</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;frame&quot;</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">___frame_id__</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_stale</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">remove_cdp_listener</span><span class="p">(</span><span class="s2">&quot;Page.frameNavigated&quot;</span><span class="p">,</span> <span class="n">set_stale_frame</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">_page_enabled</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Page.enable&quot;</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">add_cdp_listener</span><span class="p">(</span><span class="s2">&quot;Page.frameNavigated&quot;</span><span class="p">,</span> <span class="n">set_stale_frame</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_started</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">obj_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__obj_id_for_context__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">context_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_stale</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">___context_id__</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__context_id__</span>
+
+    <span class="k">def</span> <span class="nf">_check_stale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stale</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">StaleElementReferenceException</span><span class="p">(</span><span class="n">elem</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_args_builder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_stale</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;nodeId&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span><span class="p">}</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">__obj_id__</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;objectId&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__obj_id__</span><span class="p">}</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend_node_id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;backendNodeId&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend_node_id</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;missing remote element id&#39;s for </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">__obj_id_for_context__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_stale</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_ids</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">context_id</span><span class="p">):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend_node_id</span><span class="p">:</span>
+                <span class="n">args</span><span class="p">[</span><span class="s2">&quot;backendNodeId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend_node_id</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span><span class="p">:</span>
+                <span class="n">args</span><span class="p">[</span><span class="s2">&quot;nodeId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;missing remote element id&#39;s for </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">context_id</span><span class="p">:</span>
+                <span class="n">args</span><span class="p">[</span><span class="s2">&quot;executionContextId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">context_id</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.resolveNode&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s1">&#39;No node with given id found&#39;</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">StaleElementReferenceException</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">e</span>
+            <span class="n">obj_id</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;objectId&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">obj_id</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__context_id__</span> <span class="o">==</span> <span class="n">context_id</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">___obj_id__</span> <span class="o">=</span> <span class="n">obj_id</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_obj_ids</span><span class="p">[</span><span class="n">context_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj_id</span>
+            <span class="n">class_name</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;className&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">class_name</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_class_name</span> <span class="o">=</span> <span class="n">class_name</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj_ids</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">context_id</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">__context_id__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__obj_id__</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__obj_id__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">___context_id__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">node_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_stale</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.requestNode&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;objectId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span><span class="p">})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s2">&quot;nodeId&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">__frame_id__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">___frame_id__</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_describe</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">___frame_id__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">content_document</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        gets the document of the iframe</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_desc</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_describe</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">_desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;localName&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;iframe&quot;</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">_desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;contentDocument&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node</span><span class="p">:</span>
+                <span class="n">frame_id</span> <span class="o">=</span> <span class="n">_desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;frameId&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">node</span><span class="p">[</span><span class="s1">&#39;documentURL&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;about:blank&#39;</span><span class="p">:</span>
+                    <span class="c1"># wait for frame to load</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">_page_enabled</span><span class="p">:</span>
+                        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Page.enable&quot;</span><span class="p">)</span>
+                    <span class="k">async</span> <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">get_cdp_event_iter</span><span class="p">(</span><span class="s2">&quot;Page.frameNavigated&quot;</span><span class="p">):</span>
+                        <span class="n">frame</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;frame&quot;</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">frame</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">frame_id</span><span class="p">:</span>
+                            <span class="k">break</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_stale</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">_desc</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_describe</span><span class="p">()</span>
+                    <span class="n">node</span> <span class="o">=</span> <span class="n">_desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;contentDocument&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">:</span>
+                    <span class="kn">from</span> <span class="nn">selenium_driverless.sync.webelement</span> <span class="kn">import</span> <span class="n">WebElement</span> <span class="k">as</span> <span class="n">SyncWebElement</span>
+                    <span class="k">return</span> <span class="k">await</span> <span class="n">SyncWebElement</span><span class="p">(</span><span class="n">backend_node_id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;backendNodeId&#39;</span><span class="p">),</span>
+                                                <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">,</span>
+                                                <span class="n">class_name</span><span class="o">=</span><span class="s1">&#39;HTMLIFrameElement&#39;</span><span class="p">,</span>
+                                                <span class="n">isolated_exec_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">frame_id</span><span class="o">=</span><span class="n">frame_id</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="k">await</span> <span class="n">WebElement</span><span class="p">(</span><span class="n">backend_node_id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;backendNodeId&#39;</span><span class="p">),</span>
+                                            <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">,</span>
+                                            <span class="n">class_name</span><span class="o">=</span><span class="s1">&#39;HTMLIFrameElement&#39;</span><span class="p">,</span>
+                                            <span class="n">isolated_exec_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">frame_id</span><span class="o">=</span><span class="n">frame_id</span><span class="p">)</span>
+
+            <span class="c1"># different target for cross-site</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">get_targets_for_iframes</span><span class="p">([</span><span class="bp">self</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">targets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_document_elem</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">document_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_describe</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;documentURL&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">backend_node_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend_node_id</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_describe</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend_node_id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">class_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_class_name</span>
+
+<div class="viewcode-block" id="WebElement.find_element">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.find_element">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find an element given a By strategy and locator.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                element = element.find_element(By.ID, &#39;foo&#39;)</span>
+
+<span class="sd">        :rtype: WebElement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">elems</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">elems</span><span class="p">:</span>
+            <span class="n">elems</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_elements</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">timeout</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">timeout</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">elems</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">elems</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">elems</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;find_elements returned not a list. This possibly is related to https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/84</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">elems</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">NoSuchElementException</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="WebElement.find_elements">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.find_elements">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">By</span><span class="o">.</span><span class="n">ID</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find elements given a By strategy and locator.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                element = element.find_elements(By.CLASS_NAME, &#39;foo&#39;)</span>
+
+<span class="sd">        :rtype: list of WebElement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">selenium_driverless.types.by</span> <span class="kn">import</span> <span class="n">By</span>
+
+        <span class="k">if</span> <span class="n">by</span> <span class="o">==</span> <span class="n">By</span><span class="o">.</span><span class="n">ID</span><span class="p">:</span>
+            <span class="n">by</span> <span class="o">=</span> <span class="n">By</span><span class="o">.</span><span class="n">XPATH</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;//*[@id=&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s1">&quot;]&#39;</span>
+        <span class="k">elif</span> <span class="n">by</span> <span class="o">==</span> <span class="n">By</span><span class="o">.</span><span class="n">CLASS_NAME</span><span class="p">:</span>
+            <span class="n">by</span> <span class="o">=</span> <span class="n">By</span><span class="o">.</span><span class="n">XPATH</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;//*[@class=&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s1">&quot;]&#39;</span>
+        <span class="k">elif</span> <span class="n">by</span> <span class="o">==</span> <span class="n">By</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span>
+            <span class="n">by</span> <span class="o">=</span> <span class="n">By</span><span class="o">.</span><span class="n">XPATH</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;//*[@name=&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s1">&quot;]&#39;</span>
+
+        <span class="k">if</span> <span class="n">by</span> <span class="o">==</span> <span class="n">By</span><span class="o">.</span><span class="n">TAG_NAME</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="s2">&quot;return obj.getElementsByTagName(arguments[0])&quot;</span><span class="p">,</span>
+                                             <span class="n">value</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="s2">&quot;deep&quot;</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">by</span> <span class="o">==</span> <span class="n">By</span><span class="o">.</span><span class="n">CSS_SELECTOR</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="s2">&quot;return obj.querySelectorAll(arguments[0])&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                                             <span class="n">unique_context</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">by</span> <span class="o">==</span> <span class="n">By</span><span class="o">.</span><span class="n">XPATH</span><span class="p">:</span>
+            <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;return document.evaluate(</span>
+<span class="s2">                          arguments[0],</span>
+<span class="s2">                          obj,</span>
+<span class="s2">                          null,</span>
+<span class="s2">                          XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,</span>
+<span class="s2">                          null,</span>
+<span class="s2">                        );&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="s2">&quot;deep&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unexpected by&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_describe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;pierce&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_args_builder</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.describeNode&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;node&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backend_node_id</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;backendNodeId&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;nodeId&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">___frame_id__</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;frameId&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_listeners</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span>
+            <span class="s2">&quot;DOMDebugger.getEventListeners&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;objectId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span><span class="p">,</span> <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="n">depth</span><span class="p">,</span> <span class="s2">&quot;pierce&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;listeners&#39;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">source</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args_builder</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.getOuterHTML&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;outerHTML&quot;</span><span class="p">]</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.setOuterHTML&quot;</span><span class="p">,</span>
+                                                  <span class="p">{</span><span class="s2">&quot;nodeId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span> <span class="s2">&quot;outerHTML&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
+        <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s1">&#39;Could not find node with given id&#39;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">StaleElementReferenceException</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">e</span>
+
+<div class="viewcode-block" id="WebElement.get_property">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.get_property">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_property</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the given property of the element.</span>
+
+<span class="sd">        :Args:</span>
+<span class="sd">            - name - Name of the property to retrieve.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                text_length = target_element.get_property(&quot;text_length&quot;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;return obj[arguments[0]]&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">tag_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This element&#39;s ``tagName`` property.&quot;&quot;&quot;</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_describe</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">node</span><span class="p">[</span><span class="s2">&quot;localName&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The text of the element.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s2">&quot;textContent&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The value of the element.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WebElement.clear">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.clear">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clears the text if it&#39;s a text entry element.&quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="s2">&quot;obj.value = &#39;&#39;&quot;</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.removeNode&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;nodeId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id</span><span class="p">})</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">highlight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">highlight</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">_dom_enabled</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.enable&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">highlight</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args_builder</span>
+            <span class="n">args</span><span class="p">[</span><span class="s2">&quot;highlightConfig&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;showInfo&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;borderColor&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;r&quot;</span><span class="p">:</span> <span class="mi">76</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">:</span> <span class="mi">175</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">1</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;contentColor&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;r&quot;</span><span class="p">:</span> <span class="mi">76</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">:</span> <span class="mi">175</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+                    <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mf">0.24</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;shapeColor&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;r&quot;</span><span class="p">:</span> <span class="mi">76</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">:</span> <span class="mi">175</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+                    <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mf">0.24</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Overlay.enable&quot;</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Overlay.highlightNode&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Overlay.disable&quot;</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">focus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args_builder</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.focus&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">is_clickable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listener_depth</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="n">_type</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">tag_name</span>
+        <span class="k">if</span> <span class="n">_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;button&quot;</span><span class="p">,</span> <span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="s2">&quot;details&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;select&quot;</span><span class="p">,</span> <span class="s2">&quot;textarea&quot;</span><span class="p">,</span> <span class="s2">&quot;video&quot;</span><span class="p">,</span> <span class="s2">&quot;map&quot;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="n">is_clickable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">listener_depth</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_clickable</span><span class="p">:</span>
+            <span class="n">listeners</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_listeners</span><span class="p">(</span><span class="n">depth</span><span class="o">=</span><span class="n">listener_depth</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">listener</span> <span class="ow">in</span> <span class="n">listeners</span><span class="p">:</span>
+                <span class="n">_type</span> <span class="o">=</span> <span class="n">listener</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="s2">&quot;mousedown&quot;</span><span class="p">,</span> <span class="s2">&quot;mouseup&quot;</span><span class="p">]:</span>
+                    <span class="n">is_clickable</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+        <span class="k">return</span> <span class="n">is_clickable</span>
+
+<div class="viewcode-block" id="WebElement.click">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.click">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">visible_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+                    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">scroll_to</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">move_to</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="n">ensure_clickable</span><span class="p">:</span> <span class="nb">bool</span> <span class="ow">or</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clicks the element.</span>
+
+<span class="sd">        :param timeout: the time in seconds to take for clicking on the element</span>
+<span class="sd">        :param visible_timeout: the time in seconds to wait for being able to compute the elements box model</span>
+<span class="sd">        :param bias: a (positive) bias on how probable it is to click at the centre of the element. Scale unknown:/</span>
+<span class="sd">        :param resolution: the resolution to calculate probabilities for each pixel on, affects timing performance</span>
+<span class="sd">        :param debug: plots a visualization of the point in the element</span>
+<span class="sd">        :param scroll_to: whether to scroll to the element</span>
+<span class="sd">        :param move_to: whether to move the mouse to the element</span>
+<span class="sd">        :param ensure_clickable: whether to ensure that the element is clickable. Not reliable in on every webpage</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">scroll_to</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">scroll_to</span><span class="p">()</span>
+        <span class="n">cords</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">cords</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">cords</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">mid_location</span><span class="p">(</span><span class="n">bias</span><span class="o">=</span><span class="n">bias</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s1">&#39;Could not compute box model.&#39;</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">e</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">visible_timeout</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TimeoutError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Couldn&#39;t compute element location within </span><span class="si">{</span><span class="n">visible_timeout</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">cords</span>
+        <span class="k">if</span> <span class="n">ensure_clickable</span><span class="p">:</span>
+            <span class="n">is_clickable</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_clickable</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_clickable</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ElementNotClickable</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">pointer</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">click_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="n">timeout</span><span class="p">},</span> <span class="n">move_to</span><span class="o">=</span><span class="n">move_to</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebElement.write">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.write">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        inserts literal text to the element</span>
+
+<span class="sd">        :param text: the text to send</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus</span><span class="p">()</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.insertText&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">text</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="WebElement.set_file">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.set_file">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        sets the file on the current element (has to accept files)</span>
+
+<span class="sd">        :param path: the absolute path to the file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_files</span><span class="p">([</span><span class="n">path</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="WebElement.set_files">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.set_files">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paths</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        sets files on the current element (has to accept files)</span>
+
+<span class="sd">        :param paths: the absolute paths to the files</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;files&quot;</span><span class="p">:</span> <span class="n">paths</span><span class="p">}</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_args_builder</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.setFileInputFiles&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebElement.send_keys">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.send_keys">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">send_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># noinspection GrazieInspections</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        .. warning::</span>
+<span class="sd">            NotImplemented</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># transfer file to another machine only if remote target is used</span>
+        <span class="c1"># the same behaviour as for java binding</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;you might use elem.write() for inputs instead&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebElement.mid_location">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.mid_location">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">mid_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        returns random location in element with probability close to the middle</span>
+
+<span class="sd">        :param bias: a (positive) bias on how probable it is to click at the centre of the element. Scale unknown:/</span>
+<span class="sd">        :param resolution: the resolution to calculate probabilities for each pixel on, affects timing performance</span>
+<span class="sd">        :param debug: plots a visualization of the point in the element</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">box</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_model</span>
+        <span class="n">vertices</span> <span class="o">=</span> <span class="n">box</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">bias</span> <span class="ow">and</span> <span class="n">resolution</span><span class="p">:</span>
+            <span class="n">heatmap</span> <span class="o">=</span> <span class="n">gen_heatmap</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">num_points</span><span class="o">=</span><span class="n">resolution</span><span class="p">)</span>
+            <span class="n">exc</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">point</span> <span class="o">=</span> <span class="n">gen_rand_point</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">heatmap</span><span class="p">,</span> <span class="n">bias_value</span><span class="o">=</span><span class="n">bias</span><span class="p">)</span>
+                <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">point</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">]])</span>
+                <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+            <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">selenium_driverless.scripts.geometry</span> <span class="kn">import</span> <span class="n">visualize</span>
+                <span class="n">visualize</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">heatmap</span><span class="p">,</span> <span class="n">vertices</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">selenium_driverless</span> <span class="kn">import</span> <span class="n">EXC_HANDLER</span>
+                <span class="n">EXC_HANDLER</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;couldn&#39;t get random point based on heatmap&quot;</span><span class="p">)</span>
+                <span class="n">point</span> <span class="o">=</span> <span class="n">centroid</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">point</span> <span class="o">=</span> <span class="n">centroid</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span>
+
+        <span class="c1"># noinspection PyUnboundLocalVariable</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="WebElement.submit">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.submit">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">submit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Submits a form.&quot;&quot;&quot;</span>
+        <span class="n">script</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;/* submitForm */var form = this;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s1">&#39;while (form.nodeName != &quot;FORM&quot; &amp;&amp; form.parentNode) {</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s2">&quot;  form = form.parentNode;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;if (!form) { throw Error(&#39;Unable to find containing form element&#39;); }</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;if (!form.ownerDocument) { throw Error(&#39;Unable to find owning document&#39;); }</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;var e = form.ownerDocument.createEvent(&#39;Event&#39;);</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;e.initEvent(&#39;submit&#39;, true, true);</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;if (form.dispatchEvent(e)) { HTMLFormElement.prototype.submit.call(form) }</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">dom_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.getAttributes&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;nodeId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id</span><span class="p">})</span>
+            <span class="n">attr_list</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;attributes&quot;</span><span class="p">]</span>
+            <span class="n">attributes_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">attr_list</span><span class="p">),</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="n">attr_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">attr_list</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">attributes_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">return</span> <span class="n">attributes_dict</span>
+        <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s1">&#39;Node is not an Element&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">e</span>
+
+<div class="viewcode-block" id="WebElement.get_dom_attribute">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.get_dom_attribute">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_dom_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the given attribute of the element. Unlike</span>
+<span class="sd">        :func:`~selenium.webdriver.remote.BaseWebElement.get_attribute`, this</span>
+<span class="sd">        method only returns attributes declared in the element&#39;s HTML markup.</span>
+
+<span class="sd">        :Args:</span>
+<span class="sd">            - name - Name of the attribute to retrieve.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                text_length = target_element.get_dom_attribute(&quot;class&quot;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">dom_attributes</span>
+        <span class="k">return</span> <span class="n">attrs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
+
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_dom_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.setAttributeValue&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;nodeId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span>
+                                                                        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
+
+<div class="viewcode-block" id="WebElement.get_attribute">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.get_attribute">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the given attribute or property of the element.</span>
+
+<span class="sd">        This method will first try to return the value of a property with the</span>
+<span class="sd">        given name. If a property with that name doesn&#39;t exist, it returns the</span>
+<span class="sd">        value of the attribute with the same name. If there&#39;s no attribute with</span>
+<span class="sd">        that name, ``None`` is returned.</span>
+
+<span class="sd">        Values which are considered truthy, that is equals &quot;true&quot; or &quot;false&quot;,</span>
+<span class="sd">        are returned as booleans.  All other non-``None`` values are returned</span>
+<span class="sd">        as strings.  For attributes or properties which do not exist, ``None``</span>
+<span class="sd">        is returned.</span>
+
+<span class="sd">        To obtain the exact value of the attribute or property,</span>
+<span class="sd">        use :func:`~selenium.webdriver.remote.BaseWebElement.get_dom_attribute` or</span>
+<span class="sd">        :func:`~selenium.webdriver.remote.BaseWebElement.get_property` methods respectively.</span>
+
+<span class="sd">        :Args:</span>
+<span class="sd">            - name - Name of the attribute/property to retrieve.</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            # Check if the &quot;active&quot; CSS class is applied to an element.</span>
+<span class="sd">            is_active = &quot;active&quot; in target_element.get_attribute(&quot;class&quot;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebElement.is_selected">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.is_selected">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">is_selected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns whether the element is selected.</span>
+
+<span class="sd">        Can be used to check if a checkbox or radio button is selected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s2">&quot;checked&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="WebElement.is_enabled">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.is_enabled">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">is_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns whether the element is enabled.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s2">&quot;disabled&quot;</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">shadow_root</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a shadow root of the element if there is one or an error.</span>
+<span class="sd">        Only works from Chromium 96, Firefox 96, and Safari 16.4 onwards.</span>
+
+<span class="sd">        :Returns:</span>
+<span class="sd">          - ShadowRoot object or</span>
+<span class="sd">          - NoSuchShadowRoot - if no shadow root was attached to element</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># todo: move to CDP</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="s2">&quot;return obj.ShadowRoot()&quot;</span><span class="p">)</span>
+
+    <span class="c1"># RenderedWebElement Items</span>
+<div class="viewcode-block" id="WebElement.is_displayed">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.is_displayed">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">is_displayed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the element is visible to a user.&quot;&quot;&quot;</span>
+        <span class="c1"># Only go into this conditional for browsers that don&#39;t use the atom themselves</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="n">size</span><span class="p">[</span><span class="s2">&quot;height&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">size</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">location_once_scrolled_into_view</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;THIS PROPERTY MAY CHANGE WITHOUT WARNING. Use this to discover where</span>
+<span class="sd">        on the screen an element is so that we can click it. This method should</span>
+<span class="sd">        cause the element to be scrolled into view.</span>
+
+<span class="sd">        Returns the top lefthand corner location on the screen, or zero</span>
+<span class="sd">        coordinates if the element is not visible.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">scroll_to</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">rect</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]),</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">])}</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">scroll_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rect</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args_builder</span>
+        <span class="k">if</span> <span class="n">rect</span><span class="p">:</span>
+            <span class="n">args</span><span class="p">[</span><span class="s2">&quot;rect&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rect</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.scrollIntoViewIfNeeded&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s1">&#39;Node is detached from document&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The size of the element.&quot;&quot;&quot;</span>
+        <span class="n">box_model</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_model</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="n">box_model</span><span class="p">[</span><span class="s2">&quot;height&quot;</span><span class="p">],</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="n">box_model</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">]}</span>
+
+<div class="viewcode-block" id="WebElement.value_of_css_property">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.value_of_css_property">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">value_of_css_property</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        .. warning::</span>
+<span class="sd">            NotImplemented</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;you might use get_attribute instead&quot;</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">location</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The location of the element in the renderable canvas.&quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">rect</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]),</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">])}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">rect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A dictionary with the size and location of the element.&quot;&quot;&quot;</span>
+        <span class="c1"># todo: calculate form DOM.getBoxModel</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="s2">&quot;return obj.getClientRects()[0].toJSON()&quot;</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">,</span>
+                                           <span class="n">unique_context</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">css_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            function getRotationAngle(target) </span>
+<span class="s2">                {</span>
+<span class="s2">                  const _obj = window.getComputedStyle(target, null);</span>
+<span class="s2">                  const matrix = _obj.getPropertyValue(&#39;transform&#39;);</span>
+<span class="s2">                  let angle = 0; </span>
+<span class="s2">                  if (matrix !== &#39;none&#39;) </span>
+<span class="s2">                  {</span>
+<span class="s2">                    const values = matrix.split(&#39;(&#39;)[1].split(&#39;)&#39;)[0].split(&#39;,&#39;);</span>
+<span class="s2">                    const a = values[0];</span>
+<span class="s2">                    const b = values[1];</span>
+<span class="s2">                    angle = Math.round(Math.atan2(b, a) * (180/Math.PI));</span>
+<span class="s2">                  } </span>
+<span class="s2">                </span>
+<span class="s2">                  return (angle &lt; 0) ? angle +=360 : angle;</span>
+<span class="s2">                }</span>
+<span class="s2">            var _rects = obj.getClientRects()</span>
+<span class="s2">            var rects = []</span>
+<span class="s2">            for(let i = 0; i &lt; _rects.length; i++){</span>
+<span class="s2">                rects.push(_rects[i].toJSON())</span>
+<span class="s2">            }</span>
+<span class="s2">            var rotation = getRotationAngle(obj)</span>
+<span class="s2">            return [rects, rotation]</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">box_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args_builder</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.getBoxModel&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">,</span> <span class="s1">&#39;padding&#39;</span><span class="p">,</span> <span class="s1">&#39;border&#39;</span><span class="p">,</span> <span class="s1">&#39;margin&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">quad</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="n">model</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">quad</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">quad</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="p">[</span><span class="n">quad</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">quad</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[</span><span class="n">quad</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">quad</span><span class="p">[</span><span class="mi">5</span><span class="p">]],</span> <span class="p">[</span><span class="n">quad</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">quad</span><span class="p">[</span><span class="mi">7</span><span class="p">]]])</span>
+        <span class="k">return</span> <span class="n">model</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">aria_role</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the ARIA role of the current web element.&quot;&quot;&quot;</span>
+        <span class="c1"># todo: move to CDP</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s2">&quot;ariaRoleDescription&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">accessible_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the ARIA Level of the current webelement.&quot;&quot;&quot;</span>
+        <span class="c1"># todo: move to CDP</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s2">&quot;ariaLevel&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">screenshot_as_base64</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        .. warning::</span>
+<span class="sd">            NotImplemented</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">screenshot_as_png</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the screenshot of the current element as a binary data.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                element_png = element.screenshot_as_png</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">screenshot_as_base64</span>
+        <span class="k">return</span> <span class="n">b64decode</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">))</span>
+
+<div class="viewcode-block" id="WebElement.screenshot">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.screenshot">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">screenshot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a screenshot of the current element to a PNG image file.</span>
+<span class="sd">        Returns False if there is any IOError, else returns True. Use full</span>
+<span class="sd">        paths in your filename.</span>
+
+<span class="sd">        :Args:</span>
+<span class="sd">         - filename: The full path you wish to save your screenshot to. This</span>
+<span class="sd">           should end with a `.png` extension.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                element.screenshot(&#39;/Screenshots/foo.png&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.png&quot;</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;name used for saved screenshot does not match file &quot;</span> <span class="s2">&quot;type. It should end with a `.png` extension&quot;</span><span class="p">,</span>
+                <span class="ne">UserWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">png</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">screenshot_as_png</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">png</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">png</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebElement</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The parent element this element&quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span><span class="p">:</span>
+            <span class="n">args</span><span class="p">[</span><span class="s2">&quot;nodeId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span><span class="p">[</span><span class="s2">&quot;objectId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span>
+        <span class="n">node</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_describe</span><span class="p">()</span>
+        <span class="n">node_id</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parentId&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node_id</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">:</span>
+                <span class="c1"># noinspection PyUnresolvedReferences</span>
+                <span class="k">return</span> <span class="n">SyncWebElement</span><span class="p">(</span><span class="n">node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="p">,</span> <span class="n">context_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__context_id__</span><span class="p">,</span>
+                                      <span class="n">isolated_exec_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">___isolated_exec_id__</span><span class="p">,</span> <span class="n">frame_id</span><span class="o">=</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__frame_id__</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># noinspection PyUnresolvedReferences</span>
+                <span class="k">return</span> <span class="n">WebElement</span><span class="p">(</span><span class="n">node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="p">,</span> <span class="n">context_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__context_id__</span><span class="p">,</span>
+                                  <span class="n">isolated_exec_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">___isolated_exec_id__</span><span class="p">,</span> <span class="n">frame_id</span><span class="o">=</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__frame_id__</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_elements</span><span class="p">(</span><span class="n">By</span><span class="o">.</span><span class="n">CSS_SELECTOR</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_raw_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">await_res</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                 <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                 <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__exec_raw__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">await_res</span><span class="o">=</span><span class="n">await_res</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
+                                       <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+                                       <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">,</span>
+                                       <span class="n">unique_context</span><span class="o">=</span><span class="n">unique_context</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                             <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__exec__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
+                                   <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="n">unique_context</span><span class="p">,</span>
+                                   <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_async_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__exec_async__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
+                                         <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="n">unique_context</span><span class="p">,</span>
+                                         <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">(&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">class_name</span><span class="si">}</span><span class="s1">&quot;, &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;obj_id=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__obj_id__</span><span class="si">}</span><span class="s1">, node_id=&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span><span class="si">}</span><span class="s1">&quot;, backend_node_id=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend_node_id</span><span class="si">}</span><span class="s1">, &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;context_id=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__context_id__</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">WebElement</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">__target__</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">__obj_id__</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__obj_id__</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">__obj_id__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__obj_id__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">_backend_node_id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend_node_id</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+                <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">_node_id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Aurin Aegerter (aka Steve, kaliiiiiiiiii).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
