@@ -116,6 +116,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.delete_network_conditions"><code class="docutils literal notranslate"><span class="pre">Chrome.delete_network_conditions()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.set_permissions"><code class="docutils literal notranslate"><span class="pre">Chrome.set_permissions()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.set_proxy"><code class="docutils literal notranslate"><span class="pre">Chrome.set_proxy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.set_single_proxy"><code class="docutils literal notranslate"><span class="pre">Chrome.set_single_proxy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.clear_proxy"><code class="docutils literal notranslate"><span class="pre">Chrome.clear_proxy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.set_auth"><code class="docutils literal notranslate"><span class="pre">Chrome.set_auth()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.clear_auth"><code class="docutils literal notranslate"><span class="pre">Chrome.clear_auth()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.wait_for_cdp"><code class="docutils literal notranslate"><span class="pre">Chrome.wait_for_cdp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.add_cdp_listener"><code class="docutils literal notranslate"><span class="pre">Chrome.add_cdp_listener()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.remove_cdp_listener"><code class="docutils literal notranslate"><span class="pre">Chrome.remove_cdp_listener()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.execute_cdp_cmd"><code class="docutils literal notranslate"><span class="pre">Chrome.execute_cdp_cmd()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.get_sinks"><code class="docutils literal notranslate"><span class="pre">Chrome.get_sinks()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.get_issue_message"><code class="docutils literal notranslate"><span class="pre">Chrome.get_issue_message()</span></code></a></li>
@@ -1072,6 +1079,103 @@ which is useful in embedded images in HTML.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>proxy_config</strong> – see <a class="reference external" href="https://developer.chrome.com/docs/extensions/reference/proxy/">developer.chrome.com/docs/extensions/reference/proxy</a> for reference</p>
+</dd>
+</dl>
+<p>for authentification, see <a class="reference internal" href="#selenium_driverless.webdriver.Chrome.set_auth" title="selenium_driverless.webdriver.Chrome.set_auth"><code class="xref py py-func docutils literal notranslate"><span class="pre">webdriver.Chrome.set_auth</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.set_single_proxy">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_single_proxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">proxy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bypass_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.set_single_proxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.set_single_proxy" title="Link to this definition"></a></dt>
+<dd><p>Set a single proxy dynamically to be applied in all contexts.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;http://user1:passwrd1@example.proxy.com:5001/&quot;</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<ul class="simple">
+<li><p>Only supported when Chrome has been started with driverless or the extension at <code class="docutils literal notranslate"><span class="pre">selenium_driverless/files/mv3_extension</span></code> has been loaded into the browser.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Socks5</span></code> doesn’t support authentication due to <a class="reference external" href="https://bugs.chromium.org/p/chromium/issues/detail?id=1309413">crbug#1309413</a>.</p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.clear_proxy">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clear_proxy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.clear_proxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.clear_proxy" title="Link to this definition"></a></dt>
+<dd><p>Clear the applied proxy (=&gt; use no proxy at all) in all contexts.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.set_auth">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_auth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">host_with_port</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.set_auth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.set_auth" title="Link to this definition"></a></dt>
+<dd><p>Set authentication dynamically to be applied in all contexts.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">driver</span><span class="o">.</span><span class="n">set_auth</span><span class="p">(</span><span class="s2">&quot;user1&quot;</span><span class="p">,</span><span class="s2">&quot;passwrd1&quot;</span><span class="p">,</span> <span class="s2">&quot;example.com:5001&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<ul class="simple">
+<li><p>Only supported when Chrome has been started with driverless or the extension at <code class="docutils literal notranslate"><span class="pre">selenium_driverless/files/mv3_extension</span></code> has been loaded into the browser.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Socks5</span></code> doesn’t support authentication due to <a class="reference external" href="https://bugs.chromium.org/p/chromium/issues/detail?id=1309413">crbug#1309413</a>.</p></li>
+</ul>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>username</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – </p></li>
+<li><p><strong>password</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – </p></li>
+<li><p><strong>host_with_port</strong> – in format “example.com:5001”</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.clear_auth">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clear_auth</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.clear_auth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.clear_auth" title="Link to this definition"></a></dt>
+<dd><p>clear the applied auth from <a class="reference internal" href="#selenium_driverless.webdriver.Chrome.set_auth" title="selenium_driverless.webdriver.Chrome.set_auth"><code class="xref py py-func docutils literal notranslate"><span class="pre">webdriver.Chrome.set_auth</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.wait_for_cdp">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wait_for_cdp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.wait_for_cdp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.wait_for_cdp" title="Link to this definition"></a></dt>
+<dd><p>wait for a CDP-event (current target)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – an even such as <code class="docutils literal notranslate"><span class="pre">Page.windowOpen</span></code></p></li>
+<li><p><strong>timeout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – timeout to wait for the event</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.add_cdp_listener">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_cdp_listener</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.add_cdp_listener"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.add_cdp_listener" title="Link to this definition"></a></dt>
+<dd><p>add a listener on a CDP event (current target)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the name of the event</p></li>
+<li><p><strong>callback</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">any</span></code>]</span>) – the callback on the event
+has to accept one parameter (event data as json)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.remove_cdp_listener">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">remove_cdp_listener</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.remove_cdp_listener"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.remove_cdp_listener" title="Link to this definition"></a></dt>
+<dd><p>remove a listener for CDP-event (current target)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the name of the event</p></li>
+<li><p><strong>callback</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code></span>) – the callback function to remove</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

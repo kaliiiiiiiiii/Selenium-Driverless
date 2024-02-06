@@ -469,7 +469,7 @@ class Chrome:
         if not self._mv3_extension:
             import re
             import time
-            start = time.monotonic()
+            start = time.perf_counter()
             extension_target = None
             while not extension_target:
                 targets = await self.get_targets(context_id=None)
@@ -482,7 +482,7 @@ class Chrome:
                             extension_target = target.Target
                             break
                 if not extension_target:
-                    if (time.monotonic() - start) > timeout:
+                    if (time.perf_counter() - start) > timeout:
                         raise TimeoutError(f"Couldn't find mv3 extension within {timeout} seconds")
             while True:
                 try:
@@ -799,7 +799,7 @@ class Chrome:
                     shutil.rmtree(_dir, ignore_errors=True)
 
         if self._started:
-            start = time.monotonic()
+            start = time.perf_counter()
             # noinspection PyUnresolvedReferences
             try:
                 # assumption: chrome is still running
@@ -848,7 +848,7 @@ class Chrome:
                                 loop.run_in_executor(None,
                                                      lambda: clean_dirs_sync(
                                                          [self._temp_dir, self._options.user_data_dir])),
-                                timeout=max(5,int(timeout - (time.monotonic() - start))))
+                                timeout=max(5,int(timeout - (time.perf_counter() - start))))
                         except Exception as e:
                             warnings.warn(
                                 "driver hasn't quit correctly, "
@@ -1236,7 +1236,6 @@ class Chrome:
         await self.execute_cdp_cmd("Browser.setPermission", args)
 
     async def set_proxy(self, proxy_config):
-        # TODO: documentation from here on
         # noinspection GrazieInspection
         """ set a proxy dynamically
 
@@ -1272,12 +1271,28 @@ class Chrome:
             }
 
         :param proxy_config: see `developer.chrome.com/docs/extensions/reference/proxy <https://developer.chrome.com/docs/extensions/reference/proxy/>`__ for reference
+
+        for authentification, see :func:`webdriver.Chrome.set_auth <selenium_driverless.webdriver.Chrome.set_auth>`
         """
         extension = await self.mv3_extension
         await extension.eval_async("await chrome.proxy.settings.set(arguments[0])",
                                    {"value": proxy_config, "scope": 'regular'})
 
     async def set_single_proxy(self, proxy: str, bypass_list=None):
+        """
+        Set a single proxy dynamically to be applied in all contexts.
+
+        .. code-block:: python
+
+            "http://user1:passwrd1@example.proxy.com:5001/"
+
+        .. warning::
+
+            - Only supported when Chrome has been started with driverless or the extension at ``selenium_driverless/files/mv3_extension`` has been loaded into the browser.
+
+            - ``Socks5`` doesn't support authentication due to `crbug#1309413 <https://bugs.chromium.org/p/chromium/issues/detail?id=1309413>`__.
+
+        """
 
         # parse scheme
         proxy = proxy.split("://")
@@ -1326,6 +1341,9 @@ class Chrome:
             await self.set_auth(user, passw, f"{host}:{port}")
 
     async def clear_proxy(self):
+        """
+        Clear the applied proxy (=> use no proxy at all) in all contexts.
+        """
         extension = await self.mv3_extension
         await extension.eval_async("""
             await chrome.proxy.settings.set(
@@ -1334,6 +1352,7 @@ class Chrome:
         """)
 
     async def _ensure_auth_interception(self, timeout: float = 0.3, set_flag: bool = True):
+        # internal, to re-apply auth interception which is broken when a new context gets opened. Due to how extensions in incognito work
         if not self._auth_interception_enabled:
             script = """
                         if(globalThis.authCreds == undefined){globalThis.authCreds = {}}
@@ -1352,6 +1371,24 @@ class Chrome:
                 self._auth_interception_enabled = True
 
     async def set_auth(self, username: str, password: str, host_with_port):
+        """
+        Set authentication dynamically to be applied in all contexts.
+
+        .. code-block:: python
+
+            driver.set_auth("user1","passwrd1", "example.com:5001")
+
+        .. warning::
+
+            - Only supported when Chrome has been started with driverless or the extension at ``selenium_driverless/files/mv3_extension`` has been loaded into the browser.
+
+            - ``Socks5`` doesn't support authentication due to `crbug#1309413 <https://bugs.chromium.org/p/chromium/issues/detail?id=1309413>`__.
+
+        :param username:
+        :param password:
+        :param host_with_port: in format "example.com:5001"
+
+        """
         # provide auth
         await self._ensure_auth_interception()
         mv3_target = await self.mv3_extension
@@ -1365,6 +1402,9 @@ class Chrome:
         self._auth[host_with_port] = arg
 
     async def clear_auth(self):
+        """
+        clear the applied auth from :func:`webdriver.Chrome.set_auth <selenium_driverless.webdriver.Chrome.set_auth>`
+        """
         # provide auth
         mv3_target = await self.mv3_extension
         script = "chrome.webRequest.onAuthRequired.removeListener(globalThis.onAuth);"
@@ -1372,17 +1412,32 @@ class Chrome:
         await mv3_target.execute_script(script)
         self._auth_interception_enabled = False
 
-    async def wait_for_cdp(self, event: str, timeout: float or None = None, target_id: str = None):
-        target = await self.get_target(target_id=target_id)
-        return await target.wait_for_cdp(event=event, timeout=timeout)
+    async def wait_for_cdp(self, event: str, timeout: float or None = None):
+        """
+        wait for a CDP-event (current target)
 
-    async def add_cdp_listener(self, event: str, callback: callable, target_id: str = None):
-        target = await self.get_target(target_id=target_id)
-        return await target.add_cdp_listener(event=event, callback=callback)
+        :param event: an even such as ``Page.windowOpen``
+        :param timeout: timeout to wait for the event
+        """
+        return await self.current_target.wait_for_cdp(event=event, timeout=timeout)
 
-    async def remove_cdp_listener(self, event: str, callback: callable, target_id: str = None):
-        target = await self.get_target(target_id=target_id)
-        return await target.remove_cdp_listener(event=event, callback=callback)
+    async def add_cdp_listener(self, event: str, callback: typing.Callable[[dict], any]):
+        """add a listener on a CDP event (current target)
+
+        :param event: the name of the event
+        :param callback: the callback on the event
+            has to accept one parameter (event data as json)
+        """
+        return await self.current_target.add_cdp_listener(event=event, callback=callback)
+
+    async def remove_cdp_listener(self, event: str, callback: callable):
+        """remove a listener for CDP-event (current target)
+
+        :param event: the name of the event
+        :param callback: the callback function to remove
+        """
+        # todo: documentation from here on
+        return await self.current_target.remove_cdp_listener(event=event, callback=callback)
 
     async def get_cdp_event_iter(self, event: str, target_id: str = None):
         target = await self.get_target(target_id=target_id)

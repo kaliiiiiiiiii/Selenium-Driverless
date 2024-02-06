@@ -310,11 +310,16 @@ class Target:
             pending.pop().cancel()
             if not done:
                 pending.pop().cancel()
-                await get  # ensure get is awaited in every case
+                try:
+                    await get  # ensure get is awaited in every case
+                except Exception as e:
+                    raise e
                 raise asyncio.TimeoutError(f'page: "{url}" didn\'t load within timeout of {timeout}')
             result = done.pop().result()  # data of the event waited for
-
-        await get  # wait for navigate cmd response
+        try:
+            await get  # wait for navigate cmd response
+        except Exception as e:
+            raise e
         await self._on_loaded()
         return result
 
@@ -422,8 +427,8 @@ class Target:
         if timeout is None:
             timeout = 2
 
-        start = time.monotonic()
-        while (time.monotonic() - start) < timeout:
+        start = time.perf_counter()
+        while (time.perf_counter() - start) < timeout:
             global_this = await self._global_this(execution_context_id)
             try:
                 res = await global_this.__exec__(script, *args, serialization=serialization,
@@ -454,8 +459,8 @@ class Target:
         if timeout is None:
             timeout = 2
 
-        start = time.monotonic()
-        while (time.monotonic() - start) < timeout:
+        start = time.perf_counter()
+        while (time.perf_counter() - start) < timeout:
             global_this = await self._global_this(execution_context_id)
             try:
                 res = await global_this.__exec_async__(script, *args, serialization=serialization,
@@ -489,8 +494,8 @@ class Target:
         if timeout is None:
             timeout = 2
 
-        start = time.monotonic()
-        while (time.monotonic() - start) < timeout:
+        start = time.perf_counter()
+        while (time.perf_counter() - start) < timeout:
             global_this = await self._global_this(execution_context_id)
             try:
                 res = await global_this.__eval_async__(script, *args, serialization=serialization,
@@ -693,7 +698,7 @@ class Target:
 
     # noinspection PyUnusedLocal
     async def find_element(self, by: str, value: str, parent=None, timeout: int or None = None) -> WebElement:
-        start = time.monotonic()
+        start = time.perf_counter()
         elem = None
         while not elem:
             parent = await self._document_elem
@@ -701,7 +706,7 @@ class Target:
                 elem = await parent.find_element(by=by, value=value, timeout=None)
             except (StaleElementReferenceException, NoSuchElementException, StaleJSRemoteObjReference):
                 await self._on_loaded()
-            if (not timeout) or (time.monotonic() - start) > timeout:
+            if (not timeout) or (time.perf_counter() - start) > timeout:
                 break
             await asyncio.sleep(0.01)
         if not elem:
@@ -714,8 +719,8 @@ class Target:
         return await parent.find_elements(by=by, value=value)
 
     async def set_source(self, source: str, timeout: float = 15):
-        start = time.monotonic()
-        while (time.monotonic() - start) < timeout:
+        start = time.perf_counter()
+        while (time.perf_counter() - start) < timeout:
             try:
                 document = await self._document_elem
                 await document.set_source(source)

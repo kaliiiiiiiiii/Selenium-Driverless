@@ -152,7 +152,7 @@ async def on_request(params, global_conn):
             else:
                 raise e
         else:
-            start = time.monotonic()
+            start = time.perf_counter()
             body_decoded = base64.b64decode(body['body'])
 
             # modify body here
@@ -164,7 +164,7 @@ async def on_request(params, global_conn):
                 # empty string throws "Invalid http status code or phrase"
                 fulfill_params["responsePhrase"] = params["responseStatusText"]
 
-            _time = time.monotonic() - start
+            _time = time.perf_counter() - start
             if _time > 0.01:
                 print(f"decoding took long: {_time} s")
             await global_conn.execute_cdp_cmd("Fetch.fulfillRequest", fulfill_params)
