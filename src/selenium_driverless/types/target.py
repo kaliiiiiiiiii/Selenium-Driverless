@@ -310,11 +310,16 @@ class Target:
             pending.pop().cancel()
             if not done:
                 pending.pop().cancel()
-                await get  # ensure get is awaited in every case
+                try:
+                    await get  # ensure get is awaited in every case
+                except Exception as e:
+                    raise e
                 raise asyncio.TimeoutError(f'page: "{url}" didn\'t load within timeout of {timeout}')
             result = done.pop().result()  # data of the event waited for
-
-        await get  # wait for navigate cmd response
+        try:
+            await get  # wait for navigate cmd response
+        except Exception as e:
+            raise e
         await self._on_loaded()
         return result
 
