@@ -367,7 +367,7 @@ class Context:
         """
         from selenium_driverless import EXC_HANDLER
         if not start_monotonic:
-            start_monotonic = time.monotonic()
+            start_monotonic = time.perf_counter()
         # noinspection PyBroadException
         try:
             if self.context_id and self._is_remote:

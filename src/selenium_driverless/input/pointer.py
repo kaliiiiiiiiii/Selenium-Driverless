@@ -175,7 +175,7 @@ class BasePointer:
             if i == -1:
                 _time = 0
             else:
-                _time = time.monotonic() - start
+                _time = time.perf_counter() - start
 
             if _time > total_time or _time < 0:
                 return x, y
@@ -189,7 +189,7 @@ class BasePointer:
             await self.move_to(x=x, y=y, **kwargs)
 
             if i == -1:
-                start = time.monotonic() - (1 / freq_assumption)  # => approximately 0.017, assuming 60 Hz
+                start = time.perf_counter() - (1 / freq_assumption)  # => approximately 0.017, assuming 60 Hz
             i += 1
 
 

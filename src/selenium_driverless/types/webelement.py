@@ -253,10 +253,10 @@ class WebElement(JSRemoteObj):
         :rtype: WebElement
         """
         elems = []
-        start = time.monotonic()
+        start = time.perf_counter()
         while not elems:
             elems = await self.find_elements(by=by, value=value)
-            if (not timeout) or (time.monotonic() - start) > timeout:
+            if (not timeout) or (time.perf_counter() - start) > timeout:
                 break
         if elems:
             if isinstance(elems, list):
@@ -431,7 +431,7 @@ class WebElement(JSRemoteObj):
         if scroll_to:
             await self.scroll_to()
         cords = None
-        start = time.monotonic()
+        start = time.perf_counter()
         while not cords:
             try:
                 cords = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
@@ -440,7 +440,7 @@ class WebElement(JSRemoteObj):
                     await asyncio.sleep(0.1)
                 else:
                     raise e
-            if (time.monotonic() - start) > visible_timeout:
+            if (time.perf_counter() - start) > visible_timeout:
                 raise TimeoutError(f"Couldn't compute element location within {visible_timeout} seconds")
         x, y = cords
         if ensure_clickable:

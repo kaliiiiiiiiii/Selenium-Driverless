@@ -104,7 +104,7 @@ def random_port(host: str = None):
 
 
 def check_timeout(start_monotonic: float, timeout: float):
-    if (time.monotonic() - start_monotonic) > timeout:
+    if (time.perf_counter() - start_monotonic) > timeout:
         raise TimeoutError(f"driver.quit took longer than timeout: {timeout}")
 
 

@@ -469,7 +469,7 @@ class Chrome:
         if not self._mv3_extension:
             import re
             import time
-            start = time.monotonic()
+            start = time.perf_counter()
             extension_target = None
             while not extension_target:
                 targets = await self.get_targets(context_id=None)
@@ -482,7 +482,7 @@ class Chrome:
                             extension_target = target.Target
                             break
                 if not extension_target:
-                    if (time.monotonic() - start) > timeout:
+                    if (time.perf_counter() - start) > timeout:
                         raise TimeoutError(f"Couldn't find mv3 extension within {timeout} seconds")
             while True:
                 try:
@@ -799,7 +799,7 @@ class Chrome:
                     shutil.rmtree(_dir, ignore_errors=True)
 
         if self._started:
-            start = time.monotonic()
+            start = time.perf_counter()
             # noinspection PyUnresolvedReferences
             try:
                 # assumption: chrome is still running
@@ -848,7 +848,7 @@ class Chrome:
                                 loop.run_in_executor(None,
                                                      lambda: clean_dirs_sync(
                                                          [self._temp_dir, self._options.user_data_dir])),
-                                timeout=max(5,int(timeout - (time.monotonic() - start))))
+                                timeout=max(5,int(timeout - (time.perf_counter() - start))))
                         except Exception as e:
                             warnings.warn(
                                 "driver hasn't quit correctly, "
