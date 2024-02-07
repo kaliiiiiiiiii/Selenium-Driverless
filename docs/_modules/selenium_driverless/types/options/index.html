@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>selenium_driverless.types.options &mdash; Selenium-Driverless 1.8 documentation</title>
+  <title>selenium_driverless.types.options &mdash; Selenium-Driverless 1.8.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=02d11055"></script>
+        <script src="../../../../_static/documentation_options.js?v=5e2f51e0"></script>
         <script src="../../../../_static/doctools.js?v=888ff710"></script>
         <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -135,10 +135,6 @@
                     <span class="s1">&#39;currentDockState&#39;</span><span class="p">:</span> <span class="s1">&#39;&quot;undocked&quot;&#39;</span><span class="p">,</span>
                     <span class="c1"># always open devtools with console open</span>
                     <span class="s1">&#39;panel-selectedTab&#39;</span><span class="p">:</span> <span class="s1">&#39;&quot;console&quot;&#39;</span><span class="p">}</span>
-            <span class="p">},</span>
-            <span class="s1">&#39;plugins&#39;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="c1">#  don&#39;t open PDF with pdf plugin</span>
-                <span class="s1">&#39;always_open_pdf_externally&#39;</span><span class="p">:</span> <span class="kc">True</span>
             <span class="p">},</span>
             <span class="s2">&quot;download_bubble&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="c1"># don&#39;t Show downloads when they&#39;re done</span>
@@ -276,6 +272,7 @@
 <span class="sd">                os.mkdir(_dir)</span>
 <span class="sd">            options = webdriver.ChromeOptions()</span>
 <span class="sd">            options.downloads_dir = _dir</span>
+<span class="sd">            options.update_pref(&quot;plugins.always_open_pdf_externally&quot;, True)</span>
 <span class="sd">            async with webdriver.Chrome(options=options) as driver:</span>
 <span class="sd">                download_data = await driver.get(&#39;https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf&#39;, timeout=5)</span>
 <span class="sd">                print(download_data.get(&quot;guid_file&quot;))</span>

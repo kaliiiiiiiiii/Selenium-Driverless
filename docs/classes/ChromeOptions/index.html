@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ChromeOptions &mdash; Selenium-Driverless 1.8 documentation</title>
+  <title>ChromeOptions &mdash; Selenium-Driverless 1.8.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=02d11055"></script>
+        <script src="../../_static/documentation_options.js?v=5e2f51e0"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -169,6 +169,7 @@
     <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">_dir</span><span class="p">)</span>
 <span class="n">options</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">ChromeOptions</span><span class="p">()</span>
 <span class="n">options</span><span class="o">.</span><span class="n">downloads_dir</span> <span class="o">=</span> <span class="n">_dir</span>
+<span class="n">options</span><span class="o">.</span><span class="n">update_pref</span><span class="p">(</span><span class="s2">&quot;plugins.always_open_pdf_externally&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 <span class="k">async</span> <span class="k">with</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">Chrome</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span> <span class="k">as</span> <span class="n">driver</span><span class="p">:</span>
     <span class="n">download_data</span> <span class="o">=</span> <span class="k">await</span> <span class="n">driver</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">download_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;guid_file&quot;</span><span class="p">))</span>
