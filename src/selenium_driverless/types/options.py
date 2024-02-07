@@ -57,10 +57,6 @@ class Options(metaclass=ABCMeta):
                     # always open devtools with console open
                     'panel-selectedTab': '"console"'}
             },
-            'plugins': {
-                #  don't open PDF with pdf plugin
-                'always_open_pdf_externally': True
-            },
             "download_bubble": {
                 # don't Show downloads when they're done
                 "partial_view_enabled": False,
