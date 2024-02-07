@@ -184,6 +184,7 @@ class Options(metaclass=ABCMeta):
                 os.mkdir(_dir)
             options = webdriver.ChromeOptions()
             options.downloads_dir = _dir
+            options.update_pref("plugins.always_open_pdf_externally", True)
             async with webdriver.Chrome(options=options) as driver:
                 download_data = await driver.get('https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', timeout=5)
                 print(download_data.get("guid_file"))
