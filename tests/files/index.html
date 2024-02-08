@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>driverless-fp-collector demo</title>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+        <script src="https://unpkg.com/jquery.json-viewer@1.4.0/json-viewer/jquery.json-viewer.js"></script>
+        <link
+            href="https://unpkg.com/jquery.json-viewer@1.4.0/json-viewer/jquery.json-viewer.css"
+            type="text/css"
+            rel="stylesheet"
+        />
+         <script type="text/javascript" src="bundle.js"></script>
+        <!-- <script type="text/javascript" src="://unpkg.com/fp-collector"></script> -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+        <meta name="author" content="Aurin Aegerter & Peet" />
+    </head>
+    <body>
+        <div>
+            <h3>driverless-fp-collector demo</h3>
+            <a href="https://github.com/kaliiiiiiiiii/driverless-fp-collector">Source-Code</a>
+            <pre id="json-renderer"></pre>
+        </div>
+        <script>
+            const showJSON = (json) =>
+                $("#json-renderer").jsonViewer(json, { collapsed: true, withQuotes: false, withLinks: false });
+
+            getFP();
+            async function getFP() {
+                var elem = document.documentElement;
+                function callback(e){
+                    window.fp_click_callback(e)
+                    elem.removeEventListener("mousedown", this);
+                    elem.removeEventListener("touchstart", this);
+                    elem.removeEventListener("touchmove", this);
+                    elem.removeEventListener("mousemove", this);
+                }
+                globalThis.on_fp_result = console.log
+                var json = getFingerprint(true, true);
+                elem.addEventListener("mousedown", callback);
+                elem.addEventListener("touchstart", callback);
+                elem.addEventListener("touchmove", callback);
+                elem.addEventListener("mousemove", callback);
+                json = await json
+
+                showJSON(json);
+                document.querySelector("#json-renderer > ul").style.display = "";
+            }
+        </script>
+        <style>
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #0f0d0c;
+                color: #ccc;
+            }
+        }
+        </style>
+    </body>
+</html>
