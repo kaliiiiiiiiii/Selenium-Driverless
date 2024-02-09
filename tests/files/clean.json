@@ -23,10 +23,10 @@
     "vendorSub": "",
     "webdiver": false,
     "devicePixelRatio": 1.5,
-    "innerWidth": 1280,
-    "innerHeight": 580,
-    "outerWidth": 720,
-    "outerHeight": 720,
+    "innerWidth": 1036,
+    "innerHeight": 554,
+    "outerWidth": 702,
+    "outerHeight": 702,
     "screen": {
         "availWidth": 1280,
         "availHeight": 720,
@@ -44,8 +44,8 @@
     },
     "connection": {
         "effectiveType": "4g",
-        "rtt": 150,
-        "downlink": 1.55,
+        "rtt": 50,
+        "downlink": 10,
         "saveData": false
     },
     "plugins": [
@@ -222,18 +222,18 @@
             },
             {
                 "brand": "Google Chrome",
-                "version": "121.0.6167.140"
+                "version": "121.0.6167.161"
             },
             {
                 "brand": "Chromium",
-                "version": "121.0.6167.140"
+                "version": "121.0.6167.161"
             }
         ],
         "mobile": false,
         "model": "",
         "platform": "Windows",
         "platformVersion": "10.0.0",
-        "uaFullVersion": "121.0.6167.140"
+        "uaFullVersion": "121.0.6167.161"
     },
     "darkmode": true,
     "availabeFonts": [
@@ -5018,11 +5018,53 @@
     ],
     "speechSynthesis": [
         {
+            "voiceURI": "Microsoft Hedda - German (Germany)",
+            "name": "Microsoft Hedda - German (Germany)",
+            "lang": "de-DE",
+            "localService": true,
+            "default": true
+        },
+        {
+            "voiceURI": "Microsoft Katja - German (Germany)",
+            "name": "Microsoft Katja - German (Germany)",
+            "lang": "de-DE",
+            "localService": true,
+            "default": false
+        },
+        {
+            "voiceURI": "Microsoft Stefan - German (Germany)",
+            "name": "Microsoft Stefan - German (Germany)",
+            "lang": "de-DE",
+            "localService": true,
+            "default": false
+        },
+        {
+            "voiceURI": "Microsoft George - English (United Kingdom)",
+            "name": "Microsoft George - English (United Kingdom)",
+            "lang": "en-GB",
+            "localService": true,
+            "default": false
+        },
+        {
+            "voiceURI": "Microsoft Hazel - English (United Kingdom)",
+            "name": "Microsoft Hazel - English (United Kingdom)",
+            "lang": "en-GB",
+            "localService": true,
+            "default": false
+        },
+        {
+            "voiceURI": "Microsoft Susan - English (United Kingdom)",
+            "name": "Microsoft Susan - English (United Kingdom)",
+            "lang": "en-GB",
+            "localService": true,
+            "default": false
+        },
+        {
             "voiceURI": "Google Deutsch",
             "name": "Google Deutsch",
             "lang": "de-DE",
             "localService": false,
-            "default": true
+            "default": false
         },
         {
             "voiceURI": "Google US English",
@@ -6162,10 +6204,10 @@
         "y": "KeyZ",
         "^": "Equal",
         "p": "KeyP",
-        "ö": "Semicolon",
+        "é": "Semicolon",
         "¨": "BracketRight",
         "-": "Slash",
-        "ü": "BracketLeft",
+        "è": "BracketLeft",
         "l": "KeyL",
         "w": "KeyW",
         "s": "KeyS",
@@ -6178,7 +6220,7 @@
         "q": "KeyQ",
         "t": "KeyT",
         "z": "KeyY",
-        "ä": "Quote",
+        "à": "Quote",
         "<": "IntlBackslash",
         "$": "Backslash",
         "k": "KeyK",
