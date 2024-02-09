@@ -42,6 +42,7 @@ class Options(metaclass=ABCMeta):
         self.mobile_options = None
 
         self._binary_location = find_chrome_executable()
+        self._env = os.environ
         self._extension_paths = []
         self._extensions = []
         self._experimental_options = {}
@@ -267,6 +268,15 @@ class Options(metaclass=ABCMeta):
     @binary_location.setter
     def binary_location(self, value: str) -> None:
         self._binary_location = value
+
+    @property
+    def env(self):
+        """the env for ``subprocess.Popen, ``os.environ`` by default"""
+        return self._env
+
+    @env.setter
+    def env(self, env):
+        self._env = env
 
     def add_extension(self, path: str) -> None:
         """Adds an extension to Chrome

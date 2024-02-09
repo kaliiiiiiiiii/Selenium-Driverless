@@ -229,7 +229,8 @@ class Chrome:
                     preexec_fn=os.setsid if os.name == 'posix' else None,
                     creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0,
                     shell=False,
-                    text=True
+                    text=True,
+                    env=self._options.env
                 )
 
                 host, port = self._options.debugger_address.split(":")
