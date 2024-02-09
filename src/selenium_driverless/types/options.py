@@ -172,7 +172,9 @@ class Options(metaclass=ABCMeta):
 
     @user_data_dir.setter
     def user_data_dir(self, _dir: str):
-        self.add_argument(f"--user-data-dir={_dir}")
+        self._user_data_dir = _dir
+        if _dir:
+            self.add_argument(f"--user-data-dir={_dir}")
 
     @property
     def downloads_dir(self):

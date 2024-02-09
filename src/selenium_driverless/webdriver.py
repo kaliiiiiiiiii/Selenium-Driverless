@@ -161,19 +161,26 @@ class Chrome:
                     warnings.warn("headless is detectable at first run")
 
             # handle prefs
+
             if self._options.user_data_dir:
                 prefs_path = self._options.user_data_dir + "/Default/Preferences"
                 if os.path.isfile(prefs_path):
                     self._prefs = await read_prefs(prefs_path)
                 else:
                     os.makedirs(os.path.dirname(prefs_path), exist_ok=True)
-            else:
+
+                # write prefs
+                self._prefs.update(self._options.prefs)
+                await write_prefs(self._prefs, prefs_path)
+            elif self._options.user_data_dir is None:
                 self._options.add_argument(
                     "--user-data-dir=" + self._temp_dir + "/data_dir")
                 prefs_path = self._options.user_data_dir + "/Default/Preferences"
                 os.makedirs(os.path.dirname(prefs_path), exist_ok=True)
-            self._prefs.update(self._options.prefs)
-            await write_prefs(self._prefs, prefs_path)
+
+                # write prefs
+                self._prefs.update(self._options.prefs)
+                await write_prefs(self._prefs, prefs_path)
 
             # noinspection PyProtectedMember
             # handle extensions
