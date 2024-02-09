@@ -836,18 +836,31 @@ class Chrome:
                     EXC_HANDLER(e)
                 finally:
                     self._started = False
+                    if self._stderr_file:
+                        try:
+                            self._stderr.close()
+                        except Exception as e:
+                            EXC_HANDLER(e)
+
+                    # clean temp dir for extensions etc
+                    try:
+                        await asyncio.wait_for(
+                            # wait for
+                            loop.run_in_executor(None,
+                                                 lambda: clean_dirs_sync(
+                                                     [self._temp_dir])),
+                            timeout=max(5, int(timeout - (time.perf_counter() - start))))
+                    except Exception as e:
+                        EXC_HANDLER(e)
+
                     if clean_dirs:
-                        if self._stderr_file:
-                            try:
-                                self._stderr.close()
-                            except Exception as e:
-                                EXC_HANDLER(e)
+                        # clean user-data-dir for chrome
                         try:
                             await asyncio.wait_for(
                                 # wait for
                                 loop.run_in_executor(None,
                                                      lambda: clean_dirs_sync(
-                                                         [self._temp_dir, self._options.user_data_dir])),
+                                                         [self._options.user_data_dir])),
                                 timeout=max(5,int(timeout - (time.perf_counter() - start))))
                         except Exception as e:
                             warnings.warn(
