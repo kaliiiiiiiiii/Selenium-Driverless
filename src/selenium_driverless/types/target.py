@@ -20,6 +20,7 @@ from selenium_driverless.input.pointer import Pointer
 # other
 from selenium_driverless.scripts.driver_utils import get_targets, get_target, get_cookies, get_cookie, delete_cookie, \
     delete_all_cookies, add_cookie
+from selenium_driverless.utils.utils import safe_wrap_fut
 from selenium_driverless.types.deserialize import StaleJSRemoteObjReference
 from selenium_driverless.types.webelement import StaleElementReferenceException, NoSuchElementException
 from selenium_driverless.sync.alert import Alert as SyncAlert
@@ -293,8 +294,8 @@ class Target:
 
             # wait for download or loadEventFired
             wait = asyncio.ensure_future(asyncio.wait([
-                asyncio.ensure_future(self.wait_for_cdp("Page.loadEventFired", timeout=None)),
-                asyncio.ensure_future(self.wait_download(timeout=None))
+                safe_wrap_fut(self.wait_for_cdp("Page.loadEventFired", timeout=None)),
+                safe_wrap_fut(self.wait_download(timeout=None))
             ], timeout=timeout, return_when=asyncio.FIRST_COMPLETED))
 
             await asyncio.sleep(0.01)  # ensure listening for events has already started

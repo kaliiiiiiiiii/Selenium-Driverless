@@ -1,6 +1,6 @@
 # from https://github.com/ultrafunkamsterdam/undetected-chromedriver/blob/1c704a71cf4f29181a59ecf19ddff32f1b4fbfc0/undetected_chromedriver/__init__.py#L844
 # edited by kaliiiiiiiiii | Aurin Aegerter
-
+import asyncio
 import sys
 import typing
 import os
@@ -136,3 +136,23 @@ async def get_default_ua():
 async def set_default_ua(ua: str):
     path = DATA_DIR + "/useragent"
     await write(path, ua, sel_root=False)
+
+
+def safe_wrap_fut(fn: typing.Awaitable):
+    fut = asyncio.Future()
+
+    async def helper_fn(_fut: asyncio.Future, _fn: typing.Awaitable):
+        try:
+            result = await _fn
+            try:
+                fut.set_result(result)
+            except asyncio.InvalidStateError:
+                pass
+        except Exception as e:
+            try:
+                fut.set_exception(e)
+            except asyncio.InvalidStateError:
+                pass
+
+    asyncio.ensure_future(helper_fn(fut, fn))
+    return fut
