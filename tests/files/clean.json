@@ -1,7 +1,7 @@
 {
     "appCodeName": "Mozilla",
     "appName": "Netscape",
-    "appVersion": "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+    "appVersion": "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
     "cookieEnabled": true,
     "deviceMemory": 8,
     "doNotTrack": null,
@@ -18,15 +18,15 @@
     "platform": "Win32",
     "product": "Gecko",
     "productSub": "20030107",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
     "vendor": "Google Inc.",
     "vendorSub": "",
     "webdiver": false,
     "devicePixelRatio": 1.5,
-    "innerWidth": 1036,
-    "innerHeight": 554,
-    "outerWidth": 702,
-    "outerHeight": 702,
+    "innerWidth": 1038,
+    "innerHeight": 611,
+    "outerWidth": 706,
+    "outerHeight": 706,
     "screen": {
         "availWidth": 1280,
         "availHeight": 720,
@@ -40,12 +40,12 @@
             "angle": 0,
             "type": "landscape-primary"
         },
-        "isExtended": false
+        "isExtended": true
     },
     "connection": {
         "effectiveType": "4g",
         "rtt": 50,
-        "downlink": 10,
+        "downlink": 1.75,
         "saveData": false
     },
     "plugins": [
@@ -203,37 +203,37 @@
         "bitness": "64",
         "brands": [
             {
-                "brand": "Not A(Brand",
-                "version": "99"
+                "brand": "Chromium",
+                "version": "122"
+            },
+            {
+                "brand": "Not(A:Brand",
+                "version": "24"
             },
             {
                 "brand": "Google Chrome",
-                "version": "121"
-            },
-            {
-                "brand": "Chromium",
-                "version": "121"
+                "version": "122"
             }
         ],
         "fullVersionList": [
             {
-                "brand": "Not A(Brand",
-                "version": "99.0.0.0"
+                "brand": "Chromium",
+                "version": "122.0.6261.112"
+            },
+            {
+                "brand": "Not(A:Brand",
+                "version": "24.0.0.0"
             },
             {
                 "brand": "Google Chrome",
-                "version": "121.0.6167.161"
-            },
-            {
-                "brand": "Chromium",
-                "version": "121.0.6167.161"
+                "version": "122.0.6261.112"
             }
         ],
         "mobile": false,
         "model": "",
         "platform": "Windows",
         "platformVersion": "10.0.0",
-        "uaFullVersion": "121.0.6167.161"
+        "uaFullVersion": "122.0.6261.112"
     },
     "darkmode": true,
     "availabeFonts": [
@@ -3166,11 +3166,11 @@
         "ＭＳ Ｐ明朝"
     ],
     "stack_native": [
-        12569,
-        11426,
-        79.97200349956256
+        12570,
+        11428,
+        80.05604203152365
     ],
-    "timing_native": 0.09999999403953552,
+    "timing_native": 0.09999990463256836,
     "permissions": {
         "background-sync": "granted",
         "clipboard-read": "prompt",
@@ -3223,6 +3223,7 @@
         "vibrate",
         "deprecatedRunAdAuctionEnforcesKAnonymity",
         "bluetooth",
+        "storageBuckets",
         "clipboard",
         "credentials",
         "keyboard",
@@ -3233,6 +3234,7 @@
         "virtualKeyboard",
         "wakeLock",
         "deviceMemory",
+        "userAgentData",
         "login",
         "ink",
         "mediaCapabilities",
@@ -3246,7 +3248,6 @@
         "xr",
         "serial",
         "windowControlsOverlay",
-        "userAgentData",
         "adAuctionComponents",
         "runAdAuction",
         "canLoadAdAuctionFencedFrame",
@@ -3374,6 +3375,7 @@
         "WebGL2RenderingContext",
         "WaveShaperNode",
         "VisualViewport",
+        "VisibilityStateEntry",
         "VirtualKeyboardGeometryChangeEvent",
         "ViewTransition",
         "VideoFrame",
@@ -3608,6 +3610,7 @@
         "NodeFilter",
         "Node",
         "NetworkInformation",
+        "NavigatorUAData",
         "Navigator",
         "NavigationTransition",
         "NavigationHistoryEntry",
@@ -4123,6 +4126,7 @@
         "structuredClone",
         "webkitCancelAnimationFrame",
         "webkitRequestAnimationFrame",
+        "Iterator",
         "chrome",
         "WebAssembly",
         "fence",
@@ -4283,10 +4287,14 @@
         "LaunchParams",
         "LaunchQueue",
         "NavigatorLogin",
+        "NotRestoredReasonDetails",
+        "NotRestoredReasons",
         "OTPCredential",
         "PaymentAddress",
         "PaymentRequest",
+        "PaymentRequestUpdateEvent",
         "PaymentResponse",
+        "PaymentManager",
         "PaymentMethodChangeEvent",
         "Presentation",
         "PresentationAvailability",
@@ -4300,6 +4308,8 @@
         "SerialPort",
         "SharedStorage",
         "SharedStorageWorklet",
+        "StorageBucket",
+        "StorageBucketManager",
         "USB",
         "USBAlternateInterface",
         "USBConfiguration",
@@ -4368,10 +4378,7 @@
         "MediaMetadata",
         "MediaSession",
         "MutationEvent",
-        "NavigatorUAData",
         "Notification",
-        "PaymentManager",
-        "PaymentRequestUpdateEvent",
         "PeriodicSyncManager",
         "PermissionStatus",
         "Permissions",
@@ -4388,7 +4395,6 @@
         "SpeechSynthesisUtterance",
         "SpeechSynthesisVoice",
         "VideoPlaybackQuality",
-        "VisibilityStateEntry",
         "webkitSpeechGrammar",
         "webkitSpeechGrammarList",
         "webkitSpeechRecognition",
@@ -4619,6 +4625,7 @@
         "getElementsByTagNameNS",
         "getSelection",
         "hasFocus",
+        "hasStorageAccess",
         "importNode",
         "open",
         "prepend",
@@ -4631,6 +4638,8 @@
         "querySelectorAll",
         "releaseEvents",
         "replaceChildren",
+        "requestStorageAccess",
+        "requestStorageAccessFor",
         "startViewTransition",
         "webkitCancelFullScreen",
         "webkitExitFullscreen",
@@ -4640,10 +4649,7 @@
         "browsingTopics",
         "hasPrivateToken",
         "hasRedemptionRecord",
-        "requestStorageAccess",
         "onscrollend",
-        "hasStorageAccess",
-        "requestStorageAccessFor",
         "nodeType",
         "nodeName",
         "baseURI",
@@ -4702,6 +4708,7 @@
         "translate",
         "dir",
         "hidden",
+        "inert",
         "accessKey",
         "draggable",
         "spellcheck",
@@ -4829,7 +4836,6 @@
         "hidePopover",
         "showPopover",
         "togglePopover",
-        "inert",
         "onscrollend",
         "editContext",
         "namespaceURI",
@@ -5018,53 +5024,11 @@
     ],
     "speechSynthesis": [
         {
-            "voiceURI": "Microsoft Hedda - German (Germany)",
-            "name": "Microsoft Hedda - German (Germany)",
-            "lang": "de-DE",
-            "localService": true,
-            "default": true
-        },
-        {
-            "voiceURI": "Microsoft Katja - German (Germany)",
-            "name": "Microsoft Katja - German (Germany)",
-            "lang": "de-DE",
-            "localService": true,
-            "default": false
-        },
-        {
-            "voiceURI": "Microsoft Stefan - German (Germany)",
-            "name": "Microsoft Stefan - German (Germany)",
-            "lang": "de-DE",
-            "localService": true,
-            "default": false
-        },
-        {
-            "voiceURI": "Microsoft George - English (United Kingdom)",
-            "name": "Microsoft George - English (United Kingdom)",
-            "lang": "en-GB",
-            "localService": true,
-            "default": false
-        },
-        {
-            "voiceURI": "Microsoft Hazel - English (United Kingdom)",
-            "name": "Microsoft Hazel - English (United Kingdom)",
-            "lang": "en-GB",
-            "localService": true,
-            "default": false
-        },
-        {
-            "voiceURI": "Microsoft Susan - English (United Kingdom)",
-            "name": "Microsoft Susan - English (United Kingdom)",
-            "lang": "en-GB",
-            "localService": true,
-            "default": false
-        },
-        {
             "voiceURI": "Google Deutsch",
             "name": "Google Deutsch",
             "lang": "de-DE",
             "localService": false,
-            "default": false
+            "default": true
         },
         {
             "voiceURI": "Google US English",
@@ -6204,10 +6168,10 @@
         "y": "KeyZ",
         "^": "Equal",
         "p": "KeyP",
-        "é": "Semicolon",
+        "ö": "Semicolon",
         "¨": "BracketRight",
         "-": "Slash",
-        "è": "BracketLeft",
+        "ü": "BracketLeft",
         "l": "KeyL",
         "w": "KeyW",
         "s": "KeyS",
@@ -6220,7 +6184,7 @@
         "q": "KeyQ",
         "t": "KeyT",
         "z": "KeyY",
-        "à": "Quote",
+        "ä": "Quote",
         "<": "IntlBackslash",
         "$": "Backslash",
         "k": "KeyK",
@@ -6598,7 +6562,7 @@
             "minStorageBufferOffsetAlignment": 256,
             "maxVertexBuffers": 8,
             "maxBufferSize": 2147483648,
-            "maxVertexAttributes": 16,
+            "maxVertexAttributes": 30,
             "maxVertexBufferArrayStride": 2048,
             "maxInterStageShaderComponents": 112,
             "maxInterStageShaderVariables": 28,
@@ -6640,11 +6604,11 @@
     "is_bot": false,
     "status": "pass",
     "stack_worker": [
-        6344,
-        5767,
-        79.9584055459272
+        6352,
+        5774,
+        79.91695501730104
     ],
-    "timing_worker": 0.09999999403953552,
+    "timing_worker": 0.09999990463256836,
     "gl": {
         "BLEND_EQUATION": [
             32774,
