@@ -205,7 +205,7 @@ class Pointer:
         await self.base.down(**kwargs)
 
     async def up(self, **kwargs):
-        await self.base.down(**kwargs)
+        await self.base.up(**kwargs)
 
     async def click(self, x_or_elem: float, y: float or None = None, move_to: bool = True,
                     move_kwargs: dict or None = None, click_kwargs: dict or None = None):

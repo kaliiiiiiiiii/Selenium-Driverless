@@ -42,6 +42,7 @@ class Options(metaclass=ABCMeta):
         self.mobile_options = None
 
         self._binary_location = find_chrome_executable()
+        self._env = os.environ
         self._extension_paths = []
         self._extensions = []
         self._experimental_options = {}
@@ -56,10 +57,6 @@ class Options(metaclass=ABCMeta):
                     'currentDockState': '"undocked"',
                     # always open devtools with console open
                     'panel-selectedTab': '"console"'}
-            },
-            'plugins': {
-                #  don't open PDF with pdf plugin
-                'always_open_pdf_externally': True
             },
             "download_bubble": {
                 # don't Show downloads when they're done
@@ -92,12 +89,13 @@ class Options(metaclass=ABCMeta):
             "--disable-auto-reload",
             # some backgrounding tweaking
             '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding',
-            '--disable-background-timer-throttling', '--disable-renderer-backgrounding',
+            '--disable-background-timer-throttling',
             '--disable-background-networking', '--no-pings',
             '--disable-infobars', '--disable-breakpad',  # some bars tweak
             "--no-default-browser-check",  # disable default browser message
             '--homepage=about:blank'  # set homepage
-            "--wm-window-animations-disabled", "--animation-duration-scale=0"  # disable animations
+            "--wm-window-animations-disabled", "--animation-duration-scale=0",  # disable animations
+            "--enable-privacy-sandbox-ads-apis"  # ensure window.Fence, window.SharedStorage etc. exist, looks like chrome disables them when using automation
         )
         if IS_POSIX:
             self.add_argument("--password-store=basic")
@@ -175,7 +173,9 @@ class Options(metaclass=ABCMeta):
 
     @user_data_dir.setter
     def user_data_dir(self, _dir: str):
-        self.add_argument(f"--user-data-dir={_dir}")
+        self._user_data_dir = _dir
+        if _dir:
+            self.add_argument(f"--user-data-dir={_dir}")
 
     @property
     def downloads_dir(self):
@@ -188,6 +188,7 @@ class Options(metaclass=ABCMeta):
                 os.mkdir(_dir)
             options = webdriver.ChromeOptions()
             options.downloads_dir = _dir
+            options.update_pref("plugins.always_open_pdf_externally", True)
             async with webdriver.Chrome(options=options) as driver:
                 download_data = await driver.get('https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', timeout=5)
                 print(download_data.get("guid_file"))
@@ -221,7 +222,10 @@ class Options(metaclass=ABCMeta):
 
     @headless.setter
     def headless(self, value: bool) -> None:
-        self.add_argument("--headless=new")
+        if (value is False) and self._headless:
+            raise NotImplementedError("setting headless=True can't be undone in options atm")
+        if value is True:
+            self.add_argument("--headless=new")
 
     @property
     def startup_url(self) -> str:
@@ -267,6 +271,15 @@ class Options(metaclass=ABCMeta):
     @binary_location.setter
     def binary_location(self, value: str) -> None:
         self._binary_location = value
+
+    @property
+    def env(self):
+        """the env for ``subprocess.Popen, ``os.environ`` by default"""
+        return self._env
+
+    @env.setter
+    def env(self, env):
+        self._env = env
 
     def add_extension(self, path: str) -> None:
         """Adds an extension to Chrome

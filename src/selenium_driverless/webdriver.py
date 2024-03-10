@@ -161,19 +161,26 @@ class Chrome:
                     warnings.warn("headless is detectable at first run")
 
             # handle prefs
+
             if self._options.user_data_dir:
                 prefs_path = self._options.user_data_dir + "/Default/Preferences"
                 if os.path.isfile(prefs_path):
                     self._prefs = await read_prefs(prefs_path)
                 else:
                     os.makedirs(os.path.dirname(prefs_path), exist_ok=True)
-            else:
+
+                # write prefs
+                self._prefs.update(self._options.prefs)
+                await write_prefs(self._prefs, prefs_path)
+            elif self._options.user_data_dir is None:
                 self._options.add_argument(
                     "--user-data-dir=" + self._temp_dir + "/data_dir")
                 prefs_path = self._options.user_data_dir + "/Default/Preferences"
                 os.makedirs(os.path.dirname(prefs_path), exist_ok=True)
-            self._prefs.update(self._options.prefs)
-            await write_prefs(self._prefs, prefs_path)
+
+                # write prefs
+                self._prefs.update(self._options.prefs)
+                await write_prefs(self._prefs, prefs_path)
 
             # noinspection PyProtectedMember
             # handle extensions
@@ -222,7 +229,8 @@ class Chrome:
                     preexec_fn=os.setsid if os.name == 'posix' else None,
                     creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0,
                     shell=False,
-                    text=True
+                    text=True,
+                    env=self._options.env
                 )
 
                 host, port = self._options.debugger_address.split(":")
@@ -836,18 +844,31 @@ class Chrome:
                     EXC_HANDLER(e)
                 finally:
                     self._started = False
+                    if self._stderr_file:
+                        try:
+                            self._stderr.close()
+                        except Exception as e:
+                            EXC_HANDLER(e)
+
+                    # clean temp dir for extensions etc
+                    try:
+                        await asyncio.wait_for(
+                            # wait for
+                            loop.run_in_executor(None,
+                                                 lambda: clean_dirs_sync(
+                                                     [self._temp_dir])),
+                            timeout=max(5, int(timeout - (time.perf_counter() - start))))
+                    except Exception as e:
+                        EXC_HANDLER(e)
+
                     if clean_dirs:
-                        if self._stderr_file:
-                            try:
-                                self._stderr.close()
-                            except Exception as e:
-                                EXC_HANDLER(e)
+                        # clean user-data-dir for chrome
                         try:
                             await asyncio.wait_for(
                                 # wait for
                                 loop.run_in_executor(None,
                                                      lambda: clean_dirs_sync(
-                                                         [self._temp_dir, self._options.user_data_dir])),
+                                                         [self._options.user_data_dir])),
                                 timeout=max(5,int(timeout - (time.perf_counter() - start))))
                         except Exception as e:
                             warnings.warn(
@@ -857,11 +878,14 @@ class Chrome:
                             raise e
 
     def __del__(self):
-        if self._started:
-            warnings.warn(
-                "driver hasn't quit correctly, "
-                "files might be left in your temp folder & chrome might still be running",
-                ResourceWarning)
+        try:
+            if self._started:
+                warnings.warn(
+                    "driver hasn't quit correctly, "
+                    "files might be left in your temp folder & chrome might still be running",
+                    ResourceWarning)
+        except AttributeError:
+            pass
 
     @property
     async def current_target_info(self) -> TargetInfo:

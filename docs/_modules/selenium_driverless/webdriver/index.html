@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>selenium_driverless.webdriver &mdash; Selenium-Driverless 1.8 documentation</title>
+  <title>selenium_driverless.webdriver &mdash; Selenium-Driverless 1.8.0.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=02d11055"></script>
+        <script src="../../../_static/documentation_options.js?v=696515ce"></script>
         <script src="../../../_static/doctools.js?v=888ff710"></script>
         <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -240,19 +240,26 @@
                     <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;headless is detectable at first run&quot;</span><span class="p">)</span>
 
             <span class="c1"># handle prefs</span>
+
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">user_data_dir</span><span class="p">:</span>
                 <span class="n">prefs_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">user_data_dir</span> <span class="o">+</span> <span class="s2">&quot;/Default/Preferences&quot;</span>
                 <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">prefs_path</span><span class="p">):</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span> <span class="o">=</span> <span class="k">await</span> <span class="n">read_prefs</span><span class="p">(</span><span class="n">prefs_path</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">prefs_path</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
+
+                <span class="c1"># write prefs</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">prefs</span><span class="p">)</span>
+                <span class="k">await</span> <span class="n">write_prefs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span><span class="p">,</span> <span class="n">prefs_path</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">user_data_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
                     <span class="s2">&quot;--user-data-dir=&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temp_dir</span> <span class="o">+</span> <span class="s2">&quot;/data_dir&quot;</span><span class="p">)</span>
                 <span class="n">prefs_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">user_data_dir</span> <span class="o">+</span> <span class="s2">&quot;/Default/Preferences&quot;</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">prefs_path</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">prefs</span><span class="p">)</span>
-            <span class="k">await</span> <span class="n">write_prefs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span><span class="p">,</span> <span class="n">prefs_path</span><span class="p">)</span>
+
+                <span class="c1"># write prefs</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">prefs</span><span class="p">)</span>
+                <span class="k">await</span> <span class="n">write_prefs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span><span class="p">,</span> <span class="n">prefs_path</span><span class="p">)</span>
 
             <span class="c1"># noinspection PyProtectedMember</span>
             <span class="c1"># handle extensions</span>
@@ -301,7 +308,8 @@
                     <span class="n">preexec_fn</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">setsid</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;posix&#39;</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
                     <span class="n">creationflags</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">CREATE_NEW_PROCESS_GROUP</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;nt&#39;</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
                     <span class="n">shell</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="n">text</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">env</span>
                 <span class="p">)</span>
 
                 <span class="n">host</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">debugger_address</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
@@ -962,18 +970,31 @@
                     <span class="n">EXC_HANDLER</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
                 <span class="k">finally</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_started</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stderr_file</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_stderr</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                            <span class="n">EXC_HANDLER</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+                    <span class="c1"># clean temp dir for extensions etc</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span>
+                            <span class="c1"># wait for</span>
+                            <span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span>
+                                                 <span class="k">lambda</span><span class="p">:</span> <span class="n">clean_dirs_sync</span><span class="p">(</span>
+                                                     <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_temp_dir</span><span class="p">])),</span>
+                            <span class="n">timeout</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">timeout</span> <span class="o">-</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">))))</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">EXC_HANDLER</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
                     <span class="k">if</span> <span class="n">clean_dirs</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stderr_file</span><span class="p">:</span>
-                            <span class="k">try</span><span class="p">:</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">_stderr</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-                            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                                <span class="n">EXC_HANDLER</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                        <span class="c1"># clean user-data-dir for chrome</span>
                         <span class="k">try</span><span class="p">:</span>
                             <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span>
                                 <span class="c1"># wait for</span>
                                 <span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span>
                                                      <span class="k">lambda</span><span class="p">:</span> <span class="n">clean_dirs_sync</span><span class="p">(</span>
-                                                         <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_temp_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">user_data_dir</span><span class="p">])),</span>
+                                                         <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">user_data_dir</span><span class="p">])),</span>
                                 <span class="n">timeout</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="nb">int</span><span class="p">(</span><span class="n">timeout</span> <span class="o">-</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">))))</span>
                         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -984,11 +1005,14 @@
 
 
     <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_started</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;driver hasn&#39;t quit correctly, &quot;</span>
-                <span class="s2">&quot;files might be left in your temp folder &amp; chrome might still be running&quot;</span><span class="p">,</span>
-                <span class="ne">ResourceWarning</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_started</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s2">&quot;driver hasn&#39;t quit correctly, &quot;</span>
+                    <span class="s2">&quot;files might be left in your temp folder &amp; chrome might still be running&quot;</span><span class="p">,</span>
+                    <span class="ne">ResourceWarning</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
 
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">current_target_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TargetInfo</span><span class="p">:</span>
@@ -1685,6 +1709,7 @@
 <span class="sd">        :param event: the name of the event</span>
 <span class="sd">        :param callback: the callback function to remove</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># todo: documentation from here on</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">remove_cdp_listener</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span></div>
 
 

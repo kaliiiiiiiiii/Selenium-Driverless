@@ -20,6 +20,7 @@ from selenium_driverless.input.pointer import Pointer
 # other
 from selenium_driverless.scripts.driver_utils import get_targets, get_target, get_cookies, get_cookie, delete_cookie, \
     delete_all_cookies, add_cookie
+from selenium_driverless.utils.utils import safe_wrap_fut
 from selenium_driverless.types.deserialize import StaleJSRemoteObjReference
 from selenium_driverless.types.webelement import StaleElementReferenceException, NoSuchElementException
 from selenium_driverless.sync.alert import Alert as SyncAlert
@@ -293,8 +294,8 @@ class Target:
 
             # wait for download or loadEventFired
             wait = asyncio.ensure_future(asyncio.wait([
-                asyncio.ensure_future(self.wait_for_cdp("Page.loadEventFired", timeout=None)),
-                asyncio.ensure_future(self.wait_download(timeout=None))
+                safe_wrap_fut(self.wait_for_cdp("Page.loadEventFired", timeout=None)),
+                safe_wrap_fut(self.wait_download(timeout=None))
             ], timeout=timeout, return_when=asyncio.FIRST_COMPLETED))
 
             await asyncio.sleep(0.01)  # ensure listening for events has already started
@@ -334,7 +335,14 @@ class Target:
                         "serialization": "idOnly"}}
             if context_id:
                 args["contextId"] = context_id
-            res = await self.execute_cdp_cmd("Runtime.evaluate", args)
+            try:
+                res = await self.execute_cdp_cmd("Runtime.evaluate", args)
+            except CDPError as e:
+                if e.code == -32000 and e.message == 'Cannot find context with specified id':
+                    raise StaleJSRemoteObjReference("GlobalThis")
+                else:
+                    raise e
+
             if "exceptionDetails" in res.keys():
                 raise JSEvalException(res["exceptionDetails"])
             obj_id = res["result"]['objectId']
@@ -394,18 +402,23 @@ class Target:
         if timeout is None:
             timeout = 2
 
-        globalthis = await self._global_this(execution_context_id)
-        try:
-            res = await globalthis.__exec_raw__(script, *args, await_res=await_res, serialization=serialization,
-                                                max_depth=max_depth, timeout=timeout,
-                                                execution_context_id=execution_context_id)
-        except StaleJSRemoteObjReference:
-            await self.wait_for_cdp("Page.loadEventFired", timeout)
-            globalthis = await self._global_this(execution_context_id)
-            res = await globalthis.__exec_raw__(script, *args, await_res=await_res, serialization=serialization,
-                                                max_depth=max_depth, timeout=timeout,
-                                                execution_context_id=execution_context_id)
-        return res
+        start = time.perf_counter()
+        exc = None
+        while (time.perf_counter() - start) > timeout:
+            try:
+                global_this = await self._global_this(execution_context_id)
+                res = await global_this.__exec_raw__(script, *args, await_res=await_res, serialization=serialization,
+                                                    max_depth=max_depth, timeout=timeout,
+                                                    execution_context_id=execution_context_id)
+            except StaleJSRemoteObjReference as e:
+                exc = e
+            else:
+                return res
+        if exc:
+            raise exc
+        else:
+            raise asyncio.TimeoutError(f"Couldn't execute script due to stale reference within {timeout} s, "
+                                       f"possibly due to a reload loop")
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                              timeout: float = None, execution_context_id: str = None,
@@ -605,7 +618,6 @@ class Target:
             result = await self.execute_cdp_cmd("Browser.getWindowForTarget", {"targetId": self.id})
             self._window_id = result["windowId"]
         return self._window_id
-
 
     async def print_page(self) -> str:
         """Takes PDF of the current page.

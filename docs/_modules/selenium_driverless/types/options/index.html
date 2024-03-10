@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>selenium_driverless.types.options &mdash; Selenium-Driverless 1.8 documentation</title>
+  <title>selenium_driverless.types.options &mdash; Selenium-Driverless 1.8.0.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=02d11055"></script>
+        <script src="../../../../_static/documentation_options.js?v=696515ce"></script>
         <script src="../../../../_static/doctools.js?v=888ff710"></script>
         <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -121,6 +121,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">mobile_options</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_binary_location</span> <span class="o">=</span> <span class="n">find_chrome_executable</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_extension_paths</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_extensions</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_experimental_options</span> <span class="o">=</span> <span class="p">{}</span>
@@ -135,10 +136,6 @@
                     <span class="s1">&#39;currentDockState&#39;</span><span class="p">:</span> <span class="s1">&#39;&quot;undocked&quot;&#39;</span><span class="p">,</span>
                     <span class="c1"># always open devtools with console open</span>
                     <span class="s1">&#39;panel-selectedTab&#39;</span><span class="p">:</span> <span class="s1">&#39;&quot;console&quot;&#39;</span><span class="p">}</span>
-            <span class="p">},</span>
-            <span class="s1">&#39;plugins&#39;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="c1">#  don&#39;t open PDF with pdf plugin</span>
-                <span class="s1">&#39;always_open_pdf_externally&#39;</span><span class="p">:</span> <span class="kc">True</span>
             <span class="p">},</span>
             <span class="s2">&quot;download_bubble&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="c1"># don&#39;t Show downloads when they&#39;re done</span>
@@ -171,12 +168,13 @@
             <span class="s2">&quot;--disable-auto-reload&quot;</span><span class="p">,</span>
             <span class="c1"># some backgrounding tweaking</span>
             <span class="s1">&#39;--disable-backgrounding-occluded-windows&#39;</span><span class="p">,</span> <span class="s1">&#39;--disable-renderer-backgrounding&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;--disable-background-timer-throttling&#39;</span><span class="p">,</span> <span class="s1">&#39;--disable-renderer-backgrounding&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;--disable-background-timer-throttling&#39;</span><span class="p">,</span>
             <span class="s1">&#39;--disable-background-networking&#39;</span><span class="p">,</span> <span class="s1">&#39;--no-pings&#39;</span><span class="p">,</span>
             <span class="s1">&#39;--disable-infobars&#39;</span><span class="p">,</span> <span class="s1">&#39;--disable-breakpad&#39;</span><span class="p">,</span>  <span class="c1"># some bars tweak</span>
             <span class="s2">&quot;--no-default-browser-check&quot;</span><span class="p">,</span>  <span class="c1"># disable default browser message</span>
             <span class="s1">&#39;--homepage=about:blank&#39;</span>  <span class="c1"># set homepage</span>
-            <span class="s2">&quot;--wm-window-animations-disabled&quot;</span><span class="p">,</span> <span class="s2">&quot;--animation-duration-scale=0&quot;</span>  <span class="c1"># disable animations</span>
+            <span class="s2">&quot;--wm-window-animations-disabled&quot;</span><span class="p">,</span> <span class="s2">&quot;--animation-duration-scale=0&quot;</span><span class="p">,</span>  <span class="c1"># disable animations</span>
+            <span class="s2">&quot;--enable-privacy-sandbox-ads-apis&quot;</span>  <span class="c1"># ensure window.Fence, window.SharedStorage etc. exist, looks like chrome disables them when using automation</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">IS_POSIX</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--password-store=basic&quot;</span><span class="p">)</span>
@@ -263,7 +261,9 @@
 
     <span class="nd">@user_data_dir</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">user_data_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--user-data-dir=</span><span class="si">{</span><span class="n">_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_data_dir</span> <span class="o">=</span> <span class="n">_dir</span>
+        <span class="k">if</span> <span class="n">_dir</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--user-data-dir=</span><span class="si">{</span><span class="n">_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">downloads_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -276,6 +276,7 @@
 <span class="sd">                os.mkdir(_dir)</span>
 <span class="sd">            options = webdriver.ChromeOptions()</span>
 <span class="sd">            options.downloads_dir = _dir</span>
+<span class="sd">            options.update_pref(&quot;plugins.always_open_pdf_externally&quot;, True)</span>
 <span class="sd">            async with webdriver.Chrome(options=options) as driver:</span>
 <span class="sd">                download_data = await driver.get(&#39;https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf&#39;, timeout=5)</span>
 <span class="sd">                print(download_data.get(&quot;guid_file&quot;))</span>
@@ -309,7 +310,10 @@
 
     <span class="nd">@headless</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">headless</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--headless=new&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headless</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;setting headless=True can&#39;t be undone in options atm&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--headless=new&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">startup_url</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -355,6 +359,15 @@
     <span class="nd">@binary_location</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">binary_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_binary_location</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">env</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the env for ``subprocess.Popen, ``os.environ`` by default&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env</span>
+
+    <span class="nd">@env</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_env</span> <span class="o">=</span> <span class="n">env</span>
 
 <div class="viewcode-block" id="Options.add_extension">
 <a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.add_extension">[docs]</a>
