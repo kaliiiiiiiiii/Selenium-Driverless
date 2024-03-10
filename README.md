@@ -352,7 +352,7 @@ sys.modules["cdp_socket"].EXC_HANDLER = handler
 ## Help
 
 You found a bug? Feel free to open an issue:)
-You've got other questions or proposials? feel free to join the [Diriverless-Community](https://discord.com/invite/ze6EAkja) on **Discord** or open a discusion\
+You've got other questions or proposials? feel free to join the [Driverless-Community](https://discord.com/invite/MzZZjr2ZM3) on **Discord** or open a discusion\
 Note: **please check the todo's below at first!**
 
 ## Todo's
