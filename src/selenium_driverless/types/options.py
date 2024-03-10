@@ -222,7 +222,10 @@ class Options(metaclass=ABCMeta):
 
     @headless.setter
     def headless(self, value: bool) -> None:
-        self.add_argument("--headless=new")
+        if (value is False) and self._headless:
+            raise NotImplementedError("setting headless=True can't be undone in options atm")
+        if value is True:
+            self.add_argument("--headless=new")
 
     @property
     def startup_url(self) -> str:
