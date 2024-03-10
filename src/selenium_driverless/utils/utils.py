@@ -138,6 +138,9 @@ async def set_default_ua(ua: str):
     await write(path, ua, sel_root=False)
 
 
+background_tasks = set()
+
+
 def safe_wrap_fut(fn: typing.Awaitable):
     fut = asyncio.Future()
 
@@ -154,5 +157,9 @@ def safe_wrap_fut(fn: typing.Awaitable):
             except asyncio.InvalidStateError:
                 pass
 
-    asyncio.ensure_future(helper_fn(fut, fn))
+    task = asyncio.ensure_future(helper_fn(fut, fn))
+
+    # keep strong references
+    background_tasks.add(task)
+    task.add_done_callback(background_tasks.discard)
     return fut
