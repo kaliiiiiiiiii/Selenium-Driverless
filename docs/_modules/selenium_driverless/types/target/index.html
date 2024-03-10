@@ -97,6 +97,7 @@
 <span class="c1"># other</span>
 <span class="kn">from</span> <span class="nn">selenium_driverless.scripts.driver_utils</span> <span class="kn">import</span> <span class="n">get_targets</span><span class="p">,</span> <span class="n">get_target</span><span class="p">,</span> <span class="n">get_cookies</span><span class="p">,</span> <span class="n">get_cookie</span><span class="p">,</span> <span class="n">delete_cookie</span><span class="p">,</span> \
     <span class="n">delete_all_cookies</span><span class="p">,</span> <span class="n">add_cookie</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.utils.utils</span> <span class="kn">import</span> <span class="n">safe_wrap_fut</span>
 <span class="kn">from</span> <span class="nn">selenium_driverless.types.deserialize</span> <span class="kn">import</span> <span class="n">StaleJSRemoteObjReference</span>
 <span class="kn">from</span> <span class="nn">selenium_driverless.types.webelement</span> <span class="kn">import</span> <span class="n">StaleElementReferenceException</span><span class="p">,</span> <span class="n">NoSuchElementException</span>
 <span class="kn">from</span> <span class="nn">selenium_driverless.sync.alert</span> <span class="kn">import</span> <span class="n">Alert</span> <span class="k">as</span> <span class="n">SyncAlert</span>
@@ -377,8 +378,8 @@
 
             <span class="c1"># wait for download or loadEventFired</span>
             <span class="n">wait</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">wait</span><span class="p">([</span>
-                <span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wait_for_cdp</span><span class="p">(</span><span class="s2">&quot;Page.loadEventFired&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">)),</span>
-                <span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wait_download</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+                <span class="n">safe_wrap_fut</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wait_for_cdp</span><span class="p">(</span><span class="s2">&quot;Page.loadEventFired&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">)),</span>
+                <span class="n">safe_wrap_fut</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wait_download</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
             <span class="p">],</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">return_when</span><span class="o">=</span><span class="n">asyncio</span><span class="o">.</span><span class="n">FIRST_COMPLETED</span><span class="p">))</span>
 
             <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>  <span class="c1"># ensure listening for events has already started</span>
@@ -419,7 +420,14 @@
                         <span class="s2">&quot;serialization&quot;</span><span class="p">:</span> <span class="s2">&quot;idOnly&quot;</span><span class="p">}}</span>
             <span class="k">if</span> <span class="n">context_id</span><span class="p">:</span>
                 <span class="n">args</span><span class="p">[</span><span class="s2">&quot;contextId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">context_id</span>
-            <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Runtime.evaluate&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Runtime.evaluate&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s1">&#39;Cannot find context with specified id&#39;</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">StaleJSRemoteObjReference</span><span class="p">(</span><span class="s2">&quot;GlobalThis&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">e</span>
+
             <span class="k">if</span> <span class="s2">&quot;exceptionDetails&quot;</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="k">raise</span> <span class="n">JSEvalException</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s2">&quot;exceptionDetails&quot;</span><span class="p">])</span>
             <span class="n">obj_id</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">][</span><span class="s1">&#39;objectId&#39;</span><span class="p">]</span>
@@ -481,18 +489,23 @@
         <span class="k">if</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">timeout</span> <span class="o">=</span> <span class="mi">2</span>
 
-        <span class="n">globalthis</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_this</span><span class="p">(</span><span class="n">execution_context_id</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">globalthis</span><span class="o">.</span><span class="n">__exec_raw__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">await_res</span><span class="o">=</span><span class="n">await_res</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
-                                                <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-                                                <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">StaleJSRemoteObjReference</span><span class="p">:</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">wait_for_cdp</span><span class="p">(</span><span class="s2">&quot;Page.loadEventFired&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
-            <span class="n">globalthis</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_this</span><span class="p">(</span><span class="n">execution_context_id</span><span class="p">)</span>
-            <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">globalthis</span><span class="o">.</span><span class="n">__exec_raw__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">await_res</span><span class="o">=</span><span class="n">await_res</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
-                                                <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-                                                <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">res</span></div>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="n">exc</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">timeout</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">global_this</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_this</span><span class="p">(</span><span class="n">execution_context_id</span><span class="p">)</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">global_this</span><span class="o">.</span><span class="n">__exec_raw__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">await_res</span><span class="o">=</span><span class="n">await_res</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
+                                                    <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+                                                    <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">StaleJSRemoteObjReference</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">res</span>
+        <span class="k">if</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">exc</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Couldn&#39;t execute script due to stale reference within </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2"> s, &quot;</span>
+                                       <span class="sa">f</span><span class="s2">&quot;possibly due to a reload loop&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Target.execute_script">
@@ -705,7 +718,6 @@
             <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Browser.getWindowForTarget&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;targetId&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">})</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_window_id</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;windowId&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_window_id</span>
-
 
 <div class="viewcode-block" id="Target.print_page">
 <a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.print_page">[docs]</a>

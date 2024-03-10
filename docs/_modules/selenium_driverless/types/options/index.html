@@ -168,7 +168,7 @@
             <span class="s2">&quot;--disable-auto-reload&quot;</span><span class="p">,</span>
             <span class="c1"># some backgrounding tweaking</span>
             <span class="s1">&#39;--disable-backgrounding-occluded-windows&#39;</span><span class="p">,</span> <span class="s1">&#39;--disable-renderer-backgrounding&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;--disable-background-timer-throttling&#39;</span><span class="p">,</span> <span class="s1">&#39;--disable-renderer-backgrounding&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;--disable-background-timer-throttling&#39;</span><span class="p">,</span>
             <span class="s1">&#39;--disable-background-networking&#39;</span><span class="p">,</span> <span class="s1">&#39;--no-pings&#39;</span><span class="p">,</span>
             <span class="s1">&#39;--disable-infobars&#39;</span><span class="p">,</span> <span class="s1">&#39;--disable-breakpad&#39;</span><span class="p">,</span>  <span class="c1"># some bars tweak</span>
             <span class="s2">&quot;--no-default-browser-check&quot;</span><span class="p">,</span>  <span class="c1"># disable default browser message</span>
@@ -310,7 +310,10 @@
 
     <span class="nd">@headless</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">headless</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--headless=new&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headless</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;setting headless=True can&#39;t be undone in options atm&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--headless=new&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">startup_url</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
