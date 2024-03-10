@@ -878,11 +878,14 @@ class Chrome:
                             raise e
 
     def __del__(self):
-        if self._started:
-            warnings.warn(
-                "driver hasn't quit correctly, "
-                "files might be left in your temp folder & chrome might still be running",
-                ResourceWarning)
+        try:
+            if self._started:
+                warnings.warn(
+                    "driver hasn't quit correctly, "
+                    "files might be left in your temp folder & chrome might still be running",
+                    ResourceWarning)
+        except AttributeError:
+            pass
 
     @property
     async def current_target_info(self) -> TargetInfo:
