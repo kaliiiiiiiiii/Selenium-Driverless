@@ -303,7 +303,7 @@ class WebElement(JSRemoteObj):
                         );"""
             return await self.execute_script(script, value, serialization="deep", timeout=10, unique_context=True)
         else:
-            return ValueError("unexpected by")
+            raise ValueError("unexpected by")
 
     async def _describe(self):
         args = {"pierce": True}
