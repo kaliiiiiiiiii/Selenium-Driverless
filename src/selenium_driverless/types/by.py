@@ -17,49 +17,16 @@
 
 # edited by github/kaliiiiiiiiii
 
-"""The By implementation."""
-
-from typing import Literal
+from enum import Enum
 
 
-# noinspection PyPep8Naming
 class By:
     """Set of supported locator strategies."""
-
-    @property
-    def ID(self) -> Literal["id"]:
-        """by element ID"""
-        return "id"
-
-    @property
-    def XPATH(self) -> Literal["xpath"]:
-        """by XPATH to the element"""
-        return "xpath"
-
-    @property
-    def NAME(self) -> Literal["name"]:
-        """by the name of the element"""
-        return "name"
-
-    @property
-    def TAG_NAME(self) -> Literal["tag name"]:
-        """by the tag name of the element"""
-        return "tag name"
-
-    @property
-    def CLASS_NAME(self) -> Literal["class name"]:
-        """by the class name of the element"""
-        return "class name"
-
-    @property
-    def CSS_SELECTOR(self) -> Literal["css selector"]:
-        """by the CSS selector of the element"""
-        return "css selector"
-
-    @property
-    def CSS(self) -> Literal["css selector"]:
-        """by the CSS selector of the element
-
-        alias to :func:`By.CSS_SELECTOR <selenium_driverless.types.by.By.CSS_SELECTOR>`
-        """
-        return self.CSS_SELECTOR
+    ID = "id"
+    NAME = "name"
+    XPATH = "xpath"
+    TAG_NAME = "tag name"
+    CLASS_NAME = "class name"
+    CSS_SELECTOR = "css selector"
+    CSS = "css selector"
+    """alias to LocatorStrategy.CSS_SELECTOR"""
