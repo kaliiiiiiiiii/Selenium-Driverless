@@ -89,7 +89,7 @@ class Options(metaclass=ABCMeta):
             "--disable-auto-reload",
             # some backgrounding tweaking
             '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding',
-            '--disable-background-timer-throttling', '--disable-renderer-backgrounding',
+            '--disable-background-timer-throttling',
             '--disable-background-networking', '--no-pings',
             '--disable-infobars', '--disable-breakpad',  # some bars tweak
             "--no-default-browser-check",  # disable default browser message
