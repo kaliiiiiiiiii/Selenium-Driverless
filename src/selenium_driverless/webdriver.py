@@ -66,6 +66,7 @@ class Chrome:
             options: ChromeOptions = None,
             timeout: float = 30,
             debug: bool = False,
+            start_session: bool = True,
             max_ws_size: int = 2 ** 27
     ) -> None:
         # noinspection GrazieInspection
@@ -104,6 +105,7 @@ class Chrome:
         self._contexts: typing.Dict[str, Context] = {}
         self._temp_dir = tempfile.TemporaryDirectory(prefix="selenium_driverless_").name
         self._max_ws_size = max_ws_size
+        self._start_session = start_session
 
         self._auth = {}
 
@@ -123,6 +125,8 @@ class Chrome:
         return f'<{type(self).__module__}.{type(self).__name__} (session="{self.current_target.id}")>'
 
     async def __aenter__(self):
+        if not self._start_session:
+            return self
         await self.start_session()
         return self
 
@@ -136,6 +140,8 @@ class Chrome:
         pass
 
     def __await__(self):
+        if not self._start_session:
+            return self
         return self.start_session().__await__()
 
     async def start_session(self):
