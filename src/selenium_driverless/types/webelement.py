@@ -719,7 +719,13 @@ class WebElement(JSRemoteObj):
     @property
     async def box_model(self):
         args = self._args_builder
-        res = await self.__target__.execute_cdp_cmd("DOM.getBoxModel", args)
+        try:
+            res = await self.__target__.execute_cdp_cmd("DOM.getBoxModel", args)
+        except CDPError as e:
+            if e.code == -32000 and e.message == 'Cannot find context with specified id':
+                raise StaleElementReferenceException(self)
+            else:
+                raise e
         model = res['model']
         keys = ['content', 'padding', 'border', 'margin']
         for key in keys:
