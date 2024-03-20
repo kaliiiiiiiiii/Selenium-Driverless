@@ -627,7 +627,7 @@ class WebElement(JSRemoteObj):
           - NoSuchShadowRoot - if no shadow root was attached to element
         """
         # todo: move to CDP
-        return await self.execute_script("return obj.ShadowRoot()")
+        return await self.execute_script("return obj.shadowRoot")
 
     # RenderedWebElement Items
     async def is_displayed(self) -> bool:
