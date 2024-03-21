@@ -477,16 +477,15 @@ class WebElement(JSRemoteObj):
         args.update(self._args_builder)
         await self.__target__.execute_cdp_cmd("DOM.setFileInputFiles", args)
 
-    async def send_keys(self, value: str) -> None:
-        # noinspection GrazieInspections
+    async def send_keys(self, text: str) -> None:
         """
-        .. warning::
-            NotImplemented
+        sends keys to the element
 
+        :param text: the text to send
         """
-        # transfer file to another machine only if remote target is used
-        # the same behaviour as for java binding
-        raise NotImplementedError("you might use elem.write() for inputs instead")
+        await self.focus()
+        for char in text:
+            await self.__target__.execute_cdp_cmd("Input.dispatchKeyEvent", {"type": "char", "text": char})
 
     async def mid_location(self, bias: float = 5, resolution: int = 50, debug: bool = False):
         """
