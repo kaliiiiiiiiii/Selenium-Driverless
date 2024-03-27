@@ -22,6 +22,7 @@ import time
 import warnings
 import numpy as np
 import typing
+import aiofiles
 
 from base64 import b64decode
 from collections import defaultdict
@@ -748,36 +749,38 @@ class WebElement(JSRemoteObj):
     @property
     async def screenshot_as_base64(self) -> str:
         """
-        .. warning::
-            NotImplemented
+        gets a screenshot as Base64 from the element
         """
-        raise NotImplementedError()
+        element_data = await self.box_model
+
+        x = element_data["content"][0][0]
+        y = element_data["content"][0][1]
+        width = element_data["width"]
+        height = element_data["height"]
+
+        get_image_bas64 = await self.__target__.execute_cdp_cmd("Page.captureScreenshot", {
+            "clip": {
+                "x": int(x),
+                "y": int(y),
+                "width": int(width),
+                "height": int(height),
+                "scale": 1
+            }
+        })
+        return get_image_bas64["data"]
 
     @property
     async def screenshot_as_png(self) -> bytes:
         """Gets the screenshot of the current element as a binary data.
-
-        :Usage:
-            ::
-
-                element_png = element.screenshot_as_png
+        (PNG format)
         """
         res = await self.screenshot_as_base64
         return b64decode(res.encode("ascii"))
 
     async def screenshot(self, filename) -> bool:
         """Saves a screenshot of the current element to a PNG image file.
-        Returns False if there is any IOError, else returns True. Use full
-        paths in your filename.
 
-        :Args:
-         - filename: The full path you wish to save your screenshot to. This
-           should end with a `.png` extension.
-
-        :Usage:
-            ::
-
-                element.screenshot('/Screenshots/foo.png')
+        :param filename: path to save the png to
         """
         if not filename.lower().endswith(".png"):
             warnings.warn(
@@ -786,8 +789,8 @@ class WebElement(JSRemoteObj):
             )
         png = await self.screenshot_as_png
         try:
-            with open(filename, "wb") as f:
-                f.write(png)
+            async with aiofiles.open(filename, "wb") as f:
+                await f.write(png)
         except OSError:
             return False
         finally:
