@@ -323,11 +323,23 @@ class WebElement(JSRemoteObj):
 
     @property
     async def source(self):
+        """
+        returns the OuterHtml of the element
+        """
         args = self._args_builder
-        res = await self.__target__.execute_cdp_cmd("DOM.getOuterHTML", args)
+        try:
+            res = await self.__target__.execute_cdp_cmd("DOM.getOuterHTML", args)
+        except CDPError as e:
+            if e.code == -32000 and e.message == 'Could not find node with given id':
+                raise StaleElementReferenceException(self)
+            else:
+                raise e
         return res["outerHTML"]
 
     async def set_source(self, value: str):
+        """
+        sets the outer html of the element
+        """
         try:
             await self.__target__.execute_cdp_cmd("DOM.setOuterHTML",
                                                   {"nodeId": await self.node_id, "outerHTML": value})

@@ -67,7 +67,7 @@ class BaseTarget:
         if not self._started:
             res = None
             start = time.perf_counter()
-            while (time.perf_counter()-start)<=self._timeout:
+            while (time.perf_counter() - start) < self._timeout:
                 try:
                     async with aiohttp.ClientSession() as session:
                         res = await session.get(f"http://{self._host}/json/version", timeout=3)
@@ -147,7 +147,7 @@ class BaseTarget:
         result = await self.socket.exec(method=cmd, params=cmd_args, timeout=timeout)
         return result
 
-    def downloads_dir_for_context(self, context_id:str="DEFAULT") -> str:
+    def downloads_dir_for_context(self, context_id: str = "DEFAULT") -> str:
         """get the default download directory for a specific context
 
         :param context_id: the id of the context to get the directory for

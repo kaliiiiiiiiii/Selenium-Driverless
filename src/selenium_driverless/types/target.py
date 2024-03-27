@@ -408,8 +408,8 @@ class Target:
             try:
                 global_this = await self._global_this(execution_context_id)
                 res = await global_this.__exec_raw__(script, *args, await_res=await_res, serialization=serialization,
-                                                    max_depth=max_depth, timeout=timeout,
-                                                    execution_context_id=execution_context_id)
+                                                     max_depth=max_depth, timeout=timeout,
+                                                     execution_context_id=execution_context_id)
             except StaleJSRemoteObjReference as e:
                 exc = e
             else:
@@ -533,15 +533,19 @@ class Target:
 
     @property
     async def page_source(self) -> str:
-        """Gets the docs_source of the current page.
-
-        :Usage:
-            ::
-
-                target.page_source
+        """Gets the HTML of the current page.
         """
-        elem = await self._document_elem
-        return await elem.source
+        start = time.perf_counter()
+        timeout = 10
+        while (time.perf_counter() - start) < timeout:
+            try:
+                elem = await self._document_elem
+                return await elem.source
+            except StaleElementReferenceException:
+                await self._on_loaded()
+        raise asyncio.TimeoutError(
+                f"Couldn't get page source within {timeout} seconds, possibly due to a reload loop")
+
 
     async def close(self, timeout: float = 2) -> None:
         """Closes the current window.
