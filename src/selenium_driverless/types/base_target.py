@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 import aiohttp
 import websockets
@@ -65,13 +66,16 @@ class BaseTarget:
     async def _init(self):
         if not self._started:
             res = None
-            while not res:
+            start = time.perf_counter()
+            while (time.perf_counter()-start)<=self._timeout:
                 try:
                     async with aiohttp.ClientSession() as session:
-                        res = await session.get(f"http://{self._host}/json/version", timeout=self._timeout)
+                        res = await session.get(f"http://{self._host}/json/version", timeout=3)
                         _json = await res.json()
-                except aiohttp.ClientError:
+                except (aiohttp.ClientError, asyncio.TimeoutError):
                     pass
+            if not res:
+                raise asyncio.TimeoutError(f"Couldn't connect to chrome within {self._timeout} seconds")
             self._socket = await SingleCDPSocket(websock_url=_json["webSocketDebuggerUrl"], timeout=self._timeout,
                                                  loop=self._loop, max_size=self._max_ws_size)
             self._started = True
