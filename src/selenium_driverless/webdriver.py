@@ -291,8 +291,6 @@ class Chrome:
 
                     # noinspection PyProtectedMember
                     context._closed_callbacks.append(remove_context)
-                    self.base_target.socket.on_closed.append(
-                        lambda code, reason: self.quit(clean_dirs=self._options.auto_clean_dirs))
                     self._current_context = context
                     self._base_context = context
                     self._contexts[_id] = context
