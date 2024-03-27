@@ -67,10 +67,10 @@ if __name__ == "__main__":
 
     # Generate random Gaussian distributed values for a and b with biases
     size = 100_000  # Number of random points
-    bias_a = 0.5  # Bias for a
-    bias_b = 1  # Bias for b
-    point_a = generate_random_values(size, bias_a)
-    point_b = generate_random_values(size, bias_b)
+    spread_a = 0.5  # Bias for a
+    spread_b = 0.5  # Bias for b
+    point_a = generate_random_values(size, spread_a)
+    point_b = generate_random_values(size, spread_b)
 
     # Create a 3D plot
     fig = plt.figure()
