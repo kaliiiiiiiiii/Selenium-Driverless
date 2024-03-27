@@ -463,45 +463,26 @@ coordinates if the element is not visible.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.screenshot_as_base64">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">screenshot_as_base64</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.screenshot_as_base64" title="Link to this definition"></a></dt>
-<dd><div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>NotImplemented</p>
-</div>
+<dd><p>gets a screenshot as Base64 from the element</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.screenshot_as_png">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">screenshot_as_png</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bytes</span></em><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.screenshot_as_png" title="Link to this definition"></a></dt>
-<dd><p>Gets the screenshot of the current element as a binary data.</p>
-<dl class="field-list">
-<dt class="field-odd">Usage<span class="colon">:</span></dt>
-<dd class="field-odd"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">element_png</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">screenshot_as_png</span>
-</pre></div>
-</div>
-</dd>
-</dl>
+<dd><p>Gets the screenshot of the current element as a binary data.
+(PNG format)</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.screenshot">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">screenshot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.screenshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.screenshot" title="Link to this definition"></a></dt>
-<dd><p>Saves a screenshot of the current element to a PNG image file.
-Returns False if there is any IOError, else returns True. Use full
-paths in your filename.</p>
-<dl class="field-list">
-<dt class="field-odd">Args<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p>filename: The full path you wish to save your screenshot to. This
-should end with a <cite>.png</cite> extension.</p></li>
-</ul>
+<dd><p>Saves a screenshot of the current element to a PNG image file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> – path to save the png to</p>
 </dd>
-<dt class="field-even">Usage<span class="colon">:</span></dt>
-<dd class="field-even"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">element</span><span class="o">.</span><span class="n">screenshot</span><span class="p">(</span><span class="s1">&#39;/Screenshots/foo.png&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>

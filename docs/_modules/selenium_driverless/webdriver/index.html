@@ -370,8 +370,6 @@
 
                     <span class="c1"># noinspection PyProtectedMember</span>
                     <span class="n">context</span><span class="o">.</span><span class="n">_closed_callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">remove_context</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">on_closed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="k">lambda</span> <span class="n">code</span><span class="p">,</span> <span class="n">reason</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">quit</span><span class="p">(</span><span class="n">clean_dirs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">auto_clean_dirs</span><span class="p">))</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_current_context</span> <span class="o">=</span> <span class="n">context</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_base_context</span> <span class="o">=</span> <span class="n">context</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_contexts</span><span class="p">[</span><span class="n">_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">context</span>
