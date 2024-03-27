@@ -4,13 +4,13 @@ from scipy.interpolate import griddata
 import time
 
 
-def generate_random_values(size, bias, border=0.01):
+def generate_random_values(size, spread, border=0.05):
     """Generate random Gaussian distributed values with bias."""
     values = np.zeros(size)
     for idx in np.ndindex(values.shape):
-        values[idx] = np.random.normal(scale=bias, loc=0.5) ** 2 + 0.5
+        values[idx] = np.random.normal(scale=spread/3, loc=0.5)
         while not (border <= values[idx] <= 1 - border):
-            values[idx] = np.random.normal(scale=bias, loc=0.5) ** 2 + 0.5
+            values[idx] = np.random.normal(scale=spread/3, loc=0.5)
 
     return values
 
@@ -32,13 +32,13 @@ def rotate_rectangle(rectangle_points, angle, center):
 
 def get_point_within_rectangle(points, a, b):
     """
-    Given a rectangle defined by four points and two points (a and b) on two different lines,
+    Given a rectangle defined by four points and two points (a and b) ranging from 0 to 1,
     returns a point within the rectangle based on the input parameters.
 
     Args:
     - points: List of four coordinates [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
-    - a: float, a point on line |AB| (-1 to 1)
-    - b: float, a point on line |BC| (-1 to 1)
+    - a: float, a point ranging from 0 to 1 on line |AB|
+    - b: float, a point ranging from 0 to 1 on line |BC|
 
     Returns:
     - List: Coordinates of a point within the rectangle.
@@ -48,10 +48,10 @@ def get_point_within_rectangle(points, a, b):
         raise ValueError("Input should contain four points defining a rectangle.")
 
     # Calculate coordinates of the point within the rectangle
-    x = (1 - abs(b)) * (points[0][0] + a * (points[3][0] - points[0][0])) + abs(b) * (
-            points[1][0] + a * (points[2][0] - points[1][0]))
-    y = (1 - abs(b)) * (points[0][1] + a * (points[3][1] - points[0][1])) + abs(b) * (
-            points[1][1] + a * (points[2][1] - points[1][1]))
+    x = (1 - b) * (points[0][0] + a * (points[1][0] - points[0][0])) + b * (
+            points[3][0] + a * (points[2][0] - points[3][0]))
+    y = (1 - b) * (points[0][1] + a * (points[1][1] - points[0][1])) + b * (
+            points[3][1] + a * (points[2][1] - points[3][1]))
 
     return [x, y]
 
@@ -66,9 +66,9 @@ if __name__ == "__main__":
     rotated_rectangle_points = rotate_rectangle(original_rectangle_points, rotation_angle, rotation_center)
 
     # Generate random Gaussian distributed values for a and b with biases
-    size = 1000  # Number of random points
-    bias_a = 0.2  # Bias for a
-    bias_b = 0.2  # Bias for b
+    size = 100_000  # Number of random points
+    bias_a = 0.5  # Bias for a
+    bias_b = 1  # Bias for b
     point_a = generate_random_values(size, bias_a)
     point_b = generate_random_values(size, bias_b)
 
@@ -92,7 +92,7 @@ if __name__ == "__main__":
         z_values[y_idx, x_idx] += 1
 
     # Interpolation method (change this variable to control interpolation)
-    interpolation_method = 'cubic'  # You can use 'linear', 'nearest', 'cubic', etc.
+    interpolation_method = 'linear'  # You can use 'linear', 'nearest', 'cubic', etc.
 
     # Interpolate values on a regular grid for smoother heatmap
     x_flat, y_flat, z_flat = x_grid.flatten(), y_grid.flatten(), z_values.flatten()
