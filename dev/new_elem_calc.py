@@ -12,7 +12,7 @@ def generate_random_value(spread, border=0.05, bias=0.5):
     return res
 
 
-def rotate_point(point, angle, center):
+def rotate(point, angle, center):
     x, y = point
     cx, cy = center
     rotated_x = (x - cx) * np.cos(angle) - (y - cy) * np.sin(angle) + cx
@@ -44,11 +44,14 @@ def point_in_rectangle(points, a, b):
 
 
 if __name__ == "__main__":
-    # Original rectangle sides: |AB| = 100, |BC| = 200
-    elem = [[300, 200], [400, 200], [400, 400], [300, 400]]
-    angle = np.radians(30)  # Rotate by 30 degrees
-    center = [350, 300]  # Center of the rectangle
-    elem = [rotate_point(point, angle, center) for point in elem]
+    elem = [
+        [300, 200],  # A
+        [400, 200],  # B
+        [400, 400],  # C
+        [300, 400]   # D
+    ]
+    elem_angle = np.radians(30)  # Center of the rectangle
+    elem = [rotate(point, elem_angle, elem[0]) for point in elem]
 
     n = 100_000  # Number of random points
     spread_a = 1  # Bias for a
