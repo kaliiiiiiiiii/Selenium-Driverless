@@ -7,6 +7,8 @@ from scipy.interpolate import splprep, splev
 
 def gaussian_bias_rand(spread, border=0.05, bias=0.5) -> float:
     """Generate random Gaussian distributed values with bias."""
+    if spread == 0:
+        return bias
     res = np.random.normal(scale=spread / 6, loc=bias)
     while not (border <= res <= 1 - border):
         res = np.random.normal(scale=spread / 6, loc=bias)
