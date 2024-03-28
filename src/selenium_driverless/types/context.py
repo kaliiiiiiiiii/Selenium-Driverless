@@ -274,8 +274,15 @@ class Context:
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                              timeout: int = None, target_id: str = None, execution_context_id: str = None,
                              unique_context: bool = False):
-        """
-        example: script = "return obj.click()"
+        """executes JavaScript synchronously on ``GlobalThis`` such as
+
+        .. code-block:: js
+
+            return document
+
+        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
         target = await self.get_target(target_id)
         return await target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
@@ -286,6 +293,20 @@ class Context:
                                    serialization: str = None, timeout: int = 2,
                                    target_id: str = None, execution_context_id: str = None,
                                    unique_context: bool = False):
+        """executes JavaScript asynchronously on ``GlobalThis`` such as
+
+        .. warning::
+            using execute_async_script is not recommended as it doesn't handle exceptions correctly.
+            Use :func:`Chrome.eval_async <selenium_driverless.webdriver.Chrome.eval_async>`
+
+        .. code-block:: js
+
+            resolve = arguments[arguments.length-1]
+
+        ``this`` refers to ``globalThis`` (=> window)
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
+        """
         target = await self.get_target(target_id)
         return await target.execute_async_script(script, *args, max_depth=max_depth, serialization=serialization,
                                                  timeout=timeout,
@@ -617,14 +638,24 @@ class Context:
         await asyncio.sleep(time_to_wait)
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, parent=None, target_id: str = None,
-                           timeout: int or None = None) -> WebElement:
-        target = await self.get_target(target_id=target_id)
-        return await target.find_element(by=by, value=value, parent=parent, timeout=timeout)
+    async def find_element(self, by: str, value: str, timeout: int or None = None) -> WebElement:
+        """find an element in the current target
 
-    async def find_elements(self, by: str, value: str, parent=None, target_id: str = None) -> typing.List[WebElement]:
-        target = await self.get_target(target_id=target_id)
-        return await target.find_elements(by=by, value=value, parent=parent)
+        :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
+        :param value: the actual query to find the element by
+        :param timeout: how long to wait for the element to exist
+        """
+        target = await self.get_target()
+        return await target.find_element(by=by, value=value, timeout=timeout)
+
+    async def find_elements(self, by: str, value: str) -> typing.List[WebElement]:
+        """find multiple elements in the current target
+
+        :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
+        :param value: the actual query to find the elements by
+        """
+        target = await self.get_target()
+        return await target.find_elements(by=by, value=value)
 
     async def search_elements(self, query: str, target_id: str = None) -> typing.List[WebElement]:
         """

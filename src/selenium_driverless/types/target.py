@@ -713,6 +713,12 @@ class Target:
 
     # noinspection PyUnusedLocal
     async def find_element(self, by: str, value: str, parent=None, timeout: int or None = None) -> WebElement:
+        """find an element in the current target
+
+        :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
+        :param value: the actual query to find the element by
+        :param timeout: how long to wait for the element to exist
+        """
         start = time.perf_counter()
         elem = None
         while not elem:
@@ -729,11 +735,22 @@ class Target:
         return elem
 
     async def find_elements(self, by: str, value: str, parent=None) -> typing.List[WebElement]:
+        """find multiple elements in the current target
+
+        :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
+        :param value: the actual query to find the elements by
+        """
         if not parent:
             parent = await self._document_elem
         return await parent.find_elements(by=by, value=value)
 
     async def set_source(self, source: str, timeout: float = 15):
+        """
+        sets the OuterHtml of the current target (if it has DOM//HTML)
+
+        :param source: the html
+        :param timeout: the timeout to try setting the source (might fail if the page is in a reload-loop
+        """
         start = time.perf_counter()
         while (time.perf_counter() - start) < timeout:
             try:
@@ -743,7 +760,7 @@ class Target:
             except StaleElementReferenceException:
                 await self._on_loaded()
                 await asyncio.sleep(0)
-        raise TimeoutError("Couldn't get document element to not be stale")
+        raise asyncio.TimeoutError("Couldn't get document element to not be stale")
 
     async def search_elements(self, query: str) -> typing.List[WebElement]:
         """

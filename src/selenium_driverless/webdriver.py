@@ -489,7 +489,7 @@ class Chrome:
                             break
                 if not extension_target:
                     if (time.perf_counter() - start) > timeout:
-                        raise TimeoutError(f"Couldn't find mv3 extension within {timeout} seconds")
+                        raise asyncio.TimeoutError(f"Couldn't find mv3 extension within {timeout} seconds")
             while True:
                 try:
                     # fix WebRTC leak

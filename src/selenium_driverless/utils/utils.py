@@ -105,7 +105,7 @@ def random_port(host: str = None):
 
 def check_timeout(start_monotonic: float, timeout: float):
     if (time.perf_counter() - start_monotonic) > timeout:
-        raise TimeoutError(f"driver.quit took longer than timeout: {timeout}")
+        raise asyncio.TimeoutError(f"driver.quit took longer than timeout: {timeout}")
 
 
 async def is_first_run():

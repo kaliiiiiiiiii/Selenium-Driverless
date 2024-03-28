@@ -67,7 +67,7 @@ class WebElement(JSRemoteObj):
 
     All method calls will do a freshness check to ensure that the element
     reference is still valid.  This essentially determines whether the
-    element is still attached to the DOM.  If this test fails, then an
+    element is still attached to the DOM.  If this test fails, then a
     ``StaleElementReferenceException`` is thrown, and all future calls to this
     instance will fail.
     """
@@ -113,7 +113,9 @@ class WebElement(JSRemoteObj):
         return self
 
     @property
-    async def obj_id(self):
+    async def obj_id(self) -> str:
+        """**async** returns the `Runtime.RemoteObjectId <https://vanilla.aslushnikov.com/?Runtime.RemoteObjectId>`_ for the element
+        """
         return await self.__obj_id_for_context__()
 
     @property
@@ -230,6 +232,7 @@ class WebElement(JSRemoteObj):
 
     @property
     async def document_url(self):
+        """gets the url if the element is an iframe, else returns ``None``"""
         res = await self._describe()
         return res.get('documentURL')
 
@@ -244,14 +247,12 @@ class WebElement(JSRemoteObj):
         return self._class_name
 
     async def find_element(self, by: str, value: str, idx: int = 0, timeout: int or None = None):
-        """Find an element given a By strategy and locator.
+        """find an element in the current target
 
-        :Usage:
-            ::
-
-                element = element.find_element(By.ID, 'foo')
-
-        :rtype: WebElement
+        :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
+        :param value: the actual query to find the element by
+        :param timeout: how long to wait for the element to exist
+        :param idx: might be removed
         """
         elems = []
         start = time.perf_counter()
@@ -267,14 +268,10 @@ class WebElement(JSRemoteObj):
         raise NoSuchElementException()
 
     async def find_elements(self, by: str = By.ID, value: str or None = None):
-        """Find elements given a By strategy and locator.
+        """find multiple elements in the current target
 
-        :Usage:
-            ::
-
-                element = element.find_elements(By.CLASS_NAME, 'foo')
-
-        :rtype: list of WebElement
+        :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
+        :param value: the actual query to find the elements by
         """
         from selenium_driverless.types.by import By
 
@@ -329,7 +326,7 @@ class WebElement(JSRemoteObj):
     @property
     async def source(self):
         """
-        returns the OuterHtml of the element
+        **async** the OuterHtml of the element
         """
         args = self._args_builder
         try:
@@ -372,12 +369,12 @@ class WebElement(JSRemoteObj):
 
     @property
     async def text(self) -> str:
-        """The text of the element. (``elem.textContent``)"""
+        """**async** The text of the element. (``elem.textContent``)"""
         return await self.get_property("textContent")
 
     @property
     async def value(self) -> str:
-        """The value of the element. (``elem.value``)"""
+        """**async** The value of the element. (``elem.value``)"""
         return await self.get_property("value")
 
     async def clear(self) -> None:
@@ -425,7 +422,7 @@ class WebElement(JSRemoteObj):
 
     async def focus(self):
         """
-        focus the element
+        focuses the element (``Dom.focus``)
         """
         args = self._args_builder
         return await self.__target__.execute_cdp_cmd("DOM.focus", args)
@@ -484,7 +481,7 @@ class WebElement(JSRemoteObj):
                 else:
                     raise e
             if (time.perf_counter() - start) > visible_timeout:
-                raise TimeoutError(f"Couldn't compute element location within {visible_timeout} seconds")
+                raise asyncio.TimeoutError(f"Couldn't compute element location within {visible_timeout} seconds")
         x, y = cords
         if ensure_clickable:
             is_clickable = await self.is_clickable()
@@ -524,22 +521,22 @@ class WebElement(JSRemoteObj):
         # noinspection GrazieInspections
         """
         .. warning::
-            NotImplemented
+            NotImplemented yet
 
         """
         # transfer file to another machine only if remote target is used
         # the same behaviour as for java binding
         raise NotImplementedError("you might use elem.write() for inputs instead")
 
-    async def mid_location(self, spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5, border:float=0.05):
+    async def mid_location(self, spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5, border:float=0.05) -> typing.List[int]:
         """
-        returns random location in element with probability close to the middle
+        returns random location in the element with probability close to the middle
 
         :param spread_a: spread over a
         :param spread_b: spread over b
         :param bias_a: bias over a (0-1)
         :param bias_b: bias over b (0-1)
-        :param border: minimum border towards element edges (relative to element => 1).
+        :param border: minimum border towards element edges (relative to the element => 1).
             Random generated points outside that border get re-generated.
 
         .. note::
@@ -558,7 +555,11 @@ class WebElement(JSRemoteObj):
         return [x, y]
 
     async def submit(self):
-        """Submits a form."""
+        """Submits a form.
+
+        .. warning::
+            the current implementation likely is detectable. It's recommended to use click instead if possible
+        """
         script = (
             "/* submitForm */var form = this;\n"
             'while (form.nodeName != "FORM" && form.parentNode) {\n'
@@ -609,29 +610,10 @@ class WebElement(JSRemoteObj):
                                                                         "name": name, "value": value})
 
     async def get_attribute(self, name):
-        """Gets the given attribute or property of the element.
+        """Alias to WebElement.get_property.
 
-        This method will first try to return the value of a property with the
-        given name. If a property with that name doesn't exist, it returns the
-        value of the attribute with the same name. If there's no attribute with
-        that name, ``None`` is returned.
-
-        Values which are considered truthy, that is equals "true" or "false",
-        are returned as booleans.  All other non-``None`` values are returned
-        as strings.  For attributes or properties which do not exist, ``None``
-        is returned.
-
-        To obtain the exact value of the attribute or property,
-        use :func:`~selenium.webdriver.remote.BaseWebElement.get_dom_attribute` or
-        :func:`~selenium.webdriver.remote.BaseWebElement.get_property` methods respectively.
-
-        :Args:
-            - name - Name of the attribute/property to retrieve.
-
-        Example::
-
-            # Check if the "active" CSS class is applied to an element.
-            is_active = "active" in target_element.get_attribute("class")
+        .. warning::
+            do not use! This method might change in future
         """
         return await self.get_property(name)
 
@@ -640,7 +622,7 @@ class WebElement(JSRemoteObj):
 
         Can be used to check if a checkbox or radio button is selected.
         """
-        result = await self.get_attribute("checked")
+        result = await self.get_property("checked")
         if result:
             return True
         else:
@@ -652,37 +634,36 @@ class WebElement(JSRemoteObj):
 
     @property
     async def shadow_root(self):
-        """Returns a shadow root of the element if there is one or an error.
-        Only works from Chromium 96, Firefox 96, and Safari 16.4 onwards.
+        """the shadowRoot of the element
 
-        :Returns:
-          - ShadowRoot object or
-          - NoSuchShadowRoot - if no shadow root was attached to element
+        .. warning::
+            this does not support (yet) closed shadow-DOM elements
         """
         # todo: move to CDP
         return await self.execute_script("return obj.shadowRoot")
 
     # RenderedWebElement Items
     async def is_displayed(self) -> bool:
-        """Whether the element is visible to a user."""
-        # Only go into this conditional for browsers that don't use the atom themselves
+        """Whether the element has a height & width"""
         size = await self.size
         return not (size["height"] == 0 or size["width"] == 0)
 
     @property
     async def location_once_scrolled_into_view(self) -> dict:
-        """THIS PROPERTY MAY CHANGE WITHOUT WARNING. Use this to discover where
-        on the screen an element is so that we can click it. This method should
-        cause the element to be scrolled into view.
-
-        Returns the top lefthand corner location on the screen, or zero
-        coordinates if the element is not visible.
+        """
+        scrolls to the element and returns the coordinates of it
         """
         await self.scroll_to()
         result = await self.rect
         return {"x": round(result["x"]), "y": round(result["y"])}
 
     async def scroll_to(self, rect: dict = None):
+        """
+        scroll to the element
+
+        .. note::
+            this isn't properly implemented yet and might be detectable
+        """
         args = self._args_builder
         if rect:
             args["rect"] = rect
@@ -695,7 +676,7 @@ class WebElement(JSRemoteObj):
 
     @property
     async def size(self) -> dict:
-        """The size of the element."""
+        """**async** The size of the element."""
         box_model = await self.box_model
         return {"height": box_model["height"], "width": box_model["width"]}
 
@@ -705,7 +686,7 @@ class WebElement(JSRemoteObj):
             NotImplemented
 
         """
-        raise NotImplementedError("you might use get_attribute instead")
+        raise NotImplementedError("you might use javascript instead")
 
     @property
     async def location(self) -> dict:
@@ -750,7 +731,9 @@ class WebElement(JSRemoteObj):
         return await self.execute_script(script, max_depth=4)
 
     @property
-    async def box_model(self):
+    async def box_model(self) -> dict:
+        """**async** returns the box model of the element. see `DOM.BoxModel <https://vanilla.aslushnikov.com/?DOM.BoxModel>`_
+        """
         args = self._args_builder
         try:
             res = await self.__target__.execute_cdp_cmd("DOM.getBoxModel", args)
@@ -768,20 +751,19 @@ class WebElement(JSRemoteObj):
 
     @property
     async def aria_role(self) -> str:
-        """Returns the ARIA role of the current web element."""
+        """**async** Returns the ARIA role of the current web element."""
         # todo: move to CDP
         return await self.get_property("ariaRoleDescription")
 
     @property
     async def accessible_name(self) -> str:
-        """Returns the ARIA Level of the current webelement."""
+        """**async** Returns the ARIA Level of the current webelement."""
         # todo: move to CDP
         return await self.get_property("ariaLevel")
 
     @property
     async def screenshot_as_base64(self) -> str:
-        """
-        gets a screenshot as Base64 from the element
+        """**async** gets a screenshot as Base64 from the element
         """
         element_data = await self.box_model
 
@@ -803,7 +785,7 @@ class WebElement(JSRemoteObj):
 
     @property
     async def screenshot_as_png(self) -> bytes:
-        """Gets the screenshot of the current element as a binary data.
+        """**async** Gets the screenshot of the current element as a binary data.
         (PNG format)
         """
         res = await self.screenshot_as_base64
@@ -863,13 +845,57 @@ class WebElement(JSRemoteObj):
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                              timeout: float = 2, execution_context_id: str = None, unique_context: bool = True):
+        """executes JavaScript synchronously
+
+        .. code-block:: js
+
+            return document
+
+        ``this`` and ``obj`` refers to the element here
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
+        """
         return await self.__exec__(script, *args, max_depth=max_depth, serialization=serialization,
                                    timeout=timeout, unique_context=unique_context,
                                    execution_context_id=execution_context_id)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                                    timeout: float = 2, execution_context_id: str = None, unique_context: bool = True):
+        """executes JavaScript asynchronously
+
+        .. warning::
+            using execute_async_script is not recommended as it doesn't handle exceptions correctly.
+            Use :func:`Chrome.eval_async <selenium_driverless.webdriver.Chrome.eval_async>`
+
+        .. code-block:: js
+
+            resolve = arguments[arguments.length-1]
+
+        ``this`` refers to ``globalThis`` (=> window)
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
+        """
         return await self.__exec_async__(script, *args, max_depth=max_depth, serialization=serialization,
+                                         timeout=timeout, unique_context=unique_context,
+                                         execution_context_id=execution_context_id)
+
+    async def eval_async(self, script: str, *args, max_depth: int = 2, serialization: str = None,
+                         timeout: float = None, execution_context_id: str = None,
+                         unique_context: bool = None):
+        """executes JavaScript asynchronously
+
+        .. code-block:: js
+
+            res = await fetch("https://httpbin.org/get");
+            // mind CORS!
+            json = await res.json()
+            return json
+
+        ``this`` refers to the element
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
+        """
+        return await self.__eval_async__(script, *args, max_depth=max_depth, serialization=serialization,
                                          timeout=timeout, unique_context=unique_context,
                                          execution_context_id=execution_context_id)
 
