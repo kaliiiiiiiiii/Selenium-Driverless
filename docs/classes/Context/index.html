@@ -58,6 +58,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.title"><code class="docutils literal notranslate"><span class="pre">Context.title</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.execute_raw_script"><code class="docutils literal notranslate"><span class="pre">Context.execute_raw_script()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.execute_script"><code class="docutils literal notranslate"><span class="pre">Context.execute_script()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.execute_async_script"><code class="docutils literal notranslate"><span class="pre">Context.execute_async_script()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.eval_async"><code class="docutils literal notranslate"><span class="pre">Context.eval_async()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.current_url"><code class="docutils literal notranslate"><span class="pre">Context.current_url</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.page_source"><code class="docutils literal notranslate"><span class="pre">Context.page_source</span></code></a></li>
@@ -79,6 +80,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.delete_cookie"><code class="docutils literal notranslate"><span class="pre">Context.delete_cookie()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.delete_all_cookies"><code class="docutils literal notranslate"><span class="pre">Context.delete_all_cookies()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.add_cookie"><code class="docutils literal notranslate"><span class="pre">Context.add_cookie()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.find_element"><code class="docutils literal notranslate"><span class="pre">Context.find_element()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.find_elements"><code class="docutils literal notranslate"><span class="pre">Context.find_elements()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.search_elements"><code class="docutils literal notranslate"><span class="pre">Context.search_elements()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.get_screenshot_as_file"><code class="docutils literal notranslate"><span class="pre">Context.get_screenshot_as_file()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.save_screenshot"><code class="docutils literal notranslate"><span class="pre">Context.save_screenshot()</span></code></a></li>
@@ -244,7 +247,28 @@ this is by default globalThis (=&gt; window)</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.context.Context.execute_script">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">execute_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">script</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">serialization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_context_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.execute_script"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.execute_script" title="Link to this definition"></a></dt>
-<dd><p>example: script = “return obj.click()”</p>
+<dd><p>executes JavaScript synchronously on <code class="docutils literal notranslate"><span class="pre">GlobalThis</span></code> such as</p>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="nb">document</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">this</span></code> and <code class="docutils literal notranslate"><span class="pre">obj</span></code> refers to <code class="docutils literal notranslate"><span class="pre">globalThis</span></code> (=&gt; window) here</p>
+<p>see <a class="reference internal" href="../Target/#selenium_driverless.types.target.Target.execute_raw_script" title="selenium_driverless.types.target.Target.execute_raw_script"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.execute_raw_script</span></code></a> for argument descriptions</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.context.Context.execute_async_script">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">execute_async_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">script</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">serialization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_context_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.execute_async_script"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.execute_async_script" title="Link to this definition"></a></dt>
+<dd><p>executes JavaScript asynchronously on <code class="docutils literal notranslate"><span class="pre">GlobalThis</span></code> such as</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>using execute_async_script is not recommended as it doesn’t handle exceptions correctly.
+Use <a class="reference internal" href="../Chrome/#selenium_driverless.webdriver.Chrome.eval_async" title="selenium_driverless.webdriver.Chrome.eval_async"><code class="xref py py-func docutils literal notranslate"><span class="pre">Chrome.eval_async</span></code></a></p>
+</div>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="nx">resolve</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">arguments</span><span class="p">[</span><span class="nx">arguments</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mf">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">this</span></code> refers to <code class="docutils literal notranslate"><span class="pre">globalThis</span></code> (=&gt; window)</p>
+<p>see <a class="reference internal" href="../Target/#selenium_driverless.types.target.Target.execute_raw_script" title="selenium_driverless.types.target.Target.execute_raw_script"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.execute_raw_script</span></code></a> for argument descriptions</p>
 </dd></dl>
 
 <dl class="py method">
@@ -554,6 +578,41 @@ not.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.context.Context.find_element">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.find_element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.find_element" title="Link to this definition"></a></dt>
+<dd><p>find an element in the current target</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>by</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – one of the locators at <a class="reference internal" href="../By/#selenium_driverless.types.by.By" title="selenium_driverless.types.by.By"><code class="xref py py-func docutils literal notranslate"><span class="pre">By</span></code></a></p></li>
+<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the actual query to find the element by</p></li>
+<li><p><strong>timeout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – how long to wait for the element to exist</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../WebELement/#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.context.Context.find_elements">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.find_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.find_elements" title="Link to this definition"></a></dt>
+<dd><p>find multiple elements in the current target</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>by</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – one of the locators at <a class="reference internal" href="../By/#selenium_driverless.types.by.By" title="selenium_driverless.types.by.By"><code class="xref py py-func docutils literal notranslate"><span class="pre">By</span></code></a></p></li>
+<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the actual query to find the elements by</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="../WebELement/#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
