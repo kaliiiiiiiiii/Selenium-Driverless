@@ -2,6 +2,9 @@ from selenium_driverless import webdriver
 from selenium_driverless.utils.utils import read
 from selenium_driverless.types.by import By
 import asyncio
+import aiodebug.log_slow_callbacks
+
+aiodebug.log_slow_callbacks.enable(0.05)
 
 
 async def main():

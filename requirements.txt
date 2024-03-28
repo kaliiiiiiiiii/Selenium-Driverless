@@ -5,14 +5,17 @@ aiofiles~=23.2
 matplotlib~=3.8.1
 scipy~=1.11.3
 platformdirs~=3.11.0
-websockets~=11.0.3
-aiohttp
+websockets~=12.0
+aiohttp~=3.9.3
 
 # dev
-setuptools
+setuptools~=69.0.3
 twine
 pytest
 sphinx-rtd-theme
 sphinx-autodoc-typehints
 sphinx
 jsondiff
+selenium_driverless
+typing_extensions
+aiodebug
