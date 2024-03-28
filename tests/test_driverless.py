@@ -10,6 +10,7 @@ loop = asyncio.get_event_loop()
 async def make_driver():
     options = webdriver.ChromeOptions()
     # options.add_argument("--headless=new")
+    # options.binary_location = "D:/System/Lib/Chrome/chrome.exe"
     return await webdriver.Chrome(options, debug=True)
 
 

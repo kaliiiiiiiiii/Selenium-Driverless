@@ -31,7 +31,7 @@ from cdp_socket.exceptions import CDPError
 # driverless
 from selenium_driverless.types.by import By
 from selenium_driverless.types.deserialize import JSRemoteObj, StaleJSRemoteObjReference
-from selenium_driverless.scripts.geometry import gen_heatmap, gen_rand_point, centroid
+from selenium_driverless.scripts.geometry import rand_mid_loc
 
 
 class NoSuchElementException(Exception):
@@ -427,16 +427,17 @@ class WebElement(JSRemoteObj):
                     break
         return is_clickable
 
-    async def click(self, timeout: float = None, visible_timeout: float = 30, bias: float = 5, resolution: int = 50,
-                    debug: bool = False, scroll_to=True, move_to: bool = True,
-                    ensure_clickable: bool or int = False) -> None:
+    async def click(self, timeout: float = None, visible_timeout: float = 30,spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5, border:float=0.05, scroll_to=True, move_to: bool = True,
+                    ensure_clickable: typing.Union[bool, int] = False) -> None:
         """Clicks the element.
 
         :param timeout: the time in seconds to take for clicking on the element
         :param visible_timeout: the time in seconds to wait for being able to compute the elements box model
-        :param bias: a (positive) bias on how probable it is to click at the centre of the element. Scale unknown:/
-        :param resolution: the resolution to calculate probabilities for each pixel on, affects timing performance
-        :param debug: plots a visualization of the point in the element
+        :param spread_a: spread over a
+        :param spread_b: spread over b
+        :param bias_a: bias over a (0-1)
+        :param bias_b: bias over b (0-1)
+        :param border: minimum border towards element size
         :param scroll_to: whether to scroll to the element
         :param move_to: whether to move the mouse to the element
         :param ensure_clickable: whether to ensure that the element is clickable. Not reliable in on every webpage
@@ -447,7 +448,7 @@ class WebElement(JSRemoteObj):
         start = time.perf_counter()
         while not cords:
             try:
-                cords = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
+                cords = await self.mid_location(spread_a, spread_b, bias_a, bias_b, border)
             except CDPError as e:
                 if e.code == -32000 and e.message == 'Could not compute box model.':
                     await asyncio.sleep(0.1)
@@ -501,36 +502,20 @@ class WebElement(JSRemoteObj):
         # the same behaviour as for java binding
         raise NotImplementedError("you might use elem.write() for inputs instead")
 
-    async def mid_location(self, bias: float = 5, resolution: int = 50, debug: bool = False):
+    async def mid_location(self, spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5, border:float=0.05):
         """
         returns random location in element with probability close to the middle
 
-        :param bias: a (positive) bias on how probable it is to click at the centre of the element. Scale unknown:/
-        :param resolution: the resolution to calculate probabilities for each pixel on, affects timing performance
-        :param debug: plots a visualization of the point in the element
+        :param spread_a: spread over a
+        :param spread_b: spread over b
+        :param bias_a: bias over a (0-1)
+        :param bias_b: bias over b (0-1)
+        :param border: minimum border towards element size
         """
 
         box = await self.box_model
         vertices = box["content"]
-        if bias and resolution:
-            heatmap = gen_heatmap(vertices, num_points=resolution)
-            exc = None
-            try:
-                point = gen_rand_point(vertices, heatmap, bias_value=bias)
-                points = np.array([point])
-            except Exception as e:
-                points = np.array([[100, 100]])
-                exc = e
-            if debug:
-                from selenium_driverless.scripts.geometry import visualize
-                visualize(points, heatmap, vertices)
-            if exc:
-                from selenium_driverless import EXC_HANDLER
-                EXC_HANDLER(exc)
-                warnings.warn("couldn't get random point based on heatmap")
-                point = centroid(vertices)
-        else:
-            point = centroid(vertices)
+        point = rand_mid_loc(vertices, spread_a, spread_b, bias_a, bias_b, border)
 
         # noinspection PyUnboundLocalVariable
         x = int(point[0])

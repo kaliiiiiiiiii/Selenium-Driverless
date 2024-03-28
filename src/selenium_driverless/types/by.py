@@ -17,8 +17,6 @@
 
 # edited by github/kaliiiiiiiiii
 
-from enum import Enum
-
 
 class By:
     """Set of supported locator strategies."""

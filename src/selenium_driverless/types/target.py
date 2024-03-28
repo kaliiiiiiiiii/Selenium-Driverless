@@ -544,8 +544,7 @@ class Target:
             except StaleElementReferenceException:
                 await self._on_loaded()
         raise asyncio.TimeoutError(
-                f"Couldn't get page source within {timeout} seconds, possibly due to a reload loop")
-
+            f"Couldn't get page source within {timeout} seconds, possibly due to a reload loop")
 
     async def close(self, timeout: float = 2) -> None:
         """Closes the current window.

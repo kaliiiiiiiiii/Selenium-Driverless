@@ -3,13 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
 import time
 
-
-def generate_random_value(spread, border=0.05, bias=0.5):
-    """Generate random Gaussian distributed values with bias."""
-    res = np.random.normal(scale=spread / 6, loc=bias)
-    while not (border <= res <= 1 - border):
-        res = np.random.normal(scale=spread / 6, loc=bias)
-    return res
+from selenium_driverless.scripts.geometry import rand_mid_loc
 
 
 def rotate(point, angle, center):
@@ -20,35 +14,12 @@ def rotate(point, angle, center):
     return [rotated_x, rotated_y]
 
 
-def point_in_rectangle(points, a, b):
-    """
-    Args:
-    - points: List of four coordinates [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
-    - a: float, a point ranging from 0 to 1 on line |AB|
-    - b: float, a point ranging from 0 to 1 on line |BC|
-
-    Returns:
-    - List: Coordinates of a point within the rectangle.
-    """
-    # Validate input points
-    if len(points) != 4:
-        raise ValueError("Input should contain four points defining a rectangle.")
-
-    # Calculate coordinates of the point within the rectangle
-    x = (1 - b) * (points[0][0] + a * (points[1][0] - points[0][0])) + b * (
-            points[3][0] + a * (points[2][0] - points[3][0]))
-    y = (1 - b) * (points[0][1] + a * (points[1][1] - points[0][1])) + b * (
-            points[3][1] + a * (points[2][1] - points[3][1]))
-
-    return [x, y]
-
-
 if __name__ == "__main__":
     elem = [
-        [300, 200],  # A
-        [400, 200],  # B
-        [400, 400],  # C
-        [300, 400]   # D
+        (300, 200),  # A
+        (400, 200),  # B
+        (400, 400),  # C
+        (300, 400)  # D
     ]
     elem_angle = np.radians(30)  # Center of the rectangle
     elem = [rotate(point, elem_angle, elem[0]) for point in elem]
@@ -58,6 +29,7 @@ if __name__ == "__main__":
     spread_b = 1  # Bias for b
     bias_a = 0.5
     bias_b = 0.5
+    border = 0.05
 
     # create grid
     x_grid = np.linspace(min(point[0] for point in elem),
@@ -69,9 +41,7 @@ if __name__ == "__main__":
 
     start_time = time.perf_counter()
     for _ in range(n):
-        point_a = generate_random_value(spread_a, bias=bias_a)
-        point_b = generate_random_value(spread_b, bias=bias_b)
-        result_point = point_in_rectangle(elem, point_a, point_b)
+        result_point = rand_mid_loc(elem, spread_a, spread_b, bias_a, bias_b, border)
         x_idx = np.argmin(np.abs(x_grid[0] - result_point[0]))
         y_idx = np.argmin(np.abs(y_grid[:, 0] - result_point[1]))
         z_values[y_idx, x_idx] += 1

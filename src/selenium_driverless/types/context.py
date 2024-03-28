@@ -175,8 +175,8 @@ class Context:
     async def get_target_for_iframe(self, iframe: WebElement):
         return await self.current_target.get_target_for_iframe(iframe=iframe)
 
-    async def set_download_behaviour(self,behavior:typing.Literal["deny", "allow", "allowAndName", "default"],
-                                     path:str=None):
+    async def set_download_behaviour(self, behavior: typing.Literal["deny", "allow", "allowAndName", "default"],
+                                     path: str = None):
         """set the download behaviour
 
         :param behavior: the behaviour to set the downloading to
@@ -186,7 +186,7 @@ class Context:
             setting ``behaviour=allow`` instead of ``allowAndName`` can cause some bugs
 
         """
-        params = {"behavior":behavior, "eventsEnabled":True}
+        params = {"behavior": behavior, "eventsEnabled": True}
         if path:
             _dir = str(pathlib.Path(path))
             if os.path.isfile(_dir):
@@ -203,7 +203,6 @@ class Context:
             return self.base_target.downloads_dir_for_context(context_id=self.context_id)
         else:
             return self.base_target.downloads_dir_for_context(context_id="DEFAULT")
-
 
     async def wait_download(self, timeout: float or None = 30) -> dict:
         """
