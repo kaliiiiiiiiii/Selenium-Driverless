@@ -1390,7 +1390,7 @@ webelement.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>target_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <a class="reference internal" href="../Target/#selenium_driverless.types.target.TargetInfo" title="selenium_driverless.types.target.TargetInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">TargetInfo</span></code></a>, <a class="reference internal" href="../WebELement/#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></a>]</span>) – the target to switch to</p></li>
+<li><p><strong>target_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <a class="reference internal" href="../Target/#selenium_driverless.types.target.TargetInfo" title="selenium_driverless.types.target.TargetInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">TargetInfo</span></code></a>, <a class="reference internal" href="../Target/#selenium_driverless.types.target.Target" title="selenium_driverless.types.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target</span></code></a>]</span>) – the target to switch to</p></li>
 <li><p><strong>activate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to activate the target</p></li>
 </ul>
 </dd>
@@ -1406,7 +1406,11 @@ webelement.
 <dd><p>Switches to a new window</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>type_hint</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'tab'</span></code>, <code class="docutils literal notranslate"><span class="pre">'window'</span></code>]</span>) – what kind of window to switch to</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type_hint</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'tab'</span></code>, <code class="docutils literal notranslate"><span class="pre">'window'</span></code>]</span>) – what kind of window to switch to</p></li>
+<li><p><strong>url</strong> – url to load in the new target</p></li>
+<li><p><strong>activate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to activate the new target</p></li>
+</ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../Target/#selenium_driverless.types.target.Target" title="selenium_driverless.types.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target</span></code></a></span></p>

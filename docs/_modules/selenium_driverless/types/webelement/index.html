@@ -108,7 +108,7 @@
 <span class="c1"># driverless</span>
 <span class="kn">from</span> <span class="nn">selenium_driverless.types.by</span> <span class="kn">import</span> <span class="n">By</span>
 <span class="kn">from</span> <span class="nn">selenium_driverless.types.deserialize</span> <span class="kn">import</span> <span class="n">JSRemoteObj</span><span class="p">,</span> <span class="n">StaleJSRemoteObjReference</span>
-<span class="kn">from</span> <span class="nn">selenium_driverless.scripts.geometry</span> <span class="kn">import</span> <span class="n">gen_heatmap</span><span class="p">,</span> <span class="n">gen_rand_point</span><span class="p">,</span> <span class="n">centroid</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.scripts.geometry</span> <span class="kn">import</span> <span class="n">rand_mid_loc</span>
 
 
 <span class="k">class</span> <span class="nc">NoSuchElementException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
@@ -401,18 +401,40 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">___frame_id__</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;frameId&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">res</span>
 
+<div class="viewcode-block" id="WebElement.get_listeners">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.get_listeners">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_listeners</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        gets all listeners on the element. see `DOMDebugger.getEventListeners &lt;https://vanilla.aslushnikov.com/?DOMDebugger.getEventListeners&gt;`_</span>
+
+<span class="sd">        :param depth: maximum depth (nested elements) to find listeners for</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span>
             <span class="s2">&quot;DOMDebugger.getEventListeners&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;objectId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span><span class="p">,</span> <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="n">depth</span><span class="p">,</span> <span class="s2">&quot;pierce&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
-        <span class="k">return</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;listeners&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;listeners&#39;</span><span class="p">]</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">source</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        returns the OuterHtml of the element</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args_builder</span>
-        <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.getOuterHTML&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.getOuterHTML&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s1">&#39;Could not find node with given id&#39;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">StaleElementReferenceException</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">e</span>
         <span class="k">return</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;outerHTML&quot;</span><span class="p">]</span>
 
+<div class="viewcode-block" id="WebElement.set_source">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.set_source">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">set_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        sets the OuterHTML of the element</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.setOuterHTML&quot;</span><span class="p">,</span>
                                                   <span class="p">{</span><span class="s2">&quot;nodeId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span> <span class="s2">&quot;outerHTML&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
@@ -420,20 +442,18 @@
             <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s1">&#39;Could not find node with given id&#39;</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">StaleElementReferenceException</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">e</span>
+                <span class="k">raise</span> <span class="n">e</span></div>
+
 
 <div class="viewcode-block" id="WebElement.get_property">
 <a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.get_property">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_property</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the given property of the element.</span>
 
-<span class="sd">        :Args:</span>
-<span class="sd">            - name - Name of the property to retrieve.</span>
+<span class="sd">        :param name: the name of the property to get</span>
 
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
-
-<span class="sd">                text_length = target_element.get_property(&quot;text_length&quot;)</span>
+<span class="sd">        .. warning::</span>
+<span class="sd">            this gets the JavaScript property (``elem[name]``), and not HTML property</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;return obj[arguments[0]]&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
 
@@ -446,25 +466,42 @@
 
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The text of the element.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The text of the element. (``elem.textContent``)&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s2">&quot;textContent&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The value of the element.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The value of the element. (``elem.value``)&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="WebElement.clear">
 <a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.clear">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clears the text if it&#39;s a text entry element.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clears the text if it&#39;s a text entry element. (``elem.value = &quot;&quot;``)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="s2">&quot;obj.value = &#39;&#39;&quot;</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="WebElement.remove">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.remove">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.removeNode&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;nodeId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id</span><span class="p">})</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        remove the element from the page//dom//html</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.removeNode&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;nodeId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id</span><span class="p">})</span></div>
 
+
+<div class="viewcode-block" id="WebElement.highlight">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.highlight">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">highlight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">highlight</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        highlight the element</span>
+
+<span class="sd">        :param highlight: whether to disable or enable highlight</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            highlight automatically fades on any user-interaction, you might use a for-loop</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">_dom_enabled</span><span class="p">:</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.enable&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">highlight</span><span class="p">:</span>
@@ -486,13 +523,28 @@
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Overlay.enable&quot;</span><span class="p">)</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Overlay.highlightNode&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Overlay.disable&quot;</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Overlay.disable&quot;</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="WebElement.focus">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.focus">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">focus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        focus the element</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args_builder</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.focus&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.focus&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="WebElement.is_clickable">
+<a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.is_clickable">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">is_clickable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listener_depth</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        returns ``True`` if the element type is one of &quot;a&quot;, &quot;button&quot;, &quot;command&quot;, &quot;details&quot;, &quot;input&quot;, &quot;select&quot;, &quot;textarea&quot;, &quot;video&quot;, &quot;map&quot;</span>
+<span class="sd">        else wise checks for &quot;click&quot;, &quot;mousedown&quot; or &quot;mouseup&quot; event listeners on the element</span>
+
+<span class="sd">        :param listener_depth: the depth (nested elements) to get event-listeners for</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">_type</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">tag_name</span>
         <span class="k">if</span> <span class="n">_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;button&quot;</span><span class="p">,</span> <span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="s2">&quot;details&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;select&quot;</span><span class="p">,</span> <span class="s2">&quot;textarea&quot;</span><span class="p">,</span> <span class="s2">&quot;video&quot;</span><span class="p">,</span> <span class="s2">&quot;map&quot;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="kc">True</span>
@@ -504,23 +556,31 @@
                 <span class="k">if</span> <span class="n">_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="s2">&quot;mousedown&quot;</span><span class="p">,</span> <span class="s2">&quot;mouseup&quot;</span><span class="p">]:</span>
                     <span class="n">is_clickable</span> <span class="o">=</span> <span class="kc">True</span>
                     <span class="k">break</span>
-        <span class="k">return</span> <span class="n">is_clickable</span>
+        <span class="k">return</span> <span class="n">is_clickable</span></div>
+
 
 <div class="viewcode-block" id="WebElement.click">
 <a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.click">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">visible_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
-                    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">scroll_to</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">move_to</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-                    <span class="n">ensure_clickable</span><span class="p">:</span> <span class="nb">bool</span> <span class="ow">or</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">visible_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span><span class="n">spread_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">bias_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">border</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">scroll_to</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">move_to</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="n">ensure_clickable</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Clicks the element.</span>
 
 <span class="sd">        :param timeout: the time in seconds to take for clicking on the element</span>
 <span class="sd">        :param visible_timeout: the time in seconds to wait for being able to compute the elements box model</span>
-<span class="sd">        :param bias: a (positive) bias on how probable it is to click at the centre of the element. Scale unknown:/</span>
-<span class="sd">        :param resolution: the resolution to calculate probabilities for each pixel on, affects timing performance</span>
-<span class="sd">        :param debug: plots a visualization of the point in the element</span>
+<span class="sd">        :param spread_a: spread over a</span>
+<span class="sd">        :param spread_b: spread over b</span>
+<span class="sd">        :param bias_a: bias over a (0-1)</span>
+<span class="sd">        :param bias_b: bias over b (0-1)</span>
+<span class="sd">        :param border: minimum border towards element edges (relative to element =&gt; 1).</span>
+<span class="sd">            Random generated points outside that border get re-generated.</span>
 <span class="sd">        :param scroll_to: whether to scroll to the element</span>
 <span class="sd">        :param move_to: whether to move the mouse to the element</span>
 <span class="sd">        :param ensure_clickable: whether to ensure that the element is clickable. Not reliable in on every webpage</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            a spread of 1 is equivalent to 6 std.</span>
+<span class="sd">            relative to the element.</span>
+<span class="sd">            (=&gt; 99.7 %)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">scroll_to</span><span class="p">:</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">scroll_to</span><span class="p">()</span>
@@ -528,7 +588,7 @@
         <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="n">cords</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">cords</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">mid_location</span><span class="p">(</span><span class="n">bias</span><span class="o">=</span><span class="n">bias</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">)</span>
+                <span class="n">cords</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">mid_location</span><span class="p">(</span><span class="n">spread_a</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">,</span> <span class="n">bias_a</span><span class="p">,</span> <span class="n">bias_b</span><span class="p">,</span> <span class="n">border</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s1">&#39;Could not compute box model.&#39;</span><span class="p">:</span>
                     <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
@@ -597,36 +657,26 @@
 
 <div class="viewcode-block" id="WebElement.mid_location">
 <a class="viewcode-back" href="../../../../classes/WebELement/#selenium_driverless.types.webelement.WebElement.mid_location">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">mid_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">mid_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spread_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">bias_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">border</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        returns random location in element with probability close to the middle</span>
 
-<span class="sd">        :param bias: a (positive) bias on how probable it is to click at the centre of the element. Scale unknown:/</span>
-<span class="sd">        :param resolution: the resolution to calculate probabilities for each pixel on, affects timing performance</span>
-<span class="sd">        :param debug: plots a visualization of the point in the element</span>
+<span class="sd">        :param spread_a: spread over a</span>
+<span class="sd">        :param spread_b: spread over b</span>
+<span class="sd">        :param bias_a: bias over a (0-1)</span>
+<span class="sd">        :param bias_b: bias over b (0-1)</span>
+<span class="sd">        :param border: minimum border towards element edges (relative to element =&gt; 1).</span>
+<span class="sd">            Random generated points outside that border get re-generated.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            a spread of 1 is equivalent to 6 std.</span>
+<span class="sd">            relative to the element.</span>
+<span class="sd">            (=&gt; 99.7 %)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">box</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_model</span>
         <span class="n">vertices</span> <span class="o">=</span> <span class="n">box</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">bias</span> <span class="ow">and</span> <span class="n">resolution</span><span class="p">:</span>
-            <span class="n">heatmap</span> <span class="o">=</span> <span class="n">gen_heatmap</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">num_points</span><span class="o">=</span><span class="n">resolution</span><span class="p">)</span>
-            <span class="n">exc</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">point</span> <span class="o">=</span> <span class="n">gen_rand_point</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">heatmap</span><span class="p">,</span> <span class="n">bias_value</span><span class="o">=</span><span class="n">bias</span><span class="p">)</span>
-                <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">point</span><span class="p">])</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">]])</span>
-                <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
-            <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
-                <span class="kn">from</span> <span class="nn">selenium_driverless.scripts.geometry</span> <span class="kn">import</span> <span class="n">visualize</span>
-                <span class="n">visualize</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">heatmap</span><span class="p">,</span> <span class="n">vertices</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">exc</span><span class="p">:</span>
-                <span class="kn">from</span> <span class="nn">selenium_driverless</span> <span class="kn">import</span> <span class="n">EXC_HANDLER</span>
-                <span class="n">EXC_HANDLER</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;couldn&#39;t get random point based on heatmap&quot;</span><span class="p">)</span>
-                <span class="n">point</span> <span class="o">=</span> <span class="n">centroid</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">point</span> <span class="o">=</span> <span class="n">centroid</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span>
+        <span class="n">point</span> <span class="o">=</span> <span class="n">rand_mid_loc</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">spread_a</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">,</span> <span class="n">bias_a</span><span class="p">,</span> <span class="n">bias_b</span><span class="p">,</span> <span class="n">border</span><span class="p">)</span>
 
         <span class="c1"># noinspection PyUnboundLocalVariable</span>
         <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>

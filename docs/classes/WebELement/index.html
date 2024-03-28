@@ -54,11 +54,18 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.content_document"><code class="docutils literal notranslate"><span class="pre">WebElement.content_document</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.find_element"><code class="docutils literal notranslate"><span class="pre">WebElement.find_element()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.find_elements"><code class="docutils literal notranslate"><span class="pre">WebElement.find_elements()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.get_listeners"><code class="docutils literal notranslate"><span class="pre">WebElement.get_listeners()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.source"><code class="docutils literal notranslate"><span class="pre">WebElement.source</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.set_source"><code class="docutils literal notranslate"><span class="pre">WebElement.set_source()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.get_property"><code class="docutils literal notranslate"><span class="pre">WebElement.get_property()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.tag_name"><code class="docutils literal notranslate"><span class="pre">WebElement.tag_name</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.text"><code class="docutils literal notranslate"><span class="pre">WebElement.text</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.value"><code class="docutils literal notranslate"><span class="pre">WebElement.value</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.clear"><code class="docutils literal notranslate"><span class="pre">WebElement.clear()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.remove"><code class="docutils literal notranslate"><span class="pre">WebElement.remove()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.highlight"><code class="docutils literal notranslate"><span class="pre">WebElement.highlight()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.focus"><code class="docutils literal notranslate"><span class="pre">WebElement.focus()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.is_clickable"><code class="docutils literal notranslate"><span class="pre">WebElement.is_clickable()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.click"><code class="docutils literal notranslate"><span class="pre">WebElement.click()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.write"><code class="docutils literal notranslate"><span class="pre">WebElement.write()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.set_file"><code class="docutils literal notranslate"><span class="pre">WebElement.set_file()</span></code></a></li>
@@ -165,24 +172,44 @@ instance will fail.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.get_listeners">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_listeners</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.get_listeners"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.get_listeners" title="Link to this definition"></a></dt>
+<dd><p>gets all listeners on the element. see <a class="reference external" href="https://vanilla.aslushnikov.com/?DOMDebugger.getEventListeners">DOMDebugger.getEventListeners</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>depth</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – maximum depth (nested elements) to find listeners for</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.source">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">source</span></span><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.source" title="Link to this definition"></a></dt>
+<dd><p>returns the OuterHtml of the element</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.set_source">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.set_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.set_source" title="Link to this definition"></a></dt>
+<dd><p>sets the OuterHTML of the element</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.get_property">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_property</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.get_property"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.get_property" title="Link to this definition"></a></dt>
 <dd><p>Gets the given property of the element.</p>
-<dl class="field-list">
-<dt class="field-odd">Args<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p>name - Name of the property to retrieve.</p></li>
-</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the name of the property to get</p>
 </dd>
-<dt class="field-even">Usage<span class="colon">:</span></dt>
-<dd class="field-even"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">text_length</span> <span class="o">=</span> <span class="n">target_element</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s2">&quot;text_length&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
 </dd>
 </dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>this gets the JavaScript property (<code class="docutils literal notranslate"><span class="pre">elem[name]</span></code>), and not HTML property</p>
+</div>
 </dd></dl>
 
 <dl class="py property">
@@ -194,19 +221,19 @@ instance will fail.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.text">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">text</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.text" title="Link to this definition"></a></dt>
-<dd><p>The text of the element.</p>
+<dd><p>The text of the element. (<code class="docutils literal notranslate"><span class="pre">elem.textContent</span></code>)</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.value">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.value" title="Link to this definition"></a></dt>
-<dd><p>The value of the element.</p>
+<dd><p>The value of the element. (<code class="docutils literal notranslate"><span class="pre">elem.value</span></code>)</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.clear">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.clear" title="Link to this definition"></a></dt>
-<dd><p>Clears the text if it’s a text entry element.</p>
+<dd><p>Clears the text if it’s a text entry element. (<code class="docutils literal notranslate"><span class="pre">elem.value</span> <span class="pre">=</span> <span class="pre">&quot;&quot;</span></code>)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
@@ -215,26 +242,74 @@ instance will fail.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.remove">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.remove"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.remove" title="Link to this definition"></a></dt>
+<dd><p>remove the element from the page//dom//html</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.highlight">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">highlight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">highlight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.highlight"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.highlight" title="Link to this definition"></a></dt>
+<dd><p>highlight the element</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>highlight</strong> – whether to disable or enable highlight</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>highlight automatically fades on any user-interaction, you might use a for-loop</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.focus">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">focus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.focus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.focus" title="Link to this definition"></a></dt>
+<dd><p>focus the element</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.is_clickable">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_clickable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">listener_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.is_clickable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.is_clickable" title="Link to this definition"></a></dt>
+<dd><p>returns <code class="docutils literal notranslate"><span class="pre">True</span></code> if the element type is one of “a”, “button”, “command”, “details”, “input”, “select”, “textarea”, “video”, “map”
+else wise checks for “click”, “mousedown” or “mouseup” event listeners on the element</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>listener_depth</strong> – the depth (nested elements) to get event-listeners for</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.click">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">click</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visible_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scroll_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">move_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensure_clickable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.click"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.click" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">click</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visible_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spread_a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spread_b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">border</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scroll_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">move_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensure_clickable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.click"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.click" title="Link to this definition"></a></dt>
 <dd><p>Clicks the element.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>timeout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – the time in seconds to take for clicking on the element</p></li>
 <li><p><strong>visible_timeout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the time in seconds to wait for being able to compute the elements box model</p></li>
-<li><p><strong>bias</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – a (positive) bias on how probable it is to click at the centre of the element. Scale unknown:/</p></li>
-<li><p><strong>resolution</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – the resolution to calculate probabilities for each pixel on, affects timing performance</p></li>
-<li><p><strong>debug</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – plots a visualization of the point in the element</p></li>
+<li><p><strong>spread_a</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – spread over a</p></li>
+<li><p><strong>spread_b</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – spread over b</p></li>
+<li><p><strong>bias_a</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – bias over a (0-1)</p></li>
+<li><p><strong>bias_b</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – bias over b (0-1)</p></li>
+<li><p><strong>border</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – minimum border towards element edges (relative to element =&gt; 1).
+Random generated points outside that border get re-generated.</p></li>
 <li><p><strong>scroll_to</strong> – whether to scroll to the element</p></li>
 <li><p><strong>move_to</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to move the mouse to the element</p></li>
-<li><p><strong>ensure_clickable</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to ensure that the element is clickable. Not reliable in on every webpage</p></li>
+<li><p><strong>ensure_clickable</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – whether to ensure that the element is clickable. Not reliable in on every webpage</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>a spread of 1 is equivalent to 6 std.
+relative to the element.
+(=&gt; 99.7 %)</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -286,17 +361,26 @@ instance will fail.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.mid_location">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mid_location</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.mid_location"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.mid_location" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mid_location</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spread_a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spread_b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">border</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.mid_location"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.mid_location" title="Link to this definition"></a></dt>
 <dd><p>returns random location in element with probability close to the middle</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>bias</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – a (positive) bias on how probable it is to click at the centre of the element. Scale unknown:/</p></li>
-<li><p><strong>resolution</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – the resolution to calculate probabilities for each pixel on, affects timing performance</p></li>
-<li><p><strong>debug</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – plots a visualization of the point in the element</p></li>
+<li><p><strong>spread_a</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – spread over a</p></li>
+<li><p><strong>spread_b</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – spread over b</p></li>
+<li><p><strong>bias_a</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – bias over a (0-1)</p></li>
+<li><p><strong>bias_b</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – bias over b (0-1)</p></li>
+<li><p><strong>border</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – minimum border towards element edges (relative to element =&gt; 1).
+Random generated points outside that border get re-generated.</p></li>
 </ul>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>a spread of 1 is equivalent to 6 std.
+relative to the element.
+(=&gt; 99.7 %)</p>
+</div>
 </dd></dl>
 
 <dl class="py method">

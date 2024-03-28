@@ -259,8 +259,8 @@
 
 <div class="viewcode-block" id="Context.set_download_behaviour">
 <a class="viewcode-back" href="../../../../classes/Context/#selenium_driverless.types.context.Context.set_download_behaviour">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_download_behaviour</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">behavior</span><span class="p">:</span><span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;deny&quot;</span><span class="p">,</span> <span class="s2">&quot;allow&quot;</span><span class="p">,</span> <span class="s2">&quot;allowAndName&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">],</span>
-                                     <span class="n">path</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_download_behaviour</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">behavior</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;deny&quot;</span><span class="p">,</span> <span class="s2">&quot;allow&quot;</span><span class="p">,</span> <span class="s2">&quot;allowAndName&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">],</span>
+                                     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;set the download behaviour</span>
 
 <span class="sd">        :param behavior: the behaviour to set the downloading to</span>
@@ -270,7 +270,7 @@
 <span class="sd">            setting ``behaviour=allow`` instead of ``allowAndName`` can cause some bugs</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;behavior&quot;</span><span class="p">:</span><span class="n">behavior</span><span class="p">,</span> <span class="s2">&quot;eventsEnabled&quot;</span><span class="p">:</span><span class="kc">True</span><span class="p">}</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;behavior&quot;</span><span class="p">:</span> <span class="n">behavior</span><span class="p">,</span> <span class="s2">&quot;eventsEnabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
             <span class="n">_dir</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">_dir</span><span class="p">):</span>
@@ -288,7 +288,6 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">downloads_dir_for_context</span><span class="p">(</span><span class="n">context_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">context_id</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">downloads_dir_for_context</span><span class="p">(</span><span class="n">context_id</span><span class="o">=</span><span class="s2">&quot;DEFAULT&quot;</span><span class="p">)</span>
-
 
 <div class="viewcode-block" id="Context.wait_download">
 <a class="viewcode-back" href="../../../../classes/Context/#selenium_driverless.types.context.Context.wait_download">[docs]</a>

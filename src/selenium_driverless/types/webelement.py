@@ -317,6 +317,11 @@ class WebElement(JSRemoteObj):
         return res
 
     async def get_listeners(self, depth: int = 3):
+        """
+        gets all listeners on the element. see `DOMDebugger.getEventListeners <https://vanilla.aslushnikov.com/?DOMDebugger.getEventListeners>`_
+
+        :param depth: maximum depth (nested elements) to find listeners for
+        """
         res = await self.__target__.execute_cdp_cmd(
             "DOMDebugger.getEventListeners", {"objectId": await self.obj_id, "depth": depth, "pierce": True})
         return res['listeners']
@@ -338,7 +343,7 @@ class WebElement(JSRemoteObj):
 
     async def set_source(self, value: str):
         """
-        sets the outer html of the element
+        sets the OuterHTML of the element
         """
         try:
             await self.__target__.execute_cdp_cmd("DOM.setOuterHTML",
@@ -352,13 +357,10 @@ class WebElement(JSRemoteObj):
     async def get_property(self, name: str) -> str or None:
         """Gets the given property of the element.
 
-        :Args:
-            - name - Name of the property to retrieve.
+        :param name: the name of the property to get
 
-        :Usage:
-            ::
-
-                text_length = target_element.get_property("text_length")
+        .. warning::
+            this gets the JavaScript property (``elem[name]``), and not HTML property
         """
         return await self.execute_script(f"return obj[arguments[0]]", name)
 
@@ -370,22 +372,34 @@ class WebElement(JSRemoteObj):
 
     @property
     async def text(self) -> str:
-        """The text of the element."""
+        """The text of the element. (``elem.textContent``)"""
         return await self.get_property("textContent")
 
     @property
     async def value(self) -> str:
-        """The value of the element."""
+        """The value of the element. (``elem.value``)"""
         return await self.get_property("value")
 
     async def clear(self) -> None:
-        """Clears the text if it's a text entry element."""
+        """Clears the text if it's a text entry element. (``elem.value = ""``)
+        """
         await self.execute_script("obj.value = ''", unique_context=True)
 
     async def remove(self):
+        """
+        remove the element from the page//dom//html
+        """
         await self.__target__.execute_cdp_cmd("DOM.removeNode", {"nodeId": await self.node_id})
 
     async def highlight(self, highlight=True):
+        """
+        highlight the element
+
+        :param highlight: whether to disable or enable highlight
+
+        .. note::
+            highlight automatically fades on any user-interaction, you might use a for-loop
+        """
         if not self.__target__._dom_enabled:
             await self.__target__.execute_cdp_cmd("DOM.enable")
         if highlight:
@@ -410,10 +424,19 @@ class WebElement(JSRemoteObj):
             await self.__target__.execute_cdp_cmd("Overlay.disable")
 
     async def focus(self):
+        """
+        focus the element
+        """
         args = self._args_builder
         return await self.__target__.execute_cdp_cmd("DOM.focus", args)
 
     async def is_clickable(self, listener_depth=3):
+        """
+        returns ``True`` if the element type is one of "a", "button", "command", "details", "input", "select", "textarea", "video", "map"
+        else wise checks for "click", "mousedown" or "mouseup" event listeners on the element
+
+        :param listener_depth: the depth (nested elements) to get event-listeners for
+        """
         _type = await self.tag_name
         if _type in ["a", "button", "command", "details", "input", "select", "textarea", "video", "map"]:
             return True
@@ -437,10 +460,16 @@ class WebElement(JSRemoteObj):
         :param spread_b: spread over b
         :param bias_a: bias over a (0-1)
         :param bias_b: bias over b (0-1)
-        :param border: minimum border towards element size
+        :param border: minimum border towards element edges (relative to element => 1).
+            Random generated points outside that border get re-generated.
         :param scroll_to: whether to scroll to the element
         :param move_to: whether to move the mouse to the element
         :param ensure_clickable: whether to ensure that the element is clickable. Not reliable in on every webpage
+
+        .. note::
+            a spread of 1 is equivalent to 6 std.
+            relative to the element.
+            (=> 99.7 %)
         """
         if scroll_to:
             await self.scroll_to()
@@ -510,7 +539,13 @@ class WebElement(JSRemoteObj):
         :param spread_b: spread over b
         :param bias_a: bias over a (0-1)
         :param bias_b: bias over b (0-1)
-        :param border: minimum border towards element size
+        :param border: minimum border towards element edges (relative to element => 1).
+            Random generated points outside that border get re-generated.
+
+        .. note::
+            a spread of 1 is equivalent to 6 std.
+            relative to the element.
+            (=> 99.7 %)
         """
 
         box = await self.box_model
