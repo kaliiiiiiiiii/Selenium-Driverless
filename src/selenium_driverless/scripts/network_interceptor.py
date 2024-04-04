@@ -15,6 +15,8 @@ import base64
 
 PatternsType = typing.List[typing.Dict[str, str]]
 
+# TODO: support OrderedDict instead of List[Fetch.HeaderEntry]
+
 
 class RequestDoneException(Exception):
     def __init__(self, data: "InterceptedRequest"):
