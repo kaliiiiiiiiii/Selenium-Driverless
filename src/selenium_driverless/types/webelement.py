@@ -40,6 +40,7 @@ class NoSuchElementException(Exception):
 
 class StaleElementReferenceException(StaleJSRemoteObjReference):
     def __init__(self, elem):
+        elem._stale = True
         message = f"Page or Frame has been reloaded, or the element removed, {elem}"
         super().__init__(_object=elem, message=message)
 
@@ -97,17 +98,8 @@ class WebElement(JSRemoteObj):
 
     async def __aenter__(self):
         if not self._started:
-            async def set_stale_frame(data):
-                if data["frame"]["id"] == self.___frame_id__:
-                    self._stale = True
-                try:
-                    await self.__target__.remove_cdp_listener("Page.frameNavigated", set_stale_frame)
-                except ValueError:
-                    pass
-
             if not self.__target__._page_enabled:
                 await self.__target__.execute_cdp_cmd("Page.enable")
-            await self.__target__.add_cdp_listener("Page.frameNavigated", set_stale_frame)
             self._started = True
 
         return self
