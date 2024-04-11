@@ -631,10 +631,17 @@ class WebElement(JSRemoteObj):
 
     # RenderedWebElement Items
     async def is_displayed(self) -> bool:
+        from cdp_socket.exceptions import CDPError
         """Whether the element is visible to a user."""
-        # Only go into this conditional for browsers that don't use the atom themselves
-        size = await self.size
-        return not (size["height"] == 0 or size["width"] == 0)
+        try:
+            # Only go into this conditional for browsers that don't use the atom themselves
+            size = await self.size
+            return not (size["height"] == 0 or size["width"] == 0)
+        except CDPError as e:
+            if e.args[0] == {'code': -32000, 'message': 'Could not compute box model.'}:
+                return False
+            else:
+                raise
 
     @property
     async def location_once_scrolled_into_view(self) -> dict:
