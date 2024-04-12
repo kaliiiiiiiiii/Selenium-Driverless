@@ -436,7 +436,7 @@ class WebElement(JSRemoteObj):
             try:
                 cords = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
             except CDPError as e:
-                if e.code == -32000 and 'Could not compute box model' in e.message:
+                if e.code == -32000 and 'Could not compute box model.' in e.message:
                     await asyncio.sleep(0.1)
                 else:
                     raise e
@@ -637,7 +637,7 @@ class WebElement(JSRemoteObj):
             size = await self.size
             return not (size["height"] == 0 or size["width"] == 0)
         except CDPError as e:
-            if e.code == -32000 and 'Could not compute box model' in e.message:
+            if e.code == -32000 and 'Could not compute box model.' in e.message:
                 return False
             else:
                 raise
