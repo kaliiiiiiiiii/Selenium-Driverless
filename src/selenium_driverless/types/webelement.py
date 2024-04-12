@@ -154,7 +154,7 @@ class WebElement(JSRemoteObj):
             try:
                 res = await self.__target__.execute_cdp_cmd("DOM.resolveNode", args)
             except CDPError as e:
-                if e.code == -32000 and e.message == 'No node with given id found':
+                if e.code == -32000 and 'No node with given id found' in e.message:
                     raise StaleElementReferenceException(self)
                 else:
                     raise e
@@ -331,7 +331,7 @@ class WebElement(JSRemoteObj):
             await self.__target__.execute_cdp_cmd("DOM.setOuterHTML",
                                                   {"nodeId": await self.node_id, "outerHTML": value})
         except CDPError as e:
-            if e.code == -32000 and e.message == 'Could not find node with given id':
+            if e.code == -32000 and 'Could not find node with given id' in e.message:
                 raise StaleElementReferenceException(self)
             else:
                 raise e
@@ -436,7 +436,7 @@ class WebElement(JSRemoteObj):
             try:
                 cords = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
             except CDPError as e:
-                if e.code == -32000 and e.message == 'Could not compute box model.':
+                if e.code == -32000 and 'Could not compute box model' in e.message:
                     await asyncio.sleep(0.1)
                 else:
                     raise e
@@ -552,7 +552,7 @@ class WebElement(JSRemoteObj):
                 attributes_dict[key] = value
             return attributes_dict
         except CDPError as e:
-            if not (e.code == -32000 and e.message == 'Node is not an Element'):
+            if not (e.code == -32000 and 'Node is not an Element' in e.message):
                 raise e
 
     async def get_dom_attribute(self, name: str) -> str or None:
@@ -631,14 +631,13 @@ class WebElement(JSRemoteObj):
 
     # RenderedWebElement Items
     async def is_displayed(self) -> bool:
-        from cdp_socket.exceptions import CDPError
         """Whether the element is visible to a user."""
         try:
             # Only go into this conditional for browsers that don't use the atom themselves
             size = await self.size
             return not (size["height"] == 0 or size["width"] == 0)
         except CDPError as e:
-            if e.args[0] == {'code': -32000, 'message': 'Could not compute box model.'}:
+            if e.code == -32000 and 'Could not compute box model' in e.message:
                 return False
             else:
                 raise
@@ -664,7 +663,7 @@ class WebElement(JSRemoteObj):
             await self.__target__.execute_cdp_cmd("DOM.scrollIntoViewIfNeeded", args)
             return True
         except CDPError as e:
-            if e.code == -32000 and e.message == 'Node is detached from document':
+            if e.code == -32000 and 'Node is detached from document' in e.message:
                 return False
 
     @property
