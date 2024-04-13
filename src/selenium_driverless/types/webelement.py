@@ -149,7 +149,7 @@ class WebElement(JSRemoteObj):
             try:
                 res = await self.__target__.execute_cdp_cmd("DOM.resolveNode", args)
             except CDPError as e:
-                if e.code == -32000 and e.message == 'No node with given id found':
+                if e.code == -32000 and 'No node with given id found' in e.message:
                     raise StaleElementReferenceException(self)
                 else:
                     raise e
@@ -338,7 +338,7 @@ class WebElement(JSRemoteObj):
             await self.__target__.execute_cdp_cmd("DOM.setOuterHTML",
                                                   {"nodeId": await self.node_id, "outerHTML": value})
         except CDPError as e:
-            if e.code == -32000 and e.message == 'Could not find node with given id':
+            if e.code == -32000 and 'Could not find node with given id' in e.message:
                 raise StaleElementReferenceException(self)
             else:
                 raise e
@@ -468,7 +468,7 @@ class WebElement(JSRemoteObj):
             try:
                 cords = await self.mid_location(spread_a, spread_b, bias_a, bias_b, border)
             except CDPError as e:
-                if e.code == -32000 and e.message == 'Could not compute box model.':
+                if e.code == -32000 and 'Could not compute box model.' in e.message:
                     await asyncio.sleep(0.1)
                 else:
                     raise e
@@ -578,7 +578,7 @@ class WebElement(JSRemoteObj):
                 attributes_dict[key] = value
             return attributes_dict
         except CDPError as e:
-            if not (e.code == -32000 and e.message == 'Node is not an Element'):
+            if not (e.code == -32000 and 'Node is not an Element' in e.message):
                 raise e
 
     async def get_dom_attribute(self, name: str) -> str or None:
@@ -636,9 +636,18 @@ class WebElement(JSRemoteObj):
 
     # RenderedWebElement Items
     async def is_displayed(self) -> bool:
-        """Whether the element has a height & width"""
-        size = await self.size
-        return not (size["height"] == 0 or size["width"] == 0)
+
+        """Whether the element is visible to a user."""
+        try:
+            # Only go into this conditional for browsers that don't use the atom themselves
+            size = await self.size
+            return not (size["height"] == 0 or size["width"] == 0)
+        except CDPError as e:
+            if e.code == -32000 and 'Could not compute box model.' in e.message:
+                return False
+            else:
+                raise e
+
 
     @property
     async def location_once_scrolled_into_view(self) -> dict:
@@ -663,7 +672,7 @@ class WebElement(JSRemoteObj):
             await self.__target__.execute_cdp_cmd("DOM.scrollIntoViewIfNeeded", args)
             return True
         except CDPError as e:
-            if e.code == -32000 and e.message == 'Node is detached from document':
+            if e.code == -32000 and 'Node is detached from document' in e.message:
                 return False
 
     @property
