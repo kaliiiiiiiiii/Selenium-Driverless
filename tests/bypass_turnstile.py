@@ -40,7 +40,6 @@ async def main():
         if not iframe_document:
             raise Exception("correct target for iframe not found")
 
-        src = await driver.page_source
         checkbox = await iframe_document.find_element(By.CSS_SELECTOR,
                                                       "#challenge-stage > div > label > input[type=checkbox]",
                                                       timeout=20)

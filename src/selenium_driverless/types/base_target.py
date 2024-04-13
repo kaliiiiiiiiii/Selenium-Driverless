@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 import aiohttp
 import websockets
@@ -64,14 +65,18 @@ class BaseTarget:
 
     async def _init(self):
         if not self._started:
-            res = None
-            while not res:
+            start = time.perf_counter()
+            url = f"http://{self._host}/json/version"
+            while True:
                 try:
                     async with aiohttp.ClientSession() as session:
-                        res = await session.get(f"http://{self._host}/json/version", timeout=self._timeout)
+                        res = await session.get(url, timeout=10)
                         _json = await res.json()
-                except aiohttp.ClientError:
-                    pass
+                        break
+                except (aiohttp.ClientError, asyncio.TimeoutError, OSError) as e:
+                    if (time.perf_counter() - start) > self._timeout:
+                        raise asyncio.TimeoutError(
+                            f"Couldn't connect to chrome within {self._timeout} seconds")
             self._socket = await SingleCDPSocket(websock_url=_json["webSocketDebuggerUrl"], timeout=self._timeout,
                                                  loop=self._loop, max_size=self._max_ws_size)
             self._started = True
@@ -143,7 +148,7 @@ class BaseTarget:
         result = await self.socket.exec(method=cmd, params=cmd_args, timeout=timeout)
         return result
 
-    def downloads_dir_for_context(self, context_id:str="DEFAULT") -> str:
+    def downloads_dir_for_context(self, context_id: str = "DEFAULT") -> str:
         """get the default download directory for a specific context
 
         :param context_id: the id of the context to get the directory for

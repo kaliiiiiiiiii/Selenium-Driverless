@@ -1,6 +1,9 @@
 import asyncio
 from selenium_driverless import webdriver
 import sys
+import aiodebug.log_slow_callbacks
+
+aiodebug.log_slow_callbacks.enable(0.05)
 
 global driver
 
@@ -31,7 +34,9 @@ async def main():
         url = "https://abrahamjuliot.github.io/creepjs/tests/workers.html"
         await driver.get(url)
         await driver.switch_to.new_window(url=url)
-        input("press ENTER to exit: ")
+        a = True
+        while a:
+            await asyncio.sleep(2)
 
 
 asyncio.run(main())

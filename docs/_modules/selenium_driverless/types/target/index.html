@@ -495,8 +495,8 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">global_this</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_this</span><span class="p">(</span><span class="n">execution_context_id</span><span class="p">)</span>
                 <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">global_this</span><span class="o">.</span><span class="n">__exec_raw__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">await_res</span><span class="o">=</span><span class="n">await_res</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
-                                                    <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-                                                    <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">)</span>
+                                                     <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+                                                     <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">StaleJSRemoteObjReference</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
             <span class="k">else</span><span class="p">:</span>
@@ -630,15 +630,18 @@
 
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">page_source</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the docs_source of the current page.</span>
-
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
-
-<span class="sd">                target.page_source</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the HTML of the current page.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">elem</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_document_elem</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="n">elem</span><span class="o">.</span><span class="n">source</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">timeout</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">elem</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_document_elem</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="n">elem</span><span class="o">.</span><span class="n">source</span>
+            <span class="k">except</span> <span class="n">StaleElementReferenceException</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_loaded</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Couldn&#39;t get page source within </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2"> seconds, possibly due to a reload loop&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Target.close">
 <a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.close">[docs]</a>
@@ -839,7 +842,15 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_document_elem_</span>
 
     <span class="c1"># noinspection PyUnusedLocal</span>
+<div class="viewcode-block" id="Target.find_element">
+<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.find_element">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">find_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebElement</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;find an element in the current target</span>
+
+<span class="sd">        :param by: one of the locators at :func:`By &lt;selenium_driverless.types.by.By&gt;`</span>
+<span class="sd">        :param value: the actual query to find the element by</span>
+<span class="sd">        :param timeout: how long to wait for the element to exist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
         <span class="n">elem</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="n">elem</span><span class="p">:</span>
@@ -853,14 +864,31 @@
             <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">elem</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">NoSuchElementException</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">elem</span>
+        <span class="k">return</span> <span class="n">elem</span></div>
 
+
+<div class="viewcode-block" id="Target.find_elements">
+<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.find_elements">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">find_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">WebElement</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;find multiple elements in the current target</span>
+
+<span class="sd">        :param by: one of the locators at :func:`By &lt;selenium_driverless.types.by.By&gt;`</span>
+<span class="sd">        :param value: the actual query to find the elements by</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">parent</span><span class="p">:</span>
             <span class="n">parent</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_document_elem</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="n">parent</span><span class="o">.</span><span class="n">find_elements</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">parent</span><span class="o">.</span><span class="n">find_elements</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="Target.set_source">
+<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.set_source">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">set_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">15</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        sets the OuterHtml of the current target (if it has DOM//HTML)</span>
+
+<span class="sd">        :param source: the html</span>
+<span class="sd">        :param timeout: the timeout to try setting the source (might fail if the page is in a reload-loop</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
         <span class="k">while</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">timeout</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -870,7 +898,8 @@
             <span class="k">except</span> <span class="n">StaleElementReferenceException</span><span class="p">:</span>
                 <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_loaded</span><span class="p">()</span>
                 <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">TimeoutError</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t get document element to not be stale&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t get document element to not be stale&quot;</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="Target.search_elements">
 <a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.search_elements">[docs]</a>

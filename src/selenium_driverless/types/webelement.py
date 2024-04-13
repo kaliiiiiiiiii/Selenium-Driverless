@@ -22,6 +22,7 @@ import time
 import warnings
 import numpy as np
 import typing
+import aiofiles
 
 from base64 import b64decode
 from collections import defaultdict
@@ -30,7 +31,7 @@ from cdp_socket.exceptions import CDPError
 # driverless
 from selenium_driverless.types.by import By
 from selenium_driverless.types.deserialize import JSRemoteObj, StaleJSRemoteObjReference
-from selenium_driverless.scripts.geometry import gen_heatmap, gen_rand_point, centroid
+from selenium_driverless.scripts.geometry import rand_mid_loc
 
 
 class NoSuchElementException(Exception):
@@ -39,6 +40,7 @@ class NoSuchElementException(Exception):
 
 class StaleElementReferenceException(StaleJSRemoteObjReference):
     def __init__(self, elem):
+        elem._stale = True
         message = f"Page or Frame has been reloaded, or the element removed, {elem}"
         super().__init__(_object=elem, message=message)
 
@@ -66,7 +68,7 @@ class WebElement(JSRemoteObj):
 
     All method calls will do a freshness check to ensure that the element
     reference is still valid.  This essentially determines whether the
-    element is still attached to the DOM.  If this test fails, then an
+    element is still attached to the DOM.  If this test fails, then a
     ``StaleElementReferenceException`` is thrown, and all future calls to this
     instance will fail.
     """
@@ -96,23 +98,16 @@ class WebElement(JSRemoteObj):
 
     async def __aenter__(self):
         if not self._started:
-            async def set_stale_frame(data):
-                if data["frame"]["id"] == self.___frame_id__:
-                    self._stale = True
-                try:
-                    await self.__target__.remove_cdp_listener("Page.frameNavigated", set_stale_frame)
-                except ValueError:
-                    pass
-
             if not self.__target__._page_enabled:
                 await self.__target__.execute_cdp_cmd("Page.enable")
-            await self.__target__.add_cdp_listener("Page.frameNavigated", set_stale_frame)
             self._started = True
 
         return self
 
     @property
-    async def obj_id(self):
+    async def obj_id(self) -> str:
+        """**async** returns the `Runtime.RemoteObjectId <https://vanilla.aslushnikov.com/?Runtime.RemoteObjectId>`_ for the element
+        """
         return await self.__obj_id_for_context__()
 
     @property
@@ -229,6 +224,7 @@ class WebElement(JSRemoteObj):
 
     @property
     async def document_url(self):
+        """gets the url if the element is an iframe, else returns ``None``"""
         res = await self._describe()
         return res.get('documentURL')
 
@@ -243,14 +239,12 @@ class WebElement(JSRemoteObj):
         return self._class_name
 
     async def find_element(self, by: str, value: str, idx: int = 0, timeout: int or None = None):
-        """Find an element given a By strategy and locator.
+        """find an element in the current target
 
-        :Usage:
-            ::
-
-                element = element.find_element(By.ID, 'foo')
-
-        :rtype: WebElement
+        :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
+        :param value: the actual query to find the element by
+        :param timeout: how long to wait for the element to exist
+        :param idx: might be removed
         """
         elems = []
         start = time.perf_counter()
@@ -266,14 +260,10 @@ class WebElement(JSRemoteObj):
         raise NoSuchElementException()
 
     async def find_elements(self, by: str = By.ID, value: str or None = None):
-        """Find elements given a By strategy and locator.
+        """find multiple elements in the current target
 
-        :Usage:
-            ::
-
-                element = element.find_elements(By.CLASS_NAME, 'foo')
-
-        :rtype: list of WebElement
+        :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
+        :param value: the actual query to find the elements by
         """
         from selenium_driverless.types.by import By
 
@@ -303,7 +293,7 @@ class WebElement(JSRemoteObj):
                         );"""
             return await self.execute_script(script, value, serialization="deep", timeout=10, unique_context=True)
         else:
-            return ValueError("unexpected by")
+            raise ValueError("unexpected by")
 
     async def _describe(self):
         args = {"pierce": True}
@@ -316,17 +306,34 @@ class WebElement(JSRemoteObj):
         return res
 
     async def get_listeners(self, depth: int = 3):
+        """
+        gets all listeners on the element. see `DOMDebugger.getEventListeners <https://vanilla.aslushnikov.com/?DOMDebugger.getEventListeners>`_
+
+        :param depth: maximum depth (nested elements) to find listeners for
+        """
         res = await self.__target__.execute_cdp_cmd(
             "DOMDebugger.getEventListeners", {"objectId": await self.obj_id, "depth": depth, "pierce": True})
         return res['listeners']
 
     @property
     async def source(self):
+        """
+        **async** the OuterHtml of the element
+        """
         args = self._args_builder
-        res = await self.__target__.execute_cdp_cmd("DOM.getOuterHTML", args)
+        try:
+            res = await self.__target__.execute_cdp_cmd("DOM.getOuterHTML", args)
+        except CDPError as e:
+            if e.code == -32000 and e.message == 'Could not find node with given id':
+                raise StaleElementReferenceException(self)
+            else:
+                raise e
         return res["outerHTML"]
 
     async def set_source(self, value: str):
+        """
+        sets the OuterHTML of the element
+        """
         try:
             await self.__target__.execute_cdp_cmd("DOM.setOuterHTML",
                                                   {"nodeId": await self.node_id, "outerHTML": value})
@@ -339,13 +346,10 @@ class WebElement(JSRemoteObj):
     async def get_property(self, name: str) -> str or None:
         """Gets the given property of the element.
 
-        :Args:
-            - name - Name of the property to retrieve.
+        :param name: the name of the property to get
 
-        :Usage:
-            ::
-
-                text_length = target_element.get_property("text_length")
+        .. warning::
+            this gets the JavaScript property (``elem[name]``), and not HTML property
         """
         return await self.execute_script(f"return obj[arguments[0]]", name)
 
@@ -357,22 +361,34 @@ class WebElement(JSRemoteObj):
 
     @property
     async def text(self) -> str:
-        """The text of the element."""
+        """**async** The text of the element. (``elem.textContent``)"""
         return await self.get_property("textContent")
 
     @property
     async def value(self) -> str:
-        """The value of the element."""
+        """**async** The value of the element. (``elem.value``)"""
         return await self.get_property("value")
 
     async def clear(self) -> None:
-        """Clears the text if it's a text entry element."""
+        """Clears the text if it's a text entry element. (``elem.value = ""``)
+        """
         await self.execute_script("obj.value = ''", unique_context=True)
 
     async def remove(self):
+        """
+        remove the element from the page//dom//html
+        """
         await self.__target__.execute_cdp_cmd("DOM.removeNode", {"nodeId": await self.node_id})
 
     async def highlight(self, highlight=True):
+        """
+        highlight the element
+
+        :param highlight: whether to disable or enable highlight
+
+        .. note::
+            highlight automatically fades on any user-interaction, you might use a for-loop
+        """
         if not self.__target__._dom_enabled:
             await self.__target__.execute_cdp_cmd("DOM.enable")
         if highlight:
@@ -397,10 +413,19 @@ class WebElement(JSRemoteObj):
             await self.__target__.execute_cdp_cmd("Overlay.disable")
 
     async def focus(self):
+        """
+        focuses the element (``Dom.focus``)
+        """
         args = self._args_builder
         return await self.__target__.execute_cdp_cmd("DOM.focus", args)
 
     async def is_clickable(self, listener_depth=3):
+        """
+        returns ``True`` if the element type is one of "a", "button", "command", "details", "input", "select", "textarea", "video", "map"
+        else wise checks for "click", "mousedown" or "mouseup" event listeners on the element
+
+        :param listener_depth: the depth (nested elements) to get event-listeners for
+        """
         _type = await self.tag_name
         if _type in ["a", "button", "command", "details", "input", "select", "textarea", "video", "map"]:
             return True
@@ -414,19 +439,26 @@ class WebElement(JSRemoteObj):
                     break
         return is_clickable
 
-    async def click(self, timeout: float = None, visible_timeout: float = 30, bias: float = 5, resolution: int = 50,
-                    debug: bool = False, scroll_to=True, move_to: bool = True,
-                    ensure_clickable: bool or int = False) -> None:
+    async def click(self, timeout: float = None, visible_timeout: float = 30,spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5, border:float=0.05, scroll_to=True, move_to: bool = True,
+                    ensure_clickable: typing.Union[bool, int] = False) -> None:
         """Clicks the element.
 
         :param timeout: the time in seconds to take for clicking on the element
         :param visible_timeout: the time in seconds to wait for being able to compute the elements box model
-        :param bias: a (positive) bias on how probable it is to click at the centre of the element. Scale unknown:/
-        :param resolution: the resolution to calculate probabilities for each pixel on, affects timing performance
-        :param debug: plots a visualization of the point in the element
+        :param spread_a: spread over a
+        :param spread_b: spread over b
+        :param bias_a: bias over a (0-1)
+        :param bias_b: bias over b (0-1)
+        :param border: minimum border towards element edges (relative to element => 1).
+            Random generated points outside that border get re-generated.
         :param scroll_to: whether to scroll to the element
         :param move_to: whether to move the mouse to the element
         :param ensure_clickable: whether to ensure that the element is clickable. Not reliable in on every webpage
+
+        .. note::
+            a spread of 1 is equivalent to 6 std.
+            relative to the element.
+            (=> 99.7 %)
         """
         if scroll_to:
             await self.scroll_to()
@@ -434,14 +466,14 @@ class WebElement(JSRemoteObj):
         start = time.perf_counter()
         while not cords:
             try:
-                cords = await self.mid_location(bias=bias, resolution=resolution, debug=debug)
+                cords = await self.mid_location(spread_a, spread_b, bias_a, bias_b, border)
             except CDPError as e:
                 if e.code == -32000 and 'Could not compute box model.' in e.message:
                     await asyncio.sleep(0.1)
                 else:
                     raise e
             if (time.perf_counter() - start) > visible_timeout:
-                raise TimeoutError(f"Couldn't compute element location within {visible_timeout} seconds")
+                raise asyncio.TimeoutError(f"Couldn't compute element location within {visible_timeout} seconds")
         x, y = cords
         if ensure_clickable:
             is_clickable = await self.is_clickable()
@@ -481,43 +513,33 @@ class WebElement(JSRemoteObj):
         # noinspection GrazieInspections
         """
         .. warning::
-            NotImplemented
+            NotImplemented yet
 
         """
         # transfer file to another machine only if remote target is used
         # the same behaviour as for java binding
         raise NotImplementedError("you might use elem.write() for inputs instead")
 
-    async def mid_location(self, bias: float = 5, resolution: int = 50, debug: bool = False):
+    async def mid_location(self, spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5, border:float=0.05) -> typing.List[int]:
         """
-        returns random location in element with probability close to the middle
+        returns random location in the element with probability close to the middle
 
-        :param bias: a (positive) bias on how probable it is to click at the centre of the element. Scale unknown:/
-        :param resolution: the resolution to calculate probabilities for each pixel on, affects timing performance
-        :param debug: plots a visualization of the point in the element
+        :param spread_a: spread over a
+        :param spread_b: spread over b
+        :param bias_a: bias over a (0-1)
+        :param bias_b: bias over b (0-1)
+        :param border: minimum border towards element edges (relative to the element => 1).
+            Random generated points outside that border get re-generated.
+
+        .. note::
+            a spread of 1 is equivalent to 6 std.
+            relative to the element.
+            (=> 99.7 %)
         """
 
         box = await self.box_model
         vertices = box["content"]
-        if bias and resolution:
-            heatmap = gen_heatmap(vertices, num_points=resolution)
-            exc = None
-            try:
-                point = gen_rand_point(vertices, heatmap, bias_value=bias)
-                points = np.array([point])
-            except Exception as e:
-                points = np.array([[100, 100]])
-                exc = e
-            if debug:
-                from selenium_driverless.scripts.geometry import visualize
-                visualize(points, heatmap, vertices)
-            if exc:
-                from selenium_driverless import EXC_HANDLER
-                EXC_HANDLER(exc)
-                warnings.warn("couldn't get random point based on heatmap")
-                point = centroid(vertices)
-        else:
-            point = centroid(vertices)
+        point = rand_mid_loc(vertices, spread_a, spread_b, bias_a, bias_b, border)
 
         # noinspection PyUnboundLocalVariable
         x = int(point[0])
@@ -525,7 +547,11 @@ class WebElement(JSRemoteObj):
         return [x, y]
 
     async def submit(self):
-        """Submits a form."""
+        """Submits a form.
+
+        .. warning::
+            the current implementation likely is detectable. It's recommended to use click instead if possible
+        """
         script = (
             "/* submitForm */var form = this;\n"
             'while (form.nodeName != "FORM" && form.parentNode) {\n'
@@ -576,29 +602,10 @@ class WebElement(JSRemoteObj):
                                                                         "name": name, "value": value})
 
     async def get_attribute(self, name):
-        """Gets the given attribute or property of the element.
+        """Alias to WebElement.get_property.
 
-        This method will first try to return the value of a property with the
-        given name. If a property with that name doesn't exist, it returns the
-        value of the attribute with the same name. If there's no attribute with
-        that name, ``None`` is returned.
-
-        Values which are considered truthy, that is equals "true" or "false",
-        are returned as booleans.  All other non-``None`` values are returned
-        as strings.  For attributes or properties which do not exist, ``None``
-        is returned.
-
-        To obtain the exact value of the attribute or property,
-        use :func:`~selenium.webdriver.remote.BaseWebElement.get_dom_attribute` or
-        :func:`~selenium.webdriver.remote.BaseWebElement.get_property` methods respectively.
-
-        :Args:
-            - name - Name of the attribute/property to retrieve.
-
-        Example::
-
-            # Check if the "active" CSS class is applied to an element.
-            is_active = "active" in target_element.get_attribute("class")
+        .. warning::
+            do not use! This method might change in future
         """
         return await self.get_property(name)
 
@@ -607,7 +614,7 @@ class WebElement(JSRemoteObj):
 
         Can be used to check if a checkbox or radio button is selected.
         """
-        result = await self.get_attribute("checked")
+        result = await self.get_property("checked")
         if result:
             return True
         else:
@@ -619,18 +626,17 @@ class WebElement(JSRemoteObj):
 
     @property
     async def shadow_root(self):
-        """Returns a shadow root of the element if there is one or an error.
-        Only works from Chromium 96, Firefox 96, and Safari 16.4 onwards.
+        """the shadowRoot of the element
 
-        :Returns:
-          - ShadowRoot object or
-          - NoSuchShadowRoot - if no shadow root was attached to element
+        .. warning::
+            this does not support (yet) closed shadow-DOM elements
         """
         # todo: move to CDP
-        return await self.execute_script("return obj.ShadowRoot()")
+        return await self.execute_script("return obj.shadowRoot")
 
     # RenderedWebElement Items
     async def is_displayed(self) -> bool:
+
         """Whether the element is visible to a user."""
         try:
             # Only go into this conditional for browsers that don't use the atom themselves
@@ -640,22 +646,25 @@ class WebElement(JSRemoteObj):
             if e.code == -32000 and 'Could not compute box model.' in e.message:
                 return False
             else:
-                raise
+                raise e
+
 
     @property
     async def location_once_scrolled_into_view(self) -> dict:
-        """THIS PROPERTY MAY CHANGE WITHOUT WARNING. Use this to discover where
-        on the screen an element is so that we can click it. This method should
-        cause the element to be scrolled into view.
-
-        Returns the top lefthand corner location on the screen, or zero
-        coordinates if the element is not visible.
+        """
+        scrolls to the element and returns the coordinates of it
         """
         await self.scroll_to()
         result = await self.rect
         return {"x": round(result["x"]), "y": round(result["y"])}
 
     async def scroll_to(self, rect: dict = None):
+        """
+        scroll to the element
+
+        .. note::
+            this isn't properly implemented yet and might be detectable
+        """
         args = self._args_builder
         if rect:
             args["rect"] = rect
@@ -668,7 +677,7 @@ class WebElement(JSRemoteObj):
 
     @property
     async def size(self) -> dict:
-        """The size of the element."""
+        """**async** The size of the element."""
         box_model = await self.box_model
         return {"height": box_model["height"], "width": box_model["width"]}
 
@@ -678,7 +687,7 @@ class WebElement(JSRemoteObj):
             NotImplemented
 
         """
-        raise NotImplementedError("you might use get_attribute instead")
+        raise NotImplementedError("you might use javascript instead")
 
     @property
     async def location(self) -> dict:
@@ -723,9 +732,17 @@ class WebElement(JSRemoteObj):
         return await self.execute_script(script, max_depth=4)
 
     @property
-    async def box_model(self):
+    async def box_model(self) -> dict:
+        """**async** returns the box model of the element. see `DOM.BoxModel <https://vanilla.aslushnikov.com/?DOM.BoxModel>`_
+        """
         args = self._args_builder
-        res = await self.__target__.execute_cdp_cmd("DOM.getBoxModel", args)
+        try:
+            res = await self.__target__.execute_cdp_cmd("DOM.getBoxModel", args)
+        except CDPError as e:
+            if e.code == -32000 and e.message == 'Cannot find context with specified id':
+                raise StaleElementReferenceException(self)
+            else:
+                raise e
         model = res['model']
         keys = ['content', 'padding', 'border', 'margin']
         for key in keys:
@@ -735,49 +752,50 @@ class WebElement(JSRemoteObj):
 
     @property
     async def aria_role(self) -> str:
-        """Returns the ARIA role of the current web element."""
+        """**async** Returns the ARIA role of the current web element."""
         # todo: move to CDP
         return await self.get_property("ariaRoleDescription")
 
     @property
     async def accessible_name(self) -> str:
-        """Returns the ARIA Level of the current webelement."""
+        """**async** Returns the ARIA Level of the current webelement."""
         # todo: move to CDP
         return await self.get_property("ariaLevel")
 
     @property
     async def screenshot_as_base64(self) -> str:
+        """**async** gets a screenshot as Base64 from the element
         """
-        .. warning::
-            NotImplemented
-        """
-        raise NotImplementedError()
+        element_data = await self.box_model
+
+        x = element_data["content"][0][0]
+        y = element_data["content"][0][1]
+        width = element_data["width"]
+        height = element_data["height"]
+
+        get_image_bas64 = await self.__target__.execute_cdp_cmd("Page.captureScreenshot", {
+            "clip": {
+                "x": int(x),
+                "y": int(y),
+                "width": int(width),
+                "height": int(height),
+                "scale": 1
+            }
+        })
+        return get_image_bas64["data"]
 
     @property
     async def screenshot_as_png(self) -> bytes:
-        """Gets the screenshot of the current element as a binary data.
-
-        :Usage:
-            ::
-
-                element_png = element.screenshot_as_png
+        """**async** Gets the screenshot of the current element as a binary data.
+        (PNG format)
         """
         res = await self.screenshot_as_base64
         return b64decode(res.encode("ascii"))
 
     async def screenshot(self, filename) -> bool:
         """Saves a screenshot of the current element to a PNG image file.
-        Returns False if there is any IOError, else returns True. Use full
-        paths in your filename.
 
-        :Args:
-         - filename: The full path you wish to save your screenshot to. This
-           should end with a `.png` extension.
-
-        :Usage:
-            ::
-
-                element.screenshot('/Screenshots/foo.png')
+        :param filename: path to save the png to
         """
         if not filename.lower().endswith(".png"):
             warnings.warn(
@@ -786,8 +804,8 @@ class WebElement(JSRemoteObj):
             )
         png = await self.screenshot_as_png
         try:
-            with open(filename, "wb") as f:
-                f.write(png)
+            async with aiofiles.open(filename, "wb") as f:
+                await f.write(png)
         except OSError:
             return False
         finally:
@@ -828,13 +846,57 @@ class WebElement(JSRemoteObj):
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                              timeout: float = 2, execution_context_id: str = None, unique_context: bool = True):
+        """executes JavaScript synchronously
+
+        .. code-block:: js
+
+            return document
+
+        ``this`` and ``obj`` refers to the element here
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
+        """
         return await self.__exec__(script, *args, max_depth=max_depth, serialization=serialization,
                                    timeout=timeout, unique_context=unique_context,
                                    execution_context_id=execution_context_id)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                                    timeout: float = 2, execution_context_id: str = None, unique_context: bool = True):
+        """executes JavaScript asynchronously
+
+        .. warning::
+            using execute_async_script is not recommended as it doesn't handle exceptions correctly.
+            Use :func:`Chrome.eval_async <selenium_driverless.webdriver.Chrome.eval_async>`
+
+        .. code-block:: js
+
+            resolve = arguments[arguments.length-1]
+
+        ``this`` refers to ``globalThis`` (=> window)
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
+        """
         return await self.__exec_async__(script, *args, max_depth=max_depth, serialization=serialization,
+                                         timeout=timeout, unique_context=unique_context,
+                                         execution_context_id=execution_context_id)
+
+    async def eval_async(self, script: str, *args, max_depth: int = 2, serialization: str = None,
+                         timeout: float = None, execution_context_id: str = None,
+                         unique_context: bool = None):
+        """executes JavaScript asynchronously
+
+        .. code-block:: js
+
+            res = await fetch("https://httpbin.org/get");
+            // mind CORS!
+            json = await res.json()
+            return json
+
+        ``this`` refers to the element
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
+        """
+        return await self.__eval_async__(script, *args, max_depth=max_depth, serialization=serialization,
                                          timeout=timeout, unique_context=unique_context,
                                          execution_context_id=execution_context_id)
 

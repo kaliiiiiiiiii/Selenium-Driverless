@@ -19,7 +19,6 @@
 
 import asyncio
 import typing
-from typing import Optional
 from typing import Union
 import warnings
 
@@ -126,7 +125,7 @@ class SwitchTo:
             await target.focus()
         return target
 
-    async def target(self, target_id: typing.Union[str, TargetInfo, WebElement], activate: bool = True) -> Target:
+    async def target(self, target_id: typing.Union[str, TargetInfo, Target], activate: bool = True) -> Target:
         """
         switches to a target
 
@@ -151,6 +150,8 @@ class SwitchTo:
         """Switches to a new window
 
         :param type_hint: what kind of window to switch to
+        :param url: url to load in the new target
+        :param activate: whether to activate the new target
         """
         target = await self._context.new_window(type_hint=type_hint, url=url, activate=activate)
         return await self.target(target, activate=activate)

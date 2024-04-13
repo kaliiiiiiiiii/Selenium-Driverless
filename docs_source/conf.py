@@ -11,6 +11,7 @@ sys.path.insert(0, r"/")
 from selenium_driverless import __version__
 
 project = 'Selenium-Driverless'
+# noinspection PyShadowingBuiltins
 copyright = '2024, Aurin Aegerter (aka Steve, kaliiiiiiiiii)'
 author = 'Aurin Aegerter (aka Steve, kaliiiiiiiiii)'
 release = __version__

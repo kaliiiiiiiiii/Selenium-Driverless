@@ -96,7 +96,6 @@
 
 <span class="kn">import</span> <span class="nn">asyncio</span>
 <span class="kn">import</span> <span class="nn">typing</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 
@@ -216,7 +215,7 @@
 
 <div class="viewcode-block" id="SwitchTo.target">
 <a class="viewcode-back" href="../../../../classes/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.target">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TargetInfo</span><span class="p">,</span> <span class="n">WebElement</span><span class="p">],</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TargetInfo</span><span class="p">,</span> <span class="n">Target</span><span class="p">],</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        switches to a target</span>
 
@@ -244,6 +243,8 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Switches to a new window</span>
 
 <span class="sd">        :param type_hint: what kind of window to switch to</span>
+<span class="sd">        :param url: url to load in the new target</span>
+<span class="sd">        :param activate: whether to activate the new target</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">new_window</span><span class="p">(</span><span class="n">type_hint</span><span class="o">=</span><span class="n">type_hint</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">activate</span><span class="o">=</span><span class="n">activate</span><span class="p">)</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">activate</span><span class="o">=</span><span class="n">activate</span><span class="p">)</span></div>

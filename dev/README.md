@@ -2,10 +2,12 @@
 
 
 ### element click
-- generated
 
+default
+![img.png](assets/heatmap.png)
 
-![heatmap.png](assets%2Fheatmap.png)
+`bias_a = 0.7`
+![img.png](assets/heatmap_biased.png)
 
 
 ### mouse path

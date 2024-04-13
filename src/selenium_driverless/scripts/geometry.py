@@ -1,106 +1,71 @@
 import numpy as np
 import random
+import typing
 
-from matplotlib.patches import Polygon
 from scipy.interpolate import splprep, splev
 
 
-# Element middle
-def gen_heatmap(polygon_vertices: np.array, num_points: int = 70):
-    polygon = Polygon(polygon_vertices, closed=True, edgecolor='black', facecolor='none')
-
-    x_min, y_min, x_max, y_max = get_bounds(polygon_vertices)
-
-    x_vals = np.linspace(x_min, x_max, num_points)
-    y_vals = np.linspace(y_min, y_max, num_points)
-    x, y = np.meshgrid(x_vals, y_vals)
-    points = np.column_stack((x.flatten(), y.flatten()))
-
-    distances = np.empty(num_points ** 2)
-    for i, point in enumerate(points):
-        min_distance = np.inf
-        for j in range(len(polygon_vertices)):
-            edge_start = polygon_vertices[j]
-            edge_end = polygon_vertices[(j + 1) % len(polygon_vertices)]
-
-            v1 = edge_end - edge_start
-            # noinspection PyUnresolvedReferences
-            v2 = point - edge_start
-            distance = np.linalg.norm(np.cross(v1, v2)) / np.linalg.norm(v1)
-
-            min_distance = min(min_distance, distance)
-        distances[i] = min_distance
-
-    distances_normalized = distances / np.max(distances)
-    distances_grid = distances_normalized.reshape((num_points, num_points))
-
-    path = polygon.get_path()
-    mask = ~path.contains_points(points).reshape((num_points, num_points))
-    distances_grid[mask] = 0.0
-
-    return distances_grid
+def gaussian_bias_rand(spread, border=0.05, bias=0.5) -> float:
+    """Generate random Gaussian distributed values with bias."""
+    if spread == 0:
+        return bias
+    res = np.random.normal(scale=spread / 6, loc=bias)
+    while not (border <= res <= 1 - border):
+        res = np.random.normal(scale=spread / 6, loc=bias)
+    return res
 
 
-def gen_rand_point(polygon_vertices: np.array, heatmap_grid: np.array, bias_value: float = 7):
-    num_points = len(heatmap_grid)
+ElemType = typing.Union[np.ndarray[(int, int)], typing.List[typing.Union[typing.List, typing.Tuple]]]
 
-    heatmap_probs = heatmap_grid.flatten() ** bias_value
-    heatmap_probs /= np.sum(heatmap_probs)
 
-    try:
-        sampled_index = np.random.choice(num_points ** 2, p=heatmap_probs)
-    except ValueError as e:
-        if e.args[0] == 'probabilities contain NaN':
-            raise ValueError("Can't generate point from heatmap with 0-values only")
-        else:
-            raise e
+def point_in_rectangle(points: np.ndarray[(int, int)], a, b) -> typing.List[float]:
+    """
+    Args:
+    - points: List of four coordinates [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
+    - a: float, a point ranging from 0 to 1 on line |AB|
+    - b: float, a point ranging from 0 to 1 on line |BC|
 
-    row = sampled_index // num_points
-    col = sampled_index % num_points
+    Returns:
+    - List: Coordinates of a point within the rectangle.
+    """
+    # Validate input points
+    if len(points) != 4:
+        raise ValueError("Input should contain four points defining a rectangle.")
 
-    x_min, y_min, x_max, y_max = get_bounds(polygon_vertices)
+    # Calculate coordinates of the point within the rectangle
+    x = (1 - b) * (points[0][0] + a * (points[1][0] - points[0][0])) + b * (
+            points[3][0] + a * (points[2][0] - points[3][0]))
+    y = (1 - b) * (points[0][1] + a * (points[1][1] - points[0][1])) + b * (
+            points[3][1] + a * (points[2][1] - points[3][1]))
 
-    x_range = polygon_vertices.max(axis=0) - polygon_vertices.min(axis=0)
-    x_sample = x_min + col * (x_range[0] / (num_points - 1))
-    y_sample = y_min + row * (x_range[1] / (num_points - 1))
+    return [x, y]
 
-    return x_sample, y_sample
+
+# noinspection PyUnusedLocal
+def rand_mid_loc(elem: ElemType, spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5, border:float=0.05) -> typing.List[float]:
+    if len(elem) != 4:
+        raise ValueError("Input should contain four points defining a rectangle.")
+    assert 0 <= bias_a <= 1
+    assert 0 <= bias_b <= 1
+    elem = np.array(elem)
+
+    # ensure element has an area
+    a_b = elem[1] - elem[0]
+    b_c = elem[2] - elem[1]
+    # noinspection PyUnreachableCode
+    area = np.abs(np.cross(a_b, b_c))
+    if area == 0:
+        raise ValueError("The area of the element is 0")
+
+    point_a = gaussian_bias_rand(spread_a, bias=bias_a, border=border)
+    point_b = gaussian_bias_rand(spread_b, bias=bias_b, border=border)
+    return point_in_rectangle(elem, point_a, point_b)
 
 
 def get_bounds(vertices: np.array):
     x_min, y_min = vertices.min(axis=0)
     x_max, y_max = vertices.max(axis=0)
     return x_min, y_min, x_max, y_max
-
-
-def centroid(vertices):
-    polygon2 = np.roll(vertices, -1, axis=0)
-
-    # Compute signed area of each triangle
-    signed_areas = 0.5 * np.cross(vertices, polygon2)
-
-    # Compute centroid of each triangle
-    centroids = (vertices + polygon2) / 3.0
-
-    # Get average of those centroids, weighted by the signed areas.
-    return np.average(centroids, axis=0, weights=signed_areas)
-
-
-def visualize(rand_points: np.array, heatmap_grid: np.array, polygon_vertices: np.array):
-    import matplotlib.pyplot as plt
-    x_min, y_min, x_max, y_max = get_bounds(polygon_vertices)
-
-    fig, ax = plt.subplots(figsize=(8, 6))
-
-    ax.imshow(heatmap_grid, cmap='hot', extent=[x_min, x_max, y_min, y_max], origin='lower')
-    ax.add_patch(
-        Polygon(polygon_vertices, closed=True, edgecolor='yellow', facecolor='none'))  # Changed edgecolor to yellow
-
-    ax.scatter(rand_points[:, 0], rand_points[:, 1], color='blue')
-    ax.set_title('Random points inside element (Polygon) based on heatmap')
-
-    plt.tight_layout()
-    plt.show(block=True)
 
 
 def bias_0_dot_5(strength: float, max_offset: float):
