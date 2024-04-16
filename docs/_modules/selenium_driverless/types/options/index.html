@@ -42,12 +42,13 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/By/">By Element Locator</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/Chrome/">webdriver.Chrome</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/ChromeOptions/">ChromeOptions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/Context/">Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/Target/">Target</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/WebELement/">WebElement</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/By/">By Element Locator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Chrome/">webdriver.Chrome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/ChromeOptions/">ChromeOptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Context/">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/RequestInterception/">Request-Interception</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Target/">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/WebELement/">WebElement</a></li>
 </ul>
 
         </div>
@@ -107,7 +108,7 @@
 
 <span class="c1"># noinspection PyUnreachableCode,PyUnusedLocal</span>
 <div class="viewcode-block" id="Options">
-<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options">[docs]</a>
+<a class="viewcode-back" href="../../../../api/ChromeOptions/#selenium_driverless.types.options.Options">[docs]</a>
 <span class="k">class</span> <span class="nc">Options</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -192,7 +193,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arguments</span>
 
 <div class="viewcode-block" id="Options.add_argument">
-<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.add_argument">[docs]</a>
+<a class="viewcode-back" href="../../../../api/ChromeOptions/#selenium_driverless.types.options.Options.add_argument">[docs]</a>
     <span class="k">def</span> <span class="nf">add_argument</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argument</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds an argument for launching chrome</span>
 
@@ -226,7 +227,7 @@
 
 
 <div class="viewcode-block" id="Options.add_arguments">
-<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.add_arguments">[docs]</a>
+<a class="viewcode-back" href="../../../../api/ChromeOptions/#selenium_driverless.types.options.Options.add_arguments">[docs]</a>
     <span class="k">def</span> <span class="nf">add_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">arguments</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;add multiple arguments</span>
 
@@ -242,7 +243,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prefs</span>
 
 <div class="viewcode-block" id="Options.update_pref">
-<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.update_pref">[docs]</a>
+<a class="viewcode-back" href="../../../../api/ChromeOptions/#selenium_driverless.types.options.Options.update_pref">[docs]</a>
     <span class="k">def</span> <span class="nf">update_pref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;update a preference</span>
 
@@ -370,7 +371,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_env</span> <span class="o">=</span> <span class="n">env</span>
 
 <div class="viewcode-block" id="Options.add_extension">
-<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.add_extension">[docs]</a>
+<a class="viewcode-back" href="../../../../api/ChromeOptions/#selenium_driverless.types.options.Options.add_extension">[docs]</a>
     <span class="k">def</span> <span class="nf">add_extension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds an extension to Chrome</span>
 <span class="sd">        The extension can either be a compressed file (zip, crx, etc.) or extracted in a directory</span>
@@ -412,7 +413,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_auto_clean_dirs</span> <span class="o">=</span> <span class="n">enabled</span>
 
 <div class="viewcode-block" id="Options.enable_mobile">
-<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.enable_mobile">[docs]</a>
+<a class="viewcode-back" href="../../../../api/ChromeOptions/#selenium_driverless.types.options.Options.enable_mobile">[docs]</a>
     <span class="k">def</span> <span class="nf">enable_mobile</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">android_package</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;com.android.chrome&quot;</span><span class="p">,</span>
@@ -451,7 +452,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_caps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;acceptInsecureCerts&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Options.ignore_local_proxy_environment_variables">
-<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.ignore_local_proxy_environment_variables">[docs]</a>
+<a class="viewcode-back" href="../../../../api/ChromeOptions/#selenium_driverless.types.options.Options.ignore_local_proxy_environment_variables">[docs]</a>
     <span class="k">def</span> <span class="nf">ignore_local_proxy_environment_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;By calling this you will ignore HTTP_PROXY and HTTPS_PROXY from</span>
 <span class="sd">        being picked up and used.</span>
@@ -464,7 +465,7 @@
 
 
 <div class="viewcode-block" id="Options.add_experimental_option">
-<a class="viewcode-back" href="../../../../classes/ChromeOptions/#selenium_driverless.types.options.Options.add_experimental_option">[docs]</a>
+<a class="viewcode-back" href="../../../../api/ChromeOptions/#selenium_driverless.types.options.Options.add_experimental_option">[docs]</a>
     <span class="k">def</span> <span class="nf">add_experimental_option</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds an experimental option which is passed to chromium.</span>
 

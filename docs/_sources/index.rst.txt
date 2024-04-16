@@ -15,13 +15,13 @@ Indices and tables
 ==================
 * :ref:`search`
 
-Classes
+API
 --------
 
 .. toctree::
     :glob:
     :maxdepth: 2
 
-    classes/*
+    api/*
 
 

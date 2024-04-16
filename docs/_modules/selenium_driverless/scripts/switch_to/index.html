@@ -42,12 +42,13 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/By/">By Element Locator</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/Chrome/">webdriver.Chrome</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/ChromeOptions/">ChromeOptions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/Context/">Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/Target/">Target</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/WebELement/">WebElement</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/By/">By Element Locator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Chrome/">webdriver.Chrome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/ChromeOptions/">ChromeOptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Context/">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/RequestInterception/">Request-Interception</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Target/">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/WebELement/">WebElement</a></li>
 </ul>
 
         </div>
@@ -109,7 +110,7 @@
 
 
 <div class="viewcode-block" id="SwitchTo">
-<a class="viewcode-back" href="../../../../classes/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo">[docs]</a>
 <span class="k">class</span> <span class="nc">SwitchTo</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    the SwitchTo class</span>
@@ -147,7 +148,7 @@
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_alert</span><span class="p">()</span>
 
 <div class="viewcode-block" id="SwitchTo.get_alert">
-<a class="viewcode-back" href="../../../../classes/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.get_alert">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.get_alert">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_alert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Alert</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Switches focus to an alert on the page.</span>
 
@@ -161,7 +162,7 @@
 
 
 <div class="viewcode-block" id="SwitchTo.default_content">
-<a class="viewcode-back" href="../../../../classes/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.default_content">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.default_content">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">default_content</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Switch focus to the default frame.</span>
 
@@ -176,7 +177,7 @@
 
 
 <div class="viewcode-block" id="SwitchTo.frame">
-<a class="viewcode-back" href="../../../../classes/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.frame">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.frame">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_reference</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">WebElement</span><span class="p">],</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Switches focus to the specified frame, by index, name, or</span>
 <span class="sd">        webelement.</span>
@@ -214,7 +215,7 @@
 
 
 <div class="viewcode-block" id="SwitchTo.target">
-<a class="viewcode-back" href="../../../../classes/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.target">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.target">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TargetInfo</span><span class="p">,</span> <span class="n">Target</span><span class="p">],</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        switches to a target</span>
@@ -238,7 +239,7 @@
 
 
 <div class="viewcode-block" id="SwitchTo.new_window">
-<a class="viewcode-back" href="../../../../classes/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.new_window">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.new_window">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">new_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">type_hint</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;tab&quot;</span><span class="p">,</span> <span class="s2">&quot;window&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tab&quot;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Switches to a new window</span>
 
@@ -251,7 +252,7 @@
 
 
 <div class="viewcode-block" id="SwitchTo.parent_frame">
-<a class="viewcode-back" href="../../../../classes/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.parent_frame">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.parent_frame">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">parent_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Switches focus to the parent context. If the current context is the</span>
 <span class="sd">        top level browsing context, the context remains unchanged.</span>
@@ -268,7 +269,7 @@
 
 
 <div class="viewcode-block" id="SwitchTo.window">
-<a class="viewcode-back" href="../../../../classes/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.window">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.window">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">window_id</span><span class="p">:</span> <span class="nb">str</span> <span class="ow">or</span> <span class="n">TargetInfo</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Switches focus to the specified window.</span>
 

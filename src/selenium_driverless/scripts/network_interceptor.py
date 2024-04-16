@@ -13,18 +13,34 @@ from cdp_socket.exceptions import CDPError
 
 import base64
 
+__all__ = ["PatternsType", "RequestDoneException", "AuthAlreadyHandledException", "RequestStages", "RequestPattern", "Request", "AuthChallenge", "InterceptedAuth", "InterceptedRequest", "NetworkInterceptor"]
+
 PatternsType = typing.List[typing.Dict[str, str]]
+
 
 # TODO: support OrderedDict instead of List[Fetch.HeaderEntry]
 
 
 class RequestDoneException(Exception):
-    def __init__(self, data: "InterceptedRequest"):
+    def __init__(self, data: typing.Union["InterceptedRequest", "InterceptedAuth"]):
+        data._done = True
         super().__init__(f'request with url:"{data.request.url}" has already been resumed')
         self._data = data
 
     @property
-    def request(self) -> "InterceptedRequest":
+    def request(self) -> typing.Union["InterceptedRequest", "InterceptedAuth"]:
+        return self._data
+
+
+class AuthAlreadyHandledException(Exception):
+    def __init__(self, data: "InterceptedAuth"):
+        data._done = True
+        super().__init__(
+            f'Auth for url"{data.request.url}" has already been handled by an external application (for example chrome-extension)')
+        self._data = data
+
+    @property
+    def request(self) -> "InterceptedAuth":
         return self._data
 
 
@@ -121,6 +137,39 @@ class Request:
         return self.params.__repr__()
 
 
+class AuthChallenge:
+    def __init__(self, params, target):
+        self._params = params
+        self._target = target
+
+    @property
+    def target(self) -> typing.Union[Target, BaseTarget]:
+        return self._target
+
+    @property
+    def params(self) -> dict:
+        return self._params
+
+    @property
+    def source(self) -> str:
+        return self.params.get("source")
+
+    @property
+    def origin(self) -> str:
+        return self.params["origin"]
+
+    @property
+    def scheme(self) -> str:
+        return self.params["scheme"]
+
+    @property
+    def realm(self) -> str:
+        return self.params["realm"]
+
+    def __repr__(self):
+        return self.params.__repr__()
+
+
 class InterceptedRequest:
     def __init__(self, params, target):
         self._params = params
@@ -129,6 +178,7 @@ class InterceptedRequest:
         self._stage = None
         self._is_redirect = None
         self._body = False
+        self._request = None
         self.timeout = 10
 
     @property
@@ -167,7 +217,9 @@ class InterceptedRequest:
 
     @property
     def request(self) -> Request:
-        return Request(self._params["request"], self.target)
+        if self._request is None:
+            self._request = Request(self._params["request"], self.target)
+        return self._request
 
     @property
     def id(self) -> str:
@@ -225,7 +277,7 @@ class InterceptedRequest:
                 body = await resp.read()
                 response_headers = []
                 for name, value in resp.headers.items():
-                    response_headers.append({"name":name, "value":value})
+                    response_headers.append({"name": name, "value": value})
                 await self.fulfill(response_code=resp.status, body=body,
                                    response_headers=response_headers, response_phrase=None)
 
@@ -285,7 +337,7 @@ class InterceptedRequest:
                 pass
 
     async def fail_request(self, error_reason: typing.Literal[
-            "Failed", "Aborted", "TimedOut", "AccessDenied", "ConnectionClosed", "ConnectionReset", "ConnectionRefused", "ConnectionAborted", "ConnectionFailed", "NameNotResolved", "InternetDisconnected", "AddressUnreachable", "BlockedByClient", "BlockedByResponse"]):
+        "Failed", "Aborted", "TimedOut", "AccessDenied", "ConnectionClosed", "ConnectionReset", "ConnectionRefused", "ConnectionAborted", "ConnectionFailed", "NameNotResolved", "InternetDisconnected", "AddressUnreachable", "BlockedByClient", "BlockedByResponse"]):
         if self._done:
             raise RequestDoneException(self)
         params = {"requestId": self.id}
@@ -339,14 +391,108 @@ class InterceptedRequest:
         return self.params.__repr__()
 
 
+class InterceptedAuth:
+    def __init__(self, params, target):
+        self._params = params
+        self._target = target
+        self._done = False
+        self._stage = None
+        self._is_redirect = None
+        self._body = False
+        self._request = None
+        self._auth_challenge = None
+        self.timeout = 10
+
+    @property
+    def request(self) -> Request:
+        if self._request is None:
+            self._request = Request(self._params["request"], self.target)
+        return self._request
+
+    @property
+    def id(self) -> str:
+        return self.params["requestId"]
+
+    @property
+    def frame_id(self) -> str:
+        return self._params["frameId"]
+
+    @property
+    def params(self) -> dict:
+        return self._params
+
+    @property
+    def target(self) -> typing.Union[Target, BaseTarget]:
+        return self._target
+
+    @property
+    def resource_type(self) -> str:
+        return self._params["resourceType"]
+
+    @property
+    def auth_challenge(self) -> AuthChallenge:
+        if self._auth_challenge is None:
+            self._auth_challenge = AuthChallenge(self._params["request"], self.target)
+        return self._auth_challenge
+
+    async def continue_auth(self, response: typing.Literal["Default", "CancelAuth", "ProvideCredentials"] = "Default",
+                            username: str = None, password: str = None):
+        if self._done:
+            raise RequestDoneException(self)
+
+        if username or password:
+            response = "ProvideCredentials"
+        challenge_response = {"response": response}
+        if username:
+            challenge_response["username"] = username
+        if password:
+            challenge_response["password"] = password
+        try:
+            await self.target.execute_cdp_cmd("Fetch.continueWithAuth",
+                                              {"requestId": self.id, "authChallengeResponse": challenge_response}, timeout=self.timeout)
+            self._done = True
+        except CDPError as e:
+            if e.code == -32000 and e.message == 'Invalid state for continueInterceptedRequest':
+                raise AuthAlreadyHandledException(self)
+            else:
+                raise e
+
+    async def resume(self):
+        if not self._done:
+            try:
+                await self.continue_auth()
+            except AuthAlreadyHandledException:
+                pass
+
+    async def cancel(self):
+        await self.continue_auth(response="CancelAuth")
+
+    def __repr__(self):
+        return self.params.__repr__()
+
+
 CallbackType = typing.Callable[[InterceptedRequest], typing.Awaitable[None]]
+AuthCallbackType = typing.Callable[[InterceptedRequest], typing.Awaitable[None]]
 
 
 class NetworkInterceptor:
+    on_request: CallbackType
+    on_response: CallbackType
+    on_auth: AuthCallbackType
+
     def __init__(self, target: typing.Union[Chrome, Target], on_request: CallbackType = None,
-                 on_response: CallbackType = None,
-                 patterns: typing.Union[PatternsType, typing.List[RequestPattern]] = None, driver=None,
+                 on_response: CallbackType = None, on_auth: AuthCallbackType = None,
+                 patterns: typing.Union[PatternsType, typing.List[RequestPattern]] = None, intercept_auth: bool = False,
                  bypass_service_workers: bool = False):
+        """
+        :param target: the Target or Driver, on which requests get intercepted
+        :param on_request: onRequest callback
+        :param on_response: onResponse callback
+        :param on_auth: onAuth callback
+        :param patterns: the request patterns to intercept
+        :param intercept_auth: whether to intercept authentification
+        :param bypass_service_workers: whether to bypass service workers for a single Target
+        """
         if patterns is None:
             patterns = [RequestPattern.AnyRequest, RequestPattern.AnyResponse]
 
@@ -357,17 +503,13 @@ class NetworkInterceptor:
             _patters.append(pattern)
 
         self._iter_callbacks: typing.Dict[str, typing.List[asyncio.Future]] = {}
-        self._driver = driver
-
-        self._started = False
 
         if isinstance(target, Chrome):
-            self._driver = target
-            target = self._driver.base_target
-        if isinstance(target, BaseTarget):
-            # not supported for BaseTarget
-            bypass_service_workers = False
-        self._bypass_service_workers = bypass_service_workers
+            driver = target
+            target = driver.base_target
+        else:
+            # noinspection PyProtectedMember
+            driver = target._driver
 
         # noinspection PyUnusedLocal
         async def blank_callback(data):
@@ -377,20 +519,29 @@ class NetworkInterceptor:
             on_request = blank_callback
         if on_response is None:
             on_response = blank_callback
+        if on_auth is None:
+            on_auth = blank_callback
 
+        self._driver = driver
+        self._started = False
+        self._bypass_service_workers = bypass_service_workers
         self.on_request = on_request
         self.on_response = on_response
+        self.on_auth = on_auth
         self._target = target
         self._patterns = _patters
+        self._intercept_auth = intercept_auth
 
     async def __aenter__(self):
         if not self._started:
-            await self.target.execute_cdp_cmd("Fetch.enable", cmd_args={"patterns": self._patterns})
+            await self.target.execute_cdp_cmd("Fetch.enable",
+                                              cmd_args={"patterns": self._patterns,
+                                                        "handleAuthRequests": self._intercept_auth})
+            await self.target.add_cdp_listener("Fetch.authRequired", self._paused_handler)
             if self._bypass_service_workers:
                 await self.target.execute_cdp_cmd("Network.setBypassServiceWorker",
                                                   {"bypass": self._bypass_service_workers})
-            await self.target.add_cdp_listener("Fetch.requestPaused",
-                                               lambda data: self._paused_handler(data))
+            await self.target.add_cdp_listener("Fetch.requestPaused", self._paused_handler)
             self._started = True
         return self
 
@@ -405,9 +556,16 @@ class NetworkInterceptor:
             await self.target.remove_cdp_listener("Fetch.requestPaused", self._paused_handler)
         except ValueError:
             pass  # ValueError: list.remove(x): x not in list
+        try:
+            await self.target.remove_cdp_listener("Fetch.authRequired", self._paused_handler)
+        except ValueError:
+            pass
 
     async def _paused_handler(self, params: dict):
-        request = InterceptedRequest(params, self.target)
+        if "authChallenge" in params.keys():
+            request = InterceptedAuth(params, self.target)
+        else:
+            request = InterceptedRequest(params, self.target)
         coro = []
         for _id, val in list(self._iter_callbacks.items()):
             fut, done = val
@@ -422,21 +580,30 @@ class NetworkInterceptor:
         if coro:
             await asyncio.gather(*coro)
 
-        if request.stage == RequestStages.Response:
-            try:
-                await self.on_response(request)
-            except Exception as e:
-                await request.resume()
-                raise e
+        if isinstance(request, InterceptedRequest):
+            if request.stage == RequestStages.Response:
+                try:
+                    await self.on_response(request)
+                except Exception as e:
+                    await request.resume()
+                    raise e
+            else:
+                try:
+                    await self.on_request(request)
+                except Exception as e:
+                    await request.resume()
+                    raise e
         else:
-            try:
-                await self.on_request(request)
-            except Exception as e:
-                await request.resume()
-                raise e
+            await self.on_auth(request)
         await request.resume()
 
-    def __aiter__(self) -> typing.AsyncIterator[InterceptedRequest]:
+    def __aiter__(self) -> typing.AsyncIterator[typing.Union[InterceptedRequest, InterceptedAuth]]:
+        """
+        iterate using ``async with`` over requests
+
+        .. warning::
+            iterations should virtually take zero time, you might use ``asyncio.ensure_future`` where possible
+        """
         async def _iter():
             while True:
                 fut, done = asyncio.Future(), asyncio.Future()
@@ -452,8 +619,10 @@ class NetworkInterceptor:
 
     @property
     def patterns(self) -> PatternsType:
+        """patters to intercept"""
         return self._patterns
 
     @property
     def target(self) -> typing.Union[Target, BaseTarget]:
+        """the Target, on which requests get intercepted"""
         return self._target
