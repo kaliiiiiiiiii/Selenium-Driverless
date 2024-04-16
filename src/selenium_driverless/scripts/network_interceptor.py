@@ -320,7 +320,7 @@ class InterceptedRequest:
 
     @property
     async def body(self) -> typing.Union[bytes, None]:
-        """
+        """**async**
         get the response body for a request
 
         .. note::

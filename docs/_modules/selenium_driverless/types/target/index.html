@@ -1177,6 +1177,207 @@
         <span class="k">return</span> <span class="n">result</span></div>
 
 
+<div class="viewcode-block" id="Target.fetch">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.fetch">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                    <span class="n">method</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span>
+                        <span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="s2">&quot;HEAD&quot;</span><span class="p">,</span> <span class="s2">&quot;PUT&quot;</span><span class="p">,</span> <span class="s2">&quot;DELETE&quot;</span><span class="p">,</span> <span class="s2">&quot;CONNECT&quot;</span><span class="p">,</span> <span class="s2">&quot;OPTIONS&quot;</span><span class="p">,</span> <span class="s2">&quot;TRACE&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;GET&quot;</span><span class="p">,</span>
+                    <span class="n">headers</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">mode</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;cors&quot;</span><span class="p">,</span> <span class="s2">&quot;no-cors&quot;</span><span class="p">,</span> <span class="s2">&quot;same-origin&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">credentials</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;omit&quot;</span><span class="p">,</span> <span class="s2">&quot;same-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;include&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">cache</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span>
+                        <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;no-store&quot;</span><span class="p">,</span> <span class="s2">&quot;reload&quot;</span><span class="p">,</span> <span class="s2">&quot;no-cache&quot;</span><span class="p">,</span> <span class="s2">&quot;force-cache&quot;</span><span class="p">,</span> <span class="s2">&quot;only-if-cached&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">redirect</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;follow&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">referrer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">referrer_policy</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span>
+                        <span class="s2">&quot;no-referrer&quot;</span><span class="p">,</span> <span class="s2">&quot;no-referrer-when-downgrade&quot;</span><span class="p">,</span> <span class="s2">&quot;same-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;origin&quot;</span><span class="p">,</span> <span class="s2">&quot;strict-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;origin-when-cross-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;strict-origin-when-cross-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;unsafe-url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">integrity</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">keepalive</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">priority</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;high&quot;</span><span class="p">,</span> <span class="s2">&quot;low&quot;</span><span class="p">,</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;high&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        executes a JS ``fetch`` request within the target,</span>
+<span class="sd">        see `developer.mozilla.org/en-US/docs/Web/API/fetch &lt;https://developer.mozilla.org/en-US/docs/Web/API/fetch&gt;`_ for reference</span>
+
+<span class="sd">        returns smth like</span>
+
+<span class="sd">        .. code-block:: Python</span>
+
+<span class="sd">            {</span>
+<span class="sd">                &quot;body&quot;:bytes,</span>
+<span class="sd">                &quot;headers&quot;:dict,</span>
+<span class="sd">                &quot;ok&quot;:bool,</span>
+<span class="sd">                &quot;status_code&quot;:int,</span>
+<span class="sd">                &quot;redirected&quot;:bool,</span>
+<span class="sd">                &quot;status_text&quot;:str,</span>
+<span class="sd">                &quot;type&quot;:str,</span>
+<span class="sd">                &quot;url&quot;:str</span>
+<span class="sd">            }</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># see</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">method</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
+        <span class="k">if</span> <span class="n">headers</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;headers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">headers</span>
+        <span class="k">if</span> <span class="n">body</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;body&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">body</span>
+        <span class="k">if</span> <span class="n">mode</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;mode&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="k">if</span> <span class="n">credentials</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;credentials&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">credentials</span>
+        <span class="k">if</span> <span class="n">cache</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;cache&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cache</span>
+        <span class="k">if</span> <span class="n">redirect</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;redirect&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">redirect</span>
+        <span class="k">if</span> <span class="n">referrer</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;referrer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">referrer</span>
+        <span class="k">if</span> <span class="n">referrer_policy</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;referrerPolicy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">referrer_policy</span>
+        <span class="k">if</span> <span class="n">integrity</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;integrity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">integrity</span>
+        <span class="k">if</span> <span class="n">keepalive</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;keepalive&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keepalive</span>
+        <span class="k">if</span> <span class="n">priority</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;priority&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">priority</span>
+
+        <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            function buffer2hex (buffer) {</span>
+<span class="s2">                return [...new Uint8Array (buffer)]</span>
+<span class="s2">                    .map (b =&gt; b.toString (16).padStart (2, &quot;0&quot;))</span>
+<span class="s2">                    .join (&quot;&quot;);</span>
+<span class="s2">            }</span>
+
+<span class="s2">            function headers2dict(headers){</span>
+<span class="s2">                var my_dict = </span><span class="si">{}</span><span class="s2">;</span>
+<span class="s2">                for (var pair of headers.entries()) {</span>
+<span class="s2">                        my_dict[pair[0]] = pair[1]};</span>
+<span class="s2">                return my_dict}</span>
+
+<span class="s2">            async function get(url, options){</span>
+<span class="s2">                var response = await fetch(url, options);</span>
+<span class="s2">                var buffer = await response.arrayBuffer()</span>
+<span class="s2">                var hex = buffer2hex(buffer)</span>
+<span class="s2">                var res = {</span>
+<span class="s2">                        &quot;HEX&quot;:hex,</span>
+<span class="s2">                        &quot;headers&quot;:headers2dict(response.headers),</span>
+<span class="s2">                        &quot;ok&quot;:response.ok,</span>
+<span class="s2">                        &quot;status_code&quot;:response.status,</span>
+<span class="s2">                        &quot;redirected&quot;:response.redirected,</span>
+<span class="s2">                        &quot;status_text&quot;:response.statusText,</span>
+<span class="s2">                        &quot;type&quot;:response.type,</span>
+<span class="s2">                        &quot;url&quot;:response.url</span>
+<span class="s2">                        };</span>
+<span class="s2">                console.log(res)</span>
+<span class="s2">                return res;</span>
+<span class="s2">            }</span>
+<span class="s2">            return await get(arguments[0], arguments[1])</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_async</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;body&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;HEX&quot;</span><span class="p">])</span>
+        <span class="k">del</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;HEX&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="Target.xhr">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.xhr">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">xhr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                  <span class="n">method</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="s2">&quot;PUT&quot;</span><span class="p">,</span> <span class="s2">&quot;DELETE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;GET&quot;</span><span class="p">,</span>
+                  <span class="n">user</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">with_credentials</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">mime_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;text/plain&quot;</span><span class="p">,</span>
+                  <span class="n">extra_headers</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        executes a JS ``XMLHttpRequest`` request within the target,</span>
+<span class="sd">        see `developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest &lt;https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest&gt;`_ for reference</span>
+
+<span class="sd">        :param url: the url to get</span>
+<span class="sd">        :param method: one of &quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;DELETE&quot;</span>
+<span class="sd">        :param user: user to authenticate with</span>
+<span class="sd">        :param password: password to authenticate with</span>
+<span class="sd">        :param with_credentials: whether to include cookies</span>
+<span class="sd">        :param mime_type: the type to parse the response as</span>
+<span class="sd">        :param extra_headers: a key/value dict of extra headers to add to the request</span>
+<span class="sd">        :param timeout: timeout in seconds for the request to take</span>
+
+<span class="sd">        returns smth like</span>
+
+<span class="sd">        .. code-block:: Python</span>
+
+<span class="sd">            {</span>
+<span class="sd">                &quot;status&quot;: int,</span>
+<span class="sd">                &quot;response&quot;: any,</span>
+<span class="sd">                &quot;responseText&quot;:str,</span>
+<span class="sd">                &quot;responseType&quot;:str,</span>
+<span class="sd">                &quot;responseURL&quot;:str,</span>
+<span class="sd">                &quot;responseXML&quot;:any,</span>
+<span class="sd">                &quot;statusText&quot;:str,</span>
+<span class="sd">                &quot;responseHeaders&quot;:dict</span>
+<span class="sd">            }</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">extra_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">extra_headers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        function makeRequest(withCredentials, mimeType, extraHeaders, ...args) {</span>
+<span class="s2">            return new Promise(function (resolve, reject) {</span>
+<span class="s2">                try{</span>
+<span class="s2">                    let xhr = new XMLHttpRequest();</span>
+
+<span class="s2">                    if(!(args[3])){args[3] = null};</span>
+<span class="s2">                    if(!(args[4])){args[4] = null};</span>
+<span class="s2">                    xhr.overrideMimeType(mimeType);</span>
+
+<span class="s2">                    xhr.open(...args);</span>
+<span class="s2">                    Object.keys(extraHeaders).forEach(function(key) {</span>
+<span class="s2">                        xhr.setRequestHeader(key, extraHeaders[key])</span>
+<span class="s2">                    });</span>
+<span class="s2">                    xhr.withCredentials = withCredentials;</span>
+
+<span class="s2">                    xhr.onload = function () {</span>
+<span class="s2">                        resolve(xhr)</span>
+<span class="s2">                    };</span>
+<span class="s2">                    xhr.onerror = function () {</span>
+<span class="s2">                        reject(new Error(&quot;XHR failed&quot;));</span>
+<span class="s2">                    };</span>
+<span class="s2">                    xhr.send();</span>
+<span class="s2">                }catch(e){reject(e)}</span>
+<span class="s2">            });</span>
+<span class="s2">        };</span>
+
+<span class="s2">        var xhr =  await makeRequest(...arguments);</span>
+<span class="s2">        data = {</span>
+<span class="s2">            status: xhr.status,</span>
+<span class="s2">            response: xhr.response,</span>
+<span class="s2">            responseText:xhr.responseText,</span>
+<span class="s2">            responseType:xhr.responseType,</span>
+<span class="s2">            responseURL:xhr.responseURL,</span>
+<span class="s2">            responseXML:xhr.responseXML,</span>
+<span class="s2">            statusText:xhr.statusText,</span>
+<span class="s2">            responseHeaders:xhr.getAllResponseHeaders()</span>
+
+<span class="s2">        };</span>
+<span class="s2">        return data</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_async</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">with_credentials</span><span class="p">,</span> <span class="n">mime_type</span><span class="p">,</span> <span class="n">extra_headers</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span>
+                                     <span class="n">password</span><span class="p">,</span>
+                                     <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># parse headers</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;responseHeaders&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">headers</span> <span class="o">==</span> <span class="s2">&quot;null&quot;</span><span class="p">:</span>
+            <span class="n">_headers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">_headers</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">header</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">:</span>
+                <span class="n">header</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;: &#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">header</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">header</span>
+                    <span class="n">_headers</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;responseHeaders&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_headers</span>
+
+        <span class="c1"># todo: parse different response types</span>
+        <span class="k">return</span> <span class="n">data</span></div>
+
+
     <span class="c1"># noinspection PyTypeChecker</span>
 <div class="viewcode-block" id="Target.get_sinks">
 <a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_sinks">[docs]</a>

@@ -89,6 +89,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.remove_cdp_listener"><code class="docutils literal notranslate"><span class="pre">Target.remove_cdp_listener()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get_cdp_event_iter"><code class="docutils literal notranslate"><span class="pre">Target.get_cdp_event_iter()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.execute_cdp_cmd"><code class="docutils literal notranslate"><span class="pre">Target.execute_cdp_cmd()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.fetch"><code class="docutils literal notranslate"><span class="pre">Target.fetch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.xhr"><code class="docutils literal notranslate"><span class="pre">Target.xhr()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get_sinks"><code class="docutils literal notranslate"><span class="pre">Target.get_sinks()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get_issue_message"><code class="docutils literal notranslate"><span class="pre">Target.get_issue_message()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.set_sink_to_use"><code class="docutils literal notranslate"><span class="pre">Target.set_sink_to_use()</span></code></a></li>
@@ -715,6 +717,68 @@ For example to getResponseBody:
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.fetch">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fetch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'GET'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">body</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">credentials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">redirect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">referrer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">referrer_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keepalive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'high'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.fetch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.fetch" title="Link to this definition"></a></dt>
+<dd><p>executes a JS <code class="docutils literal notranslate"><span class="pre">fetch</span></code> request within the target,
+see <a class="reference external" href="https://developer.mozilla.org/en-US/docs/Web/API/fetch">developer.mozilla.org/en-US/docs/Web/API/fetch</a> for reference</p>
+<p>returns smth like</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;body&quot;</span><span class="p">:</span><span class="nb">bytes</span><span class="p">,</span>
+    <span class="s2">&quot;headers&quot;</span><span class="p">:</span><span class="nb">dict</span><span class="p">,</span>
+    <span class="s2">&quot;ok&quot;</span><span class="p">:</span><span class="nb">bool</span><span class="p">,</span>
+    <span class="s2">&quot;status_code&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+    <span class="s2">&quot;redirected&quot;</span><span class="p">:</span><span class="nb">bool</span><span class="p">,</span>
+    <span class="s2">&quot;status_text&quot;</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+    <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+    <span class="s2">&quot;url&quot;</span><span class="p">:</span><span class="nb">str</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.xhr">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xhr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'GET'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_credentials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mime_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'text/plain'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.xhr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.xhr" title="Link to this definition"></a></dt>
+<dd><p>executes a JS <code class="docutils literal notranslate"><span class="pre">XMLHttpRequest</span></code> request within the target,
+see <a class="reference external" href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest">developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest</a> for reference</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the url to get</p></li>
+<li><p><strong>method</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'GET'</span></code>, <code class="docutils literal notranslate"><span class="pre">'POST'</span></code>, <code class="docutils literal notranslate"><span class="pre">'PUT'</span></code>, <code class="docutils literal notranslate"><span class="pre">'DELETE'</span></code>]</span>) – one of “GET”, “POST”, “PUT”, “DELETE”</p></li>
+<li><p><strong>user</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – user to authenticate with</p></li>
+<li><p><strong>password</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – password to authenticate with</p></li>
+<li><p><strong>with_credentials</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to include cookies</p></li>
+<li><p><strong>mime_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the type to parse the response as</p></li>
+<li><p><strong>extra_headers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – a key/value dict of extra headers to add to the request</p></li>
+<li><p><strong>timeout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – timeout in seconds for the request to take</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+<p>returns smth like</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="s2">&quot;response&quot;</span><span class="p">:</span> <span class="nb">any</span><span class="p">,</span>
+    <span class="s2">&quot;responseText&quot;</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+    <span class="s2">&quot;responseType&quot;</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+    <span class="s2">&quot;responseURL&quot;</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+    <span class="s2">&quot;responseXML&quot;</span><span class="p">:</span><span class="nb">any</span><span class="p">,</span>
+    <span class="s2">&quot;statusText&quot;</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+    <span class="s2">&quot;responseHeaders&quot;</span><span class="p">:</span><span class="nb">dict</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">

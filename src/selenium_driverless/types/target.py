@@ -998,6 +998,201 @@ class Target:
             self._dom_enabled = False
         return result
 
+    async def fetch(self, url: str,
+                    method: typing.Literal[
+                        "GET", "POST", "HEAD", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", None] = "GET",
+                    headers: typing.Dict[str, str] = None, body: str = None,
+                    mode: typing.Literal["cors", "no-cors", "same-origin", None] = None,
+                    credentials: typing.Literal["omit", "same-origin", "include"] = None,
+                    cache: typing.Literal[
+                        "default", "no-store", "reload", "no-cache", "force-cache", "only-if-cached"] = None,
+                    redirect: typing.Literal["follow", "error"] = None, referrer: str = None,
+                    referrer_policy: typing.Literal[
+                        "no-referrer", "no-referrer-when-downgrade", "same-origin", "origin", "strict-origin", "origin-when-cross-origin", "strict-origin-when-cross-origin", "unsafe-url"] = None,
+                    integrity: str = None, keepalive=None,
+                    priority: typing.Literal["high", "low", "auto", None] = "high", timeout: float = 20) -> dict:
+        """
+        executes a JS ``fetch`` request within the target,
+        see `developer.mozilla.org/en-US/docs/Web/API/fetch <https://developer.mozilla.org/en-US/docs/Web/API/fetch>`_ for reference
+
+        returns smth like
+
+        .. code-block:: Python
+
+            {
+                "body":bytes,
+                "headers":dict,
+                "ok":bool,
+                "status_code":int,
+                "redirected":bool,
+                "status_text":str,
+                "type":str,
+                "url":str
+            }
+
+        """
+        # see
+        options = {}
+        if method:
+            options["method"] = method
+        if headers:
+            options["headers"] = headers
+        if body:
+            options["body"] = body
+        if mode:
+            options["mode"] = mode
+        if credentials:
+            options["credentials"] = credentials
+        if cache:
+            options["cache"] = cache
+        if redirect:
+            options["redirect"] = redirect
+        if referrer:
+            options["referrer"] = referrer
+        if referrer_policy:
+            options["referrerPolicy"] = referrer_policy
+        if integrity:
+            options["integrity"] = integrity
+        if keepalive:
+            options["keepalive"] = keepalive
+        if priority:
+            options["priority"] = priority
+
+        script = """
+            function buffer2hex (buffer) {
+                return [...new Uint8Array (buffer)]
+                    .map (b => b.toString (16).padStart (2, "0"))
+                    .join ("");
+            }
+
+            function headers2dict(headers){
+                var my_dict = {};
+                for (var pair of headers.entries()) {
+                        my_dict[pair[0]] = pair[1]};
+                return my_dict}
+
+            async function get(url, options){
+                var response = await fetch(url, options);
+                var buffer = await response.arrayBuffer()
+                var hex = buffer2hex(buffer)
+                var res = {
+                        "HEX":hex,
+                        "headers":headers2dict(response.headers),
+                        "ok":response.ok,
+                        "status_code":response.status,
+                        "redirected":response.redirected,
+                        "status_text":response.statusText,
+                        "type":response.type,
+                        "url":response.url
+                        };
+                console.log(res)
+                return res;
+            }
+            return await get(arguments[0], arguments[1])
+        """
+        result = await self.eval_async(script, url, options, unique_context=True, timeout=timeout)
+        result["body"] = bytes.fromhex(result["HEX"])
+        del result["HEX"]
+        return result
+
+    async def xhr(self, url: str,
+                  method: typing.Literal["GET", "POST", "PUT", "DELETE"] = "GET",
+                  user: str = None, password: str = None, with_credentials: bool = True, mime_type: str = "text/plain",
+                  extra_headers: typing.Dict[str, str] = None,
+                  timeout: float = 30) -> dict:
+        """
+        executes a JS ``XMLHttpRequest`` request within the target,
+        see `developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest <https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest>`_ for reference
+
+        :param url: the url to get
+        :param method: one of "GET", "POST", "PUT", "DELETE"
+        :param user: user to authenticate with
+        :param password: password to authenticate with
+        :param with_credentials: whether to include cookies
+        :param mime_type: the type to parse the response as
+        :param extra_headers: a key/value dict of extra headers to add to the request
+        :param timeout: timeout in seconds for the request to take
+
+        returns smth like
+
+        .. code-block:: Python
+
+            {
+                "status": int,
+                "response": any,
+                "responseText":str,
+                "responseType":str,
+                "responseURL":str,
+                "responseXML":any,
+                "statusText":str,
+                "responseHeaders":dict
+            }
+
+        """
+        if extra_headers is None:
+            extra_headers = {}
+        script = """
+        function makeRequest(withCredentials, mimeType, extraHeaders, ...args) {
+            return new Promise(function (resolve, reject) {
+                try{
+                    let xhr = new XMLHttpRequest();
+
+                    if(!(args[3])){args[3] = null};
+                    if(!(args[4])){args[4] = null};
+                    xhr.overrideMimeType(mimeType);
+
+                    xhr.open(...args);
+                    Object.keys(extraHeaders).forEach(function(key) {
+                        xhr.setRequestHeader(key, extraHeaders[key])
+                    });
+                    xhr.withCredentials = withCredentials;
+
+                    xhr.onload = function () {
+                        resolve(xhr)
+                    };
+                    xhr.onerror = function () {
+                        reject(new Error("XHR failed"));
+                    };
+                    xhr.send();
+                }catch(e){reject(e)}
+            });
+        };
+
+        var xhr =  await makeRequest(...arguments);
+        data = {
+            status: xhr.status,
+            response: xhr.response,
+            responseText:xhr.responseText,
+            responseType:xhr.responseType,
+            responseURL:xhr.responseURL,
+            responseXML:xhr.responseXML,
+            statusText:xhr.statusText,
+            responseHeaders:xhr.getAllResponseHeaders()
+
+        };
+        return data
+        """
+        data = await self.eval_async(script, with_credentials, mime_type, extra_headers, method, url, True, user,
+                                     password,
+                                     timeout=timeout, unique_context=True)
+
+        # parse headers
+        headers = data['responseHeaders']
+        if headers == "null":
+            _headers = {}
+        else:
+            headers = headers.split("\r\n")
+            _headers = {}
+            for header in headers:
+                header = header.split(': ')
+                if len(header) == 2:
+                    key, value = header
+                    _headers[key] = value
+        data['responseHeaders'] = _headers
+
+        # todo: parse different response types
+        return data
+
     # noinspection PyTypeChecker
     async def get_sinks(self) -> list:
         """

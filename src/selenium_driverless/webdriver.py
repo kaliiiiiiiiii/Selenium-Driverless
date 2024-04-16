@@ -1473,6 +1473,20 @@ class Chrome:
         return await self.current_context.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout,
                                                           target_id=target_id)
 
+    async def fetch(self, *args, **kwargs) -> dict:
+        """
+        executes a JS ``fetch`` request within the current target
+        see :func:`Target.fetch <selenium_driverless.types.target.Target.fetch>` for reference
+        """
+        return await self.current_target.fetch(*args, **kwargs)
+
+    async def xhr(self, *args, **kwargs) -> dict:
+        """
+        executes a JS ``XMLHttpRequest`` request within the current target
+        see :func:`Target.fetch <selenium_driverless.types.target.Target.fetch>` for reference
+        """
+        return await self.current_target.xhr(*args, **kwargs)
+
     # noinspection PyTypeChecker
     async def get_sinks(self, target_id: str = None) -> list:
         """

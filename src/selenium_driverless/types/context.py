@@ -947,6 +947,20 @@ class Context:
             if e.code == -32000 and e.message == 'Not allowed':
                 return await self.base_target.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout)
 
+    async def fetch(self, *args, **kwargs) -> dict:
+        """
+        executes a JS ``fetch`` request within the current target
+        see :func:`Target.fetch <selenium_driverless.types.target.Target.fetch>` for reference
+        """
+        return await self.current_target.fetch(*args, **kwargs)
+
+    async def xhr(self, *args, **kwargs) -> dict:
+        """
+        executes a JS ``XMLHttpRequest`` request within the current target
+        see :func:`Target.fetch <selenium_driverless.types.target.Target.fetch>` for reference
+        """
+        return await self.current_target.xhr(*args, **kwargs)
+
     # noinspection PyTypeChecker
     async def get_sinks(self, target_id: str = None) -> list:
         """

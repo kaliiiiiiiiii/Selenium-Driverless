@@ -102,6 +102,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.remove_cdp_listener"><code class="docutils literal notranslate"><span class="pre">Context.remove_cdp_listener()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.get_cdp_event_iter"><code class="docutils literal notranslate"><span class="pre">Context.get_cdp_event_iter()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.execute_cdp_cmd"><code class="docutils literal notranslate"><span class="pre">Context.execute_cdp_cmd()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.fetch"><code class="docutils literal notranslate"><span class="pre">Context.fetch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.xhr"><code class="docutils literal notranslate"><span class="pre">Context.xhr()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.get_sinks"><code class="docutils literal notranslate"><span class="pre">Context.get_sinks()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.get_issue_message"><code class="docutils literal notranslate"><span class="pre">Context.get_issue_message()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.set_sink_to_use"><code class="docutils literal notranslate"><span class="pre">Context.set_sink_to_use()</span></code></a></li>
@@ -946,6 +948,30 @@ see <a class="reference internal" href="../Target/#selenium_driverless.types.tar
 executes it on <a class="reference internal" href="../Target/#selenium_driverless.types.base_target.BaseTarget" title="selenium_driverless.types.base_target.BaseTarget"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target.execute_cdp_cmd</span></code></a>
 if <code class="docutils literal notranslate"><span class="pre">message:'Not</span> <span class="pre">allowed'</span></code> received
 see <a class="reference internal" href="../Target/#selenium_driverless.types.target.Target.execute_cdp_cmd" title="selenium_driverless.types.target.Target.execute_cdp_cmd"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.execute_cdp_cmd</span></code></a> for reference</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.context.Context.fetch">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fetch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.fetch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.fetch" title="Link to this definition"></a></dt>
+<dd><p>executes a JS <code class="docutils literal notranslate"><span class="pre">fetch</span></code> request within the current target
+see <a class="reference internal" href="../Target/#selenium_driverless.types.target.Target.fetch" title="selenium_driverless.types.target.Target.fetch"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.fetch</span></code></a> for reference</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.context.Context.xhr">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xhr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.xhr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.xhr" title="Link to this definition"></a></dt>
+<dd><p>executes a JS <code class="docutils literal notranslate"><span class="pre">XMLHttpRequest</span></code> request within the current target
+see <a class="reference internal" href="../Target/#selenium_driverless.types.target.Target.fetch" title="selenium_driverless.types.target.Target.fetch"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.fetch</span></code></a> for reference</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>

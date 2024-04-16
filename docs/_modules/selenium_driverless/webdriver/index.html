@@ -1730,6 +1730,26 @@
                                                           <span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="Chrome.fetch">
+<a class="viewcode-back" href="../../../api/Chrome/#selenium_driverless.webdriver.Chrome.fetch">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        executes a JS ``fetch`` request within the current target</span>
+<span class="sd">        see :func:`Target.fetch &lt;selenium_driverless.types.target.Target.fetch&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Chrome.xhr">
+<a class="viewcode-back" href="../../../api/Chrome/#selenium_driverless.webdriver.Chrome.xhr">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">xhr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        executes a JS ``XMLHttpRequest`` request within the current target</span>
+<span class="sd">        see :func:`Target.fetch &lt;selenium_driverless.types.target.Target.fetch&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">xhr</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
     <span class="c1"># noinspection PyTypeChecker</span>
 <div class="viewcode-block" id="Chrome.get_sinks">
 <a class="viewcode-back" href="../../../api/Chrome/#selenium_driverless.webdriver.Chrome.get_sinks">[docs]</a>

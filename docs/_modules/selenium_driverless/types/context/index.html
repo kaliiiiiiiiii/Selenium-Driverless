@@ -1162,6 +1162,26 @@
                 <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span> <span class="n">cmd_args</span><span class="o">=</span><span class="n">cmd_args</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="Context.fetch">
+<a class="viewcode-back" href="../../../../api/Context/#selenium_driverless.types.context.Context.fetch">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        executes a JS ``fetch`` request within the current target</span>
+<span class="sd">        see :func:`Target.fetch &lt;selenium_driverless.types.target.Target.fetch&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Context.xhr">
+<a class="viewcode-back" href="../../../../api/Context/#selenium_driverless.types.context.Context.xhr">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">xhr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        executes a JS ``XMLHttpRequest`` request within the current target</span>
+<span class="sd">        see :func:`Target.fetch &lt;selenium_driverless.types.target.Target.fetch&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">xhr</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
     <span class="c1"># noinspection PyTypeChecker</span>
 <div class="viewcode-block" id="Context.get_sinks">
 <a class="viewcode-back" href="../../../../api/Context/#selenium_driverless.types.context.Context.get_sinks">[docs]</a>
