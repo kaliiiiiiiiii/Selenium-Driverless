@@ -1,5 +1,6 @@
 import asyncio
 import time
+import typing
 
 import aiohttp
 import websockets
@@ -8,18 +9,19 @@ from cdp_socket.socket import SingleCDPSocket
 
 
 class BaseTarget:
-    """Allows you to drive the browser without chromedriver."""
+    """the baseTarget for the ChromeInstance
+    represents a connection to the whole browser.
+
+    .. note::
+        commands executed on BaseTarget usually are on a global scope over the whole Chrome instance.
+        unfortunately, not all are supported
+
+    """
 
     # noinspection PyMissingConstructor
     def __init__(self, host: str, is_remote: bool = False,
                  loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
                  max_ws_size: int = 2 ** 20) -> None:
-        """Creates a new instance of the chrome target. Starts the service and
-        then creates new instance of chrome target.
-
-        :Args:
-         - options - this takes an instance of ChromeOptions.rst
-        """
         self._socket = None
 
         self._is_remote = is_remote
@@ -45,6 +47,7 @@ class BaseTarget:
 
     @property
     def socket(self) -> SingleCDPSocket:
+        """the cdp-socket for the connection"""
         return self._socket
 
     async def __aenter__(self):
@@ -83,13 +86,6 @@ class BaseTarget:
         return self
 
     async def close(self) -> None:
-        """Closes the current window.
-
-        :Usage:
-            ::
-
-                target.close()
-        """
         try:
             await self._socket.close()
         except websockets.ConnectionClosedError:
@@ -101,43 +97,44 @@ class BaseTarget:
                 raise e
 
     async def wait_for_cdp(self, event: str, timeout: float or None = None):
+        """wait for an event
+        see :func:`Target.wait_for_cdp <selenium_driverless.types.target.Target.wait_for_cdp>` for reference
+        """
         if not self.socket:
             await self._init()
         return await self.socket.wait_for(event, timeout=timeout)
 
-    async def add_cdp_listener(self, event: str, callback: callable):
+    async def add_cdp_listener(self, event: str, callback: typing.Callable[[dict], any]):
+        """
+        add a listener for a CDP event
+        see :func:`Target.add_cdp_listener <selenium_driverless.types.target.Target.add_cdp_listener>` for reference
+        """
         if not self.socket:
             await self._init()
         self.socket.add_listener(method=event, callback=callback)
 
-    async def remove_cdp_listener(self, event: str, callback: callable):
+    async def remove_cdp_listener(self, event: str, callback: typing.Callable[[dict], any]):
+        """
+        remove a listener for a CDP event
+        see :func:`Target.remove_cdp_listener <selenium_driverless.types.target.Target.remove_cdp_listener>` for reference
+        """
         if not self.socket:
             await self._init()
         self.socket.remove_listener(method=event, callback=callback)
 
-    async def get_cdp_event_iter(self, event: str):
+    async def get_cdp_event_iter(self, event: str) -> typing.AsyncIterable[dict]:
+        """
+        iterate over CDP events on the current target
+        see :func:`Target.get_cdp_event_iter <selenium_driverless.types.target.Target.get_cdp_event_iter>` for reference
+        """
         if not self.socket:
             await self._init()
         return self.socket.method_iterator(method=event)
 
     async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None,
                               timeout: float or None = 10) -> dict:
-        """Execute Chrome Devtools Protocol command and get returned result The
-        command and command args should follow chrome devtools protocol
-        domains/commands, refer to link
-        https://chromedevtools.github.io/devtools-protocol/
-
-        :Args:
-         - cmd: A str, command name
-         - cmd_args: A dict, command args. empty dict {} if there is no command args
-        :Usage:
-            ::
-
-                target.execute_cdp_cmd('Network.getResponseBody', {'requestId': requestId})
-        :Returns:
-            A dict, empty dict {} if there is no result to return.
-            For example to getResponseBody:
-            {'base64Encoded': False, 'body': 'response body string'}
+        """Execute Chrome Devtools Protocol command and get returned result
+        see :func:`Target.execute_cdp_cmd <selenium_driverless.types.target.Target.execute_cdp_cmd>` for reference
         """
         if not self.socket:
             await self._init()

@@ -152,10 +152,12 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">Target</span><span class="p">,</span> <span class="n">BaseTarget</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the target&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the parameters from `Network.Request &lt;https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-Request&gt;`_ as a dict&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span>
 
     <span class="nd">@property</span>
@@ -222,10 +224,12 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">Target</span><span class="p">,</span> <span class="n">BaseTarget</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the target&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the parameters from `Fetch.AuthChallenge &lt;https://chromedevtools.github.io/devtools-protocol/tot/Fetch/#type-AuthChallenge&gt;`_ as a dict&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span>
 
     <span class="nd">@property</span>
@@ -248,7 +252,11 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
 
 
+<div class="viewcode-block" id="InterceptedRequest">
+<a class="viewcode-back" href="../../../../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedRequest">[docs]</a>
 <span class="k">class</span> <span class="nc">InterceptedRequest</span><span class="p">:</span>
+<div class="viewcode-block" id="InterceptedRequest.__init__">
+<a class="viewcode-back" href="../../../../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedRequest.__init__">[docs]</a>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_params</span> <span class="o">=</span> <span class="n">params</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">target</span>
@@ -257,10 +265,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_redirect</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_body</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_request</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">Target</span><span class="p">,</span> <span class="n">BaseTarget</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the target&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span>
 
     <span class="nd">@property</span>
@@ -287,6 +297,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the parameters from `Fetch.requestPaused &lt;https://chromedevtools.github.io/devtools-protocol/tot/Fetch/#event-requestPaused&gt;`_ as a dict&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span>
 
     <span class="nd">@property</span>
@@ -466,10 +477,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_done</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span></div>
 
 
+
+<div class="viewcode-block" id="InterceptedAuth">
+<a class="viewcode-back" href="../../../../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedAuth">[docs]</a>
 <span class="k">class</span> <span class="nc">InterceptedAuth</span><span class="p">:</span>
+<div class="viewcode-block" id="InterceptedAuth.__init__">
+<a class="viewcode-back" href="../../../../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedAuth.__init__">[docs]</a>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_params</span> <span class="o">=</span> <span class="n">params</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">target</span>
@@ -479,28 +495,34 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_body</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_request</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_auth_challenge</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Request</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the Request, for which auth is required&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">[</span><span class="s2">&quot;request&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the ``Fetch.RequestId``&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;requestId&quot;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">frame_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the ``Page.FrameId`` from which the request has been initiated&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">[</span><span class="s2">&quot;frameId&quot;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the parameters from `Fetch.authRequired &lt;https://chromedevtools.github.io/devtools-protocol/tot/Fetch/#event-authRequired&gt;`_ as a dict&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">Target</span><span class="p">,</span> <span class="n">BaseTarget</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the target&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span>
 
     <span class="nd">@property</span>
@@ -546,7 +568,8 @@
         <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">continue_auth</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="s2">&quot;CancelAuth&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span></div>
+
 
 
 <span class="n">CallbackType</span> <span class="o">=</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">InterceptedRequest</span><span class="p">],</span> <span class="n">typing</span><span class="o">.</span><span class="n">Awaitable</span><span class="p">[</span><span class="kc">None</span><span class="p">]]</span>
@@ -684,10 +707,29 @@
 <a class="viewcode-back" href="../../../../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.__aiter__">[docs]</a>
     <span class="k">def</span> <span class="fm">__aiter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">AsyncIterator</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">InterceptedRequest</span><span class="p">,</span> <span class="n">InterceptedAuth</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        iterate using ``async with`` over requests</span>
+<span class="sd">        iterate using ``async for`` over requests</span>
+
+<span class="sd">        **Example**</span>
+
+<span class="sd">        .. code-block:: Python</span>
+
+<span class="sd">            from selenium_driverless.scripts.network_interceptor import InterceptedRequest, RequestStages</span>
+
+<span class="sd">            # ... some code</span>
+<span class="sd">            async for data in interceptor:</span>
+<span class="sd">                url = data.request.url</span>
+<span class="sd">                if isinstance(data, InterceptedRequest):</span>
+<span class="sd">                    data.stage == RequestStages.Request:</span>
+<span class="sd">                        print(&quot;Request:&quot;+url)</span>
+<span class="sd">                    else:</span>
+<span class="sd">                        print(&quot;Response:&quot;+url)</span>
+<span class="sd">                else:</span>
+<span class="sd">                    print(&quot;Authentification:&quot;+url)</span>
+
 
 <span class="sd">        .. warning::</span>
 <span class="sd">            iterations should virtually take zero time, you might use ``asyncio.ensure_future`` where possible</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">async</span> <span class="k">def</span> <span class="nf">_iter</span><span class="p">():</span>
             <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>

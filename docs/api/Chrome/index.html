@@ -123,6 +123,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.wait_for_cdp"><code class="docutils literal notranslate"><span class="pre">Chrome.wait_for_cdp()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.add_cdp_listener"><code class="docutils literal notranslate"><span class="pre">Chrome.add_cdp_listener()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.remove_cdp_listener"><code class="docutils literal notranslate"><span class="pre">Chrome.remove_cdp_listener()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.get_cdp_event_iter"><code class="docutils literal notranslate"><span class="pre">Chrome.get_cdp_event_iter()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.execute_cdp_cmd"><code class="docutils literal notranslate"><span class="pre">Chrome.execute_cdp_cmd()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.get_sinks"><code class="docutils literal notranslate"><span class="pre">Chrome.get_sinks()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.webdriver.Chrome.get_issue_message"><code class="docutils literal notranslate"><span class="pre">Chrome.get_issue_message()</span></code></a></li>
@@ -255,7 +256,7 @@ all (incognito) contexts on Chrome.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.base_target">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">base_target</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">BaseTarget</span></em><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.base_target" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">base_target</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../Target/#selenium_driverless.types.base_target.BaseTarget" title="selenium_driverless.types.base_target.BaseTarget"><span class="pre">BaseTarget</span></a></em><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.base_target" title="Link to this definition"></a></dt>
 <dd><p>The connection handle for the global connection to Chrome</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -1141,13 +1142,11 @@ which is useful in embedded images in HTML.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.wait_for_cdp">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wait_for_cdp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.wait_for_cdp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.wait_for_cdp" title="Link to this definition"></a></dt>
-<dd><p>wait for a CDP-event (current target)</p>
+<dd><p>wait for an event on the current target
+see <a class="reference internal" href="../Target/#selenium_driverless.types.target.Target.wait_for_cdp" title="selenium_driverless.types.target.Target.wait_for_cdp"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.wait_for_cdp</span></code></a> for reference</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>event</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – an even such as <code class="docutils literal notranslate"><span class="pre">Page.windowOpen</span></code></p></li>
-<li><p><strong>timeout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – timeout to wait for the event</p></li>
-</ul>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1155,28 +1154,25 @@ which is useful in embedded images in HTML.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.add_cdp_listener">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_cdp_listener</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.add_cdp_listener"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.add_cdp_listener" title="Link to this definition"></a></dt>
-<dd><p>add a listener on a CDP event (current target)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>event</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the name of the event</p></li>
-<li><p><strong>callback</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">any</span></code>]</span>) – the callback on the event
-has to accept one parameter (event data as json)</p></li>
-</ul>
-</dd>
-</dl>
+<dd><p>add a listener for a CDP event on the current target
+see <a class="reference internal" href="../Target/#selenium_driverless.types.target.Target.add_cdp_listener" title="selenium_driverless.types.target.Target.add_cdp_listener"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.add_cdp_listener</span></code></a> for reference</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.remove_cdp_listener">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">remove_cdp_listener</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.remove_cdp_listener"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.remove_cdp_listener" title="Link to this definition"></a></dt>
-<dd><p>remove a listener for CDP-event (current target)</p>
+<dd><p>remove a listener for a CDP event on the current target
+see <a class="reference internal" href="../Target/#selenium_driverless.types.target.Target.remove_cdp_listener" title="selenium_driverless.types.target.Target.remove_cdp_listener"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.remove_cdp_listener</span></code></a> for reference</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.get_cdp_event_iter">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_cdp_event_iter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.get_cdp_event_iter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.get_cdp_event_iter" title="Link to this definition"></a></dt>
+<dd><p>iterate over CDP events on the current target
+see <a class="reference internal" href="../Target/#selenium_driverless.types.target.Target.get_cdp_event_iter" title="selenium_driverless.types.target.Target.get_cdp_event_iter"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.get_cdp_event_iter</span></code></a> for reference</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>event</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the name of the event</p></li>
-<li><p><strong>callback</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code></span>) – the callback function to remove</p></li>
-</ul>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncIterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1184,29 +1180,13 @@ has to accept one parameter (event data as json)</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.webdriver.Chrome.execute_cdp_cmd">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">execute_cdp_cmd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmd_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/webdriver/#Chrome.execute_cdp_cmd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.webdriver.Chrome.execute_cdp_cmd" title="Link to this definition"></a></dt>
-<dd><p>Execute Chrome Devtools Protocol command and get returned result The
-command and command args should follow chrome devtools protocol
-domains/commands, refer to link
-<a class="reference external" href="https://chromedevtools.github.io/devtools-protocol/">https://chromedevtools.github.io/devtools-protocol/</a></p>
-<dl class="field-list">
-<dt class="field-odd">Args<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p>cmd: A str, command name</p></li>
-<li><p>cmd_args: A dict, command args. empty dict {} if there is no command args</p></li>
-</ul>
-</dd>
-<dt class="field-even">Usage<span class="colon">:</span></dt>
-<dd class="field-even"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s1">&#39;Network.getResponseBody&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;requestId&#39;</span><span class="p">:</span> <span class="n">requestId</span><span class="p">})</span>
-</pre></div>
-</div>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A dict, empty dict {} if there is no result to return.
-For example to getResponseBody:
-{‘base64Encoded’: False, ‘body’: ‘response body string’}</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+<dd><p>Execute Chrome Devtools Protocol command on the current target
+executes it on <a class="reference internal" href="../Target/#selenium_driverless.types.base_target.BaseTarget" title="selenium_driverless.types.base_target.BaseTarget"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target.execute_cdp_cmd</span></code></a>
+if <code class="docutils literal notranslate"><span class="pre">message:'Not</span> <span class="pre">allowed'</span></code> received
+see <a class="reference internal" href="../Target/#selenium_driverless.types.target.Target.execute_cdp_cmd" title="selenium_driverless.types.target.Target.execute_cdp_cmd"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.execute_cdp_cmd</span></code></a> for reference</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>

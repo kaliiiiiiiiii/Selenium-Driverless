@@ -901,42 +901,45 @@ class Context:
             args["origin"] = origin
         await self.execute_cdp_cmd("Browser.setPermission", args)
 
-    async def wait_for_cdp(self, event: str, timeout: float or None = None, target_id: str = None):
+    async def wait_for_cdp(self, event: str, timeout: float or None = None, target_id: str = None) -> dict:
+        """
+        wait for an event on the current target
+        see :func:`Target.wait_for_cdp <selenium_driverless.types.target.Target.wait_for_cdp>` for reference
+        """
         target = await self.get_target(target_id=target_id)
         return await target.wait_for_cdp(event=event, timeout=timeout)
 
-    async def add_cdp_listener(self, event: str, callback: callable, target_id: str = None):
+    async def add_cdp_listener(self, event: str, callback: typing.Callable[[dict], any], target_id: str = None):
+        """
+        add a listener for a CDP event on the current target
+        see :func:`Target.add_cdp_listener <selenium_driverless.types.target.Target.add_cdp_listener>` for reference
+        """
         target = await self.get_target(target_id=target_id)
         return await target.add_cdp_listener(event=event, callback=callback)
 
-    async def remove_cdp_listener(self, event: str, callback: callable, target_id: str = None):
+    async def remove_cdp_listener(self, event: str, callback: typing.Callable[[dict], any], target_id: str = None):
+        """
+        remove a listener for a CDP event on the current target
+        see :func:`Target.remove_cdp_listener <selenium_driverless.types.target.Target.remove_cdp_listener>` for reference
+        """
         target = await self.get_target(target_id=target_id)
         return await target.remove_cdp_listener(event=event, callback=callback)
 
-    async def get_cdp_event_iter(self, event: str, target_id: str = None):
+    async def get_cdp_event_iter(self, event: str, target_id: str = None) -> typing.AsyncIterable[dict]:
+        """
+        iterate over CDP events on the current target
+        see :func:`Target.get_cdp_event_iter <selenium_driverless.types.target.Target.get_cdp_event_iter>` for reference
+        """
         target = await self.get_target(target_id=target_id)
         return await target.get_cdp_event_iter(event=event)
 
     async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None,
                               timeout: float or None = 10, target_id: str = None) -> dict:
-        """Execute Chrome Devtools Protocol command and get returned result The
-        command and command args should follow chrome devtools protocol
-        domains/commands, refer to link
-        https://chromedevtools.github.io/devtools-protocol/
-
-        :Args:
-         - cmd: A str, command name
-         - cmd_args: A dict, command args. empty dict {} if there is no command args
-        :Usage:
-            ::
-
-                target.execute_cdp_cmd('Network.getResponseBody', {'requestId': requestId})
-        :Returns:
-            A dict, empty dict {} if there is no result to return.
-            For example to getResponseBody:
-            {'base64Encoded': False, 'body': 'response body string'}
+        """Execute Chrome Devtools Protocol command on the current target
+        executes it on :class:`Target.execute_cdp_cmd <selenium_driverless.types.base_target.BaseTarget>`
+        if ``message:'Not allowed'`` received
+        see :func:`Target.execute_cdp_cmd <selenium_driverless.types.target.Target.execute_cdp_cmd>` for reference
         """
-
         target = await self.get_target(target_id=target_id)
         try:
             return await target.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout)

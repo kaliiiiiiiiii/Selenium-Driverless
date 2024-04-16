@@ -1101,44 +1101,59 @@
         <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Browser.setPermission&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span></div>
 
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">wait_for_cdp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Context.wait_for_cdp">
+<a class="viewcode-back" href="../../../../api/Context/#selenium_driverless.types.context.Context.wait_for_cdp">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">wait_for_cdp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        wait for an event on the current target</span>
+<span class="sd">        see :func:`Target.wait_for_cdp &lt;selenium_driverless.types.target.Target.wait_for_cdp&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">wait_for_cdp</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">wait_for_cdp</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">add_cdp_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="nb">callable</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">add_cdp_listener</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">remove_cdp_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="nb">callable</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Context.add_cdp_listener">
+<a class="viewcode-back" href="../../../../api/Context/#selenium_driverless.types.context.Context.add_cdp_listener">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">add_cdp_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">any</span><span class="p">],</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        add a listener for a CDP event on the current target</span>
+<span class="sd">        see :func:`Target.add_cdp_listener &lt;selenium_driverless.types.target.Target.add_cdp_listener&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">remove_cdp_listener</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">add_cdp_listener</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span></div>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cdp_event_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Context.remove_cdp_listener">
+<a class="viewcode-back" href="../../../../api/Context/#selenium_driverless.types.context.Context.remove_cdp_listener">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">remove_cdp_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">any</span><span class="p">],</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        remove a listener for a CDP event on the current target</span>
+<span class="sd">        see :func:`Target.remove_cdp_listener &lt;selenium_driverless.types.target.Target.remove_cdp_listener&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">get_cdp_event_iter</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">remove_cdp_listener</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Context.get_cdp_event_iter">
+<a class="viewcode-back" href="../../../../api/Context/#selenium_driverless.types.context.Context.get_cdp_event_iter">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cdp_event_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">AsyncIterable</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        iterate over CDP events on the current target</span>
+<span class="sd">        see :func:`Target.get_cdp_event_iter &lt;selenium_driverless.types.target.Target.get_cdp_event_iter&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">get_cdp_event_iter</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="Context.execute_cdp_cmd">
 <a class="viewcode-back" href="../../../../api/Context/#selenium_driverless.types.context.Context.execute_cdp_cmd">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_cdp_cmd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cmd_args</span><span class="p">:</span> <span class="nb">dict</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                               <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute Chrome Devtools Protocol command and get returned result The</span>
-<span class="sd">        command and command args should follow chrome devtools protocol</span>
-<span class="sd">        domains/commands, refer to link</span>
-<span class="sd">        https://chromedevtools.github.io/devtools-protocol/</span>
-
-<span class="sd">        :Args:</span>
-<span class="sd">         - cmd: A str, command name</span>
-<span class="sd">         - cmd_args: A dict, command args. empty dict {} if there is no command args</span>
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
-
-<span class="sd">                target.execute_cdp_cmd(&#39;Network.getResponseBody&#39;, {&#39;requestId&#39;: requestId})</span>
-<span class="sd">        :Returns:</span>
-<span class="sd">            A dict, empty dict {} if there is no result to return.</span>
-<span class="sd">            For example to getResponseBody:</span>
-<span class="sd">            {&#39;base64Encoded&#39;: False, &#39;body&#39;: &#39;response body string&#39;}</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute Chrome Devtools Protocol command on the current target</span>
+<span class="sd">        executes it on :class:`Target.execute_cdp_cmd &lt;selenium_driverless.types.base_target.BaseTarget&gt;`</span>
+<span class="sd">        if ``message:&#39;Not allowed&#39;`` received</span>
+<span class="sd">        see :func:`Target.execute_cdp_cmd &lt;selenium_driverless.types.target.Target.execute_cdp_cmd&gt;` for reference</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span> <span class="n">cmd_args</span><span class="o">=</span><span class="n">cmd_args</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>

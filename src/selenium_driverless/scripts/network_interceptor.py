@@ -74,10 +74,12 @@ class Request:
 
     @property
     def target(self) -> typing.Union[Target, BaseTarget]:
+        """the target"""
         return self._target
 
     @property
     def params(self) -> dict:
+        """the parameters from `Network.Request <https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-Request>`_ as a dict"""
         return self._params
 
     @property
@@ -144,10 +146,12 @@ class AuthChallenge:
 
     @property
     def target(self) -> typing.Union[Target, BaseTarget]:
+        """the target"""
         return self._target
 
     @property
     def params(self) -> dict:
+        """the parameters from `Fetch.AuthChallenge <https://chromedevtools.github.io/devtools-protocol/tot/Fetch/#type-AuthChallenge>`_ as a dict"""
         return self._params
 
     @property
@@ -183,6 +187,7 @@ class InterceptedRequest:
 
     @property
     def target(self) -> typing.Union[Target, BaseTarget]:
+        """the target"""
         return self._target
 
     @property
@@ -209,6 +214,7 @@ class InterceptedRequest:
 
     @property
     def params(self) -> dict:
+        """the parameters from `Fetch.requestPaused <https://chromedevtools.github.io/devtools-protocol/tot/Fetch/#event-requestPaused>`_ as a dict"""
         return self._params
 
     @property
@@ -405,24 +411,29 @@ class InterceptedAuth:
 
     @property
     def request(self) -> Request:
+        """the Request, for which auth is required"""
         if self._request is None:
             self._request = Request(self._params["request"], self.target)
         return self._request
 
     @property
     def id(self) -> str:
+        """the ``Fetch.RequestId``"""
         return self.params["requestId"]
 
     @property
     def frame_id(self) -> str:
+        """the ``Page.FrameId`` from which the request has been initiated"""
         return self._params["frameId"]
 
     @property
     def params(self) -> dict:
+        """the parameters from `Fetch.authRequired <https://chromedevtools.github.io/devtools-protocol/tot/Fetch/#event-authRequired>`_ as a dict"""
         return self._params
 
     @property
     def target(self) -> typing.Union[Target, BaseTarget]:
+        """the target"""
         return self._target
 
     @property
@@ -599,10 +610,29 @@ class NetworkInterceptor:
 
     def __aiter__(self) -> typing.AsyncIterator[typing.Union[InterceptedRequest, InterceptedAuth]]:
         """
-        iterate using ``async with`` over requests
+        iterate using ``async for`` over requests
+
+        **Example**
+
+        .. code-block:: Python
+
+            from selenium_driverless.scripts.network_interceptor import InterceptedRequest, RequestStages
+
+            # ... some code
+            async for data in interceptor:
+                url = data.request.url
+                if isinstance(data, InterceptedRequest):
+                    data.stage == RequestStages.Request:
+                        print("Request:"+url)
+                    else:
+                        print("Response:"+url)
+                else:
+                    print("Authentification:"+url)
+
 
         .. warning::
             iterations should virtually take zero time, you might use ``asyncio.ensure_future`` where possible
+
         """
         async def _iter():
             while True:

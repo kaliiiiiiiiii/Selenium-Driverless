@@ -185,6 +185,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">socket</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SingleCDPSocket</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the cdp-socket for the connection&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_socket</span>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
@@ -845,7 +846,7 @@
     <span class="c1"># noinspection PyUnusedLocal</span>
 <div class="viewcode-block" id="Target.find_element">
 <a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.find_element">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebElement</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebElement</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;find an element in the current target</span>
 
 <span class="sd">        :param by: one of the locators at :func:`By &lt;selenium_driverless.types.by.By&gt;`</span>
@@ -870,14 +871,13 @@
 
 <div class="viewcode-block" id="Target.find_elements">
 <a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.find_elements">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">WebElement</span><span class="p">]:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">WebElement</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;find multiple elements in the current target</span>
 
 <span class="sd">        :param by: one of the locators at :func:`By &lt;selenium_driverless.types.by.By&gt;`</span>
 <span class="sd">        :param value: the actual query to find the elements by</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">parent</span><span class="p">:</span>
-            <span class="n">parent</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_document_elem</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_document_elem</span>
         <span class="k">return</span> <span class="k">await</span> <span class="n">parent</span><span class="o">.</span><span class="n">find_elements</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span></div>
 
 
@@ -1075,25 +1075,71 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;not started with chromedriver&quot;</span><span class="p">)</span></div>
 
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">wait_for_cdp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Target.wait_for_cdp">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.wait_for_cdp">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">wait_for_cdp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        wait for a CDP event and return the data</span>
+<span class="sd">        :param event: the name of the event</span>
+<span class="sd">        :param timeout: timeout to wait in seconds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">:</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">()</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">add_cdp_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="nb">callable</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">:</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">add_listener</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">remove_cdp_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="nb">callable</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">:</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">remove_listener</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span>
+<div class="viewcode-block" id="Target.add_cdp_listener">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.add_cdp_listener">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">add_cdp_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">any</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;add a listener on a CDP event (current target)</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cdp_event_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="sd">        :param event: the name of the event</span>
+<span class="sd">        :param callback: the callback on the event</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            callback has to accept one parameter (event data as json)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">:</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">method_iterator</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">event</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">add_listener</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Target.remove_cdp_listener">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.remove_cdp_listener">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">remove_cdp_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">any</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        removes the CDP listener</span>
+<span class="sd">        :param event: the name of the event</span>
+<span class="sd">        :param callback: the callback to remove</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">remove_listener</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Target.get_cdp_event_iter">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_cdp_event_iter">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cdp_event_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">AsyncIterable</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        iterate over a cdp event</span>
+
+<span class="sd">        :param event: name of the event to iterate over</span>
+
+<span class="sd">        .. code-block:: Python</span>
+
+<span class="sd">            async for data in await target.get_cdp_event_iter(&quot;Page.frameNavigated&quot;):</span>
+<span class="sd">                print(data[&quot;frame&quot;][&quot;url&quot;]</span>
+
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            **async only** supported for now</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">method_iterator</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">event</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="Target.execute_cdp_cmd">
 <a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.execute_cdp_cmd">[docs]</a>

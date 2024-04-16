@@ -105,6 +105,7 @@ class Target:
 
     @property
     def socket(self) -> SingleCDPSocket:
+        """the cdp-socket for the connection"""
         return self._socket
 
     def __eq__(self, other):
@@ -712,7 +713,7 @@ class Target:
         return self._document_elem_
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, parent=None, timeout: int or None = None) -> WebElement:
+    async def find_element(self, by: str, value: str, timeout: int or None = None) -> WebElement:
         """find an element in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
@@ -734,14 +735,13 @@ class Target:
             raise NoSuchElementException()
         return elem
 
-    async def find_elements(self, by: str, value: str, parent=None) -> typing.List[WebElement]:
+    async def find_elements(self, by: str, value: str) -> typing.List[WebElement]:
         """find multiple elements in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
         :param value: the actual query to find the elements by
         """
-        if not parent:
-            parent = await self._document_elem
+        parent = await self._document_elem
         return await parent.find_elements(by=by, value=value)
 
     async def set_source(self, source: str, timeout: float = 15):
@@ -911,22 +911,56 @@ class Target:
         """Resets Chromium network emulation settings."""
         raise NotImplementedError("not started with chromedriver")
 
-    async def wait_for_cdp(self, event: str, timeout: float or None = None):
+    async def wait_for_cdp(self, event: str, timeout: float or None = None) -> dict:
+        """
+        wait for a CDP event and return the data
+        :param event: the name of the event
+        :param timeout: timeout to wait in seconds.
+        """
         if not self.socket:
             await self._init()
         return await self.socket.wait_for(event, timeout=timeout)
 
-    async def add_cdp_listener(self, event: str, callback: callable):
+    async def add_cdp_listener(self, event: str, callback: typing.Callable[[dict], any]):
+        """add a listener on a CDP event (current target)
+
+        :param event: the name of the event
+        :param callback: the callback on the event
+
+        .. note::
+            callback has to accept one parameter (event data as json)
+
+        """
         if not self.socket:
             await self._init()
         self.socket.add_listener(method=event, callback=callback)
 
-    async def remove_cdp_listener(self, event: str, callback: callable):
+    async def remove_cdp_listener(self, event: str, callback: typing.Callable[[dict], any]):
+        """
+        removes the CDP listener
+        :param event: the name of the event
+        :param callback: the callback to remove
+        """
         if not self.socket:
             await self._init()
         self.socket.remove_listener(method=event, callback=callback)
 
-    async def get_cdp_event_iter(self, event: str):
+    async def get_cdp_event_iter(self, event: str) -> typing.AsyncIterable[dict]:
+        """
+        iterate over a cdp event
+
+        :param event: name of the event to iterate over
+
+        .. code-block:: Python
+
+            async for data in await target.get_cdp_event_iter("Page.frameNavigated"):
+                print(data["frame"]["url"]
+
+
+        .. warning::
+            **async only** supported for now
+
+        """
         if not self.socket:
             await self._init()
         return self.socket.method_iterator(method=event)

@@ -50,11 +50,31 @@
 <li class="toctree-l1"><a class="reference internal" href="../ChromeOptions/">ChromeOptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Context/">Context</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Request-Interception</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.NetworkInterceptor"><code class="docutils literal notranslate"><span class="pre">NetworkInterceptor</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.__init__"><code class="docutils literal notranslate"><span class="pre">NetworkInterceptor.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.__aiter__"><code class="docutils literal notranslate"><span class="pre">NetworkInterceptor.__aiter__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.patterns"><code class="docutils literal notranslate"><span class="pre">NetworkInterceptor.patterns</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.target"><code class="docutils literal notranslate"><span class="pre">NetworkInterceptor.target</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-script">Example Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api">API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.NetworkInterceptor"><code class="docutils literal notranslate"><span class="pre">NetworkInterceptor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.__init__"><code class="docutils literal notranslate"><span class="pre">NetworkInterceptor.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.__aiter__"><code class="docutils literal notranslate"><span class="pre">NetworkInterceptor.__aiter__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.patterns"><code class="docutils literal notranslate"><span class="pre">NetworkInterceptor.patterns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.target"><code class="docutils literal notranslate"><span class="pre">NetworkInterceptor.target</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedRequest"><code class="docutils literal notranslate"><span class="pre">InterceptedRequest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedRequest.__init__"><code class="docutils literal notranslate"><span class="pre">InterceptedRequest.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedRequest.target"><code class="docutils literal notranslate"><span class="pre">InterceptedRequest.target</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedRequest.stage"><code class="docutils literal notranslate"><span class="pre">InterceptedRequest.stage</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedRequest.params"><code class="docutils literal notranslate"><span class="pre">InterceptedRequest.params</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth"><code class="docutils literal notranslate"><span class="pre">InterceptedAuth</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth.__init__"><code class="docutils literal notranslate"><span class="pre">InterceptedAuth.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth.request"><code class="docutils literal notranslate"><span class="pre">InterceptedAuth.request</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth.id"><code class="docutils literal notranslate"><span class="pre">InterceptedAuth.id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth.frame_id"><code class="docutils literal notranslate"><span class="pre">InterceptedAuth.frame_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth.params"><code class="docutils literal notranslate"><span class="pre">InterceptedAuth.params</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth.target"><code class="docutils literal notranslate"><span class="pre">InterceptedAuth.target</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -89,6 +109,43 @@
              
   <section id="request-interception">
 <h1>Request-Interception<a class="headerlink" href="#request-interception" title="Link to this heading"></a></h1>
+<section id="example-script">
+<h2>Example Script<a class="headerlink" href="#example-script" title="Link to this heading"></a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless</span> <span class="kn">import</span> <span class="n">webdriver</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.scripts.network_interceptor</span> <span class="kn">import</span> <span class="n">NetworkInterceptor</span><span class="p">,</span> <span class="n">InterceptedRequest</span><span class="p">,</span> <span class="n">InterceptedAuth</span><span class="p">,</span> \
+    <span class="n">RequestPattern</span><span class="p">,</span> <span class="n">RequestStages</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">on_request</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">InterceptedRequest</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">url</span> <span class="o">==</span> <span class="s2">&quot;https://httpbin.org/post&quot;</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">data</span><span class="o">.</span><span class="n">continue_request</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://httpbin.org/basic-auth/user/pass&quot;</span><span class="p">,</span> <span class="n">intercept_response</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">Chrome</span><span class="p">(</span><span class="n">max_ws_size</span><span class="o">=</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">30</span><span class="p">)</span> <span class="k">as</span> <span class="n">driver</span><span class="p">:</span>
+
+        <span class="k">async</span> <span class="k">with</span> <span class="n">NetworkInterceptor</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="n">on_request</span><span class="o">=</span><span class="n">on_request</span><span class="p">,</span> <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="n">RequestPattern</span><span class="o">.</span><span class="n">AnyRequest</span><span class="p">],</span>
+                                      <span class="n">intercept_auth</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">interceptor</span><span class="p">:</span>
+
+            <span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span><span class="n">driver</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://httpbin.org/post&quot;</span><span class="p">,</span> <span class="n">wait_load</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+            <span class="k">async</span> <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">interceptor</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">url</span> <span class="o">==</span> <span class="s2">&quot;https://httpbin.org/basic-auth/user/pass&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">InterceptedAuth</span><span class="p">):</span>
+                        <span class="c1"># iteration should take virtually zero time, as that would block other requests</span>
+                        <span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">continue_auth</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;pass&quot;</span><span class="p">))</span>
+                    <span class="k">elif</span> <span class="n">data</span><span class="o">.</span><span class="n">stage</span> <span class="o">==</span> <span class="n">RequestStages</span><span class="o">.</span><span class="n">Response</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="k">await</span> <span class="n">data</span><span class="o">.</span><span class="n">body</span><span class="p">))</span>
+                        <span class="k">break</span>
+
+
+<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+</section>
+<section id="api">
+<h2>API<a class="headerlink" href="#api" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="selenium_driverless.scripts.network_interceptor.NetworkInterceptor">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.scripts.network_interceptor.</span></span><span class="sig-name descname"><span class="pre">NetworkInterceptor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_request</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_response</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_auth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intercept_auth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bypass_service_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/scripts/network_interceptor/#NetworkInterceptor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.scripts.network_interceptor.NetworkInterceptor" title="Link to this definition"></a></dt>
@@ -99,9 +156,9 @@
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>target</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="../Chrome/#selenium_driverless.webdriver.Chrome" title="selenium_driverless.webdriver.Chrome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Chrome</span></code></a>, <a class="reference internal" href="../Target/#selenium_driverless.types.target.Target" title="selenium_driverless.types.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target</span></code></a>]</span>) – the Target or Driver, on which requests get intercepted</p></li>
-<li><p><strong>on_request</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">InterceptedRequest</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Awaitable</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]]]</span>) – onRequest callback</p></li>
-<li><p><strong>on_response</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">InterceptedRequest</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Awaitable</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]]]</span>) – onResponse callback</p></li>
-<li><p><strong>on_auth</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">InterceptedRequest</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Awaitable</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]]]</span>) – onAuth callback</p></li>
+<li><p><strong>on_request</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedRequest" title="selenium_driverless.scripts.network_interceptor.InterceptedRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">InterceptedRequest</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Awaitable</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]]]</span>) – onRequest callback</p></li>
+<li><p><strong>on_response</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedRequest" title="selenium_driverless.scripts.network_interceptor.InterceptedRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">InterceptedRequest</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Awaitable</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]]]</span>) – onResponse callback</p></li>
+<li><p><strong>on_auth</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedRequest" title="selenium_driverless.scripts.network_interceptor.InterceptedRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">InterceptedRequest</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Awaitable</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]]]</span>) – onAuth callback</p></li>
 <li><p><strong>patterns</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]], <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">RequestPattern</span></code>], <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – the request patterns to intercept</p></li>
 <li><p><strong>intercept_auth</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to intercept authentification</p></li>
 <li><p><strong>bypass_service_workers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to bypass service workers for a single Target</p></li>
@@ -113,8 +170,27 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.scripts.network_interceptor.NetworkInterceptor.__aiter__">
 <span class="sig-name descname"><span class="pre">__aiter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/scripts/network_interceptor/#NetworkInterceptor.__aiter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.__aiter__" title="Link to this definition"></a></dt>
-<dd><p>iterate using <code class="docutils literal notranslate"><span class="pre">async</span> <span class="pre">with</span></code> over requests
-:rtype: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncIterator</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">InterceptedRequest</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">InterceptedAuth</span></code>]]</span></p>
+<dd><p>iterate using <code class="docutils literal notranslate"><span class="pre">async</span> <span class="pre">for</span></code> over requests</p>
+<p><strong>Example</strong></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">selenium_driverless.scripts.network_interceptor</span> <span class="kn">import</span> <span class="n">InterceptedRequest</span><span class="p">,</span> <span class="n">RequestStages</span>
+
+<span class="c1"># ... some code</span>
+<span class="k">async</span> <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">interceptor</span><span class="p">:</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">url</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">InterceptedRequest</span><span class="p">):</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">stage</span> <span class="o">==</span> <span class="n">RequestStages</span><span class="o">.</span><span class="n">Request</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Request:&quot;</span><span class="o">+</span><span class="n">url</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Response:&quot;</span><span class="o">+</span><span class="n">url</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Authentification:&quot;</span><span class="o">+</span><span class="n">url</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncIterator</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedRequest" title="selenium_driverless.scripts.network_interceptor.InterceptedRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">InterceptedRequest</span></code></a>, <a class="reference internal" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth" title="selenium_driverless.scripts.network_interceptor.InterceptedAuth"><code class="xref py py-class docutils literal notranslate"><span class="pre">InterceptedAuth</span></code></a>]]</span></p>
+</dd>
+</dl>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>iterations should virtually take zero time, you might use <code class="docutils literal notranslate"><span class="pre">asyncio.ensure_future</span></code> where possible</p>
@@ -135,6 +211,76 @@
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="selenium_driverless.scripts.network_interceptor.InterceptedRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.scripts.network_interceptor.</span></span><span class="sig-name descname"><span class="pre">InterceptedRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/scripts/network_interceptor/#InterceptedRequest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.scripts.network_interceptor.InterceptedRequest" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.scripts.network_interceptor.InterceptedRequest.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/scripts/network_interceptor/#InterceptedRequest.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.scripts.network_interceptor.InterceptedRequest.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="selenium_driverless.scripts.network_interceptor.InterceptedRequest.target">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">target</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../Target/#selenium_driverless.types.target.Target" title="selenium_driverless.types.target.Target"><span class="pre">Target</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">BaseTarget</span></em><a class="headerlink" href="#selenium_driverless.scripts.network_interceptor.InterceptedRequest.target" title="Link to this definition"></a></dt>
+<dd><p>the target</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="selenium_driverless.scripts.network_interceptor.InterceptedRequest.stage">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stage</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#selenium_driverless.scripts.network_interceptor.InterceptedRequest.stage" title="Link to this definition"></a></dt>
+<dd><p>0 =&gt; Request
+1 =&gt; Response</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="selenium_driverless.scripts.network_interceptor.InterceptedRequest.params">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#selenium_driverless.scripts.network_interceptor.InterceptedRequest.params" title="Link to this definition"></a></dt>
+<dd><p>the parameters from <a class="reference external" href="https://chromedevtools.github.io/devtools-protocol/tot/Fetch/#event-requestPaused">Fetch.requestPaused</a> as a dict</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="selenium_driverless.scripts.network_interceptor.InterceptedAuth">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.scripts.network_interceptor.</span></span><span class="sig-name descname"><span class="pre">InterceptedAuth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/scripts/network_interceptor/#InterceptedAuth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.scripts.network_interceptor.InterceptedAuth.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/scripts/network_interceptor/#InterceptedAuth.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="selenium_driverless.scripts.network_interceptor.InterceptedAuth.request">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">request</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Request</span></em><a class="headerlink" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth.request" title="Link to this definition"></a></dt>
+<dd><p>the Request, for which auth is required</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="selenium_driverless.scripts.network_interceptor.InterceptedAuth.id">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth.id" title="Link to this definition"></a></dt>
+<dd><p>the <code class="docutils literal notranslate"><span class="pre">Fetch.RequestId</span></code></p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="selenium_driverless.scripts.network_interceptor.InterceptedAuth.frame_id">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth.frame_id" title="Link to this definition"></a></dt>
+<dd><p>the <code class="docutils literal notranslate"><span class="pre">Page.FrameId</span></code> from which the request has been initiated</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="selenium_driverless.scripts.network_interceptor.InterceptedAuth.params">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth.params" title="Link to this definition"></a></dt>
+<dd><p>the parameters from <a class="reference external" href="https://chromedevtools.github.io/devtools-protocol/tot/Fetch/#event-authRequired">Fetch.authRequired</a> as a dict</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="selenium_driverless.scripts.network_interceptor.InterceptedAuth.target">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">target</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../Target/#selenium_driverless.types.target.Target" title="selenium_driverless.types.target.Target"><span class="pre">Target</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">BaseTarget</span></em><a class="headerlink" href="#selenium_driverless.scripts.network_interceptor.InterceptedAuth.target" title="Link to this definition"></a></dt>
+<dd><p>the target</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 </section>
 
 

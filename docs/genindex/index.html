@@ -108,10 +108,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.__aiter__">__aiter__() (selenium_driverless.scripts.network_interceptor.NetworkInterceptor method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.__init__">__init__() (selenium_driverless.scripts.network_interceptor.NetworkInterceptor method)</a>
+      <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedAuth.__init__">__init__() (selenium_driverless.scripts.network_interceptor.InterceptedAuth method)</a>
+
+      <ul>
+        <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedRequest.__init__">(selenium_driverless.scripts.network_interceptor.InterceptedRequest method)</a>
 </li>
+        <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.__init__">(selenium_driverless.scripts.network_interceptor.NetworkInterceptor method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -126,8 +130,16 @@
 </li>
       <li><a href="../api/ChromeOptions/#selenium_driverless.types.options.Options.add_arguments">add_arguments() (selenium_driverless.types.options.Options method)</a>
 </li>
-      <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.add_cdp_listener">add_cdp_listener() (selenium_driverless.webdriver.Chrome method)</a>
+      <li><a href="../api/Target/#selenium_driverless.types.base_target.BaseTarget.add_cdp_listener">add_cdp_listener() (selenium_driverless.types.base_target.BaseTarget method)</a>
+
+      <ul>
+        <li><a href="../api/Context/#selenium_driverless.types.context.Context.add_cdp_listener">(selenium_driverless.types.context.Context method)</a>
 </li>
+        <li><a href="../api/Target/#selenium_driverless.types.target.Target.add_cdp_listener">(selenium_driverless.types.target.Target method)</a>
+</li>
+        <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.add_cdp_listener">(selenium_driverless.webdriver.Chrome method)</a>
+</li>
+      </ul></li>
       <li><a href="../api/Context/#selenium_driverless.types.context.Context.add_cookie">add_cookie() (selenium_driverless.types.context.Context method)</a>
 
       <ul>
@@ -168,9 +180,11 @@
       </ul></li>
       <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.base_context">base_context (selenium_driverless.webdriver.Chrome property)</a>
 </li>
+      <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.base_target">base_target (selenium_driverless.webdriver.Chrome property)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.base_target">base_target (selenium_driverless.webdriver.Chrome property)</a>
+      <li><a href="../api/Target/#selenium_driverless.types.base_target.BaseTarget">BaseTarget (class in selenium_driverless.types.base_target)</a>
 </li>
       <li><a href="../api/ChromeOptions/#selenium_driverless.types.options.Options.binary_location">binary_location (selenium_driverless.types.options.Options property)</a>
 </li>
@@ -290,6 +304,8 @@
         <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.downloads_dir">(selenium_driverless.webdriver.Chrome property)</a>
 </li>
       </ul></li>
+      <li><a href="../api/Target/#selenium_driverless.types.base_target.BaseTarget.downloads_dir_for_context">downloads_dir_for_context() (selenium_driverless.types.base_target.BaseTarget method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -324,9 +340,11 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="../api/Context/#selenium_driverless.types.context.Context.execute_cdp_cmd">execute_cdp_cmd() (selenium_driverless.types.context.Context method)</a>
+      <li><a href="../api/Target/#selenium_driverless.types.base_target.BaseTarget.execute_cdp_cmd">execute_cdp_cmd() (selenium_driverless.types.base_target.BaseTarget method)</a>
 
       <ul>
+        <li><a href="../api/Context/#selenium_driverless.types.context.Context.execute_cdp_cmd">(selenium_driverless.types.context.Context method)</a>
+</li>
         <li><a href="../api/Target/#selenium_driverless.types.target.Target.execute_cdp_cmd">(selenium_driverless.types.target.Target method)</a>
 </li>
         <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.execute_cdp_cmd">(selenium_driverless.webdriver.Chrome method)</a>
@@ -376,14 +394,14 @@
         <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.find_elements">(selenium_driverless.webdriver.Chrome method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="../api/WebELement/#selenium_driverless.types.webelement.WebElement.focus">focus() (selenium_driverless.types.webelement.WebElement method)</a>
 
       <ul>
         <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.focus">(selenium_driverless.webdriver.Chrome method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="../api/Context/#selenium_driverless.types.context.Context.forward">forward() (selenium_driverless.types.context.Context method)</a>
 
       <ul>
@@ -393,6 +411,8 @@
 </li>
       </ul></li>
       <li><a href="../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.frame">frame() (selenium_driverless.scripts.switch_to.SwitchTo method)</a>
+</li>
+      <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedAuth.frame_id">frame_id (selenium_driverless.scripts.network_interceptor.InterceptedAuth property)</a>
 </li>
       <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.frame_tree">frame_tree (selenium_driverless.webdriver.Chrome property)</a>
 </li>
@@ -420,6 +440,16 @@
 </li>
       <li><a href="../api/WebELement/#selenium_driverless.types.webelement.WebElement.get_attribute">get_attribute() (selenium_driverless.types.webelement.WebElement method)</a>
 </li>
+      <li><a href="../api/Target/#selenium_driverless.types.base_target.BaseTarget.get_cdp_event_iter">get_cdp_event_iter() (selenium_driverless.types.base_target.BaseTarget method)</a>
+
+      <ul>
+        <li><a href="../api/Context/#selenium_driverless.types.context.Context.get_cdp_event_iter">(selenium_driverless.types.context.Context method)</a>
+</li>
+        <li><a href="../api/Target/#selenium_driverless.types.target.Target.get_cdp_event_iter">(selenium_driverless.types.target.Target method)</a>
+</li>
+        <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.get_cdp_event_iter">(selenium_driverless.webdriver.Chrome method)</a>
+</li>
+      </ul></li>
       <li><a href="../api/Context/#selenium_driverless.types.context.Context.get_cookie">get_cookie() (selenium_driverless.types.context.Context method)</a>
 
       <ul>
@@ -458,10 +488,10 @@
         <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.get_network_conditions">(selenium_driverless.webdriver.Chrome method)</a>
 </li>
       </ul></li>
-      <li><a href="../api/WebELement/#selenium_driverless.types.webelement.WebElement.get_property">get_property() (selenium_driverless.types.webelement.WebElement method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="../api/WebELement/#selenium_driverless.types.webelement.WebElement.get_property">get_property() (selenium_driverless.types.webelement.WebElement method)</a>
+</li>
       <li><a href="../api/Context/#selenium_driverless.types.context.Context.get_screenshot_as_base64">get_screenshot_as_base64() (selenium_driverless.types.context.Context method)</a>
 
       <ul>
@@ -538,14 +568,20 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedAuth.id">id (selenium_driverless.scripts.network_interceptor.InterceptedAuth property)</a>
+</li>
       <li><a href="../api/By/#selenium_driverless.types.by.By.ID">ID (selenium_driverless.types.by.By attribute)</a>
 </li>
       <li><a href="../api/Target/#selenium_driverless.types.target.TargetInfo.id">id (selenium_driverless.types.target.TargetInfo property)</a>
 </li>
       <li><a href="../api/ChromeOptions/#selenium_driverless.types.options.Options.ignore_local_proxy_environment_variables">ignore_local_proxy_environment_variables() (selenium_driverless.types.options.Options method)</a>
 </li>
+      <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedAuth">InterceptedAuth (class in selenium_driverless.scripts.network_interceptor)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedRequest">InterceptedRequest (class in selenium_driverless.scripts.network_interceptor)</a>
+</li>
       <li><a href="../api/WebELement/#selenium_driverless.types.webelement.WebElement.is_clickable">is_clickable() (selenium_driverless.types.webelement.WebElement method)</a>
 </li>
       <li><a href="../api/WebELement/#selenium_driverless.types.webelement.WebElement.is_displayed">is_displayed() (selenium_driverless.types.webelement.WebElement method)</a>
@@ -644,12 +680,18 @@
         <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.page_source">(selenium_driverless.webdriver.Chrome property)</a>
 </li>
       </ul></li>
-      <li><a href="../api/WebELement/#selenium_driverless.types.webelement.WebElement.parent">parent (selenium_driverless.types.webelement.WebElement property)</a>
+      <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedAuth.params">params (selenium_driverless.scripts.network_interceptor.InterceptedAuth property)</a>
+
+      <ul>
+        <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedRequest.params">(selenium_driverless.scripts.network_interceptor.InterceptedRequest property)</a>
 </li>
-      <li><a href="../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.parent_frame">parent_frame() (selenium_driverless.scripts.switch_to.SwitchTo method)</a>
+      </ul></li>
+      <li><a href="../api/WebELement/#selenium_driverless.types.webelement.WebElement.parent">parent (selenium_driverless.types.webelement.WebElement property)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.parent_frame">parent_frame() (selenium_driverless.scripts.switch_to.SwitchTo method)</a>
+</li>
       <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.patterns">patterns (selenium_driverless.scripts.network_interceptor.NetworkInterceptor property)</a>
 </li>
       <li><a href="../api/ChromeOptions/#selenium_driverless.types.options.Options.prefs">prefs (selenium_driverless.types.options.Options property)</a>
@@ -690,11 +732,21 @@
         <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.refresh">(selenium_driverless.webdriver.Chrome method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="../api/WebELement/#selenium_driverless.types.webelement.WebElement.remove">remove() (selenium_driverless.types.webelement.WebElement method)</a>
 </li>
-      <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.remove_cdp_listener">remove_cdp_listener() (selenium_driverless.webdriver.Chrome method)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="../api/Target/#selenium_driverless.types.base_target.BaseTarget.remove_cdp_listener">remove_cdp_listener() (selenium_driverless.types.base_target.BaseTarget method)</a>
+
+      <ul>
+        <li><a href="../api/Context/#selenium_driverless.types.context.Context.remove_cdp_listener">(selenium_driverless.types.context.Context method)</a>
+</li>
+        <li><a href="../api/Target/#selenium_driverless.types.target.Target.remove_cdp_listener">(selenium_driverless.types.target.Target method)</a>
+</li>
+        <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.remove_cdp_listener">(selenium_driverless.webdriver.Chrome method)</a>
+</li>
+      </ul></li>
+      <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedAuth.request">request (selenium_driverless.scripts.network_interceptor.InterceptedAuth property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -772,14 +824,14 @@
         <li><a href="../api/WebELement/#selenium_driverless.types.webelement.WebElement.set_source">(selenium_driverless.types.webelement.WebElement method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="../api/Context/#selenium_driverless.types.context.Context.set_window_position">set_window_position() (selenium_driverless.types.context.Context method)</a>
 
       <ul>
         <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.set_window_position">(selenium_driverless.webdriver.Chrome method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="../api/Context/#selenium_driverless.types.context.Context.set_window_rect">set_window_rect() (selenium_driverless.types.context.Context method)</a>
 
       <ul>
@@ -802,7 +854,15 @@
 </li>
       <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.sleep">sleep() (selenium_driverless.webdriver.Chrome static method)</a>
 </li>
+      <li><a href="../api/Target/#selenium_driverless.types.base_target.BaseTarget.socket">socket (selenium_driverless.types.base_target.BaseTarget property)</a>
+
+      <ul>
+        <li><a href="../api/Target/#selenium_driverless.types.target.Target.socket">(selenium_driverless.types.target.Target property)</a>
+</li>
+      </ul></li>
       <li><a href="../api/WebELement/#selenium_driverless.types.webelement.WebElement.source">source (selenium_driverless.types.webelement.WebElement property)</a>
+</li>
+      <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedRequest.stage">stage (selenium_driverless.scripts.network_interceptor.InterceptedRequest property)</a>
 </li>
       <li><a href="../api/Context/#selenium_driverless.types.context.Context.start_desktop_mirroring">start_desktop_mirroring() (selenium_driverless.types.context.Context method)</a>
 
@@ -856,14 +916,20 @@
 </li>
       <li><a href="../api/Target/#selenium_driverless.types.target.Target">Target (class in selenium_driverless.types.target)</a>
 </li>
-      <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.target">target (selenium_driverless.scripts.network_interceptor.NetworkInterceptor property)</a>
+      <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedAuth.target">target (selenium_driverless.scripts.network_interceptor.InterceptedAuth property)</a>
+
+      <ul>
+        <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.InterceptedRequest.target">(selenium_driverless.scripts.network_interceptor.InterceptedRequest property)</a>
 </li>
+        <li><a href="../api/RequestInterception/#selenium_driverless.scripts.network_interceptor.NetworkInterceptor.target">(selenium_driverless.scripts.network_interceptor.NetworkInterceptor property)</a>
+</li>
+      </ul></li>
       <li><a href="../api/Target/#selenium_driverless.types.target.TargetInfo.Target">Target (selenium_driverless.types.target.TargetInfo property)</a>
-</li>
-      <li><a href="../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.target">target() (selenium_driverless.scripts.switch_to.SwitchTo method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.target">target() (selenium_driverless.scripts.switch_to.SwitchTo method)</a>
+</li>
       <li><a href="../api/Target/#selenium_driverless.types.target.TargetInfo">TargetInfo (class in selenium_driverless.types.target)</a>
 </li>
       <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.targets">targets (selenium_driverless.webdriver.Chrome property)</a>
@@ -916,8 +982,16 @@
         <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.wait_download">(selenium_driverless.webdriver.Chrome method)</a>
 </li>
       </ul></li>
-      <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.wait_for_cdp">wait_for_cdp() (selenium_driverless.webdriver.Chrome method)</a>
+      <li><a href="../api/Target/#selenium_driverless.types.base_target.BaseTarget.wait_for_cdp">wait_for_cdp() (selenium_driverless.types.base_target.BaseTarget method)</a>
+
+      <ul>
+        <li><a href="../api/Context/#selenium_driverless.types.context.Context.wait_for_cdp">(selenium_driverless.types.context.Context method)</a>
 </li>
+        <li><a href="../api/Target/#selenium_driverless.types.target.Target.wait_for_cdp">(selenium_driverless.types.target.Target method)</a>
+</li>
+        <li><a href="../api/Chrome/#selenium_driverless.webdriver.Chrome.wait_for_cdp">(selenium_driverless.webdriver.Chrome method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="../api/WebELement/#selenium_driverless.types.webelement.WebElement">WebElement (class in selenium_driverless.types.webelement)</a>

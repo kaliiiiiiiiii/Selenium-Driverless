@@ -52,6 +52,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../RequestInterception/">Request-Interception</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Target</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.types.target.Target"><code class="docutils literal notranslate"><span class="pre">Target</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.socket"><code class="docutils literal notranslate"><span class="pre">Target.socket</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.wait_download"><code class="docutils literal notranslate"><span class="pre">Target.wait_download()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get"><code class="docutils literal notranslate"><span class="pre">Target.get()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.execute_raw_script"><code class="docutils literal notranslate"><span class="pre">Target.execute_raw_script()</span></code></a></li>
@@ -83,6 +84,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get_network_conditions"><code class="docutils literal notranslate"><span class="pre">Target.get_network_conditions()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.set_network_conditions"><code class="docutils literal notranslate"><span class="pre">Target.set_network_conditions()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.delete_network_conditions"><code class="docutils literal notranslate"><span class="pre">Target.delete_network_conditions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.wait_for_cdp"><code class="docutils literal notranslate"><span class="pre">Target.wait_for_cdp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.add_cdp_listener"><code class="docutils literal notranslate"><span class="pre">Target.add_cdp_listener()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.remove_cdp_listener"><code class="docutils literal notranslate"><span class="pre">Target.remove_cdp_listener()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get_cdp_event_iter"><code class="docutils literal notranslate"><span class="pre">Target.get_cdp_event_iter()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.execute_cdp_cmd"><code class="docutils literal notranslate"><span class="pre">Target.execute_cdp_cmd()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get_sinks"><code class="docutils literal notranslate"><span class="pre">Target.get_sinks()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get_issue_message"><code class="docutils literal notranslate"><span class="pre">Target.get_issue_message()</span></code></a></li>
@@ -101,6 +106,16 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.TargetInfo.opener_frame_id"><code class="docutils literal notranslate"><span class="pre">TargetInfo.opener_frame_id</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.TargetInfo.browser_context_id"><code class="docutils literal notranslate"><span class="pre">TargetInfo.browser_context_id</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.TargetInfo.subtype"><code class="docutils literal notranslate"><span class="pre">TargetInfo.subtype</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.types.base_target.BaseTarget"><code class="docutils literal notranslate"><span class="pre">BaseTarget</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.base_target.BaseTarget.socket"><code class="docutils literal notranslate"><span class="pre">BaseTarget.socket</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.base_target.BaseTarget.wait_for_cdp"><code class="docutils literal notranslate"><span class="pre">BaseTarget.wait_for_cdp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.base_target.BaseTarget.add_cdp_listener"><code class="docutils literal notranslate"><span class="pre">BaseTarget.add_cdp_listener()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.base_target.BaseTarget.remove_cdp_listener"><code class="docutils literal notranslate"><span class="pre">BaseTarget.remove_cdp_listener()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.base_target.BaseTarget.get_cdp_event_iter"><code class="docutils literal notranslate"><span class="pre">BaseTarget.get_cdp_event_iter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.base_target.BaseTarget.execute_cdp_cmd"><code class="docutils literal notranslate"><span class="pre">BaseTarget.execute_cdp_cmd()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.base_target.BaseTarget.downloads_dir_for_context"><code class="docutils literal notranslate"><span class="pre">BaseTarget.downloads_dir_for_context()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -138,6 +153,12 @@
 <dt class="sig sig-object py" id="selenium_driverless.types.target.Target">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.types.target.</span></span><span class="sig-name descname"><span class="pre">Target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">driver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_remote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_socket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_ws_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1048576</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target" title="Link to this definition"></a></dt>
 <dd><p>Allows you to drive the browser without chromedriver.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.socket">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">socket</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">SingleCDPSocket</span></em><a class="headerlink" href="#selenium_driverless.types.target.Target.socket" title="Link to this definition"></a></dt>
+<dd><p>the cdp-socket for the connection</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.target.Target.wait_download">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wait_download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.wait_download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.wait_download" title="Link to this definition"></a></dt>
@@ -411,7 +432,7 @@ not.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.target.Target.find_element">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.find_element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.find_element" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.find_element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.find_element" title="Link to this definition"></a></dt>
 <dd><p>find an element in the current target</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -429,7 +450,7 @@ not.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.target.Target.find_elements">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.find_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.find_elements" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.find_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.find_elements" title="Link to this definition"></a></dt>
 <dd><p>find multiple elements in the current target</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -599,6 +620,71 @@ which is useful in embedded images in HTML.</p>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.wait_for_cdp">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wait_for_cdp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.wait_for_cdp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.wait_for_cdp" title="Link to this definition"></a></dt>
+<dd><p>wait for a CDP event and return the data
+:type event: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
+:param event: the name of the event
+:type timeout: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>
+:param timeout: timeout to wait in seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.add_cdp_listener">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_cdp_listener</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.add_cdp_listener"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.add_cdp_listener" title="Link to this definition"></a></dt>
+<dd><p>add a listener on a CDP event (current target)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the name of the event</p></li>
+<li><p><strong>callback</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">any</span></code>]</span>) – the callback on the event</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>callback has to accept one parameter (event data as json)</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.remove_cdp_listener">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">remove_cdp_listener</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.remove_cdp_listener"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.remove_cdp_listener" title="Link to this definition"></a></dt>
+<dd><p>removes the CDP listener
+:type event: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
+:param event: the name of the event
+:type callback: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">any</span></code>]</span>
+:param callback: the callback to remove</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.get_cdp_event_iter">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_cdp_event_iter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.get_cdp_event_iter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.get_cdp_event_iter" title="Link to this definition"></a></dt>
+<dd><p>iterate over a cdp event</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of the event to iterate over</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncIterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+</dd>
+</dl>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">get_cdp_event_iter</span><span class="p">(</span><span class="s2">&quot;Page.frameNavigated&quot;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;frame&quot;</span><span class="p">][</span><span class="s2">&quot;url&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>async only</strong> supported for now</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -775,6 +861,83 @@ target.</p>
 <dt class="sig sig-object py" id="selenium_driverless.types.target.TargetInfo.subtype">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">subtype</span></span><a class="headerlink" href="#selenium_driverless.types.target.TargetInfo.subtype" title="Link to this definition"></a></dt>
 <dd><p>Provides additional details for specific target types. For example, for the type of “page”, this may be set to “portal” or “prerender</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="selenium_driverless.types.base_target.BaseTarget">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.types.base_target.</span></span><span class="sig-name descname"><span class="pre">BaseTarget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_remote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_ws_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1048576</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/base_target/#BaseTarget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.base_target.BaseTarget" title="Link to this definition"></a></dt>
+<dd><p>the baseTarget for the ChromeInstance
+represents a connection to the whole browser.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>commands executed on BaseTarget usually are on a global scope over the whole Chrome instance.
+unfortunately, not all are supported</p>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="selenium_driverless.types.base_target.BaseTarget.socket">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">socket</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">SingleCDPSocket</span></em><a class="headerlink" href="#selenium_driverless.types.base_target.BaseTarget.socket" title="Link to this definition"></a></dt>
+<dd><p>the cdp-socket for the connection</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.base_target.BaseTarget.wait_for_cdp">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wait_for_cdp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/base_target/#BaseTarget.wait_for_cdp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.base_target.BaseTarget.wait_for_cdp" title="Link to this definition"></a></dt>
+<dd><p>wait for an event
+see <a class="reference internal" href="#selenium_driverless.types.target.Target.wait_for_cdp" title="selenium_driverless.types.target.Target.wait_for_cdp"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.wait_for_cdp</span></code></a> for reference</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.base_target.BaseTarget.add_cdp_listener">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_cdp_listener</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/base_target/#BaseTarget.add_cdp_listener"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.base_target.BaseTarget.add_cdp_listener" title="Link to this definition"></a></dt>
+<dd><p>add a listener for a CDP event
+see <a class="reference internal" href="#selenium_driverless.types.target.Target.add_cdp_listener" title="selenium_driverless.types.target.Target.add_cdp_listener"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.add_cdp_listener</span></code></a> for reference</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.base_target.BaseTarget.remove_cdp_listener">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">remove_cdp_listener</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/base_target/#BaseTarget.remove_cdp_listener"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.base_target.BaseTarget.remove_cdp_listener" title="Link to this definition"></a></dt>
+<dd><p>remove a listener for a CDP event
+see <a class="reference internal" href="#selenium_driverless.types.target.Target.remove_cdp_listener" title="selenium_driverless.types.target.Target.remove_cdp_listener"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.remove_cdp_listener</span></code></a> for reference</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.base_target.BaseTarget.get_cdp_event_iter">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_cdp_event_iter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/base_target/#BaseTarget.get_cdp_event_iter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.base_target.BaseTarget.get_cdp_event_iter" title="Link to this definition"></a></dt>
+<dd><p>iterate over CDP events on the current target
+see <a class="reference internal" href="#selenium_driverless.types.target.Target.get_cdp_event_iter" title="selenium_driverless.types.target.Target.get_cdp_event_iter"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.get_cdp_event_iter</span></code></a> for reference</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncIterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.base_target.BaseTarget.execute_cdp_cmd">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">execute_cdp_cmd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmd_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/base_target/#BaseTarget.execute_cdp_cmd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.base_target.BaseTarget.execute_cdp_cmd" title="Link to this definition"></a></dt>
+<dd><p>Execute Chrome Devtools Protocol command and get returned result
+see <a class="reference internal" href="#selenium_driverless.types.target.Target.execute_cdp_cmd" title="selenium_driverless.types.target.Target.execute_cdp_cmd"><code class="xref py py-func docutils literal notranslate"><span class="pre">Target.execute_cdp_cmd</span></code></a> for reference</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.base_target.BaseTarget.downloads_dir_for_context">
+<span class="sig-name descname"><span class="pre">downloads_dir_for_context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DEFAULT'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/base_target/#BaseTarget.downloads_dir_for_context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.base_target.BaseTarget.downloads_dir_for_context" title="Link to this definition"></a></dt>
+<dd><p>get the default download directory for a specific context</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>context_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the id of the context to get the directory for</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
