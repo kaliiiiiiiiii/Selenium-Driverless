@@ -1,5 +1,5 @@
-Documentation Selenium-Driverless
-===============================================
+Documentation of Driverless
+===========================
 
 .. toctree::
    :maxdepth: 2
@@ -9,7 +9,11 @@ Documentation Selenium-Driverless
     this is not complete yet at all:)
     some methods aren't documented yet properly
 
+Installation
+==================
+.. code-block:: Shell
 
+    python -m pip install --upgrade selenium-driverless
 
 Usage
 ==================
@@ -49,5 +53,10 @@ API
     :maxdepth: 2
 
     api/*
+
+Source
+--------
+
+see `github.com/kaliiiiiiiiii/Selenium-Driverless <https://github.com/kaliiiiiiiiii/Selenium-Driverless>`_
 
 
