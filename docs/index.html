@@ -87,11 +87,34 @@
 some methods aren’t documented yet properly</p>
 </div>
 </section>
-<section id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
-<ul class="simple">
-<li><p><a class="reference internal" href="search/"><span class="std std-ref">Search Page</span></a></p></li>
-</ul>
+<section id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h1>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">selenium_driverless</span> <span class="kn">import</span> <span class="n">webdriver</span>
+ <span class="kn">from</span> <span class="nn">selenium_driverless.types.by</span> <span class="kn">import</span> <span class="n">By</span>
+ <span class="kn">import</span> <span class="nn">asyncio</span>
+
+
+ <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+     <span class="n">options</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">ChromeOptions</span><span class="p">()</span>
+     <span class="k">async</span> <span class="k">with</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">Chrome</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span> <span class="k">as</span> <span class="n">driver</span><span class="p">:</span>
+         <span class="k">await</span> <span class="n">driver</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://nowsecure.nl#relax&#39;</span><span class="p">,</span> <span class="n">wait_load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+         <span class="k">await</span> <span class="n">driver</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+         <span class="k">await</span> <span class="n">driver</span><span class="o">.</span><span class="n">wait_for_cdp</span><span class="p">(</span><span class="s2">&quot;Page.domContentEventFired&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+
+         <span class="c1"># wait 10s for elem to exist</span>
+         <span class="n">elem</span> <span class="o">=</span> <span class="k">await</span> <span class="n">driver</span><span class="o">.</span><span class="n">find_element</span><span class="p">(</span><span class="n">By</span><span class="o">.</span><span class="n">XPATH</span><span class="p">,</span> <span class="s1">&#39;/html/body/div[2]/div/main/p[2]/a&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+         <span class="k">await</span> <span class="n">elem</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="n">move_to</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+         <span class="n">alert</span> <span class="o">=</span> <span class="k">await</span> <span class="n">driver</span><span class="o">.</span><span class="n">switch_to</span><span class="o">.</span><span class="n">alert</span>
+         <span class="nb">print</span><span class="p">(</span><span class="n">alert</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+         <span class="k">await</span> <span class="n">alert</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+
+         <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">driver</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+
+
+ <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
 <section id="api">
 <h2>API<a class="headerlink" href="#api" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">

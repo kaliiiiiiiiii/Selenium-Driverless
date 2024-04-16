@@ -13,8 +13,6 @@ from cdp_socket.exceptions import CDPError
 
 import base64
 
-__all__ = ["PatternsType", "RequestDoneException", "AuthAlreadyHandledException", "RequestStages", "RequestPattern", "Request", "AuthChallenge", "InterceptedAuth", "InterceptedRequest", "NetworkInterceptor"]
-
 PatternsType = typing.List[typing.Dict[str, str]]
 
 
@@ -22,17 +20,20 @@ PatternsType = typing.List[typing.Dict[str, str]]
 
 
 class RequestDoneException(Exception):
+    """raised when the request or auth challenge has already been resumed"""
     def __init__(self, data: typing.Union["InterceptedRequest", "InterceptedAuth"]):
         data._done = True
-        super().__init__(f'request with url:"{data.request.url}" has already been resumed')
+        super().__init__(f'request or auth challenge with url:"{data.request.url}" has already been resumed')
         self._data = data
 
     @property
     def request(self) -> typing.Union["InterceptedRequest", "InterceptedAuth"]:
+        """the corresponding request or auth challenge"""
         return self._data
 
 
 class AuthAlreadyHandledException(Exception):
+    """raised when an auth challenge has already been handled by an external application (for example chrome-extension)"""
     def __init__(self, data: "InterceptedAuth"):
         data._done = True
         super().__init__(
@@ -41,23 +42,33 @@ class AuthAlreadyHandledException(Exception):
 
     @property
     def request(self) -> "InterceptedAuth":
+        """the corresponding auth challenge"""
         return self._data
 
 
 class RequestStages:
     Request = 0
+    """stage at request"""
+
     Response = 1
+    """stage at response"""
 
 
 class RequestPattern(Enum):
     AnyRequest = {"urlPattern": "*", "requestStage": "Request"}
+    """pattern for any request"""
+
     AnyResponse = {"urlPattern": "*", "requestStage": "Response"}
+    """pattern for any response"""
 
     @staticmethod
     def new(url_pattern: str = None,
             resource_type: typing.Literal[
                 "Document", "Stylesheet", "Image", "Media", "Font", "Script", "TextTrack", "XHR", "Fetch", "Prefetch", "EventSource", "WebSocket", "Manifest", "SignedExchange", "Ping", "CSPViolationReport", "Preflight", "Other"] = None,
             request_stage: typing.Literal["Request", "Response"] = None):
+        """
+        create a new request pattern
+        """
         pattern = {}
         if url_pattern:
             pattern["urlPattern"] = url_pattern
@@ -84,55 +95,71 @@ class Request:
 
     @property
     def url(self) -> str:
+        """Request URL (without fragment)."""
         return self._params["url"]
 
     @property
     def url_fragment(self) -> typing.Union[str, None]:
+        """Fragment of the requested URL starting with hash, if present."""
         return self._params.get("urlFragment")
 
     @property
     def method(self) -> typing.Union[str, None]:
+        """HTTP request method."""
         return self._params.get("method")
 
     @property
     def headers(self) -> typing.Dict[str, str]:
+        """Request / response headers as keys / values of JSON object."""
         return self._params["headers"]
 
     @property
     def post_data(self) -> typing.Union[str, None]:
+        """HTTP POST request data"""
         return self._params.get("postData")
 
     @property
     def has_post_data(self) -> typing.Union[bool, None]:
+        """True when the request has POST data. Note that postData might still be omitted when this flag is true when the data is too long."""
         return self._params.get("hasPostData")
 
     @property
     def post_data_entries(self) -> typing.Union[typing.List[str], None]:
-        # todo: encoded as Base64
+        """an array of `Network.PostDataEntry <https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-PostDataEntry>`_"""
         return self._params.get("postDataEntries")
 
     @property
-    def mixed_content_type(self) -> typing.Union[str, None]:
+    def mixed_content_type(self) -> typing.Literal["blockable", "optionally-blockable", "none", None]:
+        """The mixed content type of the request."""
         return self._params.get("mixedContentType")
 
     @property
-    def initial_priority(self) -> str:
+    def initial_priority(self) -> typing.Literal["VeryLow", "Low", "Medium", "High", "VeryHigh", None]:
+        """Priority of the resource request at the time request is sent."""
         return self._params["initialPriority"]
 
     @property
-    def referrer_policy(self) -> str:
+    def referrer_policy(self) -> typing.Literal["unsafe-url", "no-referrer-when-downgrade", "no-referrer", "origin", "origin-when-cross-origin", "same-origin", "strict-origin", "strict-origin-when-cross-origin"]:
+        """
+        The referrer policy of the request, as defined in `w3.org/TR/referrer-policy <https://www.w3.org/TR/referrer-policy/>`_
+        """
         return self._params["referrerPolicy"]
 
     @property
     def is_link_preload(self) -> typing.Union[bool, None]:
+        """Whether is loaded via link preload."""
         return self._params.get("isLinkPreload")
 
     @property
     def trust_token_params(self) -> typing.Union[dict, None]:
+        """see `Network.TrustTokenParams <https://chromedevtools.github.io/devtools-protocol/tot/Network/#type-TrustTokenParams>`_ for reference"""
         return self._params.get("trustTokenParams")
 
     @property
     def is_same_site(self) -> typing.Union[bool, None]:
+        """
+        True if this resource request is considered to be the 'same site' as the request corresponding to the main frame.
+        """
         return self._params.get("isSameSite")
 
     def __repr__(self):
@@ -155,19 +182,23 @@ class AuthChallenge:
         return self._params
 
     @property
-    def source(self) -> str:
+    def source(self) -> typing.Literal["Server", "Proxy"]:
+        """Source of the authentication challenge"""
         return self.params.get("source")
 
     @property
     def origin(self) -> str:
+        """Origin of the challenger."""
         return self.params["origin"]
 
     @property
     def scheme(self) -> str:
+        """The authentication scheme used, such as basic or digest"""
         return self.params["scheme"]
 
     @property
     def realm(self) -> str:
+        """corresponding value for ``Please enter your username and password for <realm name>:``"""
         return self.params["realm"]
 
     def __repr__(self):
@@ -193,6 +224,7 @@ class InterceptedRequest:
     @property
     def stage(self) -> typing.Literal[0, 1]:
         """
+        one of :func:`RequestStages.Request <selenium_driverless.scripts.network_interceptor.RequestStages.Request>`, :func:`RequestStages.Response <selenium_driverless.scripts.network_interceptor.RequestStages.Response>`
         0 => Request
         1 => Response
         """
@@ -205,6 +237,9 @@ class InterceptedRequest:
 
     @property
     def is_redirect(self):
+        """
+        if the response is a redirect (response_status_code in [301, 302, 303, 307, 308])
+        """
         if self._is_redirect is None:
             if self.response_status_code and (self.response_status_code in [301, 302, 303, 307, 308]):
                 self._is_redirect = True
@@ -219,48 +254,79 @@ class InterceptedRequest:
 
     @property
     def frame_id(self) -> str:
+        """the ``Page.FrameId`` of the frame that initiated the request"""
         return self._params["frameId"]
 
     @property
     def request(self) -> Request:
+        """the corresponding request"""
         if self._request is None:
             self._request = Request(self._params["request"], self.target)
         return self._request
 
     @property
     def id(self) -> str:
+        """``Fetch.RequestId``"""
         return self._params["requestId"]
 
     @property
     def resource_type(self) -> str:
+        """
+        ``Network.resourceType``
+        """
         return self._params["resourceType"]
 
     @property
     def network_id(self) -> typing.Union[str, None]:
+        """
+        the ``Network.RequestId`` if a corresponding ``Network.requestWillBeSent`` event had been fired
+        """
         return self._params.get("networkId")
 
     @property
     def response_error_reason(self) -> typing.Union[str, None]:
+        """
+        response error-reason at response stage
+        """
         return self._params.get("responseErrorReason")
 
     @property
-    def response_headers(self) -> typing.List[typing.Dict[str, str]]:
+    def response_headers(self) -> typing.Union[typing.List[typing.Dict[str, str]], None]:
+        """
+        the headers at response stage
+        """
         return self._params.get("responseHeaders")
 
     @property
     def response_status_code(self) -> typing.Union[int, None]:
+        """
+        the status code at response stage
+        """
         return self._params.get("responseStatusCode")
 
     @property
     def response_status_text(self) -> typing.Union[str, None]:
+        """
+        the status text at response stage
+        """
         return self._params.get("responseStatusText")
 
     @property
     def redirected_id(self) -> typing.Union[str, None]:
+        """
+        ``Fetch.requestId`` reference id to the request that caused the redirect
+        """
         return self._params.get("redirectedRequestId")
 
     @property
     async def body(self) -> typing.Union[bytes, None]:
+        """
+        get the response body for a request
+
+        .. note::
+            this uses network and might take some time
+
+        """
         if self._body is False:
             body = await self.target.execute_cdp_cmd("Fetch.getResponseBody", {"requestId": self.id},
                                                      timeout=self.timeout)
@@ -273,6 +339,13 @@ class InterceptedRequest:
 
     async def bypass_browser(self, auth: aiohttp.BasicAuth = None, allow_redirects=True, compress: bool = None,
                              proxy: str = None, proxy_auth: aiohttp.BasicAuth = None, timeout: float = None):
+        """
+        bypass browser by making the request externally
+
+        .. warning::
+            this method does not change the TLS fingerprint accordingly and is technically detectable
+
+        """
         if self._done:
             raise RequestDoneException(self)
         else:
@@ -290,11 +363,24 @@ class InterceptedRequest:
     async def continue_request(self, headers: typing.List[typing.Dict[str, str]] = None, method: str = None,
                                post_data: typing.Union[str, bytes] = None, url: str = None,
                                intercept_response: bool = None):
+        """
+        continue the request.
+        You might use :func:`InterceptedRequest.fulfill <selenium_driverless.scripts.network_interceptor.InterceptedRequest.fulfill>`
+        to provide a response body
+
+        :param headers: array of {"name":name, "value":value},  mind header order
+        :param method: the method of the request
+        :param post_data: the binary post data to provide
+        :param url: the url to continue the request with, change not observable by the page
+        :param intercept_response: overrides response interception behavior for this request
+        """
         if self._done:
             raise RequestDoneException(self)
         params = {"requestId": self.id}
 
-        if isinstance(post_data, bytes):
+        if isinstance(post_data, str):
+            post_data = post_data.encode("utf-8")
+        if post_data:
             post_data = base64.b64encode(post_data).decode("ascii")
         if headers:
             params["headers"] = headers
@@ -314,10 +400,22 @@ class InterceptedRequest:
         self._done = True
 
     async def continue_response(self, response_headers: typing.List[typing.Dict[str, str]] = None,
-                                binary_response_headers: str = None,
+                                binary_response_headers: bytes = None,
                                 response_code: int = None, response_phrase: str = None):
+        """
+        continue the response.
+        You might use :func:`By <selenium_driverless.scripts.network_interceptor.InterceptedRequest.fulfill>`
+        to provide a response body
+
+        :param response_code: response code
+        :param binary_response_headers:  headers as a \0-separated series of name: value pairs, treated as base64 encode if a string is passed,
+        :param response_headers: array of {"name":name, "value":value},  mind header order
+        :param response_phrase: response phrase (``"OK"`` for ``response_code=200``)
+        """
         if self._done:
             raise RequestDoneException(self)
+        if binary_response_headers:
+            binary_response_headers = base64.b64encode(binary_response_headers).decode("ascii")
         params = {"requestId": self.id}
         if response_headers:
             params["responseHeaders"] = response_headers
@@ -336,6 +434,10 @@ class InterceptedRequest:
         self._done = True
 
     async def resume(self):
+        """
+        continue the request or response
+        doesn't raise id the request is canceled or already done
+        """
         if not self._done:
             try:
                 await self.continue_request()
@@ -343,7 +445,12 @@ class InterceptedRequest:
                 pass
 
     async def fail_request(self, error_reason: typing.Literal[
-        "Failed", "Aborted", "TimedOut", "AccessDenied", "ConnectionClosed", "ConnectionReset", "ConnectionRefused", "ConnectionAborted", "ConnectionFailed", "NameNotResolved", "InternetDisconnected", "AddressUnreachable", "BlockedByClient", "BlockedByResponse"]):
+            "Failed", "Aborted", "TimedOut", "AccessDenied", "ConnectionClosed", "ConnectionReset", "ConnectionRefused", "ConnectionAborted", "ConnectionFailed", "NameNotResolved", "InternetDisconnected", "AddressUnreachable", "BlockedByClient", "BlockedByResponse"]):
+        """
+        fail the request or response
+
+        :param error_reason: the specified reason for the request failing
+        """
         if self._done:
             raise RequestDoneException(self)
         params = {"requestId": self.id}
@@ -359,6 +466,15 @@ class InterceptedRequest:
     async def fulfill(self, response_code: int, binary_response_headers: str = None,
                       body: typing.Union[str, bytes] = None,
                       response_headers: typing.List[typing.Dict[str, str]] = None, response_phrase: str = None):
+        """
+        fulfill the request or response
+
+        :param response_code: response code
+        :param body: the response body
+        :param binary_response_headers:  headers as a \0-separated series of name: value pairs, treated as base64 encode if a string is passed,
+        :param response_headers: array of {"name":name, "value":value},  mind header order
+        :param response_phrase: response phrase (``"OK"`` for ``response_code=200``)
+        """
         if self._done:
             raise RequestDoneException(self)
         params = {"requestId": self.id}
@@ -373,8 +489,12 @@ class InterceptedRequest:
             if self.response_status_text != "":
                 # can't be empty
                 response_phrase = self.response_status_text
-        if isinstance(body, bytes):
+        if isinstance(body, str):
+            body = body.encode("utf-8")
+        if body:
             body = base64.b64encode(body).decode("ascii")
+        if isinstance(binary_response_headers, bytes):
+            binary_response_headers = base64.b64encode(binary_response_headers).decode("ascii")
 
         if response_code:
             params["responseCode"] = response_code
@@ -438,16 +558,29 @@ class InterceptedAuth:
 
     @property
     def resource_type(self) -> str:
+        """
+        the `Network.ResourceType`
+        """
         return self._params["resourceType"]
 
     @property
     def auth_challenge(self) -> AuthChallenge:
+        """
+        the AuthChallenge
+        """
         if self._auth_challenge is None:
             self._auth_challenge = AuthChallenge(self._params["request"], self.target)
         return self._auth_challenge
 
     async def continue_auth(self, response: typing.Literal["Default", "CancelAuth", "ProvideCredentials"] = "Default",
                             username: str = None, password: str = None):
+        """
+        continue the auth
+
+        :param response: "Default" by default, automatically set to "ProvideCredentials", if username or password specified
+        :param username: username for the auth
+        :param password: password for the auth
+        """
         if self._done:
             raise RequestDoneException(self)
 
@@ -469,30 +602,37 @@ class InterceptedAuth:
                 raise e
 
     async def resume(self):
+        """
+        continue the auth
+        doesn't raise id the request is canceled or already done
+        """
         if not self._done:
             try:
                 await self.continue_auth()
-            except AuthAlreadyHandledException:
+            except (AuthAlreadyHandledException, websockets.ConnectionClosedError):
                 pass
 
     async def cancel(self):
+        """
+        cancel the auth
+        """
         await self.continue_auth(response="CancelAuth")
 
     def __repr__(self):
         return self.params.__repr__()
 
 
-CallbackType = typing.Callable[[InterceptedRequest], typing.Awaitable[None]]
+RequestCallbackType = typing.Callable[[InterceptedRequest], typing.Awaitable[None]]
 AuthCallbackType = typing.Callable[[InterceptedRequest], typing.Awaitable[None]]
 
 
 class NetworkInterceptor:
-    on_request: CallbackType
-    on_response: CallbackType
+    on_request: RequestCallbackType
+    on_response: RequestCallbackType
     on_auth: AuthCallbackType
 
-    def __init__(self, target: typing.Union[Chrome, Target], on_request: CallbackType = None,
-                 on_response: CallbackType = None, on_auth: AuthCallbackType = None,
+    def __init__(self, target: typing.Union[Chrome, Target], on_request: RequestCallbackType = None,
+                 on_response: RequestCallbackType = None, on_auth: AuthCallbackType = None,
                  patterns: typing.Union[PatternsType, typing.List[RequestPattern]] = None, intercept_auth: bool = False,
                  bypass_service_workers: bool = False):
         """
