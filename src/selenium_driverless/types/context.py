@@ -252,7 +252,8 @@ class Context:
         return target.title
 
     @property
-    async def current_pointer(self) -> Pointer:
+    def current_pointer(self) -> Pointer:
+        """the :class:`Pointer <selenium_driverless.input.pointer.Pointer>` for the current target"""
         target = self.current_target
         return target.pointer
 

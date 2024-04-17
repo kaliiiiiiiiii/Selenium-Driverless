@@ -205,7 +205,7 @@ asyncio.run(main())
 see [@master/dev/show_mousemove.py](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/dev/show_mousemove.py) for visualization
 
 ```python
-pointer = await driver.current_pointer
+pointer = driver.current_pointer
 move_kwargs = {"total_time": 0.7, "accel": 2, "smooth_soft": 20}
 
 await pointer.move_to(100, 500)

@@ -664,10 +664,8 @@ class Chrome:
         return target.title
 
     @property
-    async def current_pointer(self) -> Pointer:
-        """
-        **async** the Pointer of the current Target
-        """
+    def current_pointer(self) -> Pointer:
+        """the :class:`Pointer <selenium_driverless.input.pointer.Pointer>` for this target"""
         target = self.current_target
         return target.pointer
 

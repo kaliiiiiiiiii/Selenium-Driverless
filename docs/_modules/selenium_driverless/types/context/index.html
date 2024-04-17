@@ -46,6 +46,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/Chrome/">webdriver.Chrome</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/ChromeOptions/">ChromeOptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/Context/">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Input/">Input</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/RequestInterception/">Request-Interception</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/Target/">Target</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/WebELement/">WebElement</a></li>
@@ -344,7 +345,8 @@
         <span class="k">return</span> <span class="n">target</span><span class="o">.</span><span class="n">title</span>
 
     <span class="nd">@property</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">current_pointer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pointer</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">current_pointer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pointer</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the :class:`Pointer &lt;selenium_driverless.input.pointer.Pointer&gt;` for the current target&quot;&quot;&quot;</span>
         <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span>
         <span class="k">return</span> <span class="n">target</span><span class="o">.</span><span class="n">pointer</span>
 

@@ -68,7 +68,7 @@ def get_bounds(vertices: np.array):
     return x_min, y_min, x_max, y_max
 
 
-def bias_0_dot_5(strength: float, max_offset: float):
+def bias_0_dot_5(strength: float, max_offset: float) -> float:
     # Calculate alpha and beta parameters for the beta distribution
     alpha = 2 * strength
     beta = 2 * (1 - strength)
@@ -87,7 +87,7 @@ def bias_0_dot_5(strength: float, max_offset: float):
 
 
 # Mouse Path
-def pos_at_time(path, total_time, time, accel, mid_time=0.5):
+def pos_at_time(path, total_time, time, accel, mid_time=0.5) -> typing.Tuple[int]:
     if time > total_time or time < 0:
         raise ValueError("Time needs to be between 0 and total_time")
 

@@ -13,7 +13,7 @@ async def main():
         await driver.get("about:blank")
         await driver.execute_script(script=await read("/files/js/show_mousemove.js", sel_root=True))
         elem = await driver.find_element(By.ID, "clear")
-        pointer = await driver.current_pointer
+        pointer = driver.current_pointer
 
         move_kwargs = {"total_time": 0.7, "accel": 2, "smooth_soft": 20}
         await driver.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})

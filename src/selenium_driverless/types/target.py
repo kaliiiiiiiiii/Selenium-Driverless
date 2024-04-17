@@ -370,6 +370,7 @@ class Target:
 
     @property
     def pointer(self) -> Pointer:
+        """the :class:`Pointer <selenium_driverless.input.pointer.Pointer>` for this target"""
         return self._pointer
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
