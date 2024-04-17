@@ -1,4 +1,4 @@
-# Selenium-Driverless (Non-commercial use only!)
+# Driverless (Non-commercial use only!)
 
 [![Downloads](https://static.pepy.tech/badge/selenium-driverless)](https://pepy.tech/project/selenium-driverless) [![](https://img.shields.io/pypi/v/selenium-driverless.svg?color=3399EE)](https://pypi.org/project/selenium-driverless/)
 [Documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/#)
@@ -7,11 +7,10 @@
 - Use Selenium __without chromedriver__
 - Currently passes __Cloudflare__, __Bet365__, [Turnstile](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/master/dev#bypass-turnstile), and others
 - Multiple tabs simultaneously
-- Multiple Incognito-contexts with individual proxy & cookies
-- Async (`asyncio`) and sync (experimental) support
-- Proxy-auth support (experimental, [example code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
+- Multiple Incognito-contexts with isolated cookies & local storage
+- Proxy-auth support ([example code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
 - Network-interception ([documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/api/Chrome/RequestInterception/))
-- headless supported
+- Single requests ([documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/api/Target/#selenium_driverless.types.target.Target.fetch))
 
 ### Questions? 
 Feel free to join the [Driverless-Community](https://discord.com/invite/MzZZjr2ZM3) on **Discord**:)
@@ -26,9 +25,16 @@ pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/he
 ```
 </details>
 
-### Still getting detected?
-Feel free to give me a feedback! \
-You're a company and looking for another solution? Maybe **[undetect.io](https://undetect.io/partner/steve)** is smth for you
+## Sponsors
+
+### [Capsolver](https://capsolver.com/?utm_source=github&utm_medium=banner_github&utm_campaign=selenium-driverless)
+
+[![img.png](assets/capsolver.png)](https://capsolver.com/?utm_source=github&utm_medium=banner_github&utm_campaign=selenium-driverless)
+
+an AI-powered service that provides **automatic captcha solving** capabilities. It supports a range of captcha types,
+including `reCAPTCHA`, `hCaptcha`, and `FunCaptcha`, `AWS Captcha`, `Geetest` and image captcha among others.
+Capsolver offers browser-extensions for ease of use, API integration for developers, and various pricing packages to suit
+different needs.
 
 #### Also, feel free to
 <a href="https://www.buymeacoffee.com/kaliiii">
