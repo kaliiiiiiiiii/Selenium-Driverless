@@ -25,6 +25,8 @@ pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/he
 ```
 </details>
 
+<!---
+
 ## Sponsors
 
 ### [Capsolver](https://capsolver.com/?utm_source=github&utm_medium=banner_github&utm_campaign=selenium-driverless)
@@ -35,6 +37,8 @@ an AI-powered service that provides **automatic captcha solving** capabilities. 
 including `reCAPTCHA`, `hCaptcha`, and `FunCaptcha`, `AWS Captcha`, `Geetest` and image captcha among others.
 Capsolver offers browser-extensions for ease of use, API integration for developers, and various pricing packages to suit
 different needs.
+
+-->
 
 #### Also, feel free to
 <a href="https://www.buymeacoffee.com/kaliiii">
