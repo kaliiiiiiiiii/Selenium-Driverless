@@ -42,12 +42,14 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/By/">By Element Locator</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/Chrome/">webdriver.Chrome</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/ChromeOptions/">ChromeOptions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/Context/">Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/Target/">Target</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../classes/WebELement/">WebElement</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/By/">By Element Locator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Chrome/">webdriver.Chrome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/ChromeOptions/">ChromeOptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Context/">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Input/">Input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/RequestInterception/">Request-Interception</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Target/">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/WebELement/">WebElement</a></li>
 </ul>
 
         </div>
@@ -86,6 +88,7 @@
 <span class="kn">import</span> <span class="nn">aiofiles</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
 <span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="kn">import</span> <span class="nn">random</span>
 
 <span class="kn">import</span> <span class="nn">websockets</span>
 <span class="kn">from</span> <span class="nn">cdp_socket.exceptions</span> <span class="kn">import</span> <span class="n">CDPError</span>
@@ -106,6 +109,34 @@
 <span class="kn">from</span> <span class="nn">selenium_driverless.types.webelement</span> <span class="kn">import</span> <span class="n">WebElement</span>
 <span class="kn">from</span> <span class="nn">selenium_driverless.sync.webelement</span> <span class="kn">import</span> <span class="n">WebElement</span> <span class="k">as</span> <span class="n">SyncWebElement</span>
 
+<span class="n">KEY_MAPPING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyA&#39;</span><span class="p">,</span> <span class="mi">65</span><span class="p">),</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyB&#39;</span><span class="p">,</span> <span class="mi">66</span><span class="p">),</span> <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyC&#39;</span><span class="p">,</span> <span class="mi">67</span><span class="p">),</span> <span class="s1">&#39;d&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyD&#39;</span><span class="p">,</span> <span class="mi">68</span><span class="p">),</span> <span class="s1">&#39;e&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyE&#39;</span><span class="p">,</span> <span class="mi">69</span><span class="p">),</span>
+    <span class="s1">&#39;f&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyF&#39;</span><span class="p">,</span> <span class="mi">70</span><span class="p">),</span> <span class="s1">&#39;g&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyG&#39;</span><span class="p">,</span> <span class="mi">71</span><span class="p">),</span> <span class="s1">&#39;h&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyH&#39;</span><span class="p">,</span> <span class="mi">72</span><span class="p">),</span> <span class="s1">&#39;i&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyI&#39;</span><span class="p">,</span> <span class="mi">73</span><span class="p">),</span> <span class="s1">&#39;j&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyJ&#39;</span><span class="p">,</span> <span class="mi">74</span><span class="p">),</span>
+    <span class="s1">&#39;k&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyK&#39;</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="s1">&#39;l&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyL&#39;</span><span class="p">,</span> <span class="mi">76</span><span class="p">),</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyM&#39;</span><span class="p">,</span> <span class="mi">77</span><span class="p">),</span> <span class="s1">&#39;n&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyN&#39;</span><span class="p">,</span> <span class="mi">78</span><span class="p">),</span> <span class="s1">&#39;o&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyO&#39;</span><span class="p">,</span> <span class="mi">79</span><span class="p">),</span>
+    <span class="s1">&#39;p&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyP&#39;</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span> <span class="s1">&#39;q&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyQ&#39;</span><span class="p">,</span> <span class="mi">81</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyR&#39;</span><span class="p">,</span> <span class="mi">82</span><span class="p">),</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyS&#39;</span><span class="p">,</span> <span class="mi">83</span><span class="p">),</span> <span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyT&#39;</span><span class="p">,</span> <span class="mi">84</span><span class="p">),</span>
+    <span class="s1">&#39;u&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyU&#39;</span><span class="p">,</span> <span class="mi">85</span><span class="p">),</span> <span class="s1">&#39;v&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyV&#39;</span><span class="p">,</span> <span class="mi">86</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyW&#39;</span><span class="p">,</span> <span class="mi">87</span><span class="p">),</span> <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyX&#39;</span><span class="p">,</span> <span class="mi">88</span><span class="p">),</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyY&#39;</span><span class="p">,</span> <span class="mi">89</span><span class="p">),</span>
+    <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyZ&#39;</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span> <span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyA&#39;</span><span class="p">,</span> <span class="mi">65</span><span class="p">),</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyB&#39;</span><span class="p">,</span> <span class="mi">66</span><span class="p">),</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyC&#39;</span><span class="p">,</span> <span class="mi">67</span><span class="p">),</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyD&#39;</span><span class="p">,</span> <span class="mi">68</span><span class="p">),</span>
+    <span class="s1">&#39;E&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyE&#39;</span><span class="p">,</span> <span class="mi">69</span><span class="p">),</span> <span class="s1">&#39;F&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyF&#39;</span><span class="p">,</span> <span class="mi">70</span><span class="p">),</span> <span class="s1">&#39;G&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyG&#39;</span><span class="p">,</span> <span class="mi">71</span><span class="p">),</span> <span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyH&#39;</span><span class="p">,</span> <span class="mi">72</span><span class="p">),</span> <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyI&#39;</span><span class="p">,</span> <span class="mi">73</span><span class="p">),</span>
+    <span class="s1">&#39;J&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyJ&#39;</span><span class="p">,</span> <span class="mi">74</span><span class="p">),</span> <span class="s1">&#39;K&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyK&#39;</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="s1">&#39;L&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyL&#39;</span><span class="p">,</span> <span class="mi">76</span><span class="p">),</span> <span class="s1">&#39;M&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyM&#39;</span><span class="p">,</span> <span class="mi">77</span><span class="p">),</span> <span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyN&#39;</span><span class="p">,</span> <span class="mi">78</span><span class="p">),</span>
+    <span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyO&#39;</span><span class="p">,</span> <span class="mi">79</span><span class="p">),</span> <span class="s1">&#39;P&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyP&#39;</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span> <span class="s1">&#39;Q&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyQ&#39;</span><span class="p">,</span> <span class="mi">81</span><span class="p">),</span> <span class="s1">&#39;R&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyR&#39;</span><span class="p">,</span> <span class="mi">82</span><span class="p">),</span> <span class="s1">&#39;S&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyS&#39;</span><span class="p">,</span> <span class="mi">83</span><span class="p">),</span>
+    <span class="s1">&#39;T&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyT&#39;</span><span class="p">,</span> <span class="mi">84</span><span class="p">),</span> <span class="s1">&#39;U&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyU&#39;</span><span class="p">,</span> <span class="mi">85</span><span class="p">),</span> <span class="s1">&#39;V&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyV&#39;</span><span class="p">,</span> <span class="mi">86</span><span class="p">),</span> <span class="s1">&#39;W&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyW&#39;</span><span class="p">,</span> <span class="mi">87</span><span class="p">),</span> <span class="s1">&#39;X&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyX&#39;</span><span class="p">,</span> <span class="mi">88</span><span class="p">),</span>
+    <span class="s1">&#39;Y&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyY&#39;</span><span class="p">,</span> <span class="mi">89</span><span class="p">),</span> <span class="s1">&#39;Z&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;KeyZ&#39;</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span> <span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit0&#39;</span><span class="p">,</span> <span class="mi">48</span><span class="p">),</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit1&#39;</span><span class="p">,</span> <span class="mi">49</span><span class="p">),</span> <span class="s1">&#39;2&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit2&#39;</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
+    <span class="s1">&#39;3&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit3&#39;</span><span class="p">,</span> <span class="mi">51</span><span class="p">),</span> <span class="s1">&#39;4&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit4&#39;</span><span class="p">,</span> <span class="mi">52</span><span class="p">),</span> <span class="s1">&#39;5&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit5&#39;</span><span class="p">,</span> <span class="mi">53</span><span class="p">),</span> <span class="s1">&#39;6&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit6&#39;</span><span class="p">,</span> <span class="mi">54</span><span class="p">),</span> <span class="s1">&#39;7&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit7&#39;</span><span class="p">,</span> <span class="mi">55</span><span class="p">),</span>
+    <span class="s1">&#39;8&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit8&#39;</span><span class="p">,</span> <span class="mi">56</span><span class="p">),</span> <span class="s1">&#39;9&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit9&#39;</span><span class="p">,</span> <span class="mi">57</span><span class="p">),</span> <span class="s1">&#39;!&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit1&#39;</span><span class="p">,</span> <span class="mi">49</span><span class="p">),</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Quote&#39;</span><span class="p">,</span> <span class="mi">222</span><span class="p">),</span> <span class="s1">&#39;#&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit3&#39;</span><span class="p">,</span> <span class="mi">51</span><span class="p">),</span>
+    <span class="s1">&#39;$&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit4&#39;</span><span class="p">,</span> <span class="mi">52</span><span class="p">),</span> <span class="s1">&#39;%&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit5&#39;</span><span class="p">,</span> <span class="mi">53</span><span class="p">),</span> <span class="s1">&#39;&amp;&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit7&#39;</span><span class="p">,</span> <span class="mi">55</span><span class="p">),</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Quote&#39;</span><span class="p">,</span> <span class="mi">222</span><span class="p">),</span> <span class="s1">&#39;(&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit9&#39;</span><span class="p">,</span> <span class="mi">57</span><span class="p">),</span>
+    <span class="s1">&#39;)&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit0&#39;</span><span class="p">,</span> <span class="mi">48</span><span class="p">),</span> <span class="s1">&#39;*&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit8&#39;</span><span class="p">,</span> <span class="mi">56</span><span class="p">),</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Equal&#39;</span><span class="p">,</span> <span class="mi">187</span><span class="p">),</span> <span class="s1">&#39;,&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Comma&#39;</span><span class="p">,</span> <span class="mi">188</span><span class="p">),</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Minus&#39;</span><span class="p">,</span> <span class="mi">189</span><span class="p">),</span>
+    <span class="s1">&#39;.&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Period&#39;</span><span class="p">,</span> <span class="mi">190</span><span class="p">),</span> <span class="s1">&#39;/&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Slash&#39;</span><span class="p">,</span> <span class="mi">191</span><span class="p">),</span> <span class="s1">&#39;:&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Semicolon&#39;</span><span class="p">,</span> <span class="mi">186</span><span class="p">),</span> <span class="s1">&#39;;&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Semicolon&#39;</span><span class="p">,</span> <span class="mi">186</span><span class="p">),</span>
+    <span class="s1">&#39;&lt;&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Comma&#39;</span><span class="p">,</span> <span class="mi">188</span><span class="p">),</span>
+    <span class="s1">&#39;=&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Equal&#39;</span><span class="p">,</span> <span class="mi">187</span><span class="p">),</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Period&#39;</span><span class="p">,</span> <span class="mi">190</span><span class="p">),</span> <span class="s1">&#39;?&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Slash&#39;</span><span class="p">,</span> <span class="mi">191</span><span class="p">),</span> <span class="s1">&#39;@&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit2&#39;</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
+    <span class="s1">&#39;[&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;BracketLeft&#39;</span><span class="p">,</span> <span class="mi">219</span><span class="p">),</span>
+    <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Backslash&#39;</span><span class="p">,</span> <span class="mi">220</span><span class="p">),</span> <span class="s1">&#39;]&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;BracketRight&#39;</span><span class="p">,</span> <span class="mi">221</span><span class="p">),</span> <span class="s1">&#39;^&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit6&#39;</span><span class="p">,</span> <span class="mi">54</span><span class="p">),</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Minus&#39;</span><span class="p">,</span> <span class="mi">189</span><span class="p">),</span>
+    <span class="s1">&#39;`&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Backquote&#39;</span><span class="p">,</span> <span class="mi">192</span><span class="p">),</span>
+    <span class="s1">&#39;{&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;BracketLeft&#39;</span><span class="p">,</span> <span class="mi">219</span><span class="p">),</span> <span class="s1">&#39;|&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Backslash&#39;</span><span class="p">,</span> <span class="mi">220</span><span class="p">),</span> <span class="s1">&#39;}&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;BracketRight&#39;</span><span class="p">,</span> <span class="mi">221</span><span class="p">),</span> <span class="s1">&#39;~&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Backquote&#39;</span><span class="p">,</span> <span class="mi">192</span><span class="p">),</span>
+    <span class="s1">&#39; &#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Space&#39;</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">SHIFT_KEY_NEEDED</span> <span class="o">=</span> <span class="s1">&#39;~!@#$%^&amp;*()_+</span><span class="si">{}</span><span class="s1">|:&quot;&lt;&gt;?&#39;</span>
+
 
 <span class="k">class</span> <span class="nc">NoSuchIframe</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">:</span> <span class="n">WebElement</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -118,7 +149,7 @@
 
 
 <div class="viewcode-block" id="Target">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target">[docs]</a>
 <span class="k">class</span> <span class="nc">Target</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Allows you to drive the browser without chromedriver.&quot;&quot;&quot;</span>
 
@@ -163,6 +194,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_on_closed_</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_driver</span> <span class="o">=</span> <span class="n">driver</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_send_key_lock</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;&lt;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1"> (target_id=&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s1">&quot;, host=&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_host</span><span class="si">}</span><span class="s1">&quot;)&gt;&#39;</span>
@@ -184,6 +216,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">socket</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SingleCDPSocket</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the cdp-socket for the connection&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_socket</span>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
@@ -297,7 +330,7 @@
         <span class="k">return</span> <span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Target.wait_download">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.wait_download">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.wait_download">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">wait_download</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        wait for a download on the current tab</span>
@@ -347,7 +380,7 @@
 
     <span class="c1"># noinspection PyUnboundLocalVariable,PyProtectedMember</span>
 <div class="viewcode-block" id="Target.get">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.get">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">referrer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wait_load</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Loads a web page</span>
 
@@ -454,10 +487,72 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">pointer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pointer</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the :class:`Pointer &lt;selenium_driverless.input.pointer.Pointer&gt;` for this target&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pointer</span>
 
+<div class="viewcode-block" id="Target.send_keys">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.send_keys">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">send_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        send text &amp; keys to the target</span>
+
+<span class="sd">        :param text: the text to send to the target</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_key_lock</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">letter</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">letter</span> <span class="ow">in</span> <span class="n">KEY_MAPPING</span><span class="p">:</span>
+                    <span class="n">key_code</span><span class="p">,</span> <span class="n">virtual_key_code</span> <span class="o">=</span> <span class="n">KEY_MAPPING</span><span class="p">[</span><span class="n">letter</span><span class="p">]</span>
+                    <span class="c1"># Determine if a shift key is needed</span>
+                    <span class="n">shift_pressed</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">if</span> <span class="n">letter</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span> <span class="ow">or</span> <span class="n">letter</span> <span class="ow">in</span> <span class="n">SHIFT_KEY_NEEDED</span><span class="p">:</span>
+                        <span class="n">shift_pressed</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="p">{</span>
+                                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;keyDown&quot;</span><span class="p">,</span>
+                                <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="s2">&quot;ShiftLeft&quot;</span><span class="p">,</span>
+                                <span class="s2">&quot;windowsVirtualKeyCode&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
+                                <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;Shift&quot;</span><span class="p">,</span>
+                                <span class="s2">&quot;modifiers&quot;</span><span class="p">:</span> <span class="mi">8</span> <span class="k">if</span> <span class="n">shift_pressed</span> <span class="k">else</span> <span class="mi">0</span>
+                        <span class="p">})</span>
+                        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>  <span class="c1"># Simulate human typing speed</span>
+
+                    <span class="n">key_event</span> <span class="o">=</span> <span class="p">{</span>
+                            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;keyDown&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">key_code</span><span class="p">,</span>
+                            <span class="s2">&quot;windowsVirtualKeyCode&quot;</span><span class="p">:</span> <span class="n">virtual_key_code</span><span class="p">,</span>
+                            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="n">letter</span><span class="p">,</span>
+                            <span class="s2">&quot;modifiers&quot;</span><span class="p">:</span> <span class="mi">8</span> <span class="k">if</span> <span class="n">shift_pressed</span> <span class="k">else</span> <span class="mi">0</span>
+                        <span class="p">}</span>
+
+                    <span class="c1"># Send keydown event</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="n">key_event</span><span class="p">)</span>
+                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>
+
+                    <span class="c1"># Simulate key press for the actual character</span>
+                    <span class="n">key_event</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;char&quot;</span>
+                    <span class="n">key_event</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">letter</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="n">key_event</span><span class="p">)</span>
+                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>
+                    <span class="k">del</span> <span class="n">key_event</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span>
+
+                    <span class="c1"># Simulate key release</span>
+                    <span class="n">key_event</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;keyUp&quot;</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="n">key_event</span><span class="p">)</span>
+                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>
+
+                    <span class="c1"># Release the shift key if it was pressed</span>
+                    <span class="k">if</span> <span class="n">shift_pressed</span><span class="p">:</span>
+                        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="p">{</span>
+                            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;keyUp&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="s2">&quot;ShiftLeft&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;windowsVirtualKeyCode&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
+                            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;Shift&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;modifiers&quot;</span><span class="p">:</span> <span class="mi">0</span>
+                        <span class="p">})</span>
+                        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>  <span class="c1"># Simulate human typing speed</span></div>
+
+
 <div class="viewcode-block" id="Target.execute_raw_script">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.execute_raw_script">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.execute_raw_script">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_raw_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">await_res</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                                  <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                                  <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
@@ -495,8 +590,8 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">global_this</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_this</span><span class="p">(</span><span class="n">execution_context_id</span><span class="p">)</span>
                 <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">global_this</span><span class="o">.</span><span class="n">__exec_raw__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">await_res</span><span class="o">=</span><span class="n">await_res</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
-                                                    <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-                                                    <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">)</span>
+                                                     <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+                                                     <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">StaleJSRemoteObjReference</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
             <span class="k">else</span><span class="p">:</span>
@@ -509,7 +604,7 @@
 
 
 <div class="viewcode-block" id="Target.execute_script">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.execute_script">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.execute_script">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                              <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                              <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -544,7 +639,7 @@
 
 
 <div class="viewcode-block" id="Target.execute_async_script">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.execute_async_script">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.execute_async_script">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_async_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                                    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                                    <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -579,7 +674,7 @@
 
 
 <div class="viewcode-block" id="Target.eval_async">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.eval_async">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.eval_async">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">eval_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                          <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                          <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -630,18 +725,21 @@
 
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">page_source</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the docs_source of the current page.</span>
-
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
-
-<span class="sd">                target.page_source</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the HTML of the current page.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">elem</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_document_elem</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="n">elem</span><span class="o">.</span><span class="n">source</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">timeout</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">elem</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_document_elem</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="n">elem</span><span class="o">.</span><span class="n">source</span>
+            <span class="k">except</span> <span class="n">StaleElementReferenceException</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_loaded</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Couldn&#39;t get page source within </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2"> seconds, possibly due to a reload loop&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Target.close">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.close">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.close">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Closes the current window.</span>
 
@@ -720,7 +818,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_window_id</span>
 
 <div class="viewcode-block" id="Target.print_page">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.print_page">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.print_page">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">print_page</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Takes PDF of the current page.</span>
 
@@ -734,7 +832,7 @@
 
 
 <div class="viewcode-block" id="Target.get_history">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.get_history">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_history">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_history</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypedDict</span><span class="p">(</span><span class="s1">&#39;NavigationHistory&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;currentIndex&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;entries&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">}):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;returns the history data</span>
 
@@ -745,7 +843,7 @@
 
     <span class="c1"># Navigation</span>
 <div class="viewcode-block" id="Target.back">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.back">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.back">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">back</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Goes one step backward in the browser history.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -756,7 +854,7 @@
 
 
 <div class="viewcode-block" id="Target.forward">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.forward">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.forward">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Goes one step forward in the browser history.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -767,7 +865,7 @@
 
 
 <div class="viewcode-block" id="Target.refresh">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.refresh">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.refresh">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">refresh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Refreshes the page.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -777,7 +875,7 @@
 
     <span class="c1"># Options</span>
 <div class="viewcode-block" id="Target.get_cookies">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.get_cookies">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_cookies">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cookies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a set of dictionaries, corresponding to cookies visible in</span>
 <span class="sd">        the current context.</span>
@@ -786,7 +884,7 @@
 
 
 <div class="viewcode-block" id="Target.get_cookie">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.get_cookie">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_cookie">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cookie</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a single cookie by name. Returns the cookie if found, None if</span>
 <span class="sd">        not.</span>
@@ -795,7 +893,7 @@
 
 
 <div class="viewcode-block" id="Target.delete_cookie">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.delete_cookie">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.delete_cookie">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">delete_cookie</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Deletes a single cookie with the given name.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -803,7 +901,7 @@
 
 
 <div class="viewcode-block" id="Target.delete_all_cookies">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.delete_all_cookies">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.delete_all_cookies">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">delete_all_cookies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete all cookies in the scope of the context.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -812,7 +910,7 @@
 
     <span class="c1"># noinspection GrazieInspection</span>
 <div class="viewcode-block" id="Target.add_cookie">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.add_cookie">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.add_cookie">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">add_cookie</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cookie_dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds a cookie in the current (incognito-) context</span>
 
@@ -839,7 +937,15 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_document_elem_</span>
 
     <span class="c1"># noinspection PyUnusedLocal</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebElement</span><span class="p">:</span>
+<div class="viewcode-block" id="Target.find_element">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.find_element">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebElement</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;find an element in the current target</span>
+
+<span class="sd">        :param by: one of the locators at :func:`By &lt;selenium_driverless.types.by.By&gt;`</span>
+<span class="sd">        :param value: the actual query to find the element by</span>
+<span class="sd">        :param timeout: how long to wait for the element to exist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
         <span class="n">elem</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="n">elem</span><span class="p">:</span>
@@ -853,14 +959,30 @@
             <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">elem</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">NoSuchElementException</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">elem</span>
+        <span class="k">return</span> <span class="n">elem</span></div>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">WebElement</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">parent</span><span class="p">:</span>
-            <span class="n">parent</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_document_elem</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="n">parent</span><span class="o">.</span><span class="n">find_elements</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
 
+<div class="viewcode-block" id="Target.find_elements">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.find_elements">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">WebElement</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;find multiple elements in the current target</span>
+
+<span class="sd">        :param by: one of the locators at :func:`By &lt;selenium_driverless.types.by.By&gt;`</span>
+<span class="sd">        :param value: the actual query to find the elements by</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_document_elem</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">parent</span><span class="o">.</span><span class="n">find_elements</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Target.set_source">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.set_source">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">set_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">15</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        sets the OuterHtml of the current target (if it has DOM//HTML)</span>
+
+<span class="sd">        :param source: the html</span>
+<span class="sd">        :param timeout: the timeout to try setting the source (might fail if the page is in a reload-loop</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
         <span class="k">while</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">timeout</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -870,10 +992,11 @@
             <span class="k">except</span> <span class="n">StaleElementReferenceException</span><span class="p">:</span>
                 <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_loaded</span><span class="p">()</span>
                 <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">TimeoutError</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t get document element to not be stale&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t get document element to not be stale&quot;</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="Target.search_elements">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.search_elements">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.search_elements">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">search_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">WebElement</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        query:str | Plain text or query selector or XPath search query.</span>
@@ -907,7 +1030,7 @@
 
 
 <div class="viewcode-block" id="Target.get_screenshot_as_file">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.get_screenshot_as_file">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_screenshot_as_file">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="c1"># noinspection GrazieInspection</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a screenshot of the current window to a PNG image file.</span>
@@ -940,7 +1063,7 @@
 
 
 <div class="viewcode-block" id="Target.save_screenshot">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.save_screenshot">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.save_screenshot">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">save_screenshot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="c1"># noinspection GrazieInspection</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a screenshot of the current window to a PNG image file.</span>
@@ -960,7 +1083,7 @@
 
 
 <div class="viewcode-block" id="Target.get_screenshot_as_png">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.get_screenshot_as_png">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_screenshot_as_png">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_png</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the screenshot of the current window as a binary data.</span>
 
@@ -974,7 +1097,7 @@
 
 
 <div class="viewcode-block" id="Target.get_screenshot_as_base64">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.get_screenshot_as_base64">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_screenshot_as_base64">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_base64</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the screenshot of the current window as a base64 encoded string</span>
 <span class="sd">        which is useful in embedded images in HTML.</span>
@@ -989,7 +1112,7 @@
 
 
 <div class="viewcode-block" id="Target.get_network_conditions">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.get_network_conditions">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_network_conditions">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_network_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets Chromium network emulation settings.</span>
 
@@ -1002,7 +1125,7 @@
 
 
 <div class="viewcode-block" id="Target.set_network_conditions">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.set_network_conditions">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.set_network_conditions">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">set_network_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offline</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">latency</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">download_throughput</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                                      <span class="n">upload_throughput</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                                      <span class="n">connection_type</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span>
@@ -1039,34 +1162,80 @@
 
 
 <div class="viewcode-block" id="Target.delete_network_conditions">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.delete_network_conditions">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.delete_network_conditions">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">delete_network_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Resets Chromium network emulation settings.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;not started with chromedriver&quot;</span><span class="p">)</span></div>
 
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">wait_for_cdp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Target.wait_for_cdp">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.wait_for_cdp">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">wait_for_cdp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        wait for a CDP event and return the data</span>
+<span class="sd">        :param event: the name of the event</span>
+<span class="sd">        :param timeout: timeout to wait in seconds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">:</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">()</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">add_cdp_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="nb">callable</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">:</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">add_listener</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">remove_cdp_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="nb">callable</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">:</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">remove_listener</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span>
+<div class="viewcode-block" id="Target.add_cdp_listener">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.add_cdp_listener">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">add_cdp_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">any</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;add a listener on a CDP event (current target)</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cdp_event_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="sd">        :param event: the name of the event</span>
+<span class="sd">        :param callback: the callback on the event</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            callback has to accept one parameter (event data as json)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">:</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">method_iterator</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">event</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">add_listener</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Target.remove_cdp_listener">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.remove_cdp_listener">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">remove_cdp_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">any</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        removes the CDP listener</span>
+<span class="sd">        :param event: the name of the event</span>
+<span class="sd">        :param callback: the callback to remove</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">remove_listener</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Target.get_cdp_event_iter">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_cdp_event_iter">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cdp_event_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">AsyncIterable</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        iterate over a cdp event</span>
+
+<span class="sd">        :param event: name of the event to iterate over</span>
+
+<span class="sd">        .. code-block:: Python</span>
+
+<span class="sd">            async for data in await target.get_cdp_event_iter(&quot;Page.frameNavigated&quot;):</span>
+<span class="sd">                print(data[&quot;frame&quot;][&quot;url&quot;]</span>
+
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            **async only** supported for now</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">method_iterator</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">event</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="Target.execute_cdp_cmd">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.execute_cdp_cmd">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.execute_cdp_cmd">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_cdp_cmd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cmd_args</span><span class="p">:</span> <span class="nb">dict</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                               <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute Chrome Devtools Protocol command and get returned result The</span>
@@ -1101,9 +1270,210 @@
         <span class="k">return</span> <span class="n">result</span></div>
 
 
+<div class="viewcode-block" id="Target.fetch">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.fetch">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                    <span class="n">method</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span>
+                        <span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="s2">&quot;HEAD&quot;</span><span class="p">,</span> <span class="s2">&quot;PUT&quot;</span><span class="p">,</span> <span class="s2">&quot;DELETE&quot;</span><span class="p">,</span> <span class="s2">&quot;CONNECT&quot;</span><span class="p">,</span> <span class="s2">&quot;OPTIONS&quot;</span><span class="p">,</span> <span class="s2">&quot;TRACE&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;GET&quot;</span><span class="p">,</span>
+                    <span class="n">headers</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">mode</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;cors&quot;</span><span class="p">,</span> <span class="s2">&quot;no-cors&quot;</span><span class="p">,</span> <span class="s2">&quot;same-origin&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">credentials</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;omit&quot;</span><span class="p">,</span> <span class="s2">&quot;same-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;include&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">cache</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span>
+                        <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;no-store&quot;</span><span class="p">,</span> <span class="s2">&quot;reload&quot;</span><span class="p">,</span> <span class="s2">&quot;no-cache&quot;</span><span class="p">,</span> <span class="s2">&quot;force-cache&quot;</span><span class="p">,</span> <span class="s2">&quot;only-if-cached&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">redirect</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;follow&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">referrer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">referrer_policy</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span>
+                        <span class="s2">&quot;no-referrer&quot;</span><span class="p">,</span> <span class="s2">&quot;no-referrer-when-downgrade&quot;</span><span class="p">,</span> <span class="s2">&quot;same-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;origin&quot;</span><span class="p">,</span> <span class="s2">&quot;strict-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;origin-when-cross-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;strict-origin-when-cross-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;unsafe-url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">integrity</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">keepalive</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">priority</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;high&quot;</span><span class="p">,</span> <span class="s2">&quot;low&quot;</span><span class="p">,</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;high&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        executes a JS ``fetch`` request within the target,</span>
+<span class="sd">        see `developer.mozilla.org/en-US/docs/Web/API/fetch &lt;https://developer.mozilla.org/en-US/docs/Web/API/fetch&gt;`_ for reference</span>
+
+<span class="sd">        returns smth like</span>
+
+<span class="sd">        .. code-block:: Python</span>
+
+<span class="sd">            {</span>
+<span class="sd">                &quot;body&quot;:bytes,</span>
+<span class="sd">                &quot;headers&quot;:dict,</span>
+<span class="sd">                &quot;ok&quot;:bool,</span>
+<span class="sd">                &quot;status_code&quot;:int,</span>
+<span class="sd">                &quot;redirected&quot;:bool,</span>
+<span class="sd">                &quot;status_text&quot;:str,</span>
+<span class="sd">                &quot;type&quot;:str,</span>
+<span class="sd">                &quot;url&quot;:str</span>
+<span class="sd">            }</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># see</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">method</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
+        <span class="k">if</span> <span class="n">headers</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;headers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">headers</span>
+        <span class="k">if</span> <span class="n">body</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;body&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">body</span>
+        <span class="k">if</span> <span class="n">mode</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;mode&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="k">if</span> <span class="n">credentials</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;credentials&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">credentials</span>
+        <span class="k">if</span> <span class="n">cache</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;cache&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cache</span>
+        <span class="k">if</span> <span class="n">redirect</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;redirect&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">redirect</span>
+        <span class="k">if</span> <span class="n">referrer</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;referrer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">referrer</span>
+        <span class="k">if</span> <span class="n">referrer_policy</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;referrerPolicy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">referrer_policy</span>
+        <span class="k">if</span> <span class="n">integrity</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;integrity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">integrity</span>
+        <span class="k">if</span> <span class="n">keepalive</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;keepalive&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keepalive</span>
+        <span class="k">if</span> <span class="n">priority</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;priority&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">priority</span>
+
+        <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            function buffer2hex (buffer) {</span>
+<span class="s2">                return [...new Uint8Array (buffer)]</span>
+<span class="s2">                    .map (b =&gt; b.toString (16).padStart (2, &quot;0&quot;))</span>
+<span class="s2">                    .join (&quot;&quot;);</span>
+<span class="s2">            }</span>
+
+<span class="s2">            function headers2dict(headers){</span>
+<span class="s2">                var my_dict = </span><span class="si">{}</span><span class="s2">;</span>
+<span class="s2">                for (var pair of headers.entries()) {</span>
+<span class="s2">                        my_dict[pair[0]] = pair[1]};</span>
+<span class="s2">                return my_dict}</span>
+
+<span class="s2">            async function get(url, options){</span>
+<span class="s2">                var response = await fetch(url, options);</span>
+<span class="s2">                var buffer = await response.arrayBuffer()</span>
+<span class="s2">                var hex = buffer2hex(buffer)</span>
+<span class="s2">                var res = {</span>
+<span class="s2">                        &quot;HEX&quot;:hex,</span>
+<span class="s2">                        &quot;headers&quot;:headers2dict(response.headers),</span>
+<span class="s2">                        &quot;ok&quot;:response.ok,</span>
+<span class="s2">                        &quot;status_code&quot;:response.status,</span>
+<span class="s2">                        &quot;redirected&quot;:response.redirected,</span>
+<span class="s2">                        &quot;status_text&quot;:response.statusText,</span>
+<span class="s2">                        &quot;type&quot;:response.type,</span>
+<span class="s2">                        &quot;url&quot;:response.url</span>
+<span class="s2">                        };</span>
+<span class="s2">                console.log(res)</span>
+<span class="s2">                return res;</span>
+<span class="s2">            }</span>
+<span class="s2">            return await get(arguments[0], arguments[1])</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_async</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;body&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;HEX&quot;</span><span class="p">])</span>
+        <span class="k">del</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;HEX&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="Target.xhr">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.xhr">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">xhr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                  <span class="n">method</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="s2">&quot;PUT&quot;</span><span class="p">,</span> <span class="s2">&quot;DELETE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;GET&quot;</span><span class="p">,</span>
+                  <span class="n">user</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">with_credentials</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">mime_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;text/plain&quot;</span><span class="p">,</span>
+                  <span class="n">extra_headers</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        executes a JS ``XMLHttpRequest`` request within the target,</span>
+<span class="sd">        see `developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest &lt;https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest&gt;`_ for reference</span>
+
+<span class="sd">        :param url: the url to get</span>
+<span class="sd">        :param method: one of &quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;DELETE&quot;</span>
+<span class="sd">        :param user: user to authenticate with</span>
+<span class="sd">        :param password: password to authenticate with</span>
+<span class="sd">        :param with_credentials: whether to include cookies</span>
+<span class="sd">        :param mime_type: the type to parse the response as</span>
+<span class="sd">        :param extra_headers: a key/value dict of extra headers to add to the request</span>
+<span class="sd">        :param timeout: timeout in seconds for the request to take</span>
+
+<span class="sd">        returns smth like</span>
+
+<span class="sd">        .. code-block:: Python</span>
+
+<span class="sd">            {</span>
+<span class="sd">                &quot;status&quot;: int,</span>
+<span class="sd">                &quot;response&quot;: any,</span>
+<span class="sd">                &quot;responseText&quot;:str,</span>
+<span class="sd">                &quot;responseType&quot;:str,</span>
+<span class="sd">                &quot;responseURL&quot;:str,</span>
+<span class="sd">                &quot;responseXML&quot;:any,</span>
+<span class="sd">                &quot;statusText&quot;:str,</span>
+<span class="sd">                &quot;responseHeaders&quot;:dict</span>
+<span class="sd">            }</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">extra_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">extra_headers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        function makeRequest(withCredentials, mimeType, extraHeaders, ...args) {</span>
+<span class="s2">            return new Promise(function (resolve, reject) {</span>
+<span class="s2">                try{</span>
+<span class="s2">                    let xhr = new XMLHttpRequest();</span>
+
+<span class="s2">                    if(!(args[3])){args[3] = null};</span>
+<span class="s2">                    if(!(args[4])){args[4] = null};</span>
+<span class="s2">                    xhr.overrideMimeType(mimeType);</span>
+
+<span class="s2">                    xhr.open(...args);</span>
+<span class="s2">                    Object.keys(extraHeaders).forEach(function(key) {</span>
+<span class="s2">                        xhr.setRequestHeader(key, extraHeaders[key])</span>
+<span class="s2">                    });</span>
+<span class="s2">                    xhr.withCredentials = withCredentials;</span>
+
+<span class="s2">                    xhr.onload = function () {</span>
+<span class="s2">                        resolve(xhr)</span>
+<span class="s2">                    };</span>
+<span class="s2">                    xhr.onerror = function () {</span>
+<span class="s2">                        reject(new Error(&quot;XHR failed&quot;));</span>
+<span class="s2">                    };</span>
+<span class="s2">                    xhr.send();</span>
+<span class="s2">                }catch(e){reject(e)}</span>
+<span class="s2">            });</span>
+<span class="s2">        };</span>
+
+<span class="s2">        var xhr =  await makeRequest(...arguments);</span>
+<span class="s2">        data = {</span>
+<span class="s2">            status: xhr.status,</span>
+<span class="s2">            response: xhr.response,</span>
+<span class="s2">            responseText:xhr.responseText,</span>
+<span class="s2">            responseType:xhr.responseType,</span>
+<span class="s2">            responseURL:xhr.responseURL,</span>
+<span class="s2">            responseXML:xhr.responseXML,</span>
+<span class="s2">            statusText:xhr.statusText,</span>
+<span class="s2">            responseHeaders:xhr.getAllResponseHeaders()</span>
+
+<span class="s2">        };</span>
+<span class="s2">        return data</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_async</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">with_credentials</span><span class="p">,</span> <span class="n">mime_type</span><span class="p">,</span> <span class="n">extra_headers</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span>
+                                     <span class="n">password</span><span class="p">,</span>
+                                     <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># parse headers</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;responseHeaders&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">headers</span> <span class="o">==</span> <span class="s2">&quot;null&quot;</span><span class="p">:</span>
+            <span class="n">_headers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">_headers</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">header</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">:</span>
+                <span class="n">header</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;: &#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">header</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">header</span>
+                    <span class="n">_headers</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;responseHeaders&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_headers</span>
+
+        <span class="c1"># todo: parse different response types</span>
+        <span class="k">return</span> <span class="n">data</span></div>
+
+
     <span class="c1"># noinspection PyTypeChecker</span>
 <div class="viewcode-block" id="Target.get_sinks">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.get_sinks">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_sinks">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_sinks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :Returns: A list of sinks available for Cast.</span>
@@ -1113,7 +1483,7 @@
 
 
 <div class="viewcode-block" id="Target.get_issue_message">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.get_issue_message">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_issue_message">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_issue_message</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :Returns: An error message when there is any issue in a Cast session.</span>
@@ -1122,7 +1492,7 @@
 
 
 <div class="viewcode-block" id="Target.set_sink_to_use">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.set_sink_to_use">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.set_sink_to_use">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">set_sink_to_use</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets a specific sink, using its name, as a Cast session receiver</span>
 <span class="sd">        target.</span>
@@ -1134,7 +1504,7 @@
 
 
 <div class="viewcode-block" id="Target.start_desktop_mirroring">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.start_desktop_mirroring">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.start_desktop_mirroring">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">start_desktop_mirroring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Starts a desktop mirroring session on a specific receiver target.</span>
 
@@ -1145,7 +1515,7 @@
 
 
 <div class="viewcode-block" id="Target.start_tab_mirroring">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.start_tab_mirroring">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.start_tab_mirroring">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">start_tab_mirroring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Starts a tab mirroring session on a specific receiver target.</span>
 
@@ -1156,7 +1526,7 @@
 
 
 <div class="viewcode-block" id="Target.stop_casting">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.Target.stop_casting">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.stop_casting">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">stop_casting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Stops the existing Cast session on a specific receiver target.</span>
 
@@ -1169,7 +1539,7 @@
 
 
 <div class="viewcode-block" id="TargetInfo">
-<a class="viewcode-back" href="../../../../classes/Target/#selenium_driverless.types.target.TargetInfo">[docs]</a>
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.TargetInfo">[docs]</a>
 <span class="k">class</span> <span class="nc">TargetInfo</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Info for a Target</span>

@@ -1,4 +1,4 @@
-# Selenium-Driverless (Non-commercial use only!)
+# Driverless (Non-commercial use only!)
 
 [![Downloads](https://static.pepy.tech/badge/selenium-driverless)](https://pepy.tech/project/selenium-driverless) [![](https://img.shields.io/pypi/v/selenium-driverless.svg?color=3399EE)](https://pypi.org/project/selenium-driverless/)
 [Documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/#)
@@ -7,11 +7,10 @@
 - Use Selenium __without chromedriver__
 - Currently passes __Cloudflare__, __Bet365__, [Turnstile](https://github.com/kaliiiiiiiiii/Selenium-Driverless/tree/master/dev#bypass-turnstile), and others
 - Multiple tabs simultaneously
-- Multiple Incognito-contexts with individual proxy & cookies
-- Async (`asyncio`) and sync (experimental) support
-- Proxy-auth support (experimental, [example code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
-- Network-interception
-- headless supported
+- Multiple Incognito-contexts with isolated cookies & local storage
+- Proxy-auth support ([example code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
+- Network-interception ([documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/api/Chrome/RequestInterception/))
+- Single requests ([documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/api/Target/#selenium_driverless.types.target.Target.fetch))
 
 ### Questions? 
 Feel free to join the [Driverless-Community](https://discord.com/invite/MzZZjr2ZM3) on **Discord**:)
@@ -26,9 +25,20 @@ pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/he
 ```
 </details>
 
-### Still getting detected?
-Feel free to give me a feedback! \
-You're a company and looking for another solution? Maybe **[undetect.io](https://undetect.io/partner/steve)** is smth for you
+<!---
+
+## Sponsors
+
+### [Capsolver](https://capsolver.com/?utm_source=github&utm_medium=banner_github&utm_campaign=selenium-driverless)
+
+[![img.png](assets/capsolver.png)](https://capsolver.com/?utm_source=github&utm_medium=banner_github&utm_campaign=selenium-driverless)
+
+an AI-powered service that provides **automatic captcha solving** capabilities. It supports a range of captcha types,
+including `reCAPTCHA`, `hCaptcha`, and `FunCaptcha`, `AWS Captcha`, `Geetest` and image captcha among others.
+Capsolver offers browser-extensions for ease of use, API integration for developers, and various pricing packages to suit
+different needs.
+
+-->
 
 #### Also, feel free to
 <a href="https://www.buymeacoffee.com/kaliiii">
@@ -62,7 +72,7 @@ import asyncio
 async def main():
     options = webdriver.ChromeOptions()
     async with webdriver.Chrome(options=options) as driver:
-        await driver.get('http://nowsecure.nl#relax')
+        await driver.get('http://nowsecure.nl#relax', wait_load=True)
         await driver.sleep(0.5)
         await driver.wait_for_cdp("Page.domContentEventFired", timeout=15)
         
@@ -112,83 +122,6 @@ options.debugger_address = "127.0.0.1:2005"
 async with webdriver.Chrome(options=options) as driver:
   await driver.get('http://nowsecure.nl#relax', wait_load=True)
 ```
-
-### Network-Interception
-- use CDP events (see [chrome-developer-protocoll](https://chromedevtools.github.io/devtools-protocol/) for possible events) 
-
-**Notes**: synchronous might not work properly
-
-<details>
-<summary>Example Code (Click to expand)</summary>
-
-warning: network interception with `Fetch.enable` might have issues with cross-domain iframes, maximum websocket message size or Font requests.\
-You might try using [`Network.setRequestInterception](https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-setRequestInterception) (officially deprecated) or narrowing the pattern
-
-```python
-import asyncio
-import base64
-import sys
-import time
-import traceback
-
-from cdp_socket.exceptions import CDPError
-from selenium_driverless import webdriver
-
-
-async def on_request(params, global_conn):
-    url = params["request"]["url"]
-    _params = {"requestId": params['requestId']}
-    if params.get('responseStatusCode') in [301, 302, 303, 307, 308]:
-        # redirected request
-        return await global_conn.execute_cdp_cmd("Fetch.continueResponse", _params)
-    else:
-        try:
-            body = await global_conn.execute_cdp_cmd("Fetch.getResponseBody", _params, timeout=1)
-        except CDPError as e:
-            if e.code == -32000 and e.message == 'Can only get response body on requests captured after headers received.':
-                print(params, "\n", file=sys.stderr)
-                traceback.print_exc()
-                await global_conn.execute_cdp_cmd("Fetch.continueResponse", _params)
-            else:
-                raise e
-        else:
-            start = time.perf_counter()
-            body_decoded = base64.b64decode(body['body'])
-
-            # modify body here
-
-            body_modified = base64.b64encode(body_decoded).decode("ascii")
-            fulfill_params = {"responseCode": 200, "body": body_modified, "responseHeaders": params["responseHeaders"]}
-            fulfill_params.update(_params)
-            if params["responseStatusText"] != "":
-                # empty string throws "Invalid http status code or phrase"
-                fulfill_params["responsePhrase"] = params["responseStatusText"]
-
-            _time = time.perf_counter() - start
-            if _time > 0.01:
-                print(f"decoding took long: {_time} s")
-            await global_conn.execute_cdp_cmd("Fetch.fulfillRequest", fulfill_params)
-            print("Mocked response", url)
-
-
-async def main():
-    async with webdriver.Chrome(max_ws_size=2 ** 30) as driver:
-        driver.base_target.socket.on_closed.append(lambda code, reason: print(f"chrome exited"))
-
-        global_conn = driver.base_target
-        await global_conn.execute_cdp_cmd("Fetch.enable",
-                                          cmd_args={"patterns": [{"requestStage": "Response", "urlPattern": "*"}]})
-        await global_conn.add_cdp_listener("Fetch.requestPaused", lambda data: on_request(data, global_conn))
-
-        await driver.get("https://nowsecure.nl/#relax", timeout=60, wait_load=False)
-        while True:
-            # time.sleep(10) # no. cloudflare would hang
-            await asyncio.sleep(10)
-
-
-asyncio.run(main())
-```
-</details>
 
 ## Multiple tabs simultaneously
 Note: asyncio is recommended, threading only works on independent webdriver.Chrome instances.
@@ -276,7 +209,7 @@ asyncio.run(main())
 see [@master/dev/show_mousemove.py](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/dev/show_mousemove.py) for visualization
 
 ```python
-pointer = await driver.current_pointer
+pointer = driver.current_pointer
 move_kwargs = {"total_time": 0.7, "accel": 2, "smooth_soft": 20}
 
 await pointer.move_to(100, 500)

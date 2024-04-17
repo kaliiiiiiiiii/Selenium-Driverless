@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>selenium_driverless.input.pointer &mdash; Selenium-Driverless 1.8.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=696515ce"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex/" />
+    <link rel="search" title="Search" href="../../../../search/" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../" class="icon icon-home">
+            Selenium-Driverless
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/By/">By Element Locator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Chrome/">webdriver.Chrome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/ChromeOptions/">ChromeOptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Context/">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Input/">Input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/RequestInterception/">Request-Interception</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/Target/">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/WebELement/">WebElement</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../">Selenium-Driverless</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../">Module code</a></li>
+      <li class="breadcrumb-item active">selenium_driverless.input.pointer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for selenium_driverless.input.pointer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">selenium_driverless.scripts.geometry</span> <span class="kn">import</span> <span class="n">gen_combined_path</span><span class="p">,</span> <span class="n">pos_at_time</span><span class="p">,</span> <span class="n">bias_0_dot_5</span>
+
+
+<span class="k">def</span> <span class="nf">make_rand_click_timeout</span><span class="p">():</span>
+    <span class="k">return</span> <span class="mf">0.125</span> <span class="o">+</span> <span class="p">(</span><span class="n">bias_0_dot_5</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span>
+    <span class="c1"># =&gt; should be about 130ms +/-50</span>
+
+
+<div class="viewcode-block" id="Modifiers">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.Modifiers">[docs]</a>
+<span class="k">class</span> <span class="nc">Modifiers</span><span class="p">:</span>
+    <span class="n">NONE</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;no modifier&quot;&quot;&quot;</span>
+
+    <span class="n">ALT</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;alt modifier&quot;&quot;&quot;</span>
+
+    <span class="n">CTRL</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;CTRL modifier&quot;&quot;&quot;</span>
+
+    <span class="n">COMMAND</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;COMMAND modifier&quot;&quot;&quot;</span>
+
+    <span class="n">SHIFT</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;SHIFT modifier&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="PointerType">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.PointerType">[docs]</a>
+<span class="k">class</span> <span class="nc">PointerType</span><span class="p">:</span>
+    <span class="n">MOUSE</span> <span class="o">=</span> <span class="s2">&quot;mouse&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;mousePointer&quot;&quot;&quot;</span>
+
+    <span class="n">PEN</span> <span class="o">=</span> <span class="s2">&quot;pen&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;a pointer of type \&quot;pen\&quot;&quot;&quot;</span><span class="s2">&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="MouseButton">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.MouseButton">[docs]</a>
+<span class="k">class</span> <span class="nc">MouseButton</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;main button pressed&quot;&quot;&quot;</span>
+
+    <span class="n">NONE</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;no mouse button&quot;&quot;&quot;</span>
+
+    <span class="n">LEFT</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;left mouse button&quot;&quot;&quot;</span>
+
+    <span class="n">MIDDLE</span> <span class="o">=</span> <span class="s2">&quot;middle&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;middle mouse button&quot;&quot;&quot;</span>
+
+    <span class="n">RIGHT</span> <span class="o">=</span> <span class="s2">&quot;right&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;right mouse button&quot;&quot;&quot;</span>
+
+    <span class="n">BACK</span> <span class="o">=</span> <span class="s2">&quot;back&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;back mouse button&quot;&quot;&quot;</span>
+
+    <span class="n">FORWARD</span> <span class="o">=</span> <span class="s2">&quot;forward&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;forward mouse button&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Buttons">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.Buttons">[docs]</a>
+<span class="k">class</span> <span class="nc">Buttons</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;modifier mouse button&quot;&quot;&quot;</span>
+
+    <span class="n">NONE</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;no button&quot;&quot;&quot;</span>
+
+    <span class="n">LEFT</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;left mouse button&quot;&quot;&quot;</span>
+
+    <span class="n">RIGHT</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;right mouse button&quot;&quot;&quot;</span>
+
+    <span class="n">MIDDLE</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;middle mouse button&quot;&quot;&quot;</span>
+
+    <span class="n">BACK</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;back mouse button&quot;&quot;&quot;</span>
+
+    <span class="n">FORWARD</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;forward mouse button&quot;&quot;&quot;</span>
+
+    <span class="n">DEFAULT</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;no modifier mouse button specified&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="EventType">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.EventType">[docs]</a>
+<span class="k">class</span> <span class="nc">EventType</span><span class="p">:</span>
+    <span class="n">PRESS</span> <span class="o">=</span> <span class="s2">&quot;mousePressed&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;mousePressed&quot;&quot;&quot;</span>
+
+    <span class="n">RELEASE</span> <span class="o">=</span> <span class="s2">&quot;mouseReleased&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;mouseReleased&quot;&quot;&quot;</span>
+
+    <span class="n">MOVE</span> <span class="o">=</span> <span class="s2">&quot;mouseMoved&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;mouseMoved&quot;&quot;&quot;</span>
+
+    <span class="n">WHEEL</span> <span class="o">=</span> <span class="s2">&quot;mouseWheel&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;mouseWheel&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="PointerEvent">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.PointerEvent">[docs]</a>
+<span class="k">class</span> <span class="nc">PointerEvent</span><span class="p">:</span>
+    <span class="c1"># noinspection GrazieInspection</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">type_</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                 <span class="n">modifiers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Modifiers</span><span class="o">.</span><span class="n">NONE</span><span class="p">,</span>
+                 <span class="n">timestamp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">button</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">MouseButton</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span> <span class="n">buttons</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Buttons</span><span class="o">.</span><span class="n">DEFAULT</span><span class="p">,</span>
+                 <span class="n">click_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tangential_pressure</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                 <span class="n">tilt_x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tilt_y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">twist</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">delta_x</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">delta_y</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                 <span class="n">pointer_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">PointerType</span><span class="o">.</span><span class="n">MOUSE</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        see `Input.dispatchMouseEvent &lt;https://chromedevtools.github.io/devtools-protocol/tot/Input/#method-dispatchMouseEvent&gt;`_ for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_command</span> <span class="o">=</span> <span class="s2">&quot;Input.dispatchMouseEvent&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">type_</span> <span class="o">=</span> <span class="n">type_</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modifiers</span> <span class="o">=</span> <span class="n">modifiers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="n">timestamp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">button</span> <span class="o">=</span> <span class="n">button</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span> <span class="o">=</span> <span class="n">buttons</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">click_count</span> <span class="o">=</span> <span class="n">click_count</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">force</span> <span class="o">=</span> <span class="n">force</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tangential_pressure</span> <span class="o">=</span> <span class="n">tangential_pressure</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tilt_x</span> <span class="o">=</span> <span class="n">tilt_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tilt_y</span> <span class="o">=</span> <span class="n">tilt_y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">twist</span> <span class="o">=</span> <span class="n">twist</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta_x</span> <span class="o">=</span> <span class="n">delta_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta_y</span> <span class="o">=</span> <span class="n">delta_y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pointer_type</span> <span class="o">=</span> <span class="n">pointer_type</span>
+
+<div class="viewcode-block" id="PointerEvent.to_json">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.PointerEvent.to_json">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the event as JSON&quot;&quot;&quot;</span>
+        <span class="n">_json</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">type_</span><span class="p">,</span>
+            <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+            <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+            <span class="s2">&quot;modifiers&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">modifiers</span><span class="p">,</span>
+            <span class="s2">&quot;button&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">button</span><span class="p">,</span>
+            <span class="s2">&quot;clickCount&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">click_count</span><span class="p">,</span>
+            <span class="s2">&quot;force&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">force</span><span class="p">,</span>
+            <span class="s2">&quot;tangentialPressure&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tangential_pressure</span><span class="p">,</span>
+            <span class="s2">&quot;tiltX&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tilt_x</span><span class="p">,</span>
+            <span class="s2">&quot;tiltY&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tilt_y</span><span class="p">,</span>
+            <span class="s2">&quot;twist&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">twist</span><span class="p">,</span>
+            <span class="s2">&quot;deltaX&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_x</span><span class="p">,</span>
+            <span class="s2">&quot;deltaY&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_y</span><span class="p">,</span>
+            <span class="s2">&quot;pointerType&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pointer_type</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span><span class="p">:</span>
+            <span class="n">_json</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span><span class="p">:</span>
+            <span class="n">_json</span><span class="p">[</span><span class="s2">&quot;buttons&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buttons</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_command</span><span class="p">,</span> <span class="n">_json</span><span class="p">]</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BasePointer">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.BasePointer">[docs]</a>
+<span class="k">class</span> <span class="nc">BasePointer</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">driver</span><span class="p">,</span> <span class="n">pointer_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">PointerType</span><span class="o">.</span><span class="n">MOUSE</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pointer_type</span> <span class="o">=</span> <span class="n">pointer_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_driver</span> <span class="o">=</span> <span class="n">driver</span>
+
+<div class="viewcode-block" id="BasePointer.dispatch">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.BasePointer.dispatch">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">dispatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">PointerEvent</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;dispatches a PointerEVent&quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="o">*</span><span class="n">event</span><span class="o">.</span><span class="n">to_json</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="BasePointer.down">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.BasePointer.down">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">down</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;press the mouse</span>
+
+<span class="sd">        :param kwargs: kwargs for :class:`PointerEvent &lt;selenium_driverless.input.pointer.PointerEvent&gt;`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">event</span> <span class="o">=</span> <span class="n">PointerEvent</span><span class="p">(</span><span class="n">type_</span><span class="o">=</span><span class="n">EventType</span><span class="o">.</span><span class="n">PRESS</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasePointer.up">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.BasePointer.up">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">up</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;release the mouse</span>
+
+<span class="sd">        :param kwargs: kwargs for :class:`PointerEvent &lt;selenium_driverless.input.pointer.PointerEvent&gt;`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">event</span> <span class="o">=</span> <span class="n">PointerEvent</span><span class="p">(</span><span class="n">type_</span><span class="o">=</span><span class="n">EventType</span><span class="o">.</span><span class="n">RELEASE</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasePointer.click">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.BasePointer.click">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;click</span>
+
+<span class="sd">        :param x: the x coordinate</span>
+<span class="sd">        :param y: the y coordinate</span>
+<span class="sd">        :param timeout: the time to sleep between mouseUp &amp; mouseDown</span>
+<span class="sd">        :param kwargs: kwargs for :class:`PointerEvent &lt;selenium_driverless.input.pointer.PointerEvent&gt;`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">timeout</span><span class="p">:</span>
+            <span class="n">timeout</span> <span class="o">=</span> <span class="n">make_rand_click_timeout</span><span class="p">()</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">down</span><span class="p">(</span><span class="n">click_count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">up</span><span class="p">(</span><span class="n">click_count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasePointer.double_click">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.BasePointer.double_click">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">double_click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;double-click</span>
+
+<span class="sd">        :param x: the x coordinate</span>
+<span class="sd">        :param y: the y coordinate</span>
+<span class="sd">        :param timeout: the time to sleep between mouseUp &amp; mouseDown</span>
+<span class="sd">        :param kwargs: kwargs for :class:`PointerEvent &lt;selenium_driverless.input.pointer.PointerEvent&gt;`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">timeout</span><span class="p">:</span>
+            <span class="n">timeout</span> <span class="o">=</span> <span class="n">make_rand_click_timeout</span><span class="p">()</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">down</span><span class="p">(</span><span class="n">click_count</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">up</span><span class="p">(</span><span class="n">click_count</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasePointer.move_to">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.BasePointer.move_to">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">move_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;dispatch a move event</span>
+
+<span class="sd">        :param x: the x coordinate</span>
+<span class="sd">        :param y: the y coordinate</span>
+<span class="sd">        :param kwargs: kwargs for :class:`PointerEvent &lt;selenium_driverless.input.pointer.PointerEvent&gt;`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">event</span> <span class="o">=</span> <span class="n">PointerEvent</span><span class="p">(</span><span class="n">type_</span><span class="o">=</span><span class="n">EventType</span><span class="o">.</span><span class="n">MOVE</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasePointer.move_path">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.BasePointer.move_path">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">move_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">total_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">pos_from_time_callback</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">float</span><span class="p">],</span><span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">typing</span><span class="o">.</span><span class="n">Awaitable</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]],</span> <span class="n">freq_assumption</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span>
+                        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        move a path</span>
+
+<span class="sd">        :param total_time: total time the pointer should take to move the path</span>
+<span class="sd">        :param freq_assumption: assumption on a mousemove event frequency, required for accuracy</span>
+<span class="sd">        :param kwargs: kwargs for :class:`PointerEvent &lt;selenium_driverless.input.pointer.PointerEvent&gt;`</span>
+<span class="sd">        :param pos_from_time_callback: a function which returns coordinates for a specific time</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">_time</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+
+            <span class="k">if</span> <span class="n">_time</span> <span class="o">&gt;</span> <span class="n">total_time</span> <span class="ow">or</span> <span class="n">_time</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+
+            <span class="c1"># get coordinates at time</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">pos_from_time_callback</span><span class="p">(</span><span class="n">_time</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">iscoroutinefunction</span><span class="p">(</span><span class="n">pos_from_time_callback</span><span class="p">):</span>
+                <span class="k">await</span> <span class="n">res</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">res</span>
+
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">freq_assumption</span><span class="p">)</span>  <span class="c1"># =&gt; approximately 0.017, assuming 60 Hz</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Pointer">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.Pointer">[docs]</a>
+<span class="k">class</span> <span class="nc">Pointer</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">pointer_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">PointerType</span><span class="o">.</span><span class="n">MOUSE</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pointer_type</span> <span class="o">=</span> <span class="n">pointer_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">BasePointer</span><span class="p">(</span><span class="n">driver</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">pointer_type</span><span class="o">=</span><span class="n">pointer_type</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Pointer.down">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.Pointer.down">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">down</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;press the mouse</span>
+
+<span class="sd">        :param kwargs: kwargs for :class:`PointerEvent &lt;selenium_driverless.input.pointer.PointerEvent&gt;`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">down</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Pointer.up">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.Pointer.up">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">up</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;release the mouse</span>
+
+<span class="sd">        :param kwargs: kwargs for :class:`PointerEvent &lt;selenium_driverless.input.pointer.PointerEvent&gt;`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">up</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Pointer.click">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.Pointer.click">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_or_elem</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">move_to</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="n">move_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">click_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;click</span>
+
+<span class="sd">        :param x_or_elem: either the x-coordinate, or a :class:`WebElement &lt;selenium_driverless.input.types.webelement.WebElement&gt;`</span>
+<span class="sd">        :param y: the y-coordinate to click at</span>
+<span class="sd">        :param move_to: whether to move the pointer (recommended)</span>
+<span class="sd">        :param move_kwargs: kwargs for :func:`Pointer.move_to &lt;selenium_driverless.input.pointer.Pointer.move_to&gt;`</span>
+<span class="sd">        :param click_kwargs: kwargs for :func:`BasePointer.click &lt;selenium_driverless.input.pointer.BasePointer.click&gt;`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">selenium_driverless.types.webelement</span> <span class="kn">import</span> <span class="n">WebElement</span>
+        <span class="k">if</span> <span class="n">click_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">click_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">move_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">move_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_or_elem</span><span class="p">,</span> <span class="n">WebElement</span><span class="p">):</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="k">await</span> <span class="n">x_or_elem</span><span class="o">.</span><span class="n">mid_location</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x_or_elem</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span>
+        <span class="k">if</span> <span class="n">move_to</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">move_kwargs</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">click_kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Pointer.move_to">
+<a class="viewcode-back" href="../../../../api/Input/#selenium_driverless.input.pointer.Pointer.move_to">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">move_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_or_elem</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">total_time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">accel</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                      <span class="n">mid_time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">smooth_soft</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;move pinter to location</span>
+
+<span class="sd">        :param x_or_elem: either the x-coordinate, or a :class:`WebElement &lt;selenium_driverless.input.types.webelement.WebElement&gt;`</span>
+<span class="sd">        :param y: the y-coordinate to move to</span>
+<span class="sd">        :param total_time: the total time, the pointer should take to move to the location</span>
+<span class="sd">        :param accel: the acceleration &amp; deceleration, the pointerMove should perform</span>
+<span class="sd">        :param mid_time: the normalized position, where half of the time should be due (0-1)</span>
+<span class="sd">        :param smooth_soft: how &quot;curvy&quot; the line should be</span>
+<span class="sd">        :param kwargs: kwargs for :func:`BasePointer.move_path &lt;selenium_driverless.input.pointer.BasePointer.move_path&gt;`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">selenium_driverless.types.webelement</span> <span class="kn">import</span> <span class="n">WebElement</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">==</span> <span class="p">[</span><span class="n">x_or_elem</span><span class="p">,</span> <span class="n">y</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_or_elem</span><span class="p">,</span> <span class="n">WebElement</span><span class="p">):</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="k">await</span> <span class="n">x_or_elem</span><span class="o">.</span><span class="n">mid_location</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x_or_elem</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">mid_time</span><span class="p">:</span>
+                <span class="n">mid_time</span> <span class="o">=</span> <span class="n">bias_0_dot_5</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">max_offset</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+            <span class="c1"># noinspection PyShadowingNames</span>
+            <span class="k">def</span> <span class="nf">pos_from_time_callback</span><span class="p">(</span><span class="n">time</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">pos_at_time</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">total_time</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">accel</span><span class="p">,</span> <span class="n">mid_time</span><span class="o">=</span><span class="n">mid_time</span><span class="p">)</span>
+
+            <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">location</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]])</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">gen_combined_path</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">n_points_soft</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">smooth_soft</span><span class="o">=</span><span class="n">smooth_soft</span><span class="p">,</span> <span class="n">n_points_distort</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                                     <span class="n">smooth_distort</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">move_path</span><span class="p">(</span><span class="n">total_time</span><span class="o">=</span><span class="n">total_time</span><span class="p">,</span> <span class="n">pos_from_time_callback</span><span class="o">=</span><span class="n">pos_from_time_callback</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Aurin Aegerter (aka Steve, kaliiiiiiiiii).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

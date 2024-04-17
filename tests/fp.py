@@ -26,7 +26,7 @@ async def get_fp(driver: webdriver.Chrome):
     await asyncio.sleep(1)
     fut = asyncio.ensure_future(driver.eval_async(js, timeout=10))
     await asyncio.sleep(1)
-    pointer = await driver.current_pointer
+    pointer = driver.current_pointer
     await pointer.down(x=10, y=10)
     fp = json.loads(await fut)
     return fp

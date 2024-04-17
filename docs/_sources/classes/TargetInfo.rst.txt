@@ -1,6 +1,0 @@
-TargetInfo
-===============================================
-
-
-.. autoclass:: selenium_driverless.types.target.TargetInfo
-    :members:

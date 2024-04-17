@@ -1,6 +1,6 @@
 import setuptools
 
-requirements = ['selenium~=4.6', "cdp-socket>=1.2.5", "numpy", "matplotlib~=3.5", "scipy~=1.7", "aiofiles",
+requirements = ['selenium~=4.6', "cdp-socket>=1.2.5", "numpy", "scipy~=1.7", "aiofiles",
                 'platformdirs']
 
 with open('README.md', 'r', encoding='utf-8') as fh:

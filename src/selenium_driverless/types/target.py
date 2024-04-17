@@ -9,6 +9,7 @@ from base64 import b64decode
 import aiofiles
 from typing import List
 import pathlib
+import random
 
 import websockets
 from cdp_socket.exceptions import CDPError
@@ -28,6 +29,34 @@ from selenium_driverless.sync.alert import Alert as SyncAlert
 from selenium_driverless.types.alert import Alert
 from selenium_driverless.types.webelement import WebElement
 from selenium_driverless.sync.webelement import WebElement as SyncWebElement
+
+KEY_MAPPING = {
+    'a': ('KeyA', 65), 'b': ('KeyB', 66), 'c': ('KeyC', 67), 'd': ('KeyD', 68), 'e': ('KeyE', 69),
+    'f': ('KeyF', 70), 'g': ('KeyG', 71), 'h': ('KeyH', 72), 'i': ('KeyI', 73), 'j': ('KeyJ', 74),
+    'k': ('KeyK', 75), 'l': ('KeyL', 76), 'm': ('KeyM', 77), 'n': ('KeyN', 78), 'o': ('KeyO', 79),
+    'p': ('KeyP', 80), 'q': ('KeyQ', 81), 'r': ('KeyR', 82), 's': ('KeyS', 83), 't': ('KeyT', 84),
+    'u': ('KeyU', 85), 'v': ('KeyV', 86), 'w': ('KeyW', 87), 'x': ('KeyX', 88), 'y': ('KeyY', 89),
+    'z': ('KeyZ', 90), 'A': ('KeyA', 65), 'B': ('KeyB', 66), 'C': ('KeyC', 67), 'D': ('KeyD', 68),
+    'E': ('KeyE', 69), 'F': ('KeyF', 70), 'G': ('KeyG', 71), 'H': ('KeyH', 72), 'I': ('KeyI', 73),
+    'J': ('KeyJ', 74), 'K': ('KeyK', 75), 'L': ('KeyL', 76), 'M': ('KeyM', 77), 'N': ('KeyN', 78),
+    'O': ('KeyO', 79), 'P': ('KeyP', 80), 'Q': ('KeyQ', 81), 'R': ('KeyR', 82), 'S': ('KeyS', 83),
+    'T': ('KeyT', 84), 'U': ('KeyU', 85), 'V': ('KeyV', 86), 'W': ('KeyW', 87), 'X': ('KeyX', 88),
+    'Y': ('KeyY', 89), 'Z': ('KeyZ', 90), '0': ('Digit0', 48), '1': ('Digit1', 49), '2': ('Digit2', 50),
+    '3': ('Digit3', 51), '4': ('Digit4', 52), '5': ('Digit5', 53), '6': ('Digit6', 54), '7': ('Digit7', 55),
+    '8': ('Digit8', 56), '9': ('Digit9', 57), '!': ('Digit1', 49), '"': ('Quote', 222), '#': ('Digit3', 51),
+    '$': ('Digit4', 52), '%': ('Digit5', 53), '&': ('Digit7', 55), "'": ('Quote', 222), '(': ('Digit9', 57),
+    ')': ('Digit0', 48), '*': ('Digit8', 56), '+': ('Equal', 187), ',': ('Comma', 188), '-': ('Minus', 189),
+    '.': ('Period', 190), '/': ('Slash', 191), ':': ('Semicolon', 186), ';': ('Semicolon', 186),
+    '<': ('Comma', 188),
+    '=': ('Equal', 187), '>': ('Period', 190), '?': ('Slash', 191), '@': ('Digit2', 50),
+    '[': ('BracketLeft', 219),
+    '\\': ('Backslash', 220), ']': ('BracketRight', 221), '^': ('Digit6', 54), '_': ('Minus', 189),
+    '`': ('Backquote', 192),
+    '{': ('BracketLeft', 219), '|': ('Backslash', 220), '}': ('BracketRight', 221), '~': ('Backquote', 192),
+    ' ': ('Space', 32)
+}
+
+SHIFT_KEY_NEEDED = '~!@#$%^&*()_+{}|:"<>?'
 
 
 class NoSuchIframe(Exception):
@@ -84,6 +113,7 @@ class Target:
         self._on_closed_ = []
 
         self._driver = driver
+        self._send_key_lock = asyncio.Lock()
 
     def __repr__(self):
         return f'<{type(self).__module__}.{type(self).__name__} (target_id="{self.id}", host="{self._host}")>'
@@ -105,6 +135,7 @@ class Target:
 
     @property
     def socket(self) -> SingleCDPSocket:
+        """the cdp-socket for the connection"""
         return self._socket
 
     def __eq__(self, other):
@@ -369,7 +400,66 @@ class Target:
 
     @property
     def pointer(self) -> Pointer:
+        """the :class:`Pointer <selenium_driverless.input.pointer.Pointer>` for this target"""
         return self._pointer
+
+    async def send_keys(self, text: str):
+        """
+        send text & keys to the target
+
+        :param text: the text to send to the target
+        """
+        async with self._send_key_lock:
+            for letter in text:
+                if letter in KEY_MAPPING:
+                    key_code, virtual_key_code = KEY_MAPPING[letter]
+                    # Determine if a shift key is needed
+                    shift_pressed = False
+                    if letter.isupper() or letter in SHIFT_KEY_NEEDED:
+                        shift_pressed = True
+                        await self.execute_cdp_cmd("Input.dispatchKeyEvent", {
+                                "type": "keyDown",
+                                "code": "ShiftLeft",
+                                "windowsVirtualKeyCode": 16,
+                                "key": "Shift",
+                                "modifiers": 8 if shift_pressed else 0
+                        })
+                        await asyncio.sleep(random.uniform(0.05, 0.1))  # Simulate human typing speed
+
+                    key_event = {
+                            "type": "keyDown",
+                            "code": key_code,
+                            "windowsVirtualKeyCode": virtual_key_code,
+                            "key": letter,
+                            "modifiers": 8 if shift_pressed else 0
+                        }
+
+                    # Send keydown event
+                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
+                    await asyncio.sleep(random.uniform(0.05, 0.1))
+
+                    # Simulate key press for the actual character
+                    key_event["type"] = "char"
+                    key_event["text"] = letter
+                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
+                    await asyncio.sleep(random.uniform(0.05, 0.1))
+                    del key_event['text']
+
+                    # Simulate key release
+                    key_event["type"] = "keyUp"
+                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
+                    await asyncio.sleep(random.uniform(0.05, 0.1))
+
+                    # Release the shift key if it was pressed
+                    if shift_pressed:
+                        await self.execute_cdp_cmd("Input.dispatchKeyEvent", {
+                            "type": "keyUp",
+                            "code": "ShiftLeft",
+                            "windowsVirtualKeyCode": 16,
+                            "key": "Shift",
+                            "modifiers": 0
+                        })
+                        await asyncio.sleep(random.uniform(0.05, 0.1))  # Simulate human typing speed
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
                                  max_depth: int = None, timeout: float = 2, execution_context_id: str = None,
@@ -408,8 +498,8 @@ class Target:
             try:
                 global_this = await self._global_this(execution_context_id)
                 res = await global_this.__exec_raw__(script, *args, await_res=await_res, serialization=serialization,
-                                                    max_depth=max_depth, timeout=timeout,
-                                                    execution_context_id=execution_context_id)
+                                                     max_depth=max_depth, timeout=timeout,
+                                                     execution_context_id=execution_context_id)
             except StaleJSRemoteObjReference as e:
                 exc = e
             else:
@@ -533,15 +623,18 @@ class Target:
 
     @property
     async def page_source(self) -> str:
-        """Gets the docs_source of the current page.
-
-        :Usage:
-            ::
-
-                target.page_source
+        """Gets the HTML of the current page.
         """
-        elem = await self._document_elem
-        return await elem.source
+        start = time.perf_counter()
+        timeout = 10
+        while (time.perf_counter() - start) < timeout:
+            try:
+                elem = await self._document_elem
+                return await elem.source
+            except StaleElementReferenceException:
+                await self._on_loaded()
+        raise asyncio.TimeoutError(
+            f"Couldn't get page source within {timeout} seconds, possibly due to a reload loop")
 
     async def close(self, timeout: float = 2) -> None:
         """Closes the current window.
@@ -709,7 +802,13 @@ class Target:
         return self._document_elem_
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, parent=None, timeout: int or None = None) -> WebElement:
+    async def find_element(self, by: str, value: str, timeout: int or None = None) -> WebElement:
+        """find an element in the current target
+
+        :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
+        :param value: the actual query to find the element by
+        :param timeout: how long to wait for the element to exist
+        """
         start = time.perf_counter()
         elem = None
         while not elem:
@@ -725,12 +824,22 @@ class Target:
             raise NoSuchElementException()
         return elem
 
-    async def find_elements(self, by: str, value: str, parent=None) -> typing.List[WebElement]:
-        if not parent:
-            parent = await self._document_elem
+    async def find_elements(self, by: str, value: str) -> typing.List[WebElement]:
+        """find multiple elements in the current target
+
+        :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
+        :param value: the actual query to find the elements by
+        """
+        parent = await self._document_elem
         return await parent.find_elements(by=by, value=value)
 
     async def set_source(self, source: str, timeout: float = 15):
+        """
+        sets the OuterHtml of the current target (if it has DOM//HTML)
+
+        :param source: the html
+        :param timeout: the timeout to try setting the source (might fail if the page is in a reload-loop
+        """
         start = time.perf_counter()
         while (time.perf_counter() - start) < timeout:
             try:
@@ -740,7 +849,7 @@ class Target:
             except StaleElementReferenceException:
                 await self._on_loaded()
                 await asyncio.sleep(0)
-        raise TimeoutError("Couldn't get document element to not be stale")
+        raise asyncio.TimeoutError("Couldn't get document element to not be stale")
 
     async def search_elements(self, query: str) -> typing.List[WebElement]:
         """
@@ -891,22 +1000,56 @@ class Target:
         """Resets Chromium network emulation settings."""
         raise NotImplementedError("not started with chromedriver")
 
-    async def wait_for_cdp(self, event: str, timeout: float or None = None):
+    async def wait_for_cdp(self, event: str, timeout: float or None = None) -> dict:
+        """
+        wait for a CDP event and return the data
+        :param event: the name of the event
+        :param timeout: timeout to wait in seconds.
+        """
         if not self.socket:
             await self._init()
         return await self.socket.wait_for(event, timeout=timeout)
 
-    async def add_cdp_listener(self, event: str, callback: callable):
+    async def add_cdp_listener(self, event: str, callback: typing.Callable[[dict], any]):
+        """add a listener on a CDP event (current target)
+
+        :param event: the name of the event
+        :param callback: the callback on the event
+
+        .. note::
+            callback has to accept one parameter (event data as json)
+
+        """
         if not self.socket:
             await self._init()
         self.socket.add_listener(method=event, callback=callback)
 
-    async def remove_cdp_listener(self, event: str, callback: callable):
+    async def remove_cdp_listener(self, event: str, callback: typing.Callable[[dict], any]):
+        """
+        removes the CDP listener
+        :param event: the name of the event
+        :param callback: the callback to remove
+        """
         if not self.socket:
             await self._init()
         self.socket.remove_listener(method=event, callback=callback)
 
-    async def get_cdp_event_iter(self, event: str):
+    async def get_cdp_event_iter(self, event: str) -> typing.AsyncIterable[dict]:
+        """
+        iterate over a cdp event
+
+        :param event: name of the event to iterate over
+
+        .. code-block:: Python
+
+            async for data in await target.get_cdp_event_iter("Page.frameNavigated"):
+                print(data["frame"]["url"]
+
+
+        .. warning::
+            **async only** supported for now
+
+        """
         if not self.socket:
             await self._init()
         return self.socket.method_iterator(method=event)
@@ -943,6 +1086,201 @@ class Target:
         elif cmd == "DOM.disable":
             self._dom_enabled = False
         return result
+
+    async def fetch(self, url: str,
+                    method: typing.Literal[
+                        "GET", "POST", "HEAD", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", None] = "GET",
+                    headers: typing.Dict[str, str] = None, body: str = None,
+                    mode: typing.Literal["cors", "no-cors", "same-origin", None] = None,
+                    credentials: typing.Literal["omit", "same-origin", "include"] = None,
+                    cache: typing.Literal[
+                        "default", "no-store", "reload", "no-cache", "force-cache", "only-if-cached"] = None,
+                    redirect: typing.Literal["follow", "error"] = None, referrer: str = None,
+                    referrer_policy: typing.Literal[
+                        "no-referrer", "no-referrer-when-downgrade", "same-origin", "origin", "strict-origin", "origin-when-cross-origin", "strict-origin-when-cross-origin", "unsafe-url"] = None,
+                    integrity: str = None, keepalive=None,
+                    priority: typing.Literal["high", "low", "auto", None] = "high", timeout: float = 20) -> dict:
+        """
+        executes a JS ``fetch`` request within the target,
+        see `developer.mozilla.org/en-US/docs/Web/API/fetch <https://developer.mozilla.org/en-US/docs/Web/API/fetch>`_ for reference
+
+        returns smth like
+
+        .. code-block:: Python
+
+            {
+                "body":bytes,
+                "headers":dict,
+                "ok":bool,
+                "status_code":int,
+                "redirected":bool,
+                "status_text":str,
+                "type":str,
+                "url":str
+            }
+
+        """
+        # see
+        options = {}
+        if method:
+            options["method"] = method
+        if headers:
+            options["headers"] = headers
+        if body:
+            options["body"] = body
+        if mode:
+            options["mode"] = mode
+        if credentials:
+            options["credentials"] = credentials
+        if cache:
+            options["cache"] = cache
+        if redirect:
+            options["redirect"] = redirect
+        if referrer:
+            options["referrer"] = referrer
+        if referrer_policy:
+            options["referrerPolicy"] = referrer_policy
+        if integrity:
+            options["integrity"] = integrity
+        if keepalive:
+            options["keepalive"] = keepalive
+        if priority:
+            options["priority"] = priority
+
+        script = """
+            function buffer2hex (buffer) {
+                return [...new Uint8Array (buffer)]
+                    .map (b => b.toString (16).padStart (2, "0"))
+                    .join ("");
+            }
+
+            function headers2dict(headers){
+                var my_dict = {};
+                for (var pair of headers.entries()) {
+                        my_dict[pair[0]] = pair[1]};
+                return my_dict}
+
+            async function get(url, options){
+                var response = await fetch(url, options);
+                var buffer = await response.arrayBuffer()
+                var hex = buffer2hex(buffer)
+                var res = {
+                        "HEX":hex,
+                        "headers":headers2dict(response.headers),
+                        "ok":response.ok,
+                        "status_code":response.status,
+                        "redirected":response.redirected,
+                        "status_text":response.statusText,
+                        "type":response.type,
+                        "url":response.url
+                        };
+                console.log(res)
+                return res;
+            }
+            return await get(arguments[0], arguments[1])
+        """
+        result = await self.eval_async(script, url, options, unique_context=True, timeout=timeout)
+        result["body"] = bytes.fromhex(result["HEX"])
+        del result["HEX"]
+        return result
+
+    async def xhr(self, url: str,
+                  method: typing.Literal["GET", "POST", "PUT", "DELETE"] = "GET",
+                  user: str = None, password: str = None, with_credentials: bool = True, mime_type: str = "text/plain",
+                  extra_headers: typing.Dict[str, str] = None,
+                  timeout: float = 30) -> dict:
+        """
+        executes a JS ``XMLHttpRequest`` request within the target,
+        see `developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest <https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest>`_ for reference
+
+        :param url: the url to get
+        :param method: one of "GET", "POST", "PUT", "DELETE"
+        :param user: user to authenticate with
+        :param password: password to authenticate with
+        :param with_credentials: whether to include cookies
+        :param mime_type: the type to parse the response as
+        :param extra_headers: a key/value dict of extra headers to add to the request
+        :param timeout: timeout in seconds for the request to take
+
+        returns smth like
+
+        .. code-block:: Python
+
+            {
+                "status": int,
+                "response": any,
+                "responseText":str,
+                "responseType":str,
+                "responseURL":str,
+                "responseXML":any,
+                "statusText":str,
+                "responseHeaders":dict
+            }
+
+        """
+        if extra_headers is None:
+            extra_headers = {}
+        script = """
+        function makeRequest(withCredentials, mimeType, extraHeaders, ...args) {
+            return new Promise(function (resolve, reject) {
+                try{
+                    let xhr = new XMLHttpRequest();
+
+                    if(!(args[3])){args[3] = null};
+                    if(!(args[4])){args[4] = null};
+                    xhr.overrideMimeType(mimeType);
+
+                    xhr.open(...args);
+                    Object.keys(extraHeaders).forEach(function(key) {
+                        xhr.setRequestHeader(key, extraHeaders[key])
+                    });
+                    xhr.withCredentials = withCredentials;
+
+                    xhr.onload = function () {
+                        resolve(xhr)
+                    };
+                    xhr.onerror = function () {
+                        reject(new Error("XHR failed"));
+                    };
+                    xhr.send();
+                }catch(e){reject(e)}
+            });
+        };
+
+        var xhr =  await makeRequest(...arguments);
+        data = {
+            status: xhr.status,
+            response: xhr.response,
+            responseText:xhr.responseText,
+            responseType:xhr.responseType,
+            responseURL:xhr.responseURL,
+            responseXML:xhr.responseXML,
+            statusText:xhr.statusText,
+            responseHeaders:xhr.getAllResponseHeaders()
+
+        };
+        return data
+        """
+        data = await self.eval_async(script, with_credentials, mime_type, extra_headers, method, url, True, user,
+                                     password,
+                                     timeout=timeout, unique_context=True)
+
+        # parse headers
+        headers = data['responseHeaders']
+        if headers == "null":
+            _headers = {}
+        else:
+            headers = headers.split("\r\n")
+            _headers = {}
+            for header in headers:
+                header = header.split(': ')
+                if len(header) == 2:
+                    key, value = header
+                    _headers[key] = value
+        data['responseHeaders'] = _headers
+
+        # todo: parse different response types
+        return data
 
     # noinspection PyTypeChecker
     async def get_sinks(self) -> list:

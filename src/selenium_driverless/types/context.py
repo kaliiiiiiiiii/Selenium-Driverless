@@ -175,8 +175,8 @@ class Context:
     async def get_target_for_iframe(self, iframe: WebElement):
         return await self.current_target.get_target_for_iframe(iframe=iframe)
 
-    async def set_download_behaviour(self,behavior:typing.Literal["deny", "allow", "allowAndName", "default"],
-                                     path:str=None):
+    async def set_download_behaviour(self, behavior: typing.Literal["deny", "allow", "allowAndName", "default"],
+                                     path: str = None):
         """set the download behaviour
 
         :param behavior: the behaviour to set the downloading to
@@ -186,7 +186,7 @@ class Context:
             setting ``behaviour=allow`` instead of ``allowAndName`` can cause some bugs
 
         """
-        params = {"behavior":behavior, "eventsEnabled":True}
+        params = {"behavior": behavior, "eventsEnabled": True}
         if path:
             _dir = str(pathlib.Path(path))
             if os.path.isfile(_dir):
@@ -203,7 +203,6 @@ class Context:
             return self.base_target.downloads_dir_for_context(context_id=self.context_id)
         else:
             return self.base_target.downloads_dir_for_context(context_id="DEFAULT")
-
 
     async def wait_download(self, timeout: float or None = 30) -> dict:
         """
@@ -253,9 +252,17 @@ class Context:
         return target.title
 
     @property
-    async def current_pointer(self) -> Pointer:
+    def current_pointer(self) -> Pointer:
+        """the :class:`Pointer <selenium_driverless.input.pointer.Pointer>` for the current target"""
         target = self.current_target
         return target.pointer
+    async def send_keys(self, text: str):
+        """
+        send text & keys to the current target
+
+        :param text: the text to send
+        """
+        await self.current_target.send_keys(text)
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
                                  max_depth: int = None, timeout: int = 2, target_id: str = None,
@@ -275,8 +282,15 @@ class Context:
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                              timeout: int = None, target_id: str = None, execution_context_id: str = None,
                              unique_context: bool = False):
-        """
-        example: script = "return obj.click()"
+        """executes JavaScript synchronously on ``GlobalThis`` such as
+
+        .. code-block:: js
+
+            return document
+
+        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
         target = await self.get_target(target_id)
         return await target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
@@ -287,6 +301,20 @@ class Context:
                                    serialization: str = None, timeout: int = 2,
                                    target_id: str = None, execution_context_id: str = None,
                                    unique_context: bool = False):
+        """executes JavaScript asynchronously on ``GlobalThis`` such as
+
+        .. warning::
+            using execute_async_script is not recommended as it doesn't handle exceptions correctly.
+            Use :func:`Chrome.eval_async <selenium_driverless.webdriver.Chrome.eval_async>`
+
+        .. code-block:: js
+
+            resolve = arguments[arguments.length-1]
+
+        ``this`` refers to ``globalThis`` (=> window)
+
+        see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
+        """
         target = await self.get_target(target_id)
         return await target.execute_async_script(script, *args, max_depth=max_depth, serialization=serialization,
                                                  timeout=timeout,
@@ -618,14 +646,24 @@ class Context:
         await asyncio.sleep(time_to_wait)
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, parent=None, target_id: str = None,
-                           timeout: int or None = None) -> WebElement:
-        target = await self.get_target(target_id=target_id)
-        return await target.find_element(by=by, value=value, parent=parent, timeout=timeout)
+    async def find_element(self, by: str, value: str, timeout: int or None = None) -> WebElement:
+        """find an element in the current target
 
-    async def find_elements(self, by: str, value: str, parent=None, target_id: str = None) -> typing.List[WebElement]:
-        target = await self.get_target(target_id=target_id)
-        return await target.find_elements(by=by, value=value, parent=parent)
+        :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
+        :param value: the actual query to find the element by
+        :param timeout: how long to wait for the element to exist
+        """
+        target = await self.get_target()
+        return await target.find_element(by=by, value=value, timeout=timeout)
+
+    async def find_elements(self, by: str, value: str) -> typing.List[WebElement]:
+        """find multiple elements in the current target
+
+        :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
+        :param value: the actual query to find the elements by
+        """
+        target = await self.get_target()
+        return await target.find_elements(by=by, value=value)
 
     async def search_elements(self, query: str, target_id: str = None) -> typing.List[WebElement]:
         """
@@ -871,48 +909,65 @@ class Context:
             args["origin"] = origin
         await self.execute_cdp_cmd("Browser.setPermission", args)
 
-    async def wait_for_cdp(self, event: str, timeout: float or None = None, target_id: str = None):
+    async def wait_for_cdp(self, event: str, timeout: float or None = None, target_id: str = None) -> dict:
+        """
+        wait for an event on the current target
+        see :func:`Target.wait_for_cdp <selenium_driverless.types.target.Target.wait_for_cdp>` for reference
+        """
         target = await self.get_target(target_id=target_id)
         return await target.wait_for_cdp(event=event, timeout=timeout)
 
-    async def add_cdp_listener(self, event: str, callback: callable, target_id: str = None):
+    async def add_cdp_listener(self, event: str, callback: typing.Callable[[dict], any], target_id: str = None):
+        """
+        add a listener for a CDP event on the current target
+        see :func:`Target.add_cdp_listener <selenium_driverless.types.target.Target.add_cdp_listener>` for reference
+        """
         target = await self.get_target(target_id=target_id)
         return await target.add_cdp_listener(event=event, callback=callback)
 
-    async def remove_cdp_listener(self, event: str, callback: callable, target_id: str = None):
+    async def remove_cdp_listener(self, event: str, callback: typing.Callable[[dict], any], target_id: str = None):
+        """
+        remove a listener for a CDP event on the current target
+        see :func:`Target.remove_cdp_listener <selenium_driverless.types.target.Target.remove_cdp_listener>` for reference
+        """
         target = await self.get_target(target_id=target_id)
         return await target.remove_cdp_listener(event=event, callback=callback)
 
-    async def get_cdp_event_iter(self, event: str, target_id: str = None):
+    async def get_cdp_event_iter(self, event: str, target_id: str = None) -> typing.AsyncIterable[dict]:
+        """
+        iterate over CDP events on the current target
+        see :func:`Target.get_cdp_event_iter <selenium_driverless.types.target.Target.get_cdp_event_iter>` for reference
+        """
         target = await self.get_target(target_id=target_id)
         return await target.get_cdp_event_iter(event=event)
 
     async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None,
                               timeout: float or None = 10, target_id: str = None) -> dict:
-        """Execute Chrome Devtools Protocol command and get returned result The
-        command and command args should follow chrome devtools protocol
-        domains/commands, refer to link
-        https://chromedevtools.github.io/devtools-protocol/
-
-        :Args:
-         - cmd: A str, command name
-         - cmd_args: A dict, command args. empty dict {} if there is no command args
-        :Usage:
-            ::
-
-                target.execute_cdp_cmd('Network.getResponseBody', {'requestId': requestId})
-        :Returns:
-            A dict, empty dict {} if there is no result to return.
-            For example to getResponseBody:
-            {'base64Encoded': False, 'body': 'response body string'}
+        """Execute Chrome Devtools Protocol command on the current target
+        executes it on :class:`Target.execute_cdp_cmd <selenium_driverless.types.base_target.BaseTarget>`
+        if ``message:'Not allowed'`` received
+        see :func:`Target.execute_cdp_cmd <selenium_driverless.types.target.Target.execute_cdp_cmd>` for reference
         """
-
         target = await self.get_target(target_id=target_id)
         try:
             return await target.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout)
         except CDPError as e:
             if e.code == -32000 and e.message == 'Not allowed':
                 return await self.base_target.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout)
+
+    async def fetch(self, *args, **kwargs) -> dict:
+        """
+        executes a JS ``fetch`` request within the current target
+        see :func:`Target.fetch <selenium_driverless.types.target.Target.fetch>` for reference
+        """
+        return await self.current_target.fetch(*args, **kwargs)
+
+    async def xhr(self, *args, **kwargs) -> dict:
+        """
+        executes a JS ``XMLHttpRequest`` request within the current target
+        see :func:`Target.fetch <selenium_driverless.types.target.Target.fetch>` for reference
+        """
+        return await self.current_target.xhr(*args, **kwargs)
 
     # noinspection PyTypeChecker
     async def get_sinks(self, target_id: str = None) -> list:

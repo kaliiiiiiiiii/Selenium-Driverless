@@ -291,8 +291,6 @@ class Chrome:
 
                     # noinspection PyProtectedMember
                     context._closed_callbacks.append(remove_context)
-                    self.base_target.socket.on_closed.append(
-                        lambda code, reason: self.quit(clean_dirs=self._options.auto_clean_dirs))
                     self._current_context = context
                     self._base_context = context
                     self._contexts[_id] = context
@@ -491,7 +489,7 @@ class Chrome:
                             break
                 if not extension_target:
                     if (time.perf_counter() - start) > timeout:
-                        raise TimeoutError(f"Couldn't find mv3 extension within {timeout} seconds")
+                        raise asyncio.TimeoutError(f"Couldn't find mv3 extension within {timeout} seconds")
             while True:
                 try:
                     # fix WebRTC leak
@@ -666,12 +664,18 @@ class Chrome:
         return target.title
 
     @property
-    async def current_pointer(self) -> Pointer:
-        """
-        **async** the Pointer of the current Target
-        """
+    def current_pointer(self) -> Pointer:
+        """the :class:`Pointer <selenium_driverless.input.pointer.Pointer>` for this target"""
         target = self.current_target
         return target.pointer
+
+    async def send_keys(self, text: str):
+        """
+        send text & keys to the current target
+
+        :param text: the text to send
+        """
+        await self.current_target.send_keys(text)
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False,
                                  serialization: typing.Literal["deep", "json", "idOnly"] = "deep",
@@ -1436,58 +1440,58 @@ class Chrome:
         await mv3_target.execute_script(script)
         self._auth_interception_enabled = False
 
-    async def wait_for_cdp(self, event: str, timeout: float or None = None):
+    async def wait_for_cdp(self, event: str, timeout: float or None = None) -> dict:
         """
-        wait for a CDP-event (current target)
-
-        :param event: an even such as ``Page.windowOpen``
-        :param timeout: timeout to wait for the event
+        wait for an event on the current target
+        see :func:`Target.wait_for_cdp <selenium_driverless.types.target.Target.wait_for_cdp>` for reference
         """
         return await self.current_target.wait_for_cdp(event=event, timeout=timeout)
 
     async def add_cdp_listener(self, event: str, callback: typing.Callable[[dict], any]):
-        """add a listener on a CDP event (current target)
-
-        :param event: the name of the event
-        :param callback: the callback on the event
-            has to accept one parameter (event data as json)
+        """
+        add a listener for a CDP event on the current target
+        see :func:`Target.add_cdp_listener <selenium_driverless.types.target.Target.add_cdp_listener>` for reference
         """
         return await self.current_target.add_cdp_listener(event=event, callback=callback)
 
-    async def remove_cdp_listener(self, event: str, callback: callable):
-        """remove a listener for CDP-event (current target)
-
-        :param event: the name of the event
-        :param callback: the callback function to remove
+    async def remove_cdp_listener(self, event: str, callback: typing.Callable[[dict], any]):
         """
-        # todo: documentation from here on
+        remove a listener for a CDP event on the current target
+        see :func:`Target.remove_cdp_listener <selenium_driverless.types.target.Target.remove_cdp_listener>` for reference
+        """
         return await self.current_target.remove_cdp_listener(event=event, callback=callback)
 
-    async def get_cdp_event_iter(self, event: str, target_id: str = None):
+    async def get_cdp_event_iter(self, event: str, target_id: str = None) -> typing.AsyncIterable[dict]:
+        """
+        iterate over CDP events on the current target
+        see :func:`Target.get_cdp_event_iter <selenium_driverless.types.target.Target.get_cdp_event_iter>` for reference
+        """
         target = await self.get_target(target_id=target_id)
         return await target.get_cdp_event_iter(event=event)
 
     async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None,
                               timeout: float or None = 10, target_id: str = None) -> dict:
-        """Execute Chrome Devtools Protocol command and get returned result The
-        command and command args should follow chrome devtools protocol
-        domains/commands, refer to link
-        https://chromedevtools.github.io/devtools-protocol/
-
-        :Args:
-         - cmd: A str, command name
-         - cmd_args: A dict, command args. empty dict {} if there is no command args
-        :Usage:
-            ::
-
-                target.execute_cdp_cmd('Network.getResponseBody', {'requestId': requestId})
-        :Returns:
-            A dict, empty dict {} if there is no result to return.
-            For example to getResponseBody:
-            {'base64Encoded': False, 'body': 'response body string'}
+        """Execute Chrome Devtools Protocol command on the current target
+        executes it on :class:`Target.execute_cdp_cmd <selenium_driverless.types.base_target.BaseTarget>`
+        if ``message:'Not allowed'`` received
+        see :func:`Target.execute_cdp_cmd <selenium_driverless.types.target.Target.execute_cdp_cmd>` for reference
         """
         return await self.current_context.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout,
                                                           target_id=target_id)
+
+    async def fetch(self, *args, **kwargs) -> dict:
+        """
+        executes a JS ``fetch`` request within the current target
+        see :func:`Target.fetch <selenium_driverless.types.target.Target.fetch>` for reference
+        """
+        return await self.current_target.fetch(*args, **kwargs)
+
+    async def xhr(self, *args, **kwargs) -> dict:
+        """
+        executes a JS ``XMLHttpRequest`` request within the current target
+        see :func:`Target.fetch <selenium_driverless.types.target.Target.fetch>` for reference
+        """
+        return await self.current_target.xhr(*args, **kwargs)
 
     # noinspection PyTypeChecker
     async def get_sinks(self, target_id: str = None) -> list:

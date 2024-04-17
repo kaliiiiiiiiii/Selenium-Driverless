@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Input &mdash; Selenium-Driverless 1.8.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=696515ce"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex/" />
+    <link rel="search" title="Search" href="../../search/" />
+    <link rel="next" title="Request-Interception" href="../RequestInterception/" />
+    <link rel="prev" title="Context" href="../Context/" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../" class="icon icon-home">
+            Selenium-Driverless
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../By/">By Element Locator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Chrome/">webdriver.Chrome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ChromeOptions/">ChromeOptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Context/">Context</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Input</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.input.pointer.Pointer"><code class="docutils literal notranslate"><span class="pre">Pointer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Pointer.down"><code class="docutils literal notranslate"><span class="pre">Pointer.down()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Pointer.up"><code class="docutils literal notranslate"><span class="pre">Pointer.up()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Pointer.click"><code class="docutils literal notranslate"><span class="pre">Pointer.click()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Pointer.move_to"><code class="docutils literal notranslate"><span class="pre">Pointer.move_to()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.input.pointer.BasePointer"><code class="docutils literal notranslate"><span class="pre">BasePointer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.BasePointer.dispatch"><code class="docutils literal notranslate"><span class="pre">BasePointer.dispatch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.BasePointer.down"><code class="docutils literal notranslate"><span class="pre">BasePointer.down()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.BasePointer.up"><code class="docutils literal notranslate"><span class="pre">BasePointer.up()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.BasePointer.click"><code class="docutils literal notranslate"><span class="pre">BasePointer.click()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.BasePointer.double_click"><code class="docutils literal notranslate"><span class="pre">BasePointer.double_click()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.BasePointer.move_to"><code class="docutils literal notranslate"><span class="pre">BasePointer.move_to()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.BasePointer.move_path"><code class="docutils literal notranslate"><span class="pre">BasePointer.move_path()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.input.pointer.PointerEvent"><code class="docutils literal notranslate"><span class="pre">PointerEvent</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.PointerEvent.to_json"><code class="docutils literal notranslate"><span class="pre">PointerEvent.to_json()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.input.pointer.Modifiers"><code class="docutils literal notranslate"><span class="pre">Modifiers</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Modifiers.NONE"><code class="docutils literal notranslate"><span class="pre">Modifiers.NONE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Modifiers.ALT"><code class="docutils literal notranslate"><span class="pre">Modifiers.ALT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Modifiers.CTRL"><code class="docutils literal notranslate"><span class="pre">Modifiers.CTRL</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Modifiers.COMMAND"><code class="docutils literal notranslate"><span class="pre">Modifiers.COMMAND</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Modifiers.SHIFT"><code class="docutils literal notranslate"><span class="pre">Modifiers.SHIFT</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.input.pointer.PointerType"><code class="docutils literal notranslate"><span class="pre">PointerType</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.PointerType.MOUSE"><code class="docutils literal notranslate"><span class="pre">PointerType.MOUSE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.PointerType.PEN"><code class="docutils literal notranslate"><span class="pre">PointerType.PEN</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.input.pointer.MouseButton"><code class="docutils literal notranslate"><span class="pre">MouseButton</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.MouseButton.NONE"><code class="docutils literal notranslate"><span class="pre">MouseButton.NONE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.MouseButton.LEFT"><code class="docutils literal notranslate"><span class="pre">MouseButton.LEFT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.MouseButton.MIDDLE"><code class="docutils literal notranslate"><span class="pre">MouseButton.MIDDLE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.MouseButton.RIGHT"><code class="docutils literal notranslate"><span class="pre">MouseButton.RIGHT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.MouseButton.BACK"><code class="docutils literal notranslate"><span class="pre">MouseButton.BACK</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.MouseButton.FORWARD"><code class="docutils literal notranslate"><span class="pre">MouseButton.FORWARD</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.input.pointer.Buttons"><code class="docutils literal notranslate"><span class="pre">Buttons</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Buttons.NONE"><code class="docutils literal notranslate"><span class="pre">Buttons.NONE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Buttons.LEFT"><code class="docutils literal notranslate"><span class="pre">Buttons.LEFT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Buttons.RIGHT"><code class="docutils literal notranslate"><span class="pre">Buttons.RIGHT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Buttons.MIDDLE"><code class="docutils literal notranslate"><span class="pre">Buttons.MIDDLE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Buttons.BACK"><code class="docutils literal notranslate"><span class="pre">Buttons.BACK</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Buttons.FORWARD"><code class="docutils literal notranslate"><span class="pre">Buttons.FORWARD</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.Buttons.DEFAULT"><code class="docutils literal notranslate"><span class="pre">Buttons.DEFAULT</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.input.pointer.EventType"><code class="docutils literal notranslate"><span class="pre">EventType</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.EventType.PRESS"><code class="docutils literal notranslate"><span class="pre">EventType.PRESS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.EventType.RELEASE"><code class="docutils literal notranslate"><span class="pre">EventType.RELEASE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.EventType.MOVE"><code class="docutils literal notranslate"><span class="pre">EventType.MOVE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.EventType.WHEEL"><code class="docutils literal notranslate"><span class="pre">EventType.WHEEL</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../RequestInterception/">Request-Interception</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Target/">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../WebELement/">WebElement</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../">Selenium-Driverless</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Input</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/Input.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="input">
+<h1>Input<a class="headerlink" href="#input" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Pointer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.input.pointer.</span></span><span class="sig-name descname"><span class="pre">Pointer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pointer_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mouse'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#Pointer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.Pointer" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Pointer.down">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">down</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#Pointer.down"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.Pointer.down" title="Link to this definition"></a></dt>
+<dd><p>press the mouse</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – kwargs for <a class="reference internal" href="#selenium_driverless.input.pointer.PointerEvent" title="selenium_driverless.input.pointer.PointerEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointerEvent</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Pointer.up">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">up</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#Pointer.up"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.Pointer.up" title="Link to this definition"></a></dt>
+<dd><p>release the mouse</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – kwargs for <a class="reference internal" href="#selenium_driverless.input.pointer.PointerEvent" title="selenium_driverless.input.pointer.PointerEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointerEvent</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Pointer.click">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">click</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_or_elem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">move_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">move_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">click_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#Pointer.click"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.Pointer.click" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_or_elem</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – either the x-coordinate, or a <code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></p></li>
+<li><p><strong>y</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – the y-coordinate to click at</p></li>
+<li><p><strong>move_to</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to move the pointer (recommended)</p></li>
+<li><p><strong>move_kwargs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span>) – kwargs for <a class="reference internal" href="#selenium_driverless.input.pointer.Pointer.move_to" title="selenium_driverless.input.pointer.Pointer.move_to"><code class="xref py py-func docutils literal notranslate"><span class="pre">Pointer.move_to</span></code></a></p></li>
+<li><p><strong>click_kwargs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span>) – kwargs for <a class="reference internal" href="#selenium_driverless.input.pointer.BasePointer.click" title="selenium_driverless.input.pointer.BasePointer.click"><code class="xref py py-func docutils literal notranslate"><span class="pre">BasePointer.click</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Pointer.move_to">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">move_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_or_elem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mid_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smooth_soft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#Pointer.move_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.Pointer.move_to" title="Link to this definition"></a></dt>
+<dd><p>move pinter to location</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_or_elem</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – either the x-coordinate, or a <code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></p></li>
+<li><p><strong>y</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – the y-coordinate to move to</p></li>
+<li><p><strong>total_time</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the total time, the pointer should take to move to the location</p></li>
+<li><p><strong>accel</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the acceleration &amp; deceleration, the pointerMove should perform</p></li>
+<li><p><strong>mid_time</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – the normalized position, where half of the time should be due (0-1)</p></li>
+<li><p><strong>smooth_soft</strong> – how “curvy” the line should be</p></li>
+<li><p><strong>kwargs</strong> – kwargs for <a class="reference internal" href="#selenium_driverless.input.pointer.BasePointer.move_path" title="selenium_driverless.input.pointer.BasePointer.move_path"><code class="xref py py-func docutils literal notranslate"><span class="pre">BasePointer.move_path</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.BasePointer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.input.pointer.</span></span><span class="sig-name descname"><span class="pre">BasePointer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">driver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pointer_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mouse'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#BasePointer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.BasePointer" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.BasePointer.dispatch">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dispatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#BasePointer.dispatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.BasePointer.dispatch" title="Link to this definition"></a></dt>
+<dd><p>dispatches a PointerEVent</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.BasePointer.down">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">down</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#BasePointer.down"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.BasePointer.down" title="Link to this definition"></a></dt>
+<dd><p>press the mouse</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – kwargs for <a class="reference internal" href="#selenium_driverless.input.pointer.PointerEvent" title="selenium_driverless.input.pointer.PointerEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointerEvent</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.BasePointer.up">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">up</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#BasePointer.up"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.BasePointer.up" title="Link to this definition"></a></dt>
+<dd><p>release the mouse</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – kwargs for <a class="reference internal" href="#selenium_driverless.input.pointer.PointerEvent" title="selenium_driverless.input.pointer.PointerEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointerEvent</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.BasePointer.click">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">click</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#BasePointer.click"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.BasePointer.click" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the x coordinate</p></li>
+<li><p><strong>y</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the y coordinate</p></li>
+<li><p><strong>timeout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – the time to sleep between mouseUp &amp; mouseDown</p></li>
+<li><p><strong>kwargs</strong> – kwargs for <a class="reference internal" href="#selenium_driverless.input.pointer.PointerEvent" title="selenium_driverless.input.pointer.PointerEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointerEvent</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.BasePointer.double_click">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">double_click</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#BasePointer.double_click"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.BasePointer.double_click" title="Link to this definition"></a></dt>
+<dd><p>double-click</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the x coordinate</p></li>
+<li><p><strong>y</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the y coordinate</p></li>
+<li><p><strong>timeout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – the time to sleep between mouseUp &amp; mouseDown</p></li>
+<li><p><strong>kwargs</strong> – kwargs for <a class="reference internal" href="#selenium_driverless.input.pointer.PointerEvent" title="selenium_driverless.input.pointer.PointerEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointerEvent</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.BasePointer.move_to">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">move_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#BasePointer.move_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.BasePointer.move_to" title="Link to this definition"></a></dt>
+<dd><p>dispatch a move event</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – the x coordinate</p></li>
+<li><p><strong>y</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – the y coordinate</p></li>
+<li><p><strong>kwargs</strong> – kwargs for <a class="reference internal" href="#selenium_driverless.input.pointer.PointerEvent" title="selenium_driverless.input.pointer.PointerEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointerEvent</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.BasePointer.move_path">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">move_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_from_time_callback</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_assumption</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#BasePointer.move_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.BasePointer.move_path" title="Link to this definition"></a></dt>
+<dd><p>move a path</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>total_time</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – total time the pointer should take to move the path</p></li>
+<li><p><strong>freq_assumption</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – assumption on a mousemove event frequency, required for accuracy</p></li>
+<li><p><strong>kwargs</strong> – kwargs for <a class="reference internal" href="#selenium_driverless.input.pointer.PointerEvent" title="selenium_driverless.input.pointer.PointerEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointerEvent</span></code></a></p></li>
+<li><p><strong>pos_from_time_callback</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Awaitable</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]]]</span>) – a function which returns coordinates for a specific time</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.PointerEvent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.input.pointer.</span></span><span class="sig-name descname"><span class="pre">PointerEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modifiers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">button</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'left'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buttons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">click_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tangential_pressure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tilt_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tilt_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">twist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pointer_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mouse'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#PointerEvent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.PointerEvent" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.PointerEvent.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#PointerEvent.to_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.PointerEvent.to_json" title="Link to this definition"></a></dt>
+<dd><p>the event as JSON</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Modifiers">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.input.pointer.</span></span><span class="sig-name descname"><span class="pre">Modifiers</span></span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#Modifiers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.Modifiers" title="Link to this definition"></a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Modifiers.NONE">
+<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.Modifiers.NONE" title="Link to this definition"></a></dt>
+<dd><p>no modifier</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Modifiers.ALT">
+<span class="sig-name descname"><span class="pre">ALT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.Modifiers.ALT" title="Link to this definition"></a></dt>
+<dd><p>alt modifier</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Modifiers.CTRL">
+<span class="sig-name descname"><span class="pre">CTRL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.Modifiers.CTRL" title="Link to this definition"></a></dt>
+<dd><p>CTRL modifier</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Modifiers.COMMAND">
+<span class="sig-name descname"><span class="pre">COMMAND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.Modifiers.COMMAND" title="Link to this definition"></a></dt>
+<dd><p>COMMAND modifier</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Modifiers.SHIFT">
+<span class="sig-name descname"><span class="pre">SHIFT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.Modifiers.SHIFT" title="Link to this definition"></a></dt>
+<dd><p>SHIFT modifier</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.PointerType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.input.pointer.</span></span><span class="sig-name descname"><span class="pre">PointerType</span></span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#PointerType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.PointerType" title="Link to this definition"></a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.PointerType.MOUSE">
+<span class="sig-name descname"><span class="pre">MOUSE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'mouse'</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.PointerType.MOUSE" title="Link to this definition"></a></dt>
+<dd><p>mousePointer</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.PointerType.PEN">
+<span class="sig-name descname"><span class="pre">PEN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'pen'</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.PointerType.PEN" title="Link to this definition"></a></dt>
+<dd><p>a pointer of type “pen”</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.MouseButton">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.input.pointer.</span></span><span class="sig-name descname"><span class="pre">MouseButton</span></span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#MouseButton"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.MouseButton" title="Link to this definition"></a></dt>
+<dd><p>main button pressed</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.MouseButton.NONE">
+<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'none'</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.MouseButton.NONE" title="Link to this definition"></a></dt>
+<dd><p>no mouse button</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.MouseButton.LEFT">
+<span class="sig-name descname"><span class="pre">LEFT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'left'</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.MouseButton.LEFT" title="Link to this definition"></a></dt>
+<dd><p>left mouse button</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.MouseButton.MIDDLE">
+<span class="sig-name descname"><span class="pre">MIDDLE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'middle'</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.MouseButton.MIDDLE" title="Link to this definition"></a></dt>
+<dd><p>middle mouse button</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.MouseButton.RIGHT">
+<span class="sig-name descname"><span class="pre">RIGHT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'right'</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.MouseButton.RIGHT" title="Link to this definition"></a></dt>
+<dd><p>right mouse button</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.MouseButton.BACK">
+<span class="sig-name descname"><span class="pre">BACK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'back'</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.MouseButton.BACK" title="Link to this definition"></a></dt>
+<dd><p>back mouse button</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.MouseButton.FORWARD">
+<span class="sig-name descname"><span class="pre">FORWARD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forward'</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.MouseButton.FORWARD" title="Link to this definition"></a></dt>
+<dd><p>forward mouse button</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Buttons">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.input.pointer.</span></span><span class="sig-name descname"><span class="pre">Buttons</span></span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#Buttons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.Buttons" title="Link to this definition"></a></dt>
+<dd><p>modifier mouse button</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Buttons.NONE">
+<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.Buttons.NONE" title="Link to this definition"></a></dt>
+<dd><p>no button</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Buttons.LEFT">
+<span class="sig-name descname"><span class="pre">LEFT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.Buttons.LEFT" title="Link to this definition"></a></dt>
+<dd><p>left mouse button</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Buttons.RIGHT">
+<span class="sig-name descname"><span class="pre">RIGHT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.Buttons.RIGHT" title="Link to this definition"></a></dt>
+<dd><p>right mouse button</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Buttons.MIDDLE">
+<span class="sig-name descname"><span class="pre">MIDDLE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.Buttons.MIDDLE" title="Link to this definition"></a></dt>
+<dd><p>middle mouse button</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Buttons.BACK">
+<span class="sig-name descname"><span class="pre">BACK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.Buttons.BACK" title="Link to this definition"></a></dt>
+<dd><p>back mouse button</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Buttons.FORWARD">
+<span class="sig-name descname"><span class="pre">FORWARD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.Buttons.FORWARD" title="Link to this definition"></a></dt>
+<dd><p>forward mouse button</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.Buttons.DEFAULT">
+<span class="sig-name descname"><span class="pre">DEFAULT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.Buttons.DEFAULT" title="Link to this definition"></a></dt>
+<dd><p>no modifier mouse button specified</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.EventType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.input.pointer.</span></span><span class="sig-name descname"><span class="pre">EventType</span></span><a class="reference internal" href="../../_modules/selenium_driverless/input/pointer/#EventType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.pointer.EventType" title="Link to this definition"></a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.EventType.PRESS">
+<span class="sig-name descname"><span class="pre">PRESS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'mousePressed'</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.EventType.PRESS" title="Link to this definition"></a></dt>
+<dd><p>mousePressed</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.EventType.RELEASE">
+<span class="sig-name descname"><span class="pre">RELEASE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'mouseReleased'</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.EventType.RELEASE" title="Link to this definition"></a></dt>
+<dd><p>mouseReleased</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.EventType.MOVE">
+<span class="sig-name descname"><span class="pre">MOVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'mouseMoved'</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.EventType.MOVE" title="Link to this definition"></a></dt>
+<dd><p>mouseMoved</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.input.pointer.EventType.WHEEL">
+<span class="sig-name descname"><span class="pre">WHEEL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'mouseWheel'</span></em><a class="headerlink" href="#selenium_driverless.input.pointer.EventType.WHEEL" title="Link to this definition"></a></dt>
+<dd><p>mouseWheel</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../Context/" class="btn btn-neutral float-left" title="Context" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../RequestInterception/" class="btn btn-neutral float-right" title="Request-Interception" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Aurin Aegerter (aka Steve, kaliiiiiiiiii).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -13,7 +13,7 @@ async def main():
         await asyncio.sleep(0.5)
 
         # some random mouse-movements over iframes
-        pointer = await driver.current_pointer
+        pointer = driver.current_pointer
         await pointer.move_to(500, 200, smooth_soft=60, total_time=0.5)
         await pointer.move_to(20, 50, smooth_soft=60, total_time=0.5)
         await pointer.move_to(8, 45, smooth_soft=60, total_time=0.5)
@@ -28,24 +28,16 @@ async def main():
         for iframe in iframes:
             # filter out correct iframe document
             iframe_document = await iframe.content_document
-            text = None
             try:
-                elem = await iframe_document.find_element(By.CSS_SELECTOR, "body > div.overlay")
-                text = await elem.text
+                checkbox = await iframe_document.find_element(By.CSS_SELECTOR,
+                                                              "#challenge-stage > div > label > input[type=checkbox]",
+                                                              timeout=5)
             except NoSuchElementException:
                 pass
-            finally:
-                if text:  # 'Only a test.' text
-                    break
-        if not iframe_document:
-            raise Exception("correct target for iframe not found")
-
-        src = await driver.page_source
-        checkbox = await iframe_document.find_element(By.CSS_SELECTOR,
-                                                      "#challenge-stage > div > label > input[type=checkbox]",
-                                                      timeout=20)
-        await checkbox.click(move_to=True)
-        await asyncio.sleep(5)
+            else:
+                await checkbox.click(move_to=True)
+                await asyncio.sleep(1)
+        await asyncio.sleep(2)
         print("saving screenshot")
         await driver.save_screenshot("turnstile_captcha.png")
 

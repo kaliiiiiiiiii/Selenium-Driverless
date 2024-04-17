@@ -10,6 +10,7 @@ loop = asyncio.get_event_loop()
 async def make_driver():
     options = webdriver.ChromeOptions()
     # options.add_argument("--headless=new")
+    # options.binary_location = "D:/System/Lib/Chrome/chrome.exe"
     return await webdriver.Chrome(options, debug=True)
 
 
@@ -65,10 +66,10 @@ async def selenium_detector(driver):
     await driver.get('https://hmaker.github.io/selenium-detector/')
     await asyncio.sleep(1)
     elem = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-token")
-    await elem.write(await driver.execute_script('return window.token'))
+    await elem.send_keys(await driver.execute_script('return window.token'))
     elem2 = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-asynctoken")
     async_token = await driver.eval_async('return await window.getAsyncToken()')
-    await elem2.write(async_token)
+    await elem2.send_keys(async_token)
     elem3 = await driver.find_element(By.CSS_SELECTOR, "#chromedriver-test")
     await elem3.click()
     passed = await driver.find_element(By.XPATH, '//*[@id="chromedriver-test-container"]/span')
