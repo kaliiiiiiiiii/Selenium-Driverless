@@ -669,6 +669,14 @@ class Chrome:
         target = self.current_target
         return target.pointer
 
+    async def send_keys(self, text: str):
+        """
+        send text & keys to the current target
+
+        :param text: the text to send
+        """
+        await self.current_target.send_keys(text)
+
     async def execute_raw_script(self, script: str, *args, await_res: bool = False,
                                  serialization: typing.Literal["deep", "json", "idOnly"] = "deep",
                                  max_depth: int = None, timeout: int = 2, execution_context_id: str = None,

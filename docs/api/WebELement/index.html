@@ -48,6 +48,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../Chrome/">webdriver.Chrome</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ChromeOptions/">ChromeOptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Context/">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Input/">Input</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../RequestInterception/">Request-Interception</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Target/">Target</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">WebElement</a><ul>
@@ -334,6 +335,11 @@ relative to the element.
 <dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.write">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.write" title="Link to this definition"></a></dt>
 <dd><p>inserts literal text to the element</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This method is generally detectable.
+You might consider using <a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.send_keys" title="selenium_driverless.types.webelement.WebElement.send_keys"><code class="xref py py-func docutils literal notranslate"><span class="pre">Elem.send_keys</span></code></a> instead.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the text to send</p>
@@ -365,14 +371,18 @@ relative to the element.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.send_keys">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">send_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.send_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.send_keys" title="Link to this definition"></a></dt>
-<dd><div class="admonition warning">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">send_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.send_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.send_keys" title="Link to this definition"></a></dt>
+<dd><p>send text &amp; keys to the target</p>
+<div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>NotImplemented yet</p>
+<p>you might want to <a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.click" title="selenium_driverless.types.webelement.WebElement.click"><code class="xref py py-func docutils literal notranslate"><span class="pre">Elem.click</span></code></a> first before sending keys</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the text to send to the target</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>

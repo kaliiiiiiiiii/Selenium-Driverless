@@ -21,7 +21,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex/" />
     <link rel="search" title="Search" href="../../search/" />
-    <link rel="next" title="WebElement" href="../Input/" />
+    <link rel="next" title="Input" href="../Input/" />
     <link rel="prev" title="ChromeOptions" href="../ChromeOptions/" /> 
 </head>
 
@@ -57,6 +57,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.get"><code class="docutils literal notranslate"><span class="pre">Context.get()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.title"><code class="docutils literal notranslate"><span class="pre">Context.title</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.current_pointer"><code class="docutils literal notranslate"><span class="pre">Context.current_pointer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.send_keys"><code class="docutils literal notranslate"><span class="pre">Context.send_keys()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.execute_raw_script"><code class="docutils literal notranslate"><span class="pre">Context.execute_raw_script()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.execute_script"><code class="docutils literal notranslate"><span class="pre">Context.execute_script()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.execute_async_script"><code class="docutils literal notranslate"><span class="pre">Context.execute_async_script()</span></code></a></li>
@@ -115,7 +116,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../Input/">WebElement</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Input/">Input</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../RequestInterception/">Request-Interception</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../Target/">Target</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../WebELement/">WebElement</a></li>
@@ -248,6 +249,17 @@
 <dt class="sig sig-object py" id="selenium_driverless.types.context.Context.current_pointer">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_pointer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../Input/#selenium_driverless.input.pointer.Pointer" title="selenium_driverless.input.pointer.Pointer"><span class="pre">Pointer</span></a></em><a class="headerlink" href="#selenium_driverless.types.context.Context.current_pointer" title="Link to this definition"></a></dt>
 <dd><p>the <a class="reference internal" href="../Input/#selenium_driverless.input.pointer.Pointer" title="selenium_driverless.input.pointer.Pointer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pointer</span></code></a> for the current target</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.context.Context.send_keys">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">send_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.send_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.send_keys" title="Link to this definition"></a></dt>
+<dd><p>send text &amp; keys to the current target</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the text to send</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1084,7 +1096,7 @@ target.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../ChromeOptions/" class="btn btn-neutral float-left" title="ChromeOptions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../Input/" class="btn btn-neutral float-right" title="WebElement" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../Input/" class="btn btn-neutral float-right" title="Input" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

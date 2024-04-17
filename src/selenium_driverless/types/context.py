@@ -256,6 +256,13 @@ class Context:
         """the :class:`Pointer <selenium_driverless.input.pointer.Pointer>` for the current target"""
         target = self.current_target
         return target.pointer
+    async def send_keys(self, text: str):
+        """
+        send text & keys to the current target
+
+        :param text: the text to send
+        """
+        await self.current_target.send_keys(text)
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
                                  max_depth: int = None, timeout: int = 2, target_id: str = None,

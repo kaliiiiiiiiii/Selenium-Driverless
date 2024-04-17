@@ -9,6 +9,7 @@ from base64 import b64decode
 import aiofiles
 from typing import List
 import pathlib
+import random
 
 import websockets
 from cdp_socket.exceptions import CDPError
@@ -28,6 +29,34 @@ from selenium_driverless.sync.alert import Alert as SyncAlert
 from selenium_driverless.types.alert import Alert
 from selenium_driverless.types.webelement import WebElement
 from selenium_driverless.sync.webelement import WebElement as SyncWebElement
+
+KEY_MAPPING = {
+    'a': ('KeyA', 65), 'b': ('KeyB', 66), 'c': ('KeyC', 67), 'd': ('KeyD', 68), 'e': ('KeyE', 69),
+    'f': ('KeyF', 70), 'g': ('KeyG', 71), 'h': ('KeyH', 72), 'i': ('KeyI', 73), 'j': ('KeyJ', 74),
+    'k': ('KeyK', 75), 'l': ('KeyL', 76), 'm': ('KeyM', 77), 'n': ('KeyN', 78), 'o': ('KeyO', 79),
+    'p': ('KeyP', 80), 'q': ('KeyQ', 81), 'r': ('KeyR', 82), 's': ('KeyS', 83), 't': ('KeyT', 84),
+    'u': ('KeyU', 85), 'v': ('KeyV', 86), 'w': ('KeyW', 87), 'x': ('KeyX', 88), 'y': ('KeyY', 89),
+    'z': ('KeyZ', 90), 'A': ('KeyA', 65), 'B': ('KeyB', 66), 'C': ('KeyC', 67), 'D': ('KeyD', 68),
+    'E': ('KeyE', 69), 'F': ('KeyF', 70), 'G': ('KeyG', 71), 'H': ('KeyH', 72), 'I': ('KeyI', 73),
+    'J': ('KeyJ', 74), 'K': ('KeyK', 75), 'L': ('KeyL', 76), 'M': ('KeyM', 77), 'N': ('KeyN', 78),
+    'O': ('KeyO', 79), 'P': ('KeyP', 80), 'Q': ('KeyQ', 81), 'R': ('KeyR', 82), 'S': ('KeyS', 83),
+    'T': ('KeyT', 84), 'U': ('KeyU', 85), 'V': ('KeyV', 86), 'W': ('KeyW', 87), 'X': ('KeyX', 88),
+    'Y': ('KeyY', 89), 'Z': ('KeyZ', 90), '0': ('Digit0', 48), '1': ('Digit1', 49), '2': ('Digit2', 50),
+    '3': ('Digit3', 51), '4': ('Digit4', 52), '5': ('Digit5', 53), '6': ('Digit6', 54), '7': ('Digit7', 55),
+    '8': ('Digit8', 56), '9': ('Digit9', 57), '!': ('Digit1', 49), '"': ('Quote', 222), '#': ('Digit3', 51),
+    '$': ('Digit4', 52), '%': ('Digit5', 53), '&': ('Digit7', 55), "'": ('Quote', 222), '(': ('Digit9', 57),
+    ')': ('Digit0', 48), '*': ('Digit8', 56), '+': ('Equal', 187), ',': ('Comma', 188), '-': ('Minus', 189),
+    '.': ('Period', 190), '/': ('Slash', 191), ':': ('Semicolon', 186), ';': ('Semicolon', 186),
+    '<': ('Comma', 188),
+    '=': ('Equal', 187), '>': ('Period', 190), '?': ('Slash', 191), '@': ('Digit2', 50),
+    '[': ('BracketLeft', 219),
+    '\\': ('Backslash', 220), ']': ('BracketRight', 221), '^': ('Digit6', 54), '_': ('Minus', 189),
+    '`': ('Backquote', 192),
+    '{': ('BracketLeft', 219), '|': ('Backslash', 220), '}': ('BracketRight', 221), '~': ('Backquote', 192),
+    ' ': ('Space', 32)
+}
+
+SHIFT_KEY_NEEDED = '~!@#$%^&*()_+{}|:"<>?'
 
 
 class NoSuchIframe(Exception):
@@ -84,6 +113,7 @@ class Target:
         self._on_closed_ = []
 
         self._driver = driver
+        self._send_key_lock = asyncio.Lock()
 
     def __repr__(self):
         return f'<{type(self).__module__}.{type(self).__name__} (target_id="{self.id}", host="{self._host}")>'
@@ -372,6 +402,64 @@ class Target:
     def pointer(self) -> Pointer:
         """the :class:`Pointer <selenium_driverless.input.pointer.Pointer>` for this target"""
         return self._pointer
+
+    async def send_keys(self, text: str):
+        """
+        send text & keys to the target
+
+        :param text: the text to send to the target
+        """
+        async with self._send_key_lock:
+            for letter in text:
+                if letter in KEY_MAPPING:
+                    key_code, virtual_key_code = KEY_MAPPING[letter]
+                    # Determine if a shift key is needed
+                    shift_pressed = False
+                    if letter.isupper() or letter in SHIFT_KEY_NEEDED:
+                        shift_pressed = True
+                        await self.execute_cdp_cmd("Input.dispatchKeyEvent", {
+                                "type": "keyDown",
+                                "code": "ShiftLeft",
+                                "windowsVirtualKeyCode": 16,
+                                "key": "Shift",
+                                "modifiers": 8 if shift_pressed else 0
+                        })
+                        await asyncio.sleep(random.uniform(0.05, 0.1))  # Simulate human typing speed
+
+                    key_event = {
+                            "type": "keyDown",
+                            "code": key_code,
+                            "windowsVirtualKeyCode": virtual_key_code,
+                            "key": letter,
+                            "modifiers": 8 if shift_pressed else 0
+                        }
+
+                    # Send keydown event
+                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
+                    await asyncio.sleep(random.uniform(0.05, 0.1))
+
+                    # Simulate key press for the actual character
+                    key_event["type"] = "char"
+                    key_event["text"] = letter
+                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
+                    await asyncio.sleep(random.uniform(0.05, 0.1))
+                    del key_event['text']
+
+                    # Simulate key release
+                    key_event["type"] = "keyUp"
+                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
+                    await asyncio.sleep(random.uniform(0.05, 0.1))
+
+                    # Release the shift key if it was pressed
+                    if shift_pressed:
+                        await self.execute_cdp_cmd("Input.dispatchKeyEvent", {
+                            "type": "keyUp",
+                            "code": "ShiftLeft",
+                            "windowsVirtualKeyCode": 16,
+                            "key": "Shift",
+                            "modifiers": 0
+                        })
+                        await asyncio.sleep(random.uniform(0.05, 0.1))  # Simulate human typing speed
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
                                  max_depth: int = None, timeout: float = 2, execution_context_id: str = None,

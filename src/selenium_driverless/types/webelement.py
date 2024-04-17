@@ -486,6 +486,11 @@ class WebElement(JSRemoteObj):
         """
         inserts literal text to the element
 
+        .. warning::
+
+            This method is generally detectable.
+            You might consider using :func:`Elem.send_keys <selenium_driverless.types.webelement.WebElement.send_keys>` instead.
+
         :param text: the text to send
         """
         await self.focus()
@@ -509,16 +514,18 @@ class WebElement(JSRemoteObj):
         args.update(self._args_builder)
         await self.__target__.execute_cdp_cmd("DOM.setFileInputFiles", args)
 
-    async def send_keys(self, value: str) -> None:
-        # noinspection GrazieInspections
+    async def send_keys(self, text: str) -> None:
         """
-        .. warning::
-            NotImplemented yet
+        send text & keys to the target
 
+        .. warning::
+
+            you might want to :func:`Elem.click <selenium_driverless.types.webelement.WebElement.click>` first before sending keys
+
+        :param text: the text to send to the target
         """
-        # transfer file to another machine only if remote target is used
-        # the same behaviour as for java binding
-        raise NotImplementedError("you might use elem.write() for inputs instead")
+        await self.focus()
+        await self.__target__.send_keys(text)
 
     async def mid_location(self, spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5, border:float=0.05) -> typing.List[int]:
         """

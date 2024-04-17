@@ -602,6 +602,11 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        inserts literal text to the element</span>
 
+<span class="sd">        .. warning::</span>
+
+<span class="sd">            This method is generally detectable.</span>
+<span class="sd">            You might consider using :func:`Elem.send_keys &lt;selenium_driverless.types.webelement.WebElement.send_keys&gt;` instead.</span>
+
 <span class="sd">        :param text: the text to send</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus</span><span class="p">()</span>
@@ -634,16 +639,18 @@
 
 <div class="viewcode-block" id="WebElement.send_keys">
 <a class="viewcode-back" href="../../../../api/WebELement/#selenium_driverless.types.webelement.WebElement.send_keys">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">send_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># noinspection GrazieInspections</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">send_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        .. warning::</span>
-<span class="sd">            NotImplemented yet</span>
+<span class="sd">        send text &amp; keys to the target</span>
 
+<span class="sd">        .. warning::</span>
+
+<span class="sd">            you might want to :func:`Elem.click &lt;selenium_driverless.types.webelement.WebElement.click&gt;` first before sending keys</span>
+
+<span class="sd">        :param text: the text to send to the target</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># transfer file to another machine only if remote target is used</span>
-        <span class="c1"># the same behaviour as for java binding</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;you might use elem.write() for inputs instead&quot;</span><span class="p">)</span></div>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus</span><span class="p">()</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">send_keys</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="WebElement.mid_location">

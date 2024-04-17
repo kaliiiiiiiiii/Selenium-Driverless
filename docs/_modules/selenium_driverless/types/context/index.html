@@ -349,6 +349,16 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;the :class:`Pointer &lt;selenium_driverless.input.pointer.Pointer&gt;` for the current target&quot;&quot;&quot;</span>
         <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span>
         <span class="k">return</span> <span class="n">target</span><span class="o">.</span><span class="n">pointer</span>
+<div class="viewcode-block" id="Context.send_keys">
+<a class="viewcode-back" href="../../../../api/Context/#selenium_driverless.types.context.Context.send_keys">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">send_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        send text &amp; keys to the current target</span>
+
+<span class="sd">        :param text: the text to send</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">send_keys</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="Context.execute_raw_script">
 <a class="viewcode-back" href="../../../../api/Context/#selenium_driverless.types.context.Context.execute_raw_script">[docs]</a>
