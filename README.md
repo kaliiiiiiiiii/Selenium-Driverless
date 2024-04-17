@@ -9,7 +9,7 @@
 - Multiple tabs simultaneously
 - Multiple Incognito-contexts with isolated cookies & local storage
 - Proxy-auth support ([example code](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/dev/examples/proxy_with_auth.py))
-- Network-interception ([documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/api/Chrome/RequestInterception/))
+- Network-interception ([documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/api/RequestInterception/))
 - Single requests ([documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/api/Target/#selenium_driverless.types.target.Target.fetch))
 
 ### Questions? 
