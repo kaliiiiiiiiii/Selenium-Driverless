@@ -482,7 +482,7 @@ class WebElement(JSRemoteObj):
 
         await self.__target__.pointer.click(x, y=y, click_kwargs={"timeout": timeout}, move_to=move_to)
 
-    async def write(self, text: str):
+    async def write(self, text: str,click_kwargs=None, click_on:bool=True):
         """
         inserts literal text to the element
 
@@ -492,8 +492,15 @@ class WebElement(JSRemoteObj):
             You might consider using :func:`Elem.send_keys <selenium_driverless.types.webelement.WebElement.send_keys>` instead.
 
         :param text: the text to send
+        :param click_kwargs: arguments to pass for :func:`Elem.send_keys <selenium_driverless.types.webelement.WebElement.send_keys>`
+        :param click_on: whether to click on the element before inserting the text
         """
-        await self.focus()
+        if click_kwargs is None:
+            click_kwargs = {}
+        if click_on:
+            await self.click(**click_kwargs)
+        else:
+            await self.focus()
         await self.__target__.execute_cdp_cmd("Input.insertText", {"text": text})
 
     async def set_file(self, path: str):
@@ -514,17 +521,20 @@ class WebElement(JSRemoteObj):
         args.update(self._args_builder)
         await self.__target__.execute_cdp_cmd("DOM.setFileInputFiles", args)
 
-    async def send_keys(self, text: str) -> None:
+    async def send_keys(self, text: str, click_kwargs:dict=None, click_on:bool=True) -> None:
         """
         send text & keys to the target
 
-        .. warning::
-
-            you might want to :func:`Elem.click <selenium_driverless.types.webelement.WebElement.click>` first before sending keys
-
         :param text: the text to send to the target
+        :param click_kwargs: arguments to pass for :func:`Elem.send_keys <selenium_driverless.types.webelement.WebElement.send_keys>`
+        :param click_on: whether to click on the element before sending the keys
         """
-        await self.focus()
+        if click_kwargs is None:
+            click_kwargs = {}
+        if click_on:
+            await self.click(**click_kwargs)
+        else:
+            await self.focus()
         await self.__target__.send_keys(text)
 
     async def mid_location(self, spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5, border:float=0.05) -> typing.List[int]:

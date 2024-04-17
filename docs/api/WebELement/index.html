@@ -333,7 +333,7 @@ relative to the element.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.write">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.write" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">click_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">click_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.write" title="Link to this definition"></a></dt>
 <dd><p>inserts literal text to the element</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -342,7 +342,11 @@ You might consider using <a class="reference internal" href="#selenium_driverles
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the text to send</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the text to send</p></li>
+<li><p><strong>click_kwargs</strong> – arguments to pass for <a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.send_keys" title="selenium_driverless.types.webelement.WebElement.send_keys"><code class="xref py py-func docutils literal notranslate"><span class="pre">Elem.send_keys</span></code></a></p></li>
+<li><p><strong>click_on</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to click on the element before inserting the text</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -371,15 +375,15 @@ You might consider using <a class="reference internal" href="#selenium_driverles
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.send_keys">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">send_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.send_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.send_keys" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">send_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">click_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">click_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/webelement/#WebElement.send_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.send_keys" title="Link to this definition"></a></dt>
 <dd><p>send text &amp; keys to the target</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>you might want to <a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.click" title="selenium_driverless.types.webelement.WebElement.click"><code class="xref py py-func docutils literal notranslate"><span class="pre">Elem.click</span></code></a> first before sending keys</p>
-</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the text to send to the target</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the text to send to the target</p></li>
+<li><p><strong>click_kwargs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span>) – arguments to pass for <a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.send_keys" title="selenium_driverless.types.webelement.WebElement.send_keys"><code class="xref py py-func docutils literal notranslate"><span class="pre">Elem.send_keys</span></code></a></p></li>
+<li><p><strong>click_on</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to click on the element before sending the keys</p></li>
+</ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
