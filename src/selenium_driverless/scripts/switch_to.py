@@ -93,8 +93,7 @@ class SwitchTo:
     async def frame(self, frame_reference: Union[str, int, WebElement], focus:bool=True) -> None:
         """Switches to the specified frame
 
-        :param frame_reference: the reference by ID, name, index, or
-        WebElement
+        :param frame_reference: the reference by ID, name, index, or WebElement
         :param focus: whether to emulate focus on the frame
         :param focus: whether to emulate focus on the iframe
         """

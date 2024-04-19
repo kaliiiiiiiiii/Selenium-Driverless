@@ -143,9 +143,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.scripts.switch_to.SwitchTo.default_content"><code class="docutils literal notranslate"><span class="pre">SwitchTo.default_content()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.scripts.switch_to.SwitchTo.frame"><code class="docutils literal notranslate"><span class="pre">SwitchTo.frame()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.scripts.switch_to.SwitchTo.target"><code class="docutils literal notranslate"><span class="pre">SwitchTo.target()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.scripts.switch_to.SwitchTo.new_window"><code class="docutils literal notranslate"><span class="pre">SwitchTo.new_window()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.scripts.switch_to.SwitchTo.parent_frame"><code class="docutils literal notranslate"><span class="pre">SwitchTo.parent_frame()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.scripts.switch_to.SwitchTo.window"><code class="docutils literal notranslate"><span class="pre">SwitchTo.window()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.scripts.switch_to.SwitchTo.new_window"><code class="docutils literal notranslate"><span class="pre">SwitchTo.new_window()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1390,38 +1389,48 @@ target.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.scripts.switch_to.SwitchTo.frame">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/scripts/switch_to/#SwitchTo.frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.scripts.switch_to.SwitchTo.frame" title="Link to this definition"></a></dt>
-<dd><p>Switches focus to the specified frame, by index, name, or
-webelement.
-:rtype: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>this is deprecated and should not be used</p>
-</div>
-<dl class="field-list">
-<dt class="field-odd">Usage<span class="colon">:</span></dt>
-<dd class="field-odd"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">switch_to</span><span class="o">.</span><span class="n">frame</span><span class="p">(</span><span class="s1">&#39;frame_name&#39;</span><span class="p">)</span>
-<span class="n">target</span><span class="o">.</span><span class="n">switch_to</span><span class="o">.</span><span class="n">frame</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">target</span><span class="o">.</span><span class="n">switch_to</span><span class="o">.</span><span class="n">frame</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">find_elements</span><span class="p">(</span><span class="n">By</span><span class="o">.</span><span class="n">TAG_NAME</span><span class="p">,</span> <span class="s2">&quot;iframe&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
-</pre></div>
-</div>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/scripts/switch_to/#SwitchTo.frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.scripts.switch_to.SwitchTo.frame" title="Link to this definition"></a></dt>
+<dd><p>Switches to the specified frame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frame_reference</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <a class="reference internal" href="../WebELement/#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></a>]</span>) – the reference by ID, name, index, or WebElement</p></li>
+<li><p><strong>focus</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to emulate focus on the frame</p></li>
+<li><p><strong>focus</strong> – whether to emulate focus on the iframe</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.scripts.switch_to.SwitchTo.target">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/scripts/switch_to/#SwitchTo.target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.scripts.switch_to.SwitchTo.target" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/scripts/switch_to/#SwitchTo.target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.scripts.switch_to.SwitchTo.target" title="Link to this definition"></a></dt>
 <dd><p>switches to a target</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>target_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <a class="reference internal" href="../Target/#selenium_driverless.types.target.TargetInfo" title="selenium_driverless.types.target.TargetInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">TargetInfo</span></code></a>, <a class="reference internal" href="../Target/#selenium_driverless.types.target.Target" title="selenium_driverless.types.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target</span></code></a>]</span>) – the target to switch to</p></li>
-<li><p><strong>activate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to activate the target</p></li>
+<li><p><strong>activate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to bring the target to the front</p></li>
+<li><p><strong>focus</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to emulate focus on the target</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../Target/#selenium_driverless.types.target.Target" title="selenium_driverless.types.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.scripts.switch_to.SwitchTo.window">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/scripts/switch_to/#SwitchTo.window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.scripts.switch_to.SwitchTo.window" title="Link to this definition"></a></dt>
+<dd><p>switches to a window</p>
+<p>alias to <code class="xref py py-func docutils literal notranslate"><span class="pre">SwitchTo.target</span> <span class="pre">&lt;selenium_driverless.scripts.switch_to.SwitchTo.target()</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../Target/#selenium_driverless.types.target.Target" title="selenium_driverless.types.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1442,44 +1451,6 @@ webelement.
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../Target/#selenium_driverless.types.target.Target" title="selenium_driverless.types.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target</span></code></a></span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="selenium_driverless.scripts.switch_to.SwitchTo.parent_frame">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parent_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">activate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/scripts/switch_to/#SwitchTo.parent_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.scripts.switch_to.SwitchTo.parent_frame" title="Link to this definition"></a></dt>
-<dd><p>Switches focus to the parent context. If the current context is the
-top level browsing context, the context remains unchanged.</p>
-<dl class="field-list">
-<dt class="field-odd">Usage<span class="colon">:</span></dt>
-<dd class="field-odd"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">switch_to</span><span class="o">.</span><span class="n">parent_frame</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="selenium_driverless.scripts.switch_to.SwitchTo.window">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/scripts/switch_to/#SwitchTo.window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.scripts.switch_to.SwitchTo.window" title="Link to this definition"></a></dt>
-<dd><p>Switches focus to the specified window.</p>
-<dl class="field-list">
-<dt class="field-odd">Args<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p>window_name: The name or window handle of the window to switch to.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Usage<span class="colon">:</span></dt>
-<dd class="field-even"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">switch_to</span><span class="o">.</span><span class="n">window</span><span class="p">(</span><span class="s1">&#39;main&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>

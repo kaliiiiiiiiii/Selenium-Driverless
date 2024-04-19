@@ -179,22 +179,12 @@
 
 <div class="viewcode-block" id="SwitchTo.frame">
 <a class="viewcode-back" href="../../../../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.frame">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_reference</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">WebElement</span><span class="p">],</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Switches focus to the specified frame, by index, name, or</span>
-<span class="sd">        webelement.</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_reference</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">WebElement</span><span class="p">],</span> <span class="n">focus</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Switches to the specified frame</span>
 
-<span class="sd">        .. warning::</span>
-
-<span class="sd">            this is deprecated and should not be used</span>
-
-
-
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
-
-<span class="sd">                target.switch_to.frame(&#39;frame_name&#39;)</span>
-<span class="sd">                target.switch_to.frame(1)</span>
-<span class="sd">                target.switch_to.frame(target.find_elements(By.TAG_NAME, &quot;iframe&quot;)[0])</span>
+<span class="sd">        :param frame_reference: the reference by ID, name, index, or WebElement</span>
+<span class="sd">        :param focus: whether to emulate focus on the frame</span>
+<span class="sd">        :param focus: whether to emulate focus on the iframe</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
             <span class="s2">&quot;driver.switch_to.iframe deprecated and not reliable use Webelement.content_document instead&quot;</span><span class="p">,</span>
@@ -217,19 +207,21 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">frame_reference</span><span class="p">,</span> <span class="n">WebElement</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">NoSuchIframe</span><span class="p">(</span><span class="n">frame_reference</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;couldn&#39;t get element by: </span><span class="si">{</span><span class="n">frame_reference</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_target_for_iframe</span><span class="p">(</span><span class="n">frame_reference</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">activate</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">focus</span><span class="p">:</span>
             <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">focus</span><span class="p">()</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">target</span></div>
 
 
 <div class="viewcode-block" id="SwitchTo.target">
 <a class="viewcode-back" href="../../../../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.target">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TargetInfo</span><span class="p">,</span> <span class="n">Target</span><span class="p">],</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TargetInfo</span><span class="p">,</span> <span class="n">Target</span><span class="p">],</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">focus</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        switches to a target</span>
 
 <span class="sd">        :param target_id: the target to switch to</span>
-<span class="sd">        :param activate: whether to activate the target</span>
+<span class="sd">        :param activate: whether to bring the target to the front</span>
+<span class="sd">        :param focus: whether to emulate focus on the target</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_id</span><span class="p">,</span> <span class="n">TargetInfo</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">_current_target</span> <span class="o">=</span> <span class="n">target_id</span><span class="o">.</span><span class="n">Target</span>
@@ -237,13 +229,26 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">_current_target</span> <span class="o">=</span> <span class="n">target_id</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_id</span><span class="p">,</span> <span class="n">WebElement</span><span class="p">):</span>
             <span class="c1"># noinspection PyDeprecation</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">_current_target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="p">(</span><span class="n">target_id</span><span class="p">,</span> <span class="n">activate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">_current_target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="p">(</span><span class="n">target_id</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">_current_target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">activate</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">activate</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">focus</span><span class="p">:</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">focus</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">current_target</span></div>
+
+
+<div class="viewcode-block" id="SwitchTo.window">
+<a class="viewcode-back" href="../../../../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.window">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">window_id</span><span class="p">:</span> <span class="nb">str</span> <span class="ow">or</span> <span class="n">TargetInfo</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">focus</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        switches to a window</span>
+
+<span class="sd">        alias to :func:`SwitchTo.target &lt;selenium_driverless.scripts.switch_to.SwitchTo.target`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">(</span><span class="n">window_id</span><span class="p">,</span> <span class="n">activate</span><span class="o">=</span><span class="n">activate</span><span class="p">,</span> <span class="n">focus</span><span class="o">=</span><span class="n">focus</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SwitchTo.new_window">
@@ -262,38 +267,8 @@
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">(</span><span class="n">target</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="SwitchTo.parent_frame">
-<a class="viewcode-back" href="../../../../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.parent_frame">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">parent_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Switches focus to the parent context. If the current context is the</span>
-<span class="sd">        top level browsing context, the context remains unchanged.</span>
-
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
-
-<span class="sd">                target.switch_to.parent_frame()</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># noinspection PyProtectedMember</span>
-        <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">_parent_target</span>
-        <span class="k">if</span> <span class="n">parent</span><span class="p">:</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span> <span class="n">activate</span><span class="o">=</span><span class="n">activate</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="SwitchTo.window">
-<a class="viewcode-back" href="../../../../api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo.window">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">window_id</span><span class="p">:</span> <span class="nb">str</span> <span class="ow">or</span> <span class="n">TargetInfo</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Switches focus to the specified window.</span>
-
-<span class="sd">        :Args:</span>
-<span class="sd">         - window_name: The name or window handle of the window to switch to.</span>
-
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
-
-<span class="sd">                target.switch_to.window(&#39;main&#39;)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">(</span><span class="n">window_id</span><span class="p">,</span> <span class="n">activate</span><span class="o">=</span><span class="n">activate</span><span class="p">)</span></div>
-</div>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">parent_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">()</span></div>
 
 </pre></div>
 
