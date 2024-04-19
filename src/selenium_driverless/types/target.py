@@ -418,21 +418,21 @@ class Target:
                     if letter.isupper() or letter in SHIFT_KEY_NEEDED:
                         shift_pressed = True
                         await self.execute_cdp_cmd("Input.dispatchKeyEvent", {
-                                "type": "keyDown",
-                                "code": "ShiftLeft",
-                                "windowsVirtualKeyCode": 16,
-                                "key": "Shift",
-                                "modifiers": 8 if shift_pressed else 0
+                            "type": "keyDown",
+                            "code": "ShiftLeft",
+                            "windowsVirtualKeyCode": 16,
+                            "key": "Shift",
+                            "modifiers": 8 if shift_pressed else 0
                         })
                         await asyncio.sleep(random.uniform(0.05, 0.1))  # Simulate human typing speed
 
                     key_event = {
-                            "type": "keyDown",
-                            "code": key_code,
-                            "windowsVirtualKeyCode": virtual_key_code,
-                            "key": letter,
-                            "modifiers": 8 if shift_pressed else 0
-                        }
+                        "type": "keyDown",
+                        "code": key_code,
+                        "windowsVirtualKeyCode": virtual_key_code,
+                        "key": letter,
+                        "modifiers": 8 if shift_pressed else 0
+                    }
 
                     # Send keydown event
                     await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
@@ -657,14 +657,41 @@ class Target:
         except (asyncio.TimeoutError, TimeoutError):
             pass
 
-    async def focus(self):
-        await self.execute_cdp_cmd("Target.activateTarget",
-                                   {"targetId": self.id})
+    async def focus(self, activate=False):
+        """
+        emulates Focus of the target
+
+        :param activate: whether to bring the window to the front
+        """
+        if activate:
+            await self.activate()
         try:
             await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
         except CDPError as e:
             if not (e.code == -32601 and e.message == "'Emulation.setFocusEmulationEnabled' wasn't found"):
                 raise e
+
+    async def unfocus(self):
+        """
+        disables focus emulation for the target
+        """
+        try:
+            await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": False})
+        except CDPError as e:
+            if e.code == -32601 and e.message == "'Target.activateTarget' wasn't found":
+                return False
+            raise e
+
+    async def activate(self):
+        """
+        brings the window to the front
+        """
+        try:
+            await self.execute_cdp_cmd("Target.activateTarget", {"targetId": self.id})
+        except CDPError as e:
+            if e.code == -32601 and e.message == "'Target.activateTarget' wasn't found":
+                return False
+            raise e
 
     @property
     async def info(self):

@@ -16,7 +16,7 @@ async def main():
         pointer = driver.current_pointer
 
         move_kwargs = {"total_time": 0.7, "accel": 2, "smooth_soft": 20}
-        await driver.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
+        await driver.current_target.activate()
 
         for _ in range(50):
             await pointer.click(100, 500, move_kwargs=move_kwargs, move_to=True)

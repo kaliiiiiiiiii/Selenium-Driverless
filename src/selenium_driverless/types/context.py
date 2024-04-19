@@ -120,7 +120,7 @@ class Context:
             else:
                 self._switch_to = await SwitchTo(context=self, loop=self._loop, context_id=self._context_id)
             if targets:
-                await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
+                await self.current_target.focus(activate=False)
             self._started = True
         return self
 
@@ -465,27 +465,29 @@ class Context:
                 tabs.append(info)
         return tabs
 
-    async def new_window(self, type_hint: Optional[str] = "tab", url="", activate: bool = True) -> Target:
+    async def new_window(self, type_hint: typing.Literal["tab", "window"] = "tab", url="", activate: bool = True, background:bool=True) -> Target:
         """Switches to a new top-level browsing context.
 
         The type hint can be one of "tab" or "window". If not specified the
         browser will automatically select it.
 
-        :Usage:
-            ::
-
-                target.switch_to.new_window('tab')
+        :param type_hint: what kind of target to create
+        :param url: url to start the target at
+        :param activate: whether to activate the target
         """
         if self._is_incognito and url in ["chrome://extensions"]:
             raise ValueError(f"{url} only supported in non-incognito contexts")
-        new_tab = False
+
+        args = {"url": url}
         if type_hint == "window":
-            new_tab = True
+            args["newWindow"] = True
         elif type_hint == "tab":
             pass
         else:
             raise ValueError("type hint needs to be 'window' or 'tab'")
-        args = {"url": url, "newWindow": new_tab, "forTab": new_tab}
+        if not (background is None):
+            args["background"] = background
+
         # noinspection PyProtectedMember
         if self._context_id and self._is_incognito:
             args["browserContextId"] = self._context_id
