@@ -465,15 +465,14 @@ class Context:
                 tabs.append(info)
         return tabs
 
-    async def new_window(self, type_hint: typing.Literal["tab", "window"] = "tab", url="", activate: bool = True, background:bool=True) -> Target:
-        """Switches to a new top-level browsing context.
-
-        The type hint can be one of "tab" or "window". If not specified the
-        browser will automatically select it.
+    async def new_window(self, type_hint: typing.Literal["tab", "window"] = "tab", url="", activate: bool = False, focus:bool=True, background:bool=True) -> Target:
+        """creates a new tab or window
 
         :param type_hint: what kind of target to create
         :param url: url to start the target at
-        :param activate: whether to activate the target
+        :param activate: whether to bring the target to the front
+        :param focus: whether to emulate focus on the target
+        :param background: whether to start the target in the background
         """
         if self._is_incognito and url in ["chrome://extensions"]:
             raise ValueError(f"{url} only supported in non-incognito contexts")
@@ -495,6 +494,8 @@ class Context:
         target_id = target["targetId"]
         target = await self.get_target(target_id)
         if activate:
+            await target.activate()
+        if focus:
             await target.focus()
         return target
 

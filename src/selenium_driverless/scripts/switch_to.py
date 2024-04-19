@@ -98,9 +98,7 @@ class SwitchTo:
 
             this is deprecated and should not be used
 
-        :Args:
-         - frame_reference: The name of the window to switch to, an integer representing the index,
-                            or a webelement that is an (i)frame to switch to.
+
 
         :Usage:
             ::
@@ -119,7 +117,16 @@ class SwitchTo:
                 try:
                     frame_reference = await self._context.find_element(By.NAME, frame_reference)
                 except NoSuchElementException:
-                    raise NoSuchIframe(frame_reference, f"couldn't get element by: {frame_reference}")
+                    pass
+        if isinstance(frame_reference, int):
+            try:
+                frames = await self._context.find_elements(By.TAG_NAME, "iframe")
+                frame_reference = frames[frame_reference]
+            except KeyError:
+                pass
+
+        if not isinstance(frame_reference, WebElement):
+            raise NoSuchIframe(frame_reference, f"couldn't get element by: {frame_reference}")
         target = await self._context.current_target.get_target_for_iframe(frame_reference)
         if activate:
             await target.focus()
@@ -146,15 +153,18 @@ class SwitchTo:
             await self._context.current_target.focus()
         return self._context.current_target
 
-    async def new_window(self, type_hint: typing.Literal["tab", "window"] = "tab", url="", activate: bool = True) -> Target:
-        """Switches to a new window
+    async def new_window(self, type_hint: typing.Literal["tab", "window"] = "tab", url="", activate: bool = False,
+                         focus: bool = True, background: bool = True) -> Target:
+        """creates a new tab or window
 
-        :param type_hint: what kind of window to switch to
-        :param url: url to load in the new target
-        :param activate: whether to activate the new target
+        :param type_hint: what kind of target to create
+        :param url: url to start the target at
+        :param activate: whether to bring the target to the front
+        :param focus: whether to emulate focus on the target
+        :param background: whether to start the target in the background
         """
-        target = await self._context.new_window(type_hint=type_hint, url=url, activate=activate)
-        return await self.target(target, activate=activate)
+        target = await self._context.new_window(type_hint=type_hint, url=url, activate=activate, focus=focus, background=background)
+        return await self.target(target)
 
     async def parent_frame(self, activate: bool = False) -> None:
         """Switches focus to the parent context. If the current context is the

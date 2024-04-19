@@ -60,13 +60,10 @@ SHIFT_KEY_NEEDED = '~!@#$%^&*()_+{}|:"<>?'
 
 
 class NoSuchIframe(Exception):
-    def __init__(self, elem: WebElement, message: str):
-        self._elem = elem
+    reference:typing.Union[WebElement, int, str]
+    def __init__(self, reference:typing.Union[WebElement, int, str], message: str):
+        self.reference = reference
         super().__init__(message)
-
-    @property
-    def elem(self):
-        return self._elem
 
 
 class Target:
@@ -210,6 +207,18 @@ class Target:
         return alert
 
     async def get_targets_for_iframes(self, iframes: typing.List[WebElement]):
+        """
+        find targets for a list of iframes
+
+        :param iframes: iframes to find targets for
+
+        .. warning::
+
+            only CORS iframes have its own target,
+            you might use :func:`WebElement.content_document <selenium_driverless.types.webelement.WebElement.content_document>`
+            instead
+
+        """
         if not iframes:
             raise ValueError(f"Expected WebElements, but got{iframes}")
 
@@ -243,6 +252,18 @@ class Target:
         return list(targets.values())
 
     async def get_target_for_iframe(self, iframe: WebElement):
+        """
+        find a target for an iframe
+
+        :param iframe: iframe to find target for
+
+        .. warning::
+
+            only CORS iframes have its own target,
+            you might use :func:`WebElement.content_document <selenium_driverless.types.webelement.WebElement.content_document>`
+            instead
+
+        """
         targets = await self.get_targets_for_iframes([iframe])
         if not targets:
             raise NoSuchIframe(iframe, "no target for iframe found")
