@@ -1108,8 +1108,6 @@ class Chrome:
 
     async def save_snapshot(self, filename: str):
         """Saves a snapshot of the current window to a MHTML file.
-                Returns False if there is any IOError, else returns True. Use full
-                paths in your filename.
 
         :param filename: The full path you wish to save your snapshot to. This
                    should end with a ``.mhtml`` extension.
