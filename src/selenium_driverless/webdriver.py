@@ -1107,6 +1107,16 @@ class Chrome:
         which is useful in embedded images in HTML.
         """
         return await self.current_target.get_screenshot_as_base64()
+        
+    async def get_snapshot(self,filename) -> bool:
+        """Saves the screenshot of the current tab to a MHTML file.
+        :param filename: The path you wish to save your snapshot to. should end with a `.mhtml` extension.
+
+        .. code-block:: python
+
+            driver.get_snapshot('snapshot.mhtml')
+        """
+        return await self.current_target.get_snapshot(filename)
 
     # noinspection PyPep8Naming
     async def set_window_size(self, width: int, height: int) -> None:
