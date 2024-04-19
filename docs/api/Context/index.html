@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Context &mdash; Selenium-Driverless 1.9 documentation</title>
+  <title>Context &mdash; Selenium-Driverless 1.9.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=10172c4f"></script>
+        <script src="../../_static/documentation_options.js?v=fd4b3c67"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -50,7 +50,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../ChromeOptions/">ChromeOptions</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Context</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.types.context.Context"><code class="docutils literal notranslate"><span class="pre">Context</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.start_session"><code class="docutils literal notranslate"><span class="pre">Context.start_session()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.set_download_behaviour"><code class="docutils literal notranslate"><span class="pre">Context.set_download_behaviour()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.downloads_dir"><code class="docutils literal notranslate"><span class="pre">Context.downloads_dir</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.context.Context.wait_download"><code class="docutils literal notranslate"><span class="pre">Context.wait_download()</span></code></a></li>
@@ -153,19 +152,6 @@
 <dt class="sig sig-object py" id="selenium_driverless.types.context.Context">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.types.context.</span></span><span class="sig-name descname"><span class="pre">Context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">driver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_incognito</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_ws_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1048576</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context" title="Link to this definition"></a></dt>
 <dd><p>Allows you to drive the browser without chromedriver.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="selenium_driverless.types.context.Context.start_session">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.start_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.start_session" title="Link to this definition"></a></dt>
-<dd><p>Creates a new session with the desired capabilities.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Args<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p>capabilities - a capabilities dict to start the session with.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.context.Context.set_download_behaviour">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_download_behaviour</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">behavior</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.set_download_behaviour"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.set_download_behaviour" title="Link to this definition"></a></dt>
@@ -586,17 +572,12 @@ not.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.context.Context.add_cookie">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_cookie</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cookie_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.add_cookie"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.add_cookie" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_cookie</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cookie_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.add_cookie"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.add_cookie" title="Link to this definition"></a></dt>
 <dd><p>Adds a cookie to your current session.</p>
 <dl class="field-list">
-<dt class="field-odd">Args<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><dl class="simple">
-<dt>cookie_dict: A dictionary object, with required keys - “name” and “value”;</dt><dd><p>optional keys - “path”, “domain”, “secure”, “httpOnly”, “expiry”, “sameSite”</p>
-</dd>
-</dl>
-</li>
-</ul>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cookie_dict</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – A dictionary object, with required keys - “name” and “value”;
+optional keys - “path”, “domain”, “secure”, “httpOnly”, “expiry”, “sameSite”</p>
 </dd>
 <dt class="field-even">Usage<span class="colon">:</span></dt>
 <dd class="field-even"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">add_cookie</span><span class="p">({</span><span class="s1">&#39;name&#39;</span> <span class="p">:</span> <span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span> <span class="p">:</span> <span class="s1">&#39;bar&#39;</span><span class="p">})</span>
@@ -660,24 +641,15 @@ not.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.context.Context.get_screenshot_as_file">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_screenshot_as_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.get_screenshot_as_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.get_screenshot_as_file" title="Link to this definition"></a></dt>
-<dd><p>Saves a screenshot of the current window to a PNG image file.
-Returns False if there is any IOError, else returns True. Use full
-paths in your filename.</p>
-<dl class="field-list">
-<dt class="field-odd">Args<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p>filename: The full path you wish to save your screenshot to. This
-should end with a <cite>.png</cite> extension.</p></li>
-</ul>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_screenshot_as_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.get_screenshot_as_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.get_screenshot_as_file" title="Link to this definition"></a></dt>
+<dd><p>Saves a screenshot of the current window to a PNG image file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The full path you wish to save your screenshot to. This
+should end with a <cite>.png</cite> extension.</p>
 </dd>
-<dt class="field-even">Usage<span class="colon">:</span></dt>
-<dd class="field-even"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">get_screenshot_as_file</span><span class="p">(</span><span class="s1">&#39;/Screenshots/foo.png&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -772,16 +744,11 @@ should end with a <code class="docutils literal notranslate"><span class="pre">.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.context.Context.get_window_size">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_window_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">windowHandle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'current'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.get_window_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.get_window_size" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_window_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/context/#Context.get_window_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.context.Context.get_window_size" title="Link to this definition"></a></dt>
 <dd><p>Gets the width and height of the current window.</p>
-<dl class="field-list">
-<dt class="field-odd">Usage<span class="colon">:</span></dt>
-<dd class="field-odd"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">get_window_size</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>

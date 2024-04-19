@@ -112,6 +112,9 @@ class WebElement(JSRemoteObj):
 
     @property
     async def context_id(self):
+        """
+        **async** the ``Runtime.ExecutionContextId``
+        """
         self._check_stale()
         if not self.___context_id__:
             await self.obj_id
@@ -172,6 +175,10 @@ class WebElement(JSRemoteObj):
 
     @property
     async def node_id(self):
+        """
+        **async**
+        the ``DOM.NodeId``
+        """
         self._check_stale()
         if not self._node_id:
             node = await self.__target__.execute_cdp_cmd("DOM.requestNode", {"objectId": await self.obj_id})
@@ -187,7 +194,7 @@ class WebElement(JSRemoteObj):
     @property
     async def content_document(self):
         """
-        gets the document of the iframe
+        **async** gets the document of the iframe
         """
         _desc = await self._describe()
         if _desc.get("localName") == "iframe":
@@ -224,18 +231,24 @@ class WebElement(JSRemoteObj):
 
     @property
     async def document_url(self):
-        """gets the url if the element is an iframe, else returns ``None``"""
+        """**async** gets the url if the element is an iframe, else returns ``None``"""
         res = await self._describe()
         return res.get('documentURL')
 
     @property
     async def backend_node_id(self):
+        """
+        **async** the ``DOM.BackendNodeId``
+        """
         if not self._backend_node_id:
             await self._describe()
         return self._backend_node_id
 
     @property
     def class_name(self):
+        """
+        the ClassName of the element (if available)
+        """
         return self._class_name
 
     async def find_element(self, by: str, value: str, idx: int = 0, timeout: int or None = None):
@@ -256,7 +269,9 @@ class WebElement(JSRemoteObj):
             if isinstance(elems, list):
                 return elems[idx]
             else:
-                raise Exception("find_elements returned not a list. This possibly is related to https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/84\n", elems)
+                raise Exception(
+                    "find_elements returned not a list. This possibly is related to https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/84\n",
+                    elems)
         raise NoSuchElementException()
 
     async def find_elements(self, by: str = By.ID, value: str or None = None):
@@ -333,6 +348,8 @@ class WebElement(JSRemoteObj):
     async def set_source(self, value: str):
         """
         sets the OuterHTML of the element
+
+        :param value: the str to set the outerHtml to
         """
         try:
             await self.__target__.execute_cdp_cmd("DOM.setOuterHTML",
@@ -348,7 +365,7 @@ class WebElement(JSRemoteObj):
 
         :param name: the name of the property to get
 
-        .. warning::
+        .. note::
             this gets the JavaScript property (``elem[name]``), and not HTML property
         """
         return await self.execute_script(f"return obj[arguments[0]]", name)
@@ -439,7 +456,9 @@ class WebElement(JSRemoteObj):
                     break
         return is_clickable
 
-    async def click(self, timeout: float = None, visible_timeout: float = 30,spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5, border:float=0.05, scroll_to=True, move_to: bool = True,
+    async def click(self, timeout: float = None, visible_timeout: float = 30, spread_a: float = 1, spread_b: float = 1,
+                    bias_a: float = 0.5, bias_b: float = 0.5, border: float = 0.05, scroll_to=True,
+                    move_to: bool = True,
                     ensure_clickable: typing.Union[bool, int] = False) -> None:
         """Clicks the element.
 
@@ -482,7 +501,7 @@ class WebElement(JSRemoteObj):
 
         await self.__target__.pointer.click(x, y=y, click_kwargs={"timeout": timeout}, move_to=move_to)
 
-    async def write(self, text: str,click_kwargs=None, click_on:bool=True):
+    async def write(self, text: str, click_kwargs=None, click_on: bool = True):
         """
         inserts literal text to the element
 
@@ -521,7 +540,7 @@ class WebElement(JSRemoteObj):
         args.update(self._args_builder)
         await self.__target__.execute_cdp_cmd("DOM.setFileInputFiles", args)
 
-    async def send_keys(self, text: str, click_kwargs:dict=None, click_on:bool=True) -> None:
+    async def send_keys(self, text: str, click_kwargs: dict = None, click_on: bool = True) -> None:
         """
         send text & keys to the target
 
@@ -537,7 +556,8 @@ class WebElement(JSRemoteObj):
             await self.focus()
         await self.__target__.send_keys(text)
 
-    async def mid_location(self, spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5, border:float=0.05) -> typing.List[int]:
+    async def mid_location(self, spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5,
+                           border: float = 0.05) -> typing.List[int]:
         """
         returns random location in the element with probability close to the middle
 
@@ -584,6 +604,15 @@ class WebElement(JSRemoteObj):
 
     @property
     async def dom_attributes(self) -> dict:
+        """returns the dom attributes as a dict
+
+        .. warning::
+
+            this isn't implemented properly yet and might change,
+            use :func:`WebElement.execute_script <selenium_driverless.types.webelement.WelElement.execute_script`
+            instead
+
+        """
         try:
             res = await self.__target__.execute_cdp_cmd("DOM.getAttributes", {"nodeId": await self.node_id})
             attr_list = res["attributes"]
@@ -599,22 +628,27 @@ class WebElement(JSRemoteObj):
                 raise e
 
     async def get_dom_attribute(self, name: str) -> str or None:
-        """Gets the given attribute of the element. Unlike
-        :func:`~selenium.webdriver.remote.BaseWebElement.get_attribute`, this
-        method only returns attributes declared in the element's HTML markup.
+        """Gets the given attribute of the element.
+        Only returns attributes declared in the element's HTML markup.
 
-        :Args:
-            - name - Name of the attribute to retrieve.
+        :param name: Name of the attribute to retrieve.
 
-        :Usage:
-            ::
+        .. warning::
 
-                text_length = target_element.get_dom_attribute("class")
+            this isn't implemented properly yet and might change,
+            use :func:`WebElement.execute_script <selenium_driverless.types.webelement.WelElement.execute_script`
+            instead
+
         """
         attrs = await self.dom_attributes
         return attrs[name]
 
     async def set_dom_attribute(self, name: str, value: str):
+        """set a dom_attribute
+
+        :param name: the name of the DOM (=>html) attribute
+        :param value: the value to set the attribute to
+        """
         await self.__target__.execute_cdp_cmd("DOM.setAttributeValue", {"nodeId": await self.node_id,
                                                                         "name": name, "value": value})
 
@@ -622,7 +656,11 @@ class WebElement(JSRemoteObj):
         """Alias to WebElement.get_property.
 
         .. warning::
-            do not use! This method might change in future
+
+            this isn't implemented properly yet and might change,
+            use :func:`WebElement.execute_script <selenium_driverless.types.webelement.WelElement.execute_script`
+            instead
+
         """
         return await self.get_property(name)
 
@@ -664,7 +702,6 @@ class WebElement(JSRemoteObj):
                 return False
             else:
                 raise e
-
 
     @property
     async def location_once_scrolled_into_view(self) -> dict:
@@ -721,7 +758,7 @@ class WebElement(JSRemoteObj):
         return result
 
     @property
-    async def css_metrics(self):
+    async def css_metrics(self) -> typing.List[dict, float]:
         script = """
             function getRotationAngle(target) 
                 {
@@ -831,7 +868,7 @@ class WebElement(JSRemoteObj):
 
     @property
     async def parent(self) -> WebElement:
-        """The parent element this element"""
+        """**async** The parent element this element"""
         args = {}
         if self._node_id:
             args["nodeId"] = self._node_id

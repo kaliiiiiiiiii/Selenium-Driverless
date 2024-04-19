@@ -68,18 +68,15 @@ class NoSuchIframe(Exception):
 
 
 class Target:
-    """Allows you to drive the browser without chromedriver."""
+    """the Target class
+
+    Usually a tab, (cors-)iframe, WebWorker etc.
+    """
 
     # noinspection PyShadowingBuiltins
     def __init__(self, host: str, target_id: str, driver, context, is_remote: bool = False,
                  loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
                  type: str = None, start_socket: bool = False, max_ws_size: int = 2 ** 20) -> None:
-        """Creates a new instance of the chrome target. Starts the service and
-        then creates new instance of chrome target.
-
-        :Args:
-         - options - this takes an instance of ChromeOptions.rst
-        """
         from selenium_driverless.types.context import Context
         self._parent_target = None
         self._context: Context = context
@@ -937,35 +934,21 @@ class Target:
             elems.append(elem)
         return elems
 
-    async def get_screenshot_as_file(self, filename) -> bool:
+    async def get_screenshot_as_file(self, filename:str) -> None:
         # noinspection GrazieInspection
         """Saves a screenshot of the current window to a PNG image file.
-                Returns False if there is any IOError, else returns True. Use full
-                paths in your filename.
 
-                :Args:
-                 - filename: The full path you wish to save your screenshot to. This
-                   should end with a `.png` extension.
-
-                :Usage:
-                    ::
-
-                        target.get_screenshot_as_file('/Screenshots/foo.png')
-                """
+        :param filename: The full path.
+            This should end with a `.png` extension.
+        """
         if not str(filename).lower().endswith(".png"):
             warnings.warn(
                 "name used for saved screenshot does not match file " "type. It should end with a `.png` extension",
                 UserWarning,
             )
         png = await self.get_screenshot_as_png()
-        try:
-            async with aiofiles.open(filename, "wb") as f:
-                await f.write(png)
-        except OSError:
-            return False
-        finally:
-            del png
-        return True
+        async with aiofiles.open(filename, "wb") as f:
+            await f.write(png)
 
     async def save_screenshot(self, filename) -> bool:
         # noinspection GrazieInspection
@@ -1380,16 +1363,14 @@ class Target:
     async def start_tab_mirroring(self, sink_name: str) -> dict:
         """Starts a tab mirroring session on a specific receiver target.
 
-        :Args:
-         - sink_name: Name of the sink to use as the target.
+        :param sink_name: Name of the sink to use as the target.
         """
         return await self.execute_cdp_cmd("Cast.startTabMirroring", {"sinkName": sink_name})
 
     async def stop_casting(self, sink_name: str) -> dict:
         """Stops the existing Cast session on a specific receiver target.
 
-        :Args:
-         - sink_name: Name of the sink to stop the Cast session.
+        :param sink_name: Name of the sink to stop the Cast session.
         """
         return await self.execute_cdp_cmd("Cast.stopCasting", {"sinkName": sink_name})
 

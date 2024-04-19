@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>selenium_driverless.types.webelement &mdash; Selenium-Driverless 1.9 documentation</title>
+  <title>selenium_driverless.types.webelement &mdash; Selenium-Driverless 1.9.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=10172c4f"></script>
+        <script src="../../../../_static/documentation_options.js?v=fd4b3c67"></script>
         <script src="../../../../_static/doctools.js?v=888ff710"></script>
         <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -193,6 +193,9 @@
 
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">context_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        **async** the ``Runtime.ExecutionContextId``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_stale</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">___context_id__</span><span class="p">:</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span>
@@ -253,6 +256,10 @@
 
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">node_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        **async**</span>
+<span class="sd">        the ``DOM.NodeId``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_stale</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span><span class="p">:</span>
             <span class="n">node</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.requestNode&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;objectId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span><span class="p">})</span>
@@ -268,7 +275,7 @@
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">content_document</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        gets the document of the iframe</span>
+<span class="sd">        **async** gets the document of the iframe</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">_desc</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_describe</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">_desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;localName&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;iframe&quot;</span><span class="p">:</span>
@@ -305,18 +312,24 @@
 
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">document_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;gets the url if the element is an iframe, else returns ``None``&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;**async** gets the url if the element is an iframe, else returns ``None``&quot;&quot;&quot;</span>
         <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_describe</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;documentURL&#39;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">backend_node_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        **async** the ``DOM.BackendNodeId``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend_node_id</span><span class="p">:</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_describe</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend_node_id</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">class_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        the ClassName of the element (if available)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_class_name</span>
 
 <div class="viewcode-block" id="WebElement.find_element">
@@ -339,7 +352,9 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">elems</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">elems</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;find_elements returned not a list. This possibly is related to https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/84</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">elems</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="s2">&quot;find_elements returned not a list. This possibly is related to https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/84</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">elems</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">NoSuchElementException</span><span class="p">()</span></div>
 
 
@@ -425,6 +440,8 @@
     <span class="k">async</span> <span class="k">def</span> <span class="nf">set_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        sets the OuterHTML of the element</span>
+
+<span class="sd">        :param value: the str to set the outerHtml to</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.setOuterHTML&quot;</span><span class="p">,</span>
@@ -443,7 +460,7 @@
 
 <span class="sd">        :param name: the name of the property to get</span>
 
-<span class="sd">        .. warning::</span>
+<span class="sd">        .. note::</span>
 <span class="sd">            this gets the JavaScript property (``elem[name]``), and not HTML property</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;return obj[arguments[0]]&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
@@ -552,7 +569,9 @@
 
 <div class="viewcode-block" id="WebElement.click">
 <a class="viewcode-back" href="../../../../api/WebELement/#selenium_driverless.types.webelement.WebElement.click">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">visible_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span><span class="n">spread_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">bias_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">border</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">scroll_to</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">move_to</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">visible_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span> <span class="n">spread_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">bias_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">bias_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">border</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span> <span class="n">scroll_to</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">move_to</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                     <span class="n">ensure_clickable</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Clicks the element.</span>
 
@@ -598,7 +617,7 @@
 
 <div class="viewcode-block" id="WebElement.write">
 <a class="viewcode-back" href="../../../../api/WebELement/#selenium_driverless.types.webelement.WebElement.write">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span><span class="n">click_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">click_on</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">click_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">click_on</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        inserts literal text to the element</span>
 
@@ -646,7 +665,7 @@
 
 <div class="viewcode-block" id="WebElement.send_keys">
 <a class="viewcode-back" href="../../../../api/WebELement/#selenium_driverless.types.webelement.WebElement.send_keys">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">send_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">click_kwargs</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">click_on</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">send_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">click_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">click_on</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        send text &amp; keys to the target</span>
 
@@ -665,7 +684,8 @@
 
 <div class="viewcode-block" id="WebElement.mid_location">
 <a class="viewcode-back" href="../../../../api/WebELement/#selenium_driverless.types.webelement.WebElement.mid_location">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">mid_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spread_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">bias_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">border</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">mid_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spread_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">bias_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+                           <span class="n">border</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        returns random location in the element with probability close to the middle</span>
 
@@ -716,6 +736,15 @@
 
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">dom_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;returns the dom attributes as a dict</span>
+
+<span class="sd">        .. warning::</span>
+
+<span class="sd">            this isn&#39;t implemented properly yet and might change,</span>
+<span class="sd">            use :func:`WebElement.execute_script &lt;selenium_driverless.types.webelement.WelElement.execute_script`</span>
+<span class="sd">            instead</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.getAttributes&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;nodeId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id</span><span class="p">})</span>
             <span class="n">attr_list</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;attributes&quot;</span><span class="p">]</span>
@@ -733,25 +762,33 @@
 <div class="viewcode-block" id="WebElement.get_dom_attribute">
 <a class="viewcode-back" href="../../../../api/WebELement/#selenium_driverless.types.webelement.WebElement.get_dom_attribute">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_dom_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the given attribute of the element. Unlike</span>
-<span class="sd">        :func:`~selenium.webdriver.remote.BaseWebElement.get_attribute`, this</span>
-<span class="sd">        method only returns attributes declared in the element&#39;s HTML markup.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the given attribute of the element.</span>
+<span class="sd">        Only returns attributes declared in the element&#39;s HTML markup.</span>
 
-<span class="sd">        :Args:</span>
-<span class="sd">            - name - Name of the attribute to retrieve.</span>
+<span class="sd">        :param name: Name of the attribute to retrieve.</span>
 
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
+<span class="sd">        .. warning::</span>
 
-<span class="sd">                text_length = target_element.get_dom_attribute(&quot;class&quot;)</span>
+<span class="sd">            this isn&#39;t implemented properly yet and might change,</span>
+<span class="sd">            use :func:`WebElement.execute_script &lt;selenium_driverless.types.webelement.WelElement.execute_script`</span>
+<span class="sd">            instead</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">attrs</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">dom_attributes</span>
         <span class="k">return</span> <span class="n">attrs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
 
 
+<div class="viewcode-block" id="WebElement.set_dom_attribute">
+<a class="viewcode-back" href="../../../../api/WebELement/#selenium_driverless.types.webelement.WebElement.set_dom_attribute">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">set_dom_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;set a dom_attribute</span>
+
+<span class="sd">        :param name: the name of the DOM (=&gt;html) attribute</span>
+<span class="sd">        :param value: the value to set the attribute to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.setAttributeValue&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;nodeId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span>
-                                                                        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
+                                                                        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span></div>
+
 
 <div class="viewcode-block" id="WebElement.get_attribute">
 <a class="viewcode-back" href="../../../../api/WebELement/#selenium_driverless.types.webelement.WebElement.get_attribute">[docs]</a>
@@ -759,7 +796,11 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Alias to WebElement.get_property.</span>
 
 <span class="sd">        .. warning::</span>
-<span class="sd">            do not use! This method might change in future</span>
+
+<span class="sd">            this isn&#39;t implemented properly yet and might change,</span>
+<span class="sd">            use :func:`WebElement.execute_script &lt;selenium_driverless.types.webelement.WelElement.execute_script`</span>
+<span class="sd">            instead</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
 
@@ -810,7 +851,6 @@
                 <span class="k">return</span> <span class="kc">False</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">e</span></div>
-
 
 
     <span class="nd">@property</span>
@@ -874,7 +914,7 @@
         <span class="k">return</span> <span class="n">result</span>
 
     <span class="nd">@property</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">css_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">css_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
         <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            function getRotationAngle(target) </span>
 <span class="s2">                {</span>
@@ -987,7 +1027,7 @@
 
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebElement</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The parent element this element&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;**async** The parent element this element&quot;&quot;&quot;</span>
         <span class="n">args</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span><span class="p">:</span>
             <span class="n">args</span><span class="p">[</span><span class="s2">&quot;nodeId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_id</span>

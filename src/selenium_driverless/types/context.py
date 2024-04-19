@@ -94,11 +94,6 @@ class Context:
         return self.start_session().__await__()
 
     async def start_session(self):
-        """Creates a new session with the desired capabilities.
-
-        :Args:
-         - capabilities - a capabilities dict to start the session with.
-        """
         from selenium_driverless.webdriver import Chrome
         self._driver: Chrome
 
@@ -625,11 +620,10 @@ class Context:
         await target.delete_all_cookies()
 
     # noinspection GrazieInspection
-    async def add_cookie(self, cookie_dict: dict, target_id: str = None) -> None:
+    async def add_cookie(self, cookie_dict: dict) -> None:
         """Adds a cookie to your current session.
 
-        :Args:
-         - cookie_dict: A dictionary object, with required keys - "name" and "value";
+        :param cookie_dict: A dictionary object, with required keys - "name" and "value";
             optional keys - "path", "domain", "secure", "httpOnly", "expiry", "sameSite"
 
         :Usage:
@@ -640,8 +634,7 @@ class Context:
                 target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/', 'secure' : True})
                 target.add_cookie({'name' : 'foo', 'value' : 'bar', 'sameSite' : 'Strict'})
         """
-        target = await self.get_target(target_id=target_id)
-        await target.add_cookie(cookie_dict=cookie_dict)
+        await self.current_target.add_cookie(cookie_dict=cookie_dict)
 
     # Timeouts
     @staticmethod
@@ -675,23 +668,13 @@ class Context:
         target = await self.get_target(target_id=target_id)
         return await target.search_elements(query=query)
 
-    async def get_screenshot_as_file(self, filename: str, target_id: str = None) -> bool:
-        # noinspection GrazieInspection
+    async def get_screenshot_as_file(self, filename: str) -> bool:
         """Saves a screenshot of the current window to a PNG image file.
-                Returns False if there is any IOError, else returns True. Use full
-                paths in your filename.
 
-                :Args:
-                 - filename: The full path you wish to save your screenshot to. This
+        :param filename: The full path you wish to save your screenshot to. This
                    should end with a `.png` extension.
-
-                :Usage:
-                    ::
-
-                        target.get_screenshot_as_file('/Screenshots/foo.png')
-                """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_screenshot_as_file(filename=filename)
+        """
+        return await self.current_target.get_screenshot_as_file(filename=filename)
 
     async def save_screenshot(self, filename, target_id: str = None) -> bool:
         # noinspection GrazieInspection
@@ -757,17 +740,8 @@ class Context:
         await self.set_window_rect(width=int(width), height=int(height))
 
     # noinspection PyPep8Naming
-    async def get_window_size(self, windowHandle: str = "current") -> dict:
-        """Gets the width and height of the current window.
-
-        :Usage:
-            ::
-
-                target.get_window_size()
-        """
-
-        if windowHandle != "current":
-            warnings.warn("Only 'current' window is supported for W3C compatible browsers.")
+    async def get_window_size(self) -> dict:
+        """Gets the width and height of the current window."""
         size = await self.get_window_rect()
 
         if size.get("value", None):

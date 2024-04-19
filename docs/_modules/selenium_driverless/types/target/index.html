@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>selenium_driverless.types.target &mdash; Selenium-Driverless 1.9 documentation</title>
+  <title>selenium_driverless.types.target &mdash; Selenium-Driverless 1.9.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=10172c4f"></script>
+        <script src="../../../../_static/documentation_options.js?v=fd4b3c67"></script>
         <script src="../../../../_static/doctools.js?v=888ff710"></script>
         <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -149,18 +149,15 @@
 <div class="viewcode-block" id="Target">
 <a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target">[docs]</a>
 <span class="k">class</span> <span class="nc">Target</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Allows you to drive the browser without chromedriver.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;the Target class</span>
+
+<span class="sd">    Usually a tab, (cors-)iframe, WebWorker etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># noinspection PyShadowingBuiltins</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">driver</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">is_remote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                  <span class="n">loop</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">AbstractEventLoop</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
                  <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">start_socket</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">max_ws_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">20</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a new instance of the chrome target. Starts the service and</span>
-<span class="sd">        then creates new instance of chrome target.</span>
-
-<span class="sd">        :Args:</span>
-<span class="sd">         - options - this takes an instance of ChromeOptions.rst</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">selenium_driverless.types.context</span> <span class="kn">import</span> <span class="n">Context</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parent_target</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">:</span> <span class="n">Context</span> <span class="o">=</span> <span class="n">context</span>
@@ -1101,35 +1098,21 @@
 
 <div class="viewcode-block" id="Target.get_screenshot_as_file">
 <a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_screenshot_as_file">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span><span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># noinspection GrazieInspection</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a screenshot of the current window to a PNG image file.</span>
-<span class="sd">                Returns False if there is any IOError, else returns True. Use full</span>
-<span class="sd">                paths in your filename.</span>
 
-<span class="sd">                :Args:</span>
-<span class="sd">                 - filename: The full path you wish to save your screenshot to. This</span>
-<span class="sd">                   should end with a `.png` extension.</span>
-
-<span class="sd">                :Usage:</span>
-<span class="sd">                    ::</span>
-
-<span class="sd">                        target.get_screenshot_as_file(&#39;/Screenshots/foo.png&#39;)</span>
-<span class="sd">                &quot;&quot;&quot;</span>
+<span class="sd">        :param filename: The full path.</span>
+<span class="sd">            This should end with a `.png` extension.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.png&quot;</span><span class="p">):</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                 <span class="s2">&quot;name used for saved screenshot does not match file &quot;</span> <span class="s2">&quot;type. It should end with a `.png` extension&quot;</span><span class="p">,</span>
                 <span class="ne">UserWarning</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="n">png</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_screenshot_as_png</span><span class="p">()</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">async</span> <span class="k">with</span> <span class="n">aiofiles</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="k">await</span> <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">png</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">finally</span><span class="p">:</span>
-            <span class="k">del</span> <span class="n">png</span>
-        <span class="k">return</span> <span class="kc">True</span></div>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">aiofiles</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">png</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Target.save_screenshot">
@@ -1601,8 +1584,7 @@
     <span class="k">async</span> <span class="k">def</span> <span class="nf">start_tab_mirroring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Starts a tab mirroring session on a specific receiver target.</span>
 
-<span class="sd">        :Args:</span>
-<span class="sd">         - sink_name: Name of the sink to use as the target.</span>
+<span class="sd">        :param sink_name: Name of the sink to use as the target.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Cast.startTabMirroring&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;sinkName&quot;</span><span class="p">:</span> <span class="n">sink_name</span><span class="p">})</span></div>
 
@@ -1612,8 +1594,7 @@
     <span class="k">async</span> <span class="k">def</span> <span class="nf">stop_casting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Stops the existing Cast session on a specific receiver target.</span>
 
-<span class="sd">        :Args:</span>
-<span class="sd">         - sink_name: Name of the sink to stop the Cast session.</span>
+<span class="sd">        :param sink_name: Name of the sink to stop the Cast session.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Cast.stopCasting&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;sinkName&quot;</span><span class="p">:</span> <span class="n">sink_name</span><span class="p">})</span></div>
 </div>

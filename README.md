@@ -94,6 +94,10 @@ asyncio.run(main())
 ### synchronous
 asyncified, might be buggy
 
+<details>
+
+<summary>example code</summary>
+
 ```python
 from selenium_driverless.sync import webdriver
 
@@ -108,6 +112,8 @@ with webdriver.Chrome(options=options) as driver:
     source = driver.page_source
     print(title)
 ```
+
+</details>
 
 ### custom debugger address
 ```python
@@ -165,8 +171,8 @@ asyncio.run(main())
 
 </details>
 
-### Unique execution contexts
-- execute `javascript` without getting detected
+### Isolated execution contexts
+- execute `javascript` without getting detected ( in a **isolated world**)
 <details>
 <summary>Example Code (Click to expand)</summary>
 
@@ -216,7 +222,6 @@ await pointer.move_to(100, 500)
 await pointer.click(500, 50, move_kwargs=move_kwargs, move_to=True)
 ```
 ### Iframes
-- switch and interact with iframes
 
 ```python
 iframes = await driver.find_elements(By.TAG_NAME, "iframe")
