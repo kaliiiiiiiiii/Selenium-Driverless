@@ -952,6 +952,35 @@ class Target:
         res = await self.execute_cdp_cmd("Page.captureScreenshot", {"format": "png"}, timeout=30)
         return res["data"]
 
+    async def get_snapshot(self,filename) -> bool:
+        """Saves a snapshot of the current window to a MHTML file.
+                Returns False if there is any IOError, else returns True. Use full
+                paths in your filename.
+
+                :Args:
+                 - filename: The full path you wish to save your snapshot to. This
+                   should end with a `.mhtml` extension.
+
+                :Usage:
+                    ::
+
+                        target.get_snapshot('/Screenshots/foo.mhtml')
+                """
+        
+        if not str(filename).lower().endswith(".mhtml"):
+            warnings.warn(
+                "name used for saved snapshot does not match file " "type. It should end with a `.mhtml` extension",
+                UserWarning,
+            )
+        res = await self.execute_cdp_cmd("Page.captureSnapshot")
+        try:
+            async with aiofiles.open(filename, "w") as f:
+                await f.write(res["data"])
+        except OSError:
+            return False
+        finally:
+            del res
+    
     async def get_network_conditions(self):
         """Gets Chromium network emulation settings.
 
