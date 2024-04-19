@@ -1,5 +1,7 @@
 # Driverless (Non-commercial use only!)
 
+Note: This project is moving away from the selenium syntax
+
 [![Downloads](https://static.pepy.tech/badge/selenium-driverless)](https://pepy.tech/project/selenium-driverless) [![](https://img.shields.io/pypi/v/selenium-driverless.svg?color=3399EE)](https://pypi.org/project/selenium-driverless/)
 [Documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/#)
 
