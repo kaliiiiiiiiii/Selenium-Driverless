@@ -1102,11 +1102,22 @@ class Chrome:
         """
         return await self.current_target.get_screenshot_as_png()
 
-    async def get_screenshot_as_base64(self) -> str:
-        """Gets the screenshot of the current tab as a base64 encoded string
-        which is useful in embedded images in HTML.
+    async def snapshot(self) -> str:
+        """gets the current snapshot as mhtml"""
+        return await self.current_target.snapshot()
+
+    async def save_snapshot(self, filename: str):
+        """Saves a snapshot of the current window to a MHTML file.
+
+        :param filename: The full path you wish to save your snapshot to. This
+                   should end with a ``.mhtml`` extension.
+
+        .. code-block:: Python
+
+            await driver.get_snapshot('snapshot.mhtml')
+
         """
-        return await self.current_target.get_screenshot_as_base64()
+        return await self.current_target.save_snapshot(filename)
 
     # noinspection PyPep8Naming
     async def set_window_size(self, width: int, height: int) -> None:
@@ -1508,33 +1519,27 @@ class Chrome:
         target = await self.get_target(target_id=target_id)
         return await target.get_issue_message()
 
-    async def set_sink_to_use(self, sink_name: str, target_id: str = None) -> dict:
+    async def set_sink_to_use(self, sink_name: str) -> dict:
         """Sets a specific sink, using its name, as a Cast session receiver
         target.
 
-        :Args:
-         - sink_name: Name of the sink to use as the target.
+        :param sink_name: Name of the sink to use as the target.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.set_sink_to_use(sink_name=sink_name)
+        return await self.current_target.set_sink_to_use(sink_name=sink_name)
 
-    async def start_desktop_mirroring(self, sink_name: str, target_id: str = None) -> dict:
+    async def start_desktop_mirroring(self, sink_name: str) -> dict:
         """Starts a desktop mirroring session on a specific receiver target.
 
-        :Args:
-         - sink_name: Name of the sink to use as the target.
+        :param sink_name: Name of the sink to use as the target.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.start_desktop_mirroring(sink_name=sink_name)
+        return await self.current_target.start_desktop_mirroring(sink_name=sink_name)
 
-    async def start_tab_mirroring(self, sink_name: str, target_id: str = None) -> dict:
+    async def start_tab_mirroring(self, sink_name: str) -> dict:
         """Starts a tab mirroring session on a specific receiver target.
 
-        :Args:
-         - sink_name: Name of the sink to use as the target.
+        :param sink_name: Name of the sink to use as the target.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.start_tab_mirroring(sink_name=sink_name)
+        return await self.current_target.start_tab_mirroring(sink_name=sink_name)
 
     async def stop_casting(self, sink_name: str, target_id: str = None) -> dict:
         """Stops the existing Cast session on a specific receiver target.

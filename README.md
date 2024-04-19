@@ -1,5 +1,7 @@
 # Driverless (Non-commercial use only!)
 
+Note: This project is moving away from the selenium syntax
+
 [![Downloads](https://static.pepy.tech/badge/selenium-driverless)](https://pepy.tech/project/selenium-driverless) [![](https://img.shields.io/pypi/v/selenium-driverless.svg?color=3399EE)](https://pypi.org/project/selenium-driverless/)
 [Documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/#)
 
@@ -94,6 +96,10 @@ asyncio.run(main())
 ### synchronous
 asyncified, might be buggy
 
+<details>
+
+<summary>example code</summary>
+
 ```python
 from selenium_driverless.sync import webdriver
 
@@ -108,6 +114,8 @@ with webdriver.Chrome(options=options) as driver:
     source = driver.page_source
     print(title)
 ```
+
+</details>
 
 ### custom debugger address
 ```python
@@ -165,8 +173,8 @@ asyncio.run(main())
 
 </details>
 
-### Unique execution contexts
-- execute `javascript` without getting detected
+### Isolated execution contexts
+- execute `javascript` without getting detected ( in a **isolated world**)
 <details>
 <summary>Example Code (Click to expand)</summary>
 
@@ -216,7 +224,6 @@ await pointer.move_to(100, 500)
 await pointer.click(500, 50, move_kwargs=move_kwargs, move_to=True)
 ```
 ### Iframes
-- switch and interact with iframes
 
 ```python
 iframes = await driver.find_elements(By.TAG_NAME, "iframe")
@@ -286,40 +293,6 @@ sys.modules["cdp_socket"].EXC_HANDLER = handler
 
 You found a bug? Feel free to open an issue:)
 You've got other questions or proposials? feel free to join the [Driverless-Community](https://discord.com/invite/MzZZjr2ZM3) on **Discord** or open a discusion\
-Note: **please check the todo's below at first!**
-
-## Todo's
-<details>
-<summary>Click to expand</summary>
-
-- implementations
-  - [x] `WebElement`s
-    - [ ] improve `mid_location` calculation
-    - [ ] add `WebElement.screenshot`
-  - [x] `Input`
-      - [x] `Mouse`
-        - [x] `mousemove`
-        - [x] `click`
-        - [ ] `scroll`
-        - [ ] `drag&drop`
-      - [x] `write`
-      - [ ] `Touch`
-        - [ ] `touchmove`
-        - [ ] `TouchTap`
-        - [ ] `scoll`
-        - [ ] `pinch//zoom`
-      - [ ] `KeyBoard`
-        - [ ] `SendKeys`
-          - [ ] `send files`
-  - [ ] [support `options.add_extension()`](https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues/37)
-  - [ ] [support prefs](https://github.com/kaliiiiiiiiii/Selenium-Driverless/discussions/92#discussioncomment-7462309)
-- [x] sync
-  - [ ] move sync to threaded for allowing event_handlers
-  - [ ] support multithreading with sync version
-    - [x] on independent driver instances
-    - [ ] on same driver instance
-- [ ] check [Python 3.12.0](https://www.python.org/downloads/release/python-3120/)
-</details>
 
 ## Authors
 

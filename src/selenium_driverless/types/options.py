@@ -30,6 +30,14 @@ from selenium_driverless.scripts.prefs import prefs_to_json
 
 # noinspection PyUnreachableCode,PyUnusedLocal
 class Options(metaclass=ABCMeta):
+    """
+    the `webdriver.ChromeOptions` class
+
+    .. warning::
+
+        options should not be reused
+
+    """
 
     def __init__(self) -> None:
 

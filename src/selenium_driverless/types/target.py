@@ -60,28 +60,23 @@ SHIFT_KEY_NEEDED = '~!@#$%^&*()_+{}|:"<>?'
 
 
 class NoSuchIframe(Exception):
-    def __init__(self, elem: WebElement, message: str):
-        self._elem = elem
-        super().__init__(message)
+    reference: typing.Union[WebElement, int, str]
 
-    @property
-    def elem(self):
-        return self._elem
+    def __init__(self, reference: typing.Union[WebElement, int, str], message: str):
+        self.reference = reference
+        super().__init__(message)
 
 
 class Target:
-    """Allows you to drive the browser without chromedriver."""
+    """the Target class
+
+    Usually a tab, (cors-)iframe, WebWorker etc.
+    """
 
     # noinspection PyShadowingBuiltins
     def __init__(self, host: str, target_id: str, driver, context, is_remote: bool = False,
                  loop: asyncio.AbstractEventLoop or None = None, timeout: float = 30,
                  type: str = None, start_socket: bool = False, max_ws_size: int = 2 ** 20) -> None:
-        """Creates a new instance of the chrome target. Starts the service and
-        then creates new instance of chrome target.
-
-        :Args:
-         - options - this takes an instance of ChromeOptions.rst
-        """
         from selenium_driverless.types.context import Context
         self._parent_target = None
         self._context: Context = context
@@ -210,6 +205,18 @@ class Target:
         return alert
 
     async def get_targets_for_iframes(self, iframes: typing.List[WebElement]):
+        """
+        find targets for a list of iframes
+
+        :param iframes: iframes to find targets for
+
+        .. warning::
+
+            only CORS iframes have its own target,
+            you might use :func:`WebElement.content_document <selenium_driverless.types.webelement.WebElement.content_document>`
+            instead
+
+        """
         if not iframes:
             raise ValueError(f"Expected WebElements, but got{iframes}")
 
@@ -243,6 +250,18 @@ class Target:
         return list(targets.values())
 
     async def get_target_for_iframe(self, iframe: WebElement):
+        """
+        find a target for an iframe
+
+        :param iframe: iframe to find target for
+
+        .. warning::
+
+            only CORS iframes have its own target,
+            you might use :func:`WebElement.content_document <selenium_driverless.types.webelement.WebElement.content_document>`
+            instead
+
+        """
         targets = await self.get_targets_for_iframes([iframe])
         if not targets:
             raise NoSuchIframe(iframe, "no target for iframe found")
@@ -403,63 +422,69 @@ class Target:
         """the :class:`Pointer <selenium_driverless.input.pointer.Pointer>` for this target"""
         return self._pointer
 
-    async def send_keys(self, text: str):
+    async def send_keys(self, text: str, allow_not_on_mapping: bool = True):
         """
         send text & keys to the target
 
         :param text: the text to send to the target
+        :param allow_not_on_mapping: allow keys which aren't int the keyboard mapping
         """
         async with self._send_key_lock:
             for letter in text:
                 if letter in KEY_MAPPING:
                     key_code, virtual_key_code = KEY_MAPPING[letter]
-                    # Determine if a shift key is needed
-                    shift_pressed = False
-                    if letter.isupper() or letter in SHIFT_KEY_NEEDED:
-                        shift_pressed = True
-                        await self.execute_cdp_cmd("Input.dispatchKeyEvent", {
-                                "type": "keyDown",
-                                "code": "ShiftLeft",
-                                "windowsVirtualKeyCode": 16,
-                                "key": "Shift",
-                                "modifiers": 8 if shift_pressed else 0
-                        })
-                        await asyncio.sleep(random.uniform(0.05, 0.1))  # Simulate human typing speed
+                elif allow_not_on_mapping:
+                    key_code, virtual_key_code = 0, 0
+                else:
+                    raise ValueError(f"letter:{letter} not in keyboard mapping")
 
-                    key_event = {
-                            "type": "keyDown",
-                            "code": key_code,
-                            "windowsVirtualKeyCode": virtual_key_code,
-                            "key": letter,
-                            "modifiers": 8 if shift_pressed else 0
-                        }
+                # Determine if a shift key is needed
+                shift_pressed = False
+                if letter.isupper() or letter in SHIFT_KEY_NEEDED:
+                    shift_pressed = True
+                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", {
+                        "type": "keyDown",
+                        "code": "ShiftLeft",
+                        "windowsVirtualKeyCode": 16,
+                        "key": "Shift",
+                        "modifiers": 8 if shift_pressed else 0
+                    })
+                await asyncio.sleep(random.uniform(0.01, 0.05))  # Simulate human typing speed
 
-                    # Send keydown event
-                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
-                    await asyncio.sleep(random.uniform(0.05, 0.1))
+                key_event = {
+                    "type": "keyDown",
+                    "code": key_code,
+                    "windowsVirtualKeyCode": virtual_key_code,
+                    "key": letter,
+                    "modifiers": 8 if shift_pressed else 0
+                }
 
-                    # Simulate key press for the actual character
-                    key_event["type"] = "char"
-                    key_event["text"] = letter
-                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
-                    await asyncio.sleep(random.uniform(0.05, 0.1))
-                    del key_event['text']
+                # Send keydown event
+                await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
+                await asyncio.sleep(random.uniform(0.01, 0.05))
 
-                    # Simulate key release
-                    key_event["type"] = "keyUp"
-                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
-                    await asyncio.sleep(random.uniform(0.05, 0.1))
+                # Simulate key press for the actual character
+                key_event["type"] = "char"
+                key_event["text"] = letter
+                await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
+                await asyncio.sleep(random.uniform(0.01, 0.05))
+                del key_event['text']
 
-                    # Release the shift key if it was pressed
-                    if shift_pressed:
-                        await self.execute_cdp_cmd("Input.dispatchKeyEvent", {
-                            "type": "keyUp",
-                            "code": "ShiftLeft",
-                            "windowsVirtualKeyCode": 16,
-                            "key": "Shift",
-                            "modifiers": 0
-                        })
-                        await asyncio.sleep(random.uniform(0.05, 0.1))  # Simulate human typing speed
+                # Simulate key release
+                key_event["type"] = "keyUp"
+                await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
+                await asyncio.sleep(random.uniform(0.01, 0.05))
+
+                # Release the shift key if it was pressed
+                if shift_pressed:
+                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", {
+                        "type": "keyUp",
+                        "code": "ShiftLeft",
+                        "windowsVirtualKeyCode": 16,
+                        "key": "Shift",
+                        "modifiers": 0
+                    })
+                    await asyncio.sleep(random.uniform(0.01, 0.05))  # Simulate human typing speed
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
                                  max_depth: int = None, timeout: float = 2, execution_context_id: str = None,
@@ -657,14 +682,41 @@ class Target:
         except (asyncio.TimeoutError, TimeoutError):
             pass
 
-    async def focus(self):
-        await self.execute_cdp_cmd("Target.activateTarget",
-                                   {"targetId": self.id})
+    async def focus(self, activate=False):
+        """
+        emulates Focus of the target
+
+        :param activate: whether to bring the window to the front
+        """
+        if activate:
+            await self.activate()
         try:
             await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
         except CDPError as e:
             if not (e.code == -32601 and e.message == "'Emulation.setFocusEmulationEnabled' wasn't found"):
                 raise e
+
+    async def unfocus(self):
+        """
+        disables focus emulation for the target
+        """
+        try:
+            await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": False})
+        except CDPError as e:
+            if e.code == -32601 and e.message == "'Target.activateTarget' wasn't found":
+                return False
+            raise e
+
+    async def activate(self):
+        """
+        brings the window to the front
+        """
+        try:
+            await self.execute_cdp_cmd("Target.activateTarget", {"targetId": self.id})
+        except CDPError as e:
+            if e.code == -32601 and e.message == "'Target.activateTarget' wasn't found":
+                return False
+            raise e
 
     @property
     async def info(self):
@@ -882,35 +934,21 @@ class Target:
             elems.append(elem)
         return elems
 
-    async def get_screenshot_as_file(self, filename) -> bool:
+    async def get_screenshot_as_file(self, filename:str) -> None:
         # noinspection GrazieInspection
         """Saves a screenshot of the current window to a PNG image file.
-                Returns False if there is any IOError, else returns True. Use full
-                paths in your filename.
 
-                :Args:
-                 - filename: The full path you wish to save your screenshot to. This
-                   should end with a `.png` extension.
-
-                :Usage:
-                    ::
-
-                        target.get_screenshot_as_file('/Screenshots/foo.png')
-                """
+        :param filename: The full path.
+            This should end with a `.png` extension.
+        """
         if not str(filename).lower().endswith(".png"):
             warnings.warn(
                 "name used for saved screenshot does not match file " "type. It should end with a `.png` extension",
                 UserWarning,
             )
         png = await self.get_screenshot_as_png()
-        try:
-            async with aiofiles.open(filename, "wb") as f:
-                await f.write(png)
-        except OSError:
-            return False
-        finally:
-            del png
-        return True
+        async with aiofiles.open(filename, "wb") as f:
+            await f.write(png)
 
     async def save_screenshot(self, filename) -> bool:
         # noinspection GrazieInspection
@@ -931,26 +969,35 @@ class Target:
 
     async def get_screenshot_as_png(self) -> bytes:
         """Gets the screenshot of the current window as a binary data.
-
-        :Usage:
-            ::
-
-                target.get_screenshot_as_png()
-        """
-        base_64 = await self.get_screenshot_as_base64()
-        return b64decode(base_64.encode("ascii"))
-
-    async def get_screenshot_as_base64(self) -> str:
-        """Gets the screenshot of the current window as a base64 encoded string
-        which is useful in embedded images in HTML.
-
-        :Usage:
-            ::
-
-                target.get_screenshot_as_base64()
         """
         res = await self.execute_cdp_cmd("Page.captureScreenshot", {"format": "png"}, timeout=30)
+        return b64decode(res["data"].encode("ascii"))
+
+    async def snapshot(self) -> str:
+        """gets the current snapshot as mhtml"""
+        res = await self.execute_cdp_cmd("Page.captureSnapshot")
         return res["data"]
+
+    async def save_snapshot(self, filename:str):
+        """Saves a snapshot of the current window to a MHTML file.
+
+        :param filename: The full path you wish to save your snapshot to. This
+                   should end with a ``.mhtml`` extension.
+
+        .. code-block:: Python
+
+            await driver.get_snapshot('snapshot.mhtml')
+
+        """
+
+        if len(filename) <= 6 or filename[-6:] != ".mhtml":
+            warnings.warn(
+                "name used for saved snapshot does not match file " "type. It should end with a `.mhtml` extension",
+                UserWarning,
+            )
+        mhtml = await self.snapshot()
+        async with aiofiles.open(filename, "w") as f:
+            await f.write(mhtml)
 
     async def get_network_conditions(self):
         """Gets Chromium network emulation settings.
@@ -1316,16 +1363,14 @@ class Target:
     async def start_tab_mirroring(self, sink_name: str) -> dict:
         """Starts a tab mirroring session on a specific receiver target.
 
-        :Args:
-         - sink_name: Name of the sink to use as the target.
+        :param sink_name: Name of the sink to use as the target.
         """
         return await self.execute_cdp_cmd("Cast.startTabMirroring", {"sinkName": sink_name})
 
     async def stop_casting(self, sink_name: str) -> dict:
         """Stops the existing Cast session on a specific receiver target.
 
-        :Args:
-         - sink_name: Name of the sink to stop the Cast session.
+        :param sink_name: Name of the sink to stop the Cast session.
         """
         return await self.execute_cdp_cmd("Cast.stopCasting", {"sinkName": sink_name})
 

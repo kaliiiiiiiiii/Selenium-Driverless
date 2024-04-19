@@ -50,8 +50,7 @@ class Alert:
     def __init__(self, target, timeout: float = 5) -> None:
         """Creates a new Alert.
 
-        :Args:
-         - target: The WebDriver instance which performs user actions.
+        :param target: The Target instance which performs user actions.
         """
         from selenium_driverless.types.target import Target
         self.target: Target = target
@@ -118,7 +117,6 @@ class Alert:
     async def send_keys(self, keysToSend: str) -> None:
         """Send Keys to the Alert.
 
-        :Args:
-         - keysToSend: The text to be sent to Alert.
+        :param keysToSend: The text to be sent to Alert.
         """
         await self.target.execute_cdp_cmd("Page.handleJavaScriptDialog", {"accept": True, "promptText": keysToSend})

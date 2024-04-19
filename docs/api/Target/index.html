@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Target &mdash; Selenium-Driverless 1.8.0.2 documentation</title>
+  <title>Target &mdash; Selenium-Driverless 1.9.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=696515ce"></script>
+        <script src="../../_static/documentation_options.js?v=fd4b3c67"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -54,6 +54,8 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Target</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.types.target.Target"><code class="docutils literal notranslate"><span class="pre">Target</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.socket"><code class="docutils literal notranslate"><span class="pre">Target.socket</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get_targets_for_iframes"><code class="docutils literal notranslate"><span class="pre">Target.get_targets_for_iframes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get_target_for_iframe"><code class="docutils literal notranslate"><span class="pre">Target.get_target_for_iframe()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.wait_download"><code class="docutils literal notranslate"><span class="pre">Target.wait_download()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get"><code class="docutils literal notranslate"><span class="pre">Target.get()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.pointer"><code class="docutils literal notranslate"><span class="pre">Target.pointer</span></code></a></li>
@@ -65,6 +67,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.current_url"><code class="docutils literal notranslate"><span class="pre">Target.current_url</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.page_source"><code class="docutils literal notranslate"><span class="pre">Target.page_source</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.close"><code class="docutils literal notranslate"><span class="pre">Target.close()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.focus"><code class="docutils literal notranslate"><span class="pre">Target.focus()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.unfocus"><code class="docutils literal notranslate"><span class="pre">Target.unfocus()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.activate"><code class="docutils literal notranslate"><span class="pre">Target.activate()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.title"><code class="docutils literal notranslate"><span class="pre">Target.title</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.print_page"><code class="docutils literal notranslate"><span class="pre">Target.print_page()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get_history"><code class="docutils literal notranslate"><span class="pre">Target.get_history()</span></code></a></li>
@@ -83,7 +88,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get_screenshot_as_file"><code class="docutils literal notranslate"><span class="pre">Target.get_screenshot_as_file()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.save_screenshot"><code class="docutils literal notranslate"><span class="pre">Target.save_screenshot()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get_screenshot_as_png"><code class="docutils literal notranslate"><span class="pre">Target.get_screenshot_as_png()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get_screenshot_as_base64"><code class="docutils literal notranslate"><span class="pre">Target.get_screenshot_as_base64()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.snapshot"><code class="docutils literal notranslate"><span class="pre">Target.snapshot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.save_snapshot"><code class="docutils literal notranslate"><span class="pre">Target.save_snapshot()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.get_network_conditions"><code class="docutils literal notranslate"><span class="pre">Target.get_network_conditions()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.set_network_conditions"><code class="docutils literal notranslate"><span class="pre">Target.set_network_conditions()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.target.Target.delete_network_conditions"><code class="docutils literal notranslate"><span class="pre">Target.delete_network_conditions()</span></code></a></li>
@@ -157,11 +163,46 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="selenium_driverless.types.target.Target">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.types.target.</span></span><span class="sig-name descname"><span class="pre">Target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">driver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_remote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_socket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_ws_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1048576</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target" title="Link to this definition"></a></dt>
-<dd><p>Allows you to drive the browser without chromedriver.</p>
+<dd><p>the Target class</p>
+<p>Usually a tab, (cors-)iframe, WebWorker etc.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="selenium_driverless.types.target.Target.socket">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">socket</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">SingleCDPSocket</span></em><a class="headerlink" href="#selenium_driverless.types.target.Target.socket" title="Link to this definition"></a></dt>
 <dd><p>the cdp-socket for the connection</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.get_targets_for_iframes">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_targets_for_iframes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iframes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.get_targets_for_iframes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.get_targets_for_iframes" title="Link to this definition"></a></dt>
+<dd><p>find targets for a list of iframes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>iframes</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="../WebELement/#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></a>]</span>) – iframes to find targets for</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>only CORS iframes have its own target,
+you might use <a class="reference internal" href="../WebELement/#selenium_driverless.types.webelement.WebElement.content_document" title="selenium_driverless.types.webelement.WebElement.content_document"><code class="xref py py-func docutils literal notranslate"><span class="pre">WebElement.content_document</span></code></a>
+instead</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.get_target_for_iframe">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_target_for_iframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iframe</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.get_target_for_iframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.get_target_for_iframe" title="Link to this definition"></a></dt>
+<dd><p>find a target for an iframe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>iframe</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../WebELement/#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></a></span>) – iframe to find target for</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>only CORS iframes have its own target,
+you might use <a class="reference internal" href="../WebELement/#selenium_driverless.types.webelement.WebElement.content_document" title="selenium_driverless.types.webelement.WebElement.content_document"><code class="xref py py-func docutils literal notranslate"><span class="pre">WebElement.content_document</span></code></a>
+instead</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -222,11 +263,14 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.target.Target.send_keys">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">send_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.send_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.send_keys" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">send_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_not_on_mapping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.send_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.send_keys" title="Link to this definition"></a></dt>
 <dd><p>send text &amp; keys to the target</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the text to send to the target</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the text to send to the target</p></li>
+<li><p><strong>allow_not_on_mapping</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – allow keys which aren’t int the keyboard mapping</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -325,6 +369,29 @@
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.focus">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">focus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">activate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.focus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.focus" title="Link to this definition"></a></dt>
+<dd><p>emulates Focus of the target</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>activate</strong> – whether to bring the window to the front</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.unfocus">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">unfocus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.unfocus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.unfocus" title="Link to this definition"></a></dt>
+<dd><p>disables focus emulation for the target</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.activate">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">activate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.activate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.activate" title="Link to this definition"></a></dt>
+<dd><p>brings the window to the front</p>
 </dd></dl>
 
 <dl class="py property">
@@ -515,23 +582,14 @@ not.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="selenium_driverless.types.target.Target.get_screenshot_as_file">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_screenshot_as_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.get_screenshot_as_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.get_screenshot_as_file" title="Link to this definition"></a></dt>
-<dd><p>Saves a screenshot of the current window to a PNG image file.
-Returns False if there is any IOError, else returns True. Use full
-paths in your filename.</p>
-<dl class="field-list">
-<dt class="field-odd">Args<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p>filename: The full path you wish to save your screenshot to. This
-should end with a <cite>.png</cite> extension.</p></li>
-</ul>
+<dd><p>Saves a screenshot of the current window to a PNG image file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The full path.
+This should end with a <cite>.png</cite> extension.</p>
 </dd>
-<dt class="field-even">Usage<span class="colon">:</span></dt>
-<dd class="field-even"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">get_screenshot_as_file</span><span class="p">(</span><span class="s1">&#39;/Screenshots/foo.png&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -564,33 +622,37 @@ should end with a <cite>.png</cite> extension.</p></li>
 <dt class="sig sig-object py" id="selenium_driverless.types.target.Target.get_screenshot_as_png">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_screenshot_as_png</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.get_screenshot_as_png"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.get_screenshot_as_png" title="Link to this definition"></a></dt>
 <dd><p>Gets the screenshot of the current window as a binary data.</p>
-<dl class="field-list">
-<dt class="field-odd">Usage<span class="colon">:</span></dt>
-<dd class="field-odd"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">get_screenshot_as_png</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></span></p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.get_screenshot_as_base64">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_screenshot_as_base64</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.get_screenshot_as_base64"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.get_screenshot_as_base64" title="Link to this definition"></a></dt>
-<dd><p>Gets the screenshot of the current window as a base64 encoded string
-which is useful in embedded images in HTML.</p>
-<dl class="field-list">
-<dt class="field-odd">Usage<span class="colon">:</span></dt>
-<dd class="field-odd"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">get_screenshot_as_base64</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.snapshot">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">snapshot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.snapshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.snapshot" title="Link to this definition"></a></dt>
+<dd><p>gets the current snapshot as mhtml</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.target.Target.save_snapshot">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">save_snapshot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.save_snapshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.save_snapshot" title="Link to this definition"></a></dt>
+<dd><p>Saves a snapshot of the current window to a MHTML file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The full path you wish to save your snapshot to. This
+should end with a <code class="docutils literal notranslate"><span class="pre">.mhtml</span></code> extension.</p>
+</dd>
+</dl>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">await</span> <span class="n">driver</span><span class="o">.</span><span class="n">get_snapshot</span><span class="p">(</span><span class="s1">&#39;snapshot.mhtml&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -862,10 +924,8 @@ target.</p>
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start_tab_mirroring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sink_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.start_tab_mirroring"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.start_tab_mirroring" title="Link to this definition"></a></dt>
 <dd><p>Starts a tab mirroring session on a specific receiver target.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Args<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p>sink_name: Name of the sink to use as the target.</p></li>
-</ul>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sink_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of the sink to use as the target.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
@@ -878,10 +938,8 @@ target.</p>
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stop_casting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sink_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/selenium_driverless/types/target/#Target.stop_casting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.target.Target.stop_casting" title="Link to this definition"></a></dt>
 <dd><p>Stops the existing Cast session on a specific receiver target.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Args<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p>sink_name: Name of the sink to stop the Cast session.</p></li>
-</ul>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sink_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of the sink to stop the Cast session.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>

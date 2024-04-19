@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>selenium_driverless.types.target &mdash; Selenium-Driverless 1.8.0.2 documentation</title>
+  <title>selenium_driverless.types.target &mdash; Selenium-Driverless 1.9.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=696515ce"></script>
+        <script src="../../../../_static/documentation_options.js?v=fd4b3c67"></script>
         <script src="../../../../_static/doctools.js?v=888ff710"></script>
         <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -139,30 +139,25 @@
 
 
 <span class="k">class</span> <span class="nc">NoSuchIframe</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">:</span> <span class="n">WebElement</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_elem</span> <span class="o">=</span> <span class="n">elem</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="n">reference</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">WebElement</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">elem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_elem</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">WebElement</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference</span> <span class="o">=</span> <span class="n">reference</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Target">
 <a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target">[docs]</a>
 <span class="k">class</span> <span class="nc">Target</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Allows you to drive the browser without chromedriver.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;the Target class</span>
+
+<span class="sd">    Usually a tab, (cors-)iframe, WebWorker etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># noinspection PyShadowingBuiltins</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">driver</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">is_remote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                  <span class="n">loop</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">AbstractEventLoop</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
                  <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">start_socket</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">max_ws_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">20</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a new instance of the chrome target. Starts the service and</span>
-<span class="sd">        then creates new instance of chrome target.</span>
-
-<span class="sd">        :Args:</span>
-<span class="sd">         - options - this takes an instance of ChromeOptions.rst</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">selenium_driverless.types.context</span> <span class="kn">import</span> <span class="n">Context</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parent_target</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">:</span> <span class="n">Context</span> <span class="o">=</span> <span class="n">context</span>
@@ -290,7 +285,21 @@
             <span class="n">alert</span> <span class="o">=</span> <span class="k">await</span> <span class="n">Alert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">alert</span>
 
+<div class="viewcode-block" id="Target.get_targets_for_iframes">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_targets_for_iframes">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_targets_for_iframes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iframes</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">WebElement</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        find targets for a list of iframes</span>
+
+<span class="sd">        :param iframes: iframes to find targets for</span>
+
+<span class="sd">        .. warning::</span>
+
+<span class="sd">            only CORS iframes have its own target,</span>
+<span class="sd">            you might use :func:`WebElement.content_document &lt;selenium_driverless.types.webelement.WebElement.content_document&gt;`</span>
+<span class="sd">            instead</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">iframes</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected WebElements, but got</span><span class="si">{</span><span class="n">iframes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -321,13 +330,29 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">target</span><span class="o">.</span><span class="n">_base_target</span> <span class="o">=</span> <span class="bp">self</span>
                     <span class="n">targets</span><span class="p">[</span><span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">targets</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">targets</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
 
+
+<div class="viewcode-block" id="Target.get_target_for_iframe">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_target_for_iframe">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_target_for_iframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iframe</span><span class="p">:</span> <span class="n">WebElement</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        find a target for an iframe</span>
+
+<span class="sd">        :param iframe: iframe to find target for</span>
+
+<span class="sd">        .. warning::</span>
+
+<span class="sd">            only CORS iframes have its own target,</span>
+<span class="sd">            you might use :func:`WebElement.content_document &lt;selenium_driverless.types.webelement.WebElement.content_document&gt;`</span>
+<span class="sd">            instead</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">targets</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_targets_for_iframes</span><span class="p">([</span><span class="n">iframe</span><span class="p">])</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">targets</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">NoSuchIframe</span><span class="p">(</span><span class="n">iframe</span><span class="p">,</span> <span class="s2">&quot;no target for iframe found&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
 
 <div class="viewcode-block" id="Target.wait_download">
 <a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.wait_download">[docs]</a>
@@ -492,63 +517,69 @@
 
 <div class="viewcode-block" id="Target.send_keys">
 <a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.send_keys">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">send_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">send_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">allow_not_on_mapping</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        send text &amp; keys to the target</span>
 
 <span class="sd">        :param text: the text to send to the target</span>
+<span class="sd">        :param allow_not_on_mapping: allow keys which aren&#39;t int the keyboard mapping</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_key_lock</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">letter</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">letter</span> <span class="ow">in</span> <span class="n">KEY_MAPPING</span><span class="p">:</span>
                     <span class="n">key_code</span><span class="p">,</span> <span class="n">virtual_key_code</span> <span class="o">=</span> <span class="n">KEY_MAPPING</span><span class="p">[</span><span class="n">letter</span><span class="p">]</span>
-                    <span class="c1"># Determine if a shift key is needed</span>
-                    <span class="n">shift_pressed</span> <span class="o">=</span> <span class="kc">False</span>
-                    <span class="k">if</span> <span class="n">letter</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span> <span class="ow">or</span> <span class="n">letter</span> <span class="ow">in</span> <span class="n">SHIFT_KEY_NEEDED</span><span class="p">:</span>
-                        <span class="n">shift_pressed</span> <span class="o">=</span> <span class="kc">True</span>
-                        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="p">{</span>
-                                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;keyDown&quot;</span><span class="p">,</span>
-                                <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="s2">&quot;ShiftLeft&quot;</span><span class="p">,</span>
-                                <span class="s2">&quot;windowsVirtualKeyCode&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
-                                <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;Shift&quot;</span><span class="p">,</span>
-                                <span class="s2">&quot;modifiers&quot;</span><span class="p">:</span> <span class="mi">8</span> <span class="k">if</span> <span class="n">shift_pressed</span> <span class="k">else</span> <span class="mi">0</span>
-                        <span class="p">})</span>
-                        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>  <span class="c1"># Simulate human typing speed</span>
+                <span class="k">elif</span> <span class="n">allow_not_on_mapping</span><span class="p">:</span>
+                    <span class="n">key_code</span><span class="p">,</span> <span class="n">virtual_key_code</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;letter:</span><span class="si">{</span><span class="n">letter</span><span class="si">}</span><span class="s2"> not in keyboard mapping&quot;</span><span class="p">)</span>
 
-                    <span class="n">key_event</span> <span class="o">=</span> <span class="p">{</span>
-                            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;keyDown&quot;</span><span class="p">,</span>
-                            <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">key_code</span><span class="p">,</span>
-                            <span class="s2">&quot;windowsVirtualKeyCode&quot;</span><span class="p">:</span> <span class="n">virtual_key_code</span><span class="p">,</span>
-                            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="n">letter</span><span class="p">,</span>
-                            <span class="s2">&quot;modifiers&quot;</span><span class="p">:</span> <span class="mi">8</span> <span class="k">if</span> <span class="n">shift_pressed</span> <span class="k">else</span> <span class="mi">0</span>
-                        <span class="p">}</span>
+                <span class="c1"># Determine if a shift key is needed</span>
+                <span class="n">shift_pressed</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">if</span> <span class="n">letter</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span> <span class="ow">or</span> <span class="n">letter</span> <span class="ow">in</span> <span class="n">SHIFT_KEY_NEEDED</span><span class="p">:</span>
+                    <span class="n">shift_pressed</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="p">{</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;keyDown&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="s2">&quot;ShiftLeft&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;windowsVirtualKeyCode&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
+                        <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;Shift&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;modifiers&quot;</span><span class="p">:</span> <span class="mi">8</span> <span class="k">if</span> <span class="n">shift_pressed</span> <span class="k">else</span> <span class="mi">0</span>
+                    <span class="p">})</span>
+                <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">))</span>  <span class="c1"># Simulate human typing speed</span>
 
-                    <span class="c1"># Send keydown event</span>
-                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="n">key_event</span><span class="p">)</span>
-                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>
+                <span class="n">key_event</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;keyDown&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">key_code</span><span class="p">,</span>
+                    <span class="s2">&quot;windowsVirtualKeyCode&quot;</span><span class="p">:</span> <span class="n">virtual_key_code</span><span class="p">,</span>
+                    <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="n">letter</span><span class="p">,</span>
+                    <span class="s2">&quot;modifiers&quot;</span><span class="p">:</span> <span class="mi">8</span> <span class="k">if</span> <span class="n">shift_pressed</span> <span class="k">else</span> <span class="mi">0</span>
+                <span class="p">}</span>
 
-                    <span class="c1"># Simulate key press for the actual character</span>
-                    <span class="n">key_event</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;char&quot;</span>
-                    <span class="n">key_event</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">letter</span>
-                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="n">key_event</span><span class="p">)</span>
-                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>
-                    <span class="k">del</span> <span class="n">key_event</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span>
+                <span class="c1"># Send keydown event</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="n">key_event</span><span class="p">)</span>
+                <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">))</span>
 
-                    <span class="c1"># Simulate key release</span>
-                    <span class="n">key_event</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;keyUp&quot;</span>
-                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="n">key_event</span><span class="p">)</span>
-                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>
+                <span class="c1"># Simulate key press for the actual character</span>
+                <span class="n">key_event</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;char&quot;</span>
+                <span class="n">key_event</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">letter</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="n">key_event</span><span class="p">)</span>
+                <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">))</span>
+                <span class="k">del</span> <span class="n">key_event</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span>
 
-                    <span class="c1"># Release the shift key if it was pressed</span>
-                    <span class="k">if</span> <span class="n">shift_pressed</span><span class="p">:</span>
-                        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="p">{</span>
-                            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;keyUp&quot;</span><span class="p">,</span>
-                            <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="s2">&quot;ShiftLeft&quot;</span><span class="p">,</span>
-                            <span class="s2">&quot;windowsVirtualKeyCode&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
-                            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;Shift&quot;</span><span class="p">,</span>
-                            <span class="s2">&quot;modifiers&quot;</span><span class="p">:</span> <span class="mi">0</span>
-                        <span class="p">})</span>
-                        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>  <span class="c1"># Simulate human typing speed</span></div>
+                <span class="c1"># Simulate key release</span>
+                <span class="n">key_event</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;keyUp&quot;</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="n">key_event</span><span class="p">)</span>
+                <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">))</span>
+
+                <span class="c1"># Release the shift key if it was pressed</span>
+                <span class="k">if</span> <span class="n">shift_pressed</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Input.dispatchKeyEvent&quot;</span><span class="p">,</span> <span class="p">{</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;keyUp&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="s2">&quot;ShiftLeft&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;windowsVirtualKeyCode&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
+                        <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;Shift&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;modifiers&quot;</span><span class="p">:</span> <span class="mi">0</span>
+                    <span class="p">})</span>
+                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">))</span>  <span class="c1"># Simulate human typing speed</span></div>
 
 
 <div class="viewcode-block" id="Target.execute_raw_script">
@@ -762,14 +793,50 @@
             <span class="k">pass</span></div>
 
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">focus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Target.activateTarget&quot;</span><span class="p">,</span>
-                                   <span class="p">{</span><span class="s2">&quot;targetId&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">})</span>
+<div class="viewcode-block" id="Target.focus">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.focus">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">focus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activate</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        emulates Focus of the target</span>
+
+<span class="sd">        :param activate: whether to bring the window to the front</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">activate</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">activate</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Emulation.setFocusEmulationEnabled&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
         <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32601</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s2">&quot;&#39;Emulation.setFocusEmulationEnabled&#39; wasn&#39;t found&quot;</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="n">e</span>
+                <span class="k">raise</span> <span class="n">e</span></div>
+
+
+<div class="viewcode-block" id="Target.unfocus">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.unfocus">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">unfocus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        disables focus emulation for the target</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Emulation.setFocusEmulationEnabled&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+        <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32601</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s2">&quot;&#39;Target.activateTarget&#39; wasn&#39;t found&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">raise</span> <span class="n">e</span></div>
+
+
+<div class="viewcode-block" id="Target.activate">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.activate">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        brings the window to the front</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Target.activateTarget&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;targetId&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">})</span>
+        <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32601</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s2">&quot;&#39;Target.activateTarget&#39; wasn&#39;t found&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">raise</span> <span class="n">e</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1031,35 +1098,21 @@
 
 <div class="viewcode-block" id="Target.get_screenshot_as_file">
 <a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_screenshot_as_file">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span><span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># noinspection GrazieInspection</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a screenshot of the current window to a PNG image file.</span>
-<span class="sd">                Returns False if there is any IOError, else returns True. Use full</span>
-<span class="sd">                paths in your filename.</span>
 
-<span class="sd">                :Args:</span>
-<span class="sd">                 - filename: The full path you wish to save your screenshot to. This</span>
-<span class="sd">                   should end with a `.png` extension.</span>
-
-<span class="sd">                :Usage:</span>
-<span class="sd">                    ::</span>
-
-<span class="sd">                        target.get_screenshot_as_file(&#39;/Screenshots/foo.png&#39;)</span>
-<span class="sd">                &quot;&quot;&quot;</span>
+<span class="sd">        :param filename: The full path.</span>
+<span class="sd">            This should end with a `.png` extension.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.png&quot;</span><span class="p">):</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                 <span class="s2">&quot;name used for saved screenshot does not match file &quot;</span> <span class="s2">&quot;type. It should end with a `.png` extension&quot;</span><span class="p">,</span>
                 <span class="ne">UserWarning</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="n">png</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_screenshot_as_png</span><span class="p">()</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">async</span> <span class="k">with</span> <span class="n">aiofiles</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="k">await</span> <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">png</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">finally</span><span class="p">:</span>
-            <span class="k">del</span> <span class="n">png</span>
-        <span class="k">return</span> <span class="kc">True</span></div>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">aiofiles</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">png</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Target.save_screenshot">
@@ -1086,29 +1139,41 @@
 <a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_screenshot_as_png">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_png</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the screenshot of the current window as a binary data.</span>
-
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
-
-<span class="sd">                target.get_screenshot_as_png()</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">base_64</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_screenshot_as_base64</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">b64decode</span><span class="p">(</span><span class="n">base_64</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">))</span></div>
-
-
-<div class="viewcode-block" id="Target.get_screenshot_as_base64">
-<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_screenshot_as_base64">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_base64</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the screenshot of the current window as a base64 encoded string</span>
-<span class="sd">        which is useful in embedded images in HTML.</span>
-
-<span class="sd">        :Usage:</span>
-<span class="sd">            ::</span>
-
-<span class="sd">                target.get_screenshot_as_base64()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Page.captureScreenshot&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;png&quot;</span><span class="p">},</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">b64decode</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Target.snapshot">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.snapshot">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">snapshot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;gets the current snapshot as mhtml&quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Page.captureSnapshot&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Target.save_snapshot">
+<a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.save_snapshot">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">save_snapshot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span><span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a snapshot of the current window to a MHTML file.</span>
+
+<span class="sd">        :param filename: The full path you wish to save your snapshot to. This</span>
+<span class="sd">                   should end with a ``.mhtml`` extension.</span>
+
+<span class="sd">        .. code-block:: Python</span>
+
+<span class="sd">            await driver.get_snapshot(&#39;snapshot.mhtml&#39;)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">6</span> <span class="ow">or</span> <span class="n">filename</span><span class="p">[</span><span class="o">-</span><span class="mi">6</span><span class="p">:]</span> <span class="o">!=</span> <span class="s2">&quot;.mhtml&quot;</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;name used for saved snapshot does not match file &quot;</span> <span class="s2">&quot;type. It should end with a `.mhtml` extension&quot;</span><span class="p">,</span>
+                <span class="ne">UserWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">mhtml</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshot</span><span class="p">()</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">aiofiles</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">mhtml</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Target.get_network_conditions">
@@ -1519,8 +1584,7 @@
     <span class="k">async</span> <span class="k">def</span> <span class="nf">start_tab_mirroring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Starts a tab mirroring session on a specific receiver target.</span>
 
-<span class="sd">        :Args:</span>
-<span class="sd">         - sink_name: Name of the sink to use as the target.</span>
+<span class="sd">        :param sink_name: Name of the sink to use as the target.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Cast.startTabMirroring&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;sinkName&quot;</span><span class="p">:</span> <span class="n">sink_name</span><span class="p">})</span></div>
 
@@ -1530,8 +1594,7 @@
     <span class="k">async</span> <span class="k">def</span> <span class="nf">stop_casting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Stops the existing Cast session on a specific receiver target.</span>
 
-<span class="sd">        :Args:</span>
-<span class="sd">         - sink_name: Name of the sink to stop the Cast session.</span>
+<span class="sd">        :param sink_name: Name of the sink to stop the Cast session.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Cast.stopCasting&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;sinkName&quot;</span><span class="p">:</span> <span class="n">sink_name</span><span class="p">})</span></div>
 </div>

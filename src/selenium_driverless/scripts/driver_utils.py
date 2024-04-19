@@ -95,8 +95,7 @@ async def delete_all_cookies(target) -> None:
 async def add_cookie(target, cookie_dict, context_id: str = None) -> None:
     """Adds a cookie to your current session.
 
-    :Args:
-     - cookie_dict: A dictionary object, with required keys - "name" and "value";
+    :param cookie_dict: A dictionary object, with required keys - "name" and "value";
         optional keys - "path", "domain", "secure", "httpOnly", "expiry", "sameSite"
 
     :Usage:

@@ -94,11 +94,6 @@ class Context:
         return self.start_session().__await__()
 
     async def start_session(self):
-        """Creates a new session with the desired capabilities.
-
-        :Args:
-         - capabilities - a capabilities dict to start the session with.
-        """
         from selenium_driverless.webdriver import Chrome
         self._driver: Chrome
 
@@ -120,7 +115,7 @@ class Context:
             else:
                 self._switch_to = await SwitchTo(context=self, loop=self._loop, context_id=self._context_id)
             if targets:
-                await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
+                await self.current_target.focus(activate=False)
             self._started = True
         return self
 
@@ -465,27 +460,28 @@ class Context:
                 tabs.append(info)
         return tabs
 
-    async def new_window(self, type_hint: Optional[str] = "tab", url="", activate: bool = True) -> Target:
-        """Switches to a new top-level browsing context.
+    async def new_window(self, type_hint: typing.Literal["tab", "window"] = "tab", url="", activate: bool = False, focus:bool=True, background:bool=True) -> Target:
+        """creates a new tab or window
 
-        The type hint can be one of "tab" or "window". If not specified the
-        browser will automatically select it.
-
-        :Usage:
-            ::
-
-                target.switch_to.new_window('tab')
+        :param type_hint: what kind of target to create
+        :param url: url to start the target at
+        :param activate: whether to bring the target to the front
+        :param focus: whether to emulate focus on the target
+        :param background: whether to start the target in the background
         """
         if self._is_incognito and url in ["chrome://extensions"]:
             raise ValueError(f"{url} only supported in non-incognito contexts")
-        new_tab = False
+
+        args = {"url": url}
         if type_hint == "window":
-            new_tab = True
+            args["newWindow"] = True
         elif type_hint == "tab":
             pass
         else:
             raise ValueError("type hint needs to be 'window' or 'tab'")
-        args = {"url": url, "newWindow": new_tab, "forTab": new_tab}
+        if not (background is None):
+            args["background"] = background
+
         # noinspection PyProtectedMember
         if self._context_id and self._is_incognito:
             args["browserContextId"] = self._context_id
@@ -493,6 +489,8 @@ class Context:
         target_id = target["targetId"]
         target = await self.get_target(target_id)
         if activate:
+            await target.activate()
+        if focus:
             await target.focus()
         return target
 
@@ -622,11 +620,10 @@ class Context:
         await target.delete_all_cookies()
 
     # noinspection GrazieInspection
-    async def add_cookie(self, cookie_dict: dict, target_id: str = None) -> None:
+    async def add_cookie(self, cookie_dict: dict) -> None:
         """Adds a cookie to your current session.
 
-        :Args:
-         - cookie_dict: A dictionary object, with required keys - "name" and "value";
+        :param cookie_dict: A dictionary object, with required keys - "name" and "value";
             optional keys - "path", "domain", "secure", "httpOnly", "expiry", "sameSite"
 
         :Usage:
@@ -637,8 +634,7 @@ class Context:
                 target.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/', 'secure' : True})
                 target.add_cookie({'name' : 'foo', 'value' : 'bar', 'sameSite' : 'Strict'})
         """
-        target = await self.get_target(target_id=target_id)
-        await target.add_cookie(cookie_dict=cookie_dict)
+        await self.current_target.add_cookie(cookie_dict=cookie_dict)
 
     # Timeouts
     @staticmethod
@@ -672,23 +668,13 @@ class Context:
         target = await self.get_target(target_id=target_id)
         return await target.search_elements(query=query)
 
-    async def get_screenshot_as_file(self, filename: str, target_id: str = None) -> bool:
-        # noinspection GrazieInspection
+    async def get_screenshot_as_file(self, filename: str) -> bool:
         """Saves a screenshot of the current window to a PNG image file.
-                Returns False if there is any IOError, else returns True. Use full
-                paths in your filename.
 
-                :Args:
-                 - filename: The full path you wish to save your screenshot to. This
+        :param filename: The full path you wish to save your screenshot to. This
                    should end with a `.png` extension.
-
-                :Usage:
-                    ::
-
-                        target.get_screenshot_as_file('/Screenshots/foo.png')
-                """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_screenshot_as_file(filename=filename)
+        """
+        return await self.current_target.get_screenshot_as_file(filename=filename)
 
     async def save_screenshot(self, filename, target_id: str = None) -> bool:
         # noinspection GrazieInspection
@@ -719,17 +705,22 @@ class Context:
         target = await self.get_target(target_id=target_id)
         return await target.get_screenshot_as_png()
 
-    async def get_screenshot_as_base64(self, target_id: str = None) -> str:
-        """Gets the screenshot of the current window as a base64 encoded string
-        which is useful in embedded images in HTML.
+    async def snapshot(self) -> str:
+        """gets the current snapshot as mhtml"""
+        return await self.current_target.snapshot()
 
-        :Usage:
-            ::
+    async def save_snapshot(self, filename: str):
+        """Saves a snapshot of the current window to a MHTML file.
 
-                target.get_screenshot_as_base64()
+        :param filename: The full path you wish to save your snapshot to. This
+                   should end with a ``.mhtml`` extension.
+
+        .. code-block:: Python
+
+            await driver.get_snapshot('snapshot.mhtml')
+
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_screenshot_as_base64()
+        return await self.current_target.save_snapshot(filename)
 
     # noinspection PyPep8Naming
     async def set_window_size(self, width, height, windowHandle: str = "current") -> None:
@@ -749,17 +740,8 @@ class Context:
         await self.set_window_rect(width=int(width), height=int(height))
 
     # noinspection PyPep8Naming
-    async def get_window_size(self, windowHandle: str = "current") -> dict:
-        """Gets the width and height of the current window.
-
-        :Usage:
-            ::
-
-                target.get_window_size()
-        """
-
-        if windowHandle != "current":
-            warnings.warn("Only 'current' window is supported for W3C compatible browsers.")
+    async def get_window_size(self) -> dict:
+        """Gets the width and height of the current window."""
         size = await self.get_window_rect()
 
         if size.get("value", None):
