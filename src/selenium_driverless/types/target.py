@@ -424,30 +424,36 @@ class Target:
         """the :class:`Pointer <selenium_driverless.input.pointer.Pointer>` for this target"""
         return self._pointer
 
-    async def send_keys(self, text: str):
+    async def send_keys(self, text: str, allow_not_on_mapping:bool=True):
         """
         send text & keys to the target
 
         :param text: the text to send to the target
+        :param allow_not_on_mapping: allow keys which aren't int the keyboard mapping
         """
         async with self._send_key_lock:
             for letter in text:
                 if letter in KEY_MAPPING:
                     key_code, virtual_key_code = KEY_MAPPING[letter]
-                    # Determine if a shift key is needed
-                    shift_pressed = False
-                    if letter.isupper() or letter in SHIFT_KEY_NEEDED:
-                        shift_pressed = True
-                        await self.execute_cdp_cmd("Input.dispatchKeyEvent", {
+                elif allow_not_on_mapping:
+                    key_code, virtual_key_code = 0, 0
+                else:
+                    raise ValueError(f"letter:{letter} not in keyboard mapping")
+
+                # Determine if a shift key is needed
+                shift_pressed = False
+                if letter.isupper() or letter in SHIFT_KEY_NEEDED:
+                    shift_pressed = True
+                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", {
                             "type": "keyDown",
                             "code": "ShiftLeft",
                             "windowsVirtualKeyCode": 16,
                             "key": "Shift",
                             "modifiers": 8 if shift_pressed else 0
-                        })
-                        await asyncio.sleep(random.uniform(0.05, 0.1))  # Simulate human typing speed
+                    })
+                await asyncio.sleep(random.uniform(0.01, 0.05))  # Simulate human typing speed
 
-                    key_event = {
+                key_event = {
                         "type": "keyDown",
                         "code": key_code,
                         "windowsVirtualKeyCode": virtual_key_code,
@@ -455,32 +461,32 @@ class Target:
                         "modifiers": 8 if shift_pressed else 0
                     }
 
-                    # Send keydown event
-                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
-                    await asyncio.sleep(random.uniform(0.05, 0.1))
+                # Send keydown event
+                await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
+                await asyncio.sleep(random.uniform(0.01, 0.05))
 
-                    # Simulate key press for the actual character
-                    key_event["type"] = "char"
-                    key_event["text"] = letter
-                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
-                    await asyncio.sleep(random.uniform(0.05, 0.1))
-                    del key_event['text']
+                # Simulate key press for the actual character
+                key_event["type"] = "char"
+                key_event["text"] = letter
+                await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
+                await asyncio.sleep(random.uniform(0.01, 0.05))
+                del key_event['text']
 
-                    # Simulate key release
-                    key_event["type"] = "keyUp"
-                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
-                    await asyncio.sleep(random.uniform(0.05, 0.1))
+                # Simulate key release
+                key_event["type"] = "keyUp"
+                await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
+                await asyncio.sleep(random.uniform(0.01, 0.05))
 
-                    # Release the shift key if it was pressed
-                    if shift_pressed:
-                        await self.execute_cdp_cmd("Input.dispatchKeyEvent", {
-                            "type": "keyUp",
-                            "code": "ShiftLeft",
-                            "windowsVirtualKeyCode": 16,
-                            "key": "Shift",
-                            "modifiers": 0
-                        })
-                        await asyncio.sleep(random.uniform(0.05, 0.1))  # Simulate human typing speed
+                # Release the shift key if it was pressed
+                if shift_pressed:
+                    await self.execute_cdp_cmd("Input.dispatchKeyEvent", {
+                        "type": "keyUp",
+                        "code": "ShiftLeft",
+                        "windowsVirtualKeyCode": 16,
+                        "key": "Shift",
+                        "modifiers": 0
+                    })
+                    await asyncio.sleep(random.uniform(0.01, 0.05))  # Simulate human typing speed
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
                                  max_depth: int = None, timeout: float = 2, execution_context_id: str = None,
