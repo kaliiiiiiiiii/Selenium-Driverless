@@ -90,22 +90,13 @@ class SwitchTo:
         if base_target:
             return await self.target(target_id=base_target, activate=activate)
 
-    async def frame(self, frame_reference: Union[str, int, WebElement], activate: bool = False) -> None:
-        """Switches focus to the specified frame, by index, name, or
-        webelement.
+    async def frame(self, frame_reference: Union[str, int, WebElement], focus:bool=True) -> None:
+        """Switches to the specified frame
 
-        .. warning::
-
-            this is deprecated and should not be used
-
-
-
-        :Usage:
-            ::
-
-                target.switch_to.frame('frame_name')
-                target.switch_to.frame(1)
-                target.switch_to.frame(target.find_elements(By.TAG_NAME, "iframe")[0])
+        :param frame_reference: the reference by ID, name, index, or
+        WebElement
+        :param focus: whether to emulate focus on the frame
+        :param focus: whether to emulate focus on the iframe
         """
         warnings.warn(
             "driver.switch_to.iframe deprecated and not reliable use Webelement.content_document instead",
@@ -128,16 +119,18 @@ class SwitchTo:
         if not isinstance(frame_reference, WebElement):
             raise NoSuchIframe(frame_reference, f"couldn't get element by: {frame_reference}")
         target = await self._context.current_target.get_target_for_iframe(frame_reference)
-        if activate:
+        if focus:
             await target.focus()
+        await self.target(target)
         return target
 
-    async def target(self, target_id: typing.Union[str, TargetInfo, Target], activate: bool = True) -> Target:
+    async def target(self, target_id: typing.Union[str, TargetInfo, Target], activate: bool = False, focus:bool=True) -> Target:
         """
         switches to a target
 
         :param target_id: the target to switch to
-        :param activate: whether to activate the target
+        :param activate: whether to bring the target to the front
+        :param focus: whether to emulate focus on the target
         """
         if isinstance(target_id, TargetInfo):
             self._context._current_target = target_id.Target
@@ -145,13 +138,23 @@ class SwitchTo:
             self._context._current_target = target_id
         elif isinstance(target_id, WebElement):
             # noinspection PyDeprecation
-            self._context._current_target = self.frame(target_id, activate=False)
+            self._context._current_target = self.frame(target_id)
         else:
             self._context._current_target = await self._context.get_target(target_id)
 
         if activate:
+            await self._context.current_target.activate()
+        if focus:
             await self._context.current_target.focus()
         return self._context.current_target
+
+    async def window(self, window_id: str or TargetInfo, activate: bool = False, focus:bool=True) -> Target:
+        """
+        switches to a window
+
+        alias to :func:`SwitchTo.target <selenium_driverless.scripts.switch_to.SwitchTo.target`
+        """
+        return await self.target(window_id, activate=activate, focus=focus)
 
     async def new_window(self, type_hint: typing.Literal["tab", "window"] = "tab", url="", activate: bool = False,
                          focus: bool = True, background: bool = True) -> Target:
@@ -166,29 +169,5 @@ class SwitchTo:
         target = await self._context.new_window(type_hint=type_hint, url=url, activate=activate, focus=focus, background=background)
         return await self.target(target)
 
-    async def parent_frame(self, activate: bool = False) -> None:
-        """Switches focus to the parent context. If the current context is the
-        top level browsing context, the context remains unchanged.
-
-        :Usage:
-            ::
-
-                target.switch_to.parent_frame()
-        """
-        # noinspection PyProtectedMember
-        parent = self._context.current_target._parent_target
-        if parent:
-            await self.target(target_id=parent, activate=activate)
-
-    async def window(self, window_id: str or TargetInfo, activate: bool = True) -> None:
-        """Switches focus to the specified window.
-
-        :Args:
-         - window_name: The name or window handle of the window to switch to.
-
-        :Usage:
-            ::
-
-                target.switch_to.window('main')
-        """
-        await self.target(window_id, activate=activate)
+    async def parent_frame(self, activate: bool = False) -> Target:
+        raise NotImplemented()
