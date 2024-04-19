@@ -60,8 +60,9 @@ SHIFT_KEY_NEEDED = '~!@#$%^&*()_+{}|:"<>?'
 
 
 class NoSuchIframe(Exception):
-    reference:typing.Union[WebElement, int, str]
-    def __init__(self, reference:typing.Union[WebElement, int, str], message: str):
+    reference: typing.Union[WebElement, int, str]
+
+    def __init__(self, reference: typing.Union[WebElement, int, str], message: str):
         self.reference = reference
         super().__init__(message)
 
@@ -424,7 +425,7 @@ class Target:
         """the :class:`Pointer <selenium_driverless.input.pointer.Pointer>` for this target"""
         return self._pointer
 
-    async def send_keys(self, text: str, allow_not_on_mapping:bool=True):
+    async def send_keys(self, text: str, allow_not_on_mapping: bool = True):
         """
         send text & keys to the target
 
@@ -445,21 +446,21 @@ class Target:
                 if letter.isupper() or letter in SHIFT_KEY_NEEDED:
                     shift_pressed = True
                     await self.execute_cdp_cmd("Input.dispatchKeyEvent", {
-                            "type": "keyDown",
-                            "code": "ShiftLeft",
-                            "windowsVirtualKeyCode": 16,
-                            "key": "Shift",
-                            "modifiers": 8 if shift_pressed else 0
+                        "type": "keyDown",
+                        "code": "ShiftLeft",
+                        "windowsVirtualKeyCode": 16,
+                        "key": "Shift",
+                        "modifiers": 8 if shift_pressed else 0
                     })
                 await asyncio.sleep(random.uniform(0.01, 0.05))  # Simulate human typing speed
 
                 key_event = {
-                        "type": "keyDown",
-                        "code": key_code,
-                        "windowsVirtualKeyCode": virtual_key_code,
-                        "key": letter,
-                        "modifiers": 8 if shift_pressed else 0
-                    }
+                    "type": "keyDown",
+                    "code": key_code,
+                    "windowsVirtualKeyCode": virtual_key_code,
+                    "key": letter,
+                    "modifiers": 8 if shift_pressed else 0
+                }
 
                 # Send keydown event
                 await self.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
@@ -985,56 +986,38 @@ class Target:
 
     async def get_screenshot_as_png(self) -> bytes:
         """Gets the screenshot of the current window as a binary data.
-
-        :Usage:
-            ::
-
-                target.get_screenshot_as_png()
-        """
-        base_64 = await self.get_screenshot_as_base64()
-        return b64decode(base_64.encode("ascii"))
-
-    async def get_screenshot_as_base64(self) -> str:
-        """Gets the screenshot of the current window as a base64 encoded string
-        which is useful in embedded images in HTML.
-
-        :Usage:
-            ::
-
-                target.get_screenshot_as_base64()
         """
         res = await self.execute_cdp_cmd("Page.captureScreenshot", {"format": "png"}, timeout=30)
+        return b64decode(res["data"].encode("ascii"))
+
+    async def snapshot(self) -> str:
+        """gets the current snapshot as mhtml"""
+        res = await self.execute_cdp_cmd("Page.captureSnapshot")
         return res["data"]
 
-    async def get_snapshot(self,filename) -> bool:
+    async def save_snapshot(self, filename:str):
         """Saves a snapshot of the current window to a MHTML file.
                 Returns False if there is any IOError, else returns True. Use full
                 paths in your filename.
 
-                :Args:
-                 - filename: The full path you wish to save your snapshot to. This
-                   should end with a `.mhtml` extension.
+        :param filename: The full path you wish to save your snapshot to. This
+                   should end with a ``.mhtml`` extension.
 
-                :Usage:
-                    ::
+        .. code-block:: Python
 
-                        target.get_snapshot('/Screenshots/foo.mhtml')
-                """
-        
-        if not str(filename).lower().endswith(".mhtml"):
+            await driver.get_snapshot('snapshot.mhtml')
+
+        """
+
+        if len(filename) <= 6 or filename[-6:] != ".mhtml":
             warnings.warn(
                 "name used for saved snapshot does not match file " "type. It should end with a `.mhtml` extension",
                 UserWarning,
             )
-        res = await self.execute_cdp_cmd("Page.captureSnapshot")
-        try:
-            async with aiofiles.open(filename, "w") as f:
-                await f.write(res["data"])
-        except OSError:
-            return False
-        finally:
-            del res
-    
+        mhtml = await self.snapshot()
+        async with aiofiles.open(filename, "w") as f:
+            await f.write(mhtml)
+
     async def get_network_conditions(self):
         """Gets Chromium network emulation settings.
 

@@ -1102,21 +1102,24 @@ class Chrome:
         """
         return await self.current_target.get_screenshot_as_png()
 
-    async def get_screenshot_as_base64(self) -> str:
-        """Gets the screenshot of the current tab as a base64 encoded string
-        which is useful in embedded images in HTML.
-        """
-        return await self.current_target.get_screenshot_as_base64()
-        
-    async def get_snapshot(self,filename) -> bool:
-        """Saves the screenshot of the current tab to a MHTML file.
-        :param filename: The path you wish to save your snapshot to. should end with a `.mhtml` extension.
+    async def snapshot(self) -> str:
+        """gets the current snapshot as mhtml"""
+        return await self.current_target.snapshot()
 
-        .. code-block:: python
+    async def save_snapshot(self, filename: str):
+        """Saves a snapshot of the current window to a MHTML file.
+                Returns False if there is any IOError, else returns True. Use full
+                paths in your filename.
 
-            driver.get_snapshot('snapshot.mhtml')
+        :param filename: The full path you wish to save your snapshot to. This
+                   should end with a ``.mhtml`` extension.
+
+        .. code-block:: Python
+
+            await driver.get_snapshot('snapshot.mhtml')
+
         """
-        return await self.current_target.get_snapshot(filename)
+        return await self.current_target.save_snapshot(filename)
 
     # noinspection PyPep8Naming
     async def set_window_size(self, width: int, height: int) -> None:

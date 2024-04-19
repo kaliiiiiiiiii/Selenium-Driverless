@@ -722,17 +722,24 @@ class Context:
         target = await self.get_target(target_id=target_id)
         return await target.get_screenshot_as_png()
 
-    async def get_screenshot_as_base64(self, target_id: str = None) -> str:
-        """Gets the screenshot of the current window as a base64 encoded string
-        which is useful in embedded images in HTML.
+    async def snapshot(self) -> str:
+        """gets the current snapshot as mhtml"""
+        return await self.current_target.snapshot()
 
-        :Usage:
-            ::
+    async def save_snapshot(self, filename: str):
+        """Saves a snapshot of the current window to a MHTML file.
+                Returns False if there is any IOError, else returns True. Use full
+                paths in your filename.
 
-                target.get_screenshot_as_base64()
+        :param filename: The full path you wish to save your snapshot to. This
+                   should end with a ``.mhtml`` extension.
+
+        .. code-block:: Python
+
+            await driver.get_snapshot('snapshot.mhtml')
+
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_screenshot_as_base64()
+        return await self.current_target.save_snapshot(filename)
 
     # noinspection PyPep8Naming
     async def set_window_size(self, width, height, windowHandle: str = "current") -> None:
