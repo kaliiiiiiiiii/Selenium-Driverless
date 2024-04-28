@@ -540,11 +540,12 @@ class WebElement(JSRemoteObj):
         args.update(self._args_builder)
         await self.__target__.execute_cdp_cmd("DOM.setFileInputFiles", args)
 
-    async def send_keys(self, text: str, click_kwargs: dict = None, click_on: bool = True) -> None:
+    async def send_keys(self, text: str,layout:str='en', click_kwargs: dict = None, click_on: bool = True) -> None:
         """
         send text & keys to the target
 
         :param text: the text to send to the target
+        :param layout: the keybaord layout
         :param click_kwargs: arguments to pass for :func:`Elem.send_keys <selenium_driverless.types.webelement.WebElement.send_keys>`
         :param click_on: whether to click on the element before sending the keys
         """
@@ -554,7 +555,7 @@ class WebElement(JSRemoteObj):
             await self.click(**click_kwargs)
         else:
             await self.focus()
-        await self.__target__.send_keys(text)
+        await self.__target__.send_keys(text,layout)
 
     async def mid_location(self, spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5,
                            border: float = 0.05) -> typing.List[int]:
