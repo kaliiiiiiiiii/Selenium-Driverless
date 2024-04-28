@@ -26,7 +26,6 @@ import warnings
 import pathlib
 
 from typing import List
-from typing import Optional
 
 # io
 import asyncio
@@ -251,6 +250,7 @@ class Context:
         """the :class:`Pointer <selenium_driverless.input.pointer.Pointer>` for the current target"""
         target = self.current_target
         return target.pointer
+
     async def send_keys(self, text: str):
         """
         send text & keys to the current target
@@ -409,7 +409,7 @@ class Context:
                     # noinspection PyUnresolvedReferences
                     try:
                         target = target.Target
-                        await target.close(timeout=2)
+                        await target.close(timeout=7)
                         check_timeout(start_monotonic, timeout)
                     except websockets.exceptions.InvalidStatusCode:
                         # already closed
@@ -460,7 +460,8 @@ class Context:
                 tabs.append(info)
         return tabs
 
-    async def new_window(self, type_hint: typing.Literal["tab", "window"] = "tab", url="", activate: bool = False, focus:bool=True, background:bool=True) -> Target:
+    async def new_window(self, type_hint: typing.Literal["tab", "window"] = "tab", url="", activate: bool = False,
+                         focus: bool = True, background: bool = True) -> Target:
         """creates a new tab or window
 
         :param type_hint: what kind of target to create
@@ -668,7 +669,7 @@ class Context:
         target = await self.get_target(target_id=target_id)
         return await target.search_elements(query=query)
 
-    async def get_screenshot_as_file(self, filename: str) -> bool:
+    async def get_screenshot_as_file(self, filename: str) -> None:
         """Saves a screenshot of the current window to a PNG image file.
 
         :param filename: The full path you wish to save your screenshot to. This
@@ -676,23 +677,9 @@ class Context:
         """
         return await self.current_target.get_screenshot_as_file(filename=filename)
 
-    async def save_screenshot(self, filename, target_id: str = None) -> bool:
-        # noinspection GrazieInspection
-        """Saves a screenshot of the current window to a PNG image file.
-                Returns False if there is any IOError, else returns True. Use full
-                paths in your filename.
-
-                :Args:
-                 - filename: The full path you wish to save your screenshot to. This
-                   should end with a `.png` extension.
-
-                :Usage:
-                    ::
-
-                        target.save_screenshot('/Screenshots/foo.png')
-                """
-        target = await self.get_target(target_id=target_id)
-        return await target.save_screenshot(filename=filename)
+    async def save_screenshot(self, filename) -> None:
+        """alias to :func: `driver.get_screenshot_as_file <selenium_driverless.webdriver.Chrome.get_screenshot_as_file>`"""
+        return await self.current_target.save_screenshot(filename=filename)
 
     async def get_screenshot_as_png(self, target_id: str = None) -> bytes:
         """Gets the screenshot of the current window as a binary data.

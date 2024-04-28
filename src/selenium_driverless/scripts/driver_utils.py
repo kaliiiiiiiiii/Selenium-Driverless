@@ -97,6 +97,8 @@ async def add_cookie(target, cookie_dict, context_id: str = None) -> None:
 
     :param cookie_dict: A dictionary object, with required keys - "name" and "value";
         optional keys - "path", "domain", "secure", "httpOnly", "expiry", "sameSite"
+    :param target: the target to use for the connection
+    :param context_id: the browserContextId to set the cookie for
 
     :Usage:
         ::

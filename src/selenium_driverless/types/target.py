@@ -930,7 +930,6 @@ class Target:
         return elems
 
     async def get_screenshot_as_file(self, filename:str) -> None:
-        # noinspection GrazieInspection
         """Saves a screenshot of the current window to a PNG image file.
 
         :param filename: The full path.
@@ -945,21 +944,8 @@ class Target:
         async with aiofiles.open(filename, "wb") as f:
             await f.write(png)
 
-    async def save_screenshot(self, filename) -> bool:
-        # noinspection GrazieInspection
-        """Saves a screenshot of the current window to a PNG image file.
-                Returns False if there is any IOError, else returns True. Use full
-                paths in your filename.
-
-                :Args:
-                 - filename: The full path you wish to save your screenshot to. This
-                   should end with a `.png` extension.
-
-                :Usage:
-                    ::
-
-                        target.save_screenshot('/Screenshots/foo.png')
-                """
+    async def save_screenshot(self, filename:str) -> None:
+        """alias to :func: `driver.get_screenshot_as_file <selenium_driverless.webdriver.Chrome.get_screenshot_as_file>`"""
         return await self.get_screenshot_as_file(filename)
 
     async def get_screenshot_as_png(self) -> bytes:
