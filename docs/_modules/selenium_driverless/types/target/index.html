@@ -780,15 +780,10 @@
 <span class="sd">                target.close()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Page.close&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Target.closeTarget&quot;</span><span class="p">,{</span><span class="s2">&quot;targetId&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">},</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="k">except</span> <span class="n">websockets</span><span class="o">.</span><span class="n">ConnectionClosedError</span><span class="p">:</span>
             <span class="k">pass</span>
-        <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s1">&#39;Command can only be executed on top-level targets&#39;</span><span class="p">:</span>
-                <span class="k">pass</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">e</span>
         <span class="k">except</span> <span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">,</span> <span class="ne">TimeoutError</span><span class="p">):</span>
             <span class="k">pass</span></div>
 
@@ -1099,7 +1094,6 @@
 <div class="viewcode-block" id="Target.get_screenshot_as_file">
 <a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.get_screenshot_as_file">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span><span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># noinspection GrazieInspection</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a screenshot of the current window to a PNG image file.</span>
 
 <span class="sd">        :param filename: The full path.</span>
@@ -1117,21 +1111,8 @@
 
 <div class="viewcode-block" id="Target.save_screenshot">
 <a class="viewcode-back" href="../../../../api/Target/#selenium_driverless.types.target.Target.save_screenshot">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">save_screenshot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="c1"># noinspection GrazieInspection</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a screenshot of the current window to a PNG image file.</span>
-<span class="sd">                Returns False if there is any IOError, else returns True. Use full</span>
-<span class="sd">                paths in your filename.</span>
-
-<span class="sd">                :Args:</span>
-<span class="sd">                 - filename: The full path you wish to save your screenshot to. This</span>
-<span class="sd">                   should end with a `.png` extension.</span>
-
-<span class="sd">                :Usage:</span>
-<span class="sd">                    ::</span>
-
-<span class="sd">                        target.save_screenshot(&#39;/Screenshots/foo.png&#39;)</span>
-<span class="sd">                &quot;&quot;&quot;</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">save_screenshot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span><span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;alias to :func: `driver.get_screenshot_as_file &lt;selenium_driverless.webdriver.Chrome.get_screenshot_as_file&gt;`&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_screenshot_as_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
 
 

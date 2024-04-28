@@ -105,7 +105,6 @@
 <span class="kn">import</span> <span class="nn">pathlib</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="c1"># io</span>
 <span class="kn">import</span> <span class="nn">asyncio</span>
@@ -341,6 +340,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;the :class:`Pointer &lt;selenium_driverless.input.pointer.Pointer&gt;` for the current target&quot;&quot;&quot;</span>
         <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span>
         <span class="k">return</span> <span class="n">target</span><span class="o">.</span><span class="n">pointer</span>
+
 <div class="viewcode-block" id="Context.send_keys">
 <a class="viewcode-back" href="../../../../api/Context/#selenium_driverless.types.context.Context.send_keys">[docs]</a>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">send_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -519,7 +519,7 @@
                     <span class="c1"># noinspection PyUnresolvedReferences</span>
                     <span class="k">try</span><span class="p">:</span>
                         <span class="n">target</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">Target</span>
-                        <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                        <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
                         <span class="n">check_timeout</span><span class="p">(</span><span class="n">start_monotonic</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
                     <span class="k">except</span> <span class="n">websockets</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidStatusCode</span><span class="p">:</span>
                         <span class="c1"># already closed</span>
@@ -573,7 +573,8 @@
 
 <div class="viewcode-block" id="Context.new_window">
 <a class="viewcode-back" href="../../../../api/Context/#selenium_driverless.types.context.Context.new_window">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">new_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">type_hint</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;tab&quot;</span><span class="p">,</span> <span class="s2">&quot;window&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tab&quot;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">focus</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">background</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">new_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">type_hint</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;tab&quot;</span><span class="p">,</span> <span class="s2">&quot;window&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tab&quot;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                         <span class="n">focus</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">background</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;creates a new tab or window</span>
 
 <span class="sd">        :param type_hint: what kind of target to create</span>
@@ -829,7 +830,7 @@
 
 <div class="viewcode-block" id="Context.get_screenshot_as_file">
 <a class="viewcode-back" href="../../../../api/Context/#selenium_driverless.types.context.Context.get_screenshot_as_file">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a screenshot of the current window to a PNG image file.</span>
 
 <span class="sd">        :param filename: The full path you wish to save your screenshot to. This</span>
@@ -840,23 +841,9 @@
 
 <div class="viewcode-block" id="Context.save_screenshot">
 <a class="viewcode-back" href="../../../../api/Context/#selenium_driverless.types.context.Context.save_screenshot">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">save_screenshot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="c1"># noinspection GrazieInspection</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a screenshot of the current window to a PNG image file.</span>
-<span class="sd">                Returns False if there is any IOError, else returns True. Use full</span>
-<span class="sd">                paths in your filename.</span>
-
-<span class="sd">                :Args:</span>
-<span class="sd">                 - filename: The full path you wish to save your screenshot to. This</span>
-<span class="sd">                   should end with a `.png` extension.</span>
-
-<span class="sd">                :Usage:</span>
-<span class="sd">                    ::</span>
-
-<span class="sd">                        target.save_screenshot(&#39;/Screenshots/foo.png&#39;)</span>
-<span class="sd">                &quot;&quot;&quot;</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">save_screenshot</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span></div>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">save_screenshot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;alias to :func: `driver.get_screenshot_as_file &lt;selenium_driverless.webdriver.Chrome.get_screenshot_as_file&gt;`&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">save_screenshot</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Context.get_screenshot_as_png">
