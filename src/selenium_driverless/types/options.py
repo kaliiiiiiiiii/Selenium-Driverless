@@ -49,7 +49,7 @@ class Options(metaclass=ABCMeta):
         # self.set_capability("pageLoadStrategy", "normal")
         self.mobile_options = None
 
-        self._binary_location = find_chrome_executable()
+        self._binary_location = None
         self._env = os.environ
         self._extension_paths = []
         self._extensions = []
@@ -272,12 +272,18 @@ class Options(metaclass=ABCMeta):
     @property
     def binary_location(self) -> str:
         """
-        path to the Chromium binary
+        Path to the Chromium binary, only searches for the binary when accessed if not set previously.
         """
+        if self._binary_location is None:
+            from selenium_driverless.utils.utils import find_chrome_executable
+            self._binary_location = find_chrome_executable()
         return self._binary_location
 
     @binary_location.setter
     def binary_location(self, value: str) -> None:
+        """
+        Sets a new binary location for Chromium. If set, disables automatic detection by find_chrome_executable.
+        """
         self._binary_location = value
 
     @property
