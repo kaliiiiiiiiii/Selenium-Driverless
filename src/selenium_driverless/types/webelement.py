@@ -879,11 +879,11 @@ class WebElement(JSRemoteObj):
         if node_id:
             if self._loop:
                 # noinspection PyUnresolvedReferences
-                return SyncWebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
+                return await SyncWebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
                                       isolated_exec_id=self.___isolated_exec_id__, frame_id=await self.__frame_id__)
             else:
                 # noinspection PyUnresolvedReferences
-                return WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
+                return await WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
                                   isolated_exec_id=self.___isolated_exec_id__, frame_id=await self.__frame_id__)
 
     @property
