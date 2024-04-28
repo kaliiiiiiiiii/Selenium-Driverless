@@ -670,15 +670,10 @@ class Target:
                 target.close()
         """
         try:
-            await self.execute_cdp_cmd("Page.close", timeout=timeout)
+            await self.execute_cdp_cmd("Target.closeTarget",{"targetId":self.id}, timeout=timeout)
             await self._socket.close()
         except websockets.ConnectionClosedError:
             pass
-        except CDPError as e:
-            if e.code == -32000 and e.message == 'Command can only be executed on top-level targets':
-                pass
-            else:
-                raise e
         except (asyncio.TimeoutError, TimeoutError):
             pass
 
