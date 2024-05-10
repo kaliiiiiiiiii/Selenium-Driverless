@@ -12,9 +12,6 @@ This work is licensed under a
 > or any monetary equivalent to that, is not subject to this definition
 > of NonCommercial.
 
-The License applies for all files, except if there's a comment header, specifying another license.
-
-
 ---
 If you wish to **use this project commercially**, you can contact the Author for a custom License.
 This usually includes a **fee** of around **5-6%** based on your current profit.
