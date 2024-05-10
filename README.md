@@ -307,7 +307,7 @@ This work is licensed under a
 > Commercial means primarily intended for or directed 
 > towards commercial advantage or monetary compensation. \
 > A business, project or public agreement with a commercial intent of any kind
-> which profits more than, or equal to 10'000 US-Dollar per month,
+> which profits more than, or equal to 7'000 US-Dollar per month,
 > or any monetary equivalent to that, is not subject to this definition
 > of NonCommercial.
 
