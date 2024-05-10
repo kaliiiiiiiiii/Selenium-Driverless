@@ -18,9 +18,7 @@ IS_POSIX = sys.platform.startswith(("darwin", "cygwin", "linux", "linux2"))
 T_JSON_DICT = typing.Dict[str, typing.Any]
 
 DATA_DIR = user_data_dir(appname="selenium-driverless", appauthor="kaliiiiiiiiii", ensure_exists=True)
-LICENSE = '\nThis package has a "Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)" License.\n' \
-          "Therefore, you'll have to ask the developer first if you want to use this package for your business.\n" \
-          "https://github.com/kaliiiiiiiiii/Selenium-Driverless"
+LICENSE = '\nThis project is licenced under "Attribution-NonCommercial-ShareAlike" as per https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/LICENSE.md#license\n'
 
 
 def find_chrome_executable():

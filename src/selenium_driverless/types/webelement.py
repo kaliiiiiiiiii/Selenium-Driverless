@@ -14,7 +14,10 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-# edited by kaliiiiiiiiiii
+#
+# modified by kaliiiiiiiiii | Aurin Aegerter
+# all modifications are licensed under the license provided at LICENSE.md
+
 from __future__ import annotations
 
 import asyncio

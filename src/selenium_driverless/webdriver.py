@@ -16,6 +16,7 @@
 # under the License.
 
 # modified by kaliiiiiiiiii | Aurin Aegerter
+# all modifications are licensed under the license provided at LICENSE.md
 
 """The WebDriver implementation."""
 import os
