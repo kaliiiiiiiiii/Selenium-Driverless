@@ -39,7 +39,7 @@ pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/he
 
 ## Sponsors
 
-### [Capsolver](https://is.gd/OJSVP4)
+### [Capsolver](https://is.gd/pNs507)
 
 <a href="https://is.gd/pNs507" >
   <img src="assets/capsolver.png" alt="drawing" width="60%"/>
