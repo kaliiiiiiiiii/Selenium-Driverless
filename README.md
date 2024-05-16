@@ -41,9 +41,13 @@ pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/he
 
 ### [Capsolver](https://is.gd/OJSVP4)
 
-<a href="https://is.gd/OJSVP4" >
+<a href="https://is.gd/pNs507" >
   <img src="assets/capsolver.png" alt="drawing" width="60%"/>
 </a>
+
+<!--- 
+https://is.gd/stats.php?url=pNs507
+--->
 
 An AI-powered captcha-solver service.
 
