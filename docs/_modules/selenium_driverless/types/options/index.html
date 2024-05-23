@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>selenium_driverless.types.options &mdash; Selenium-Driverless 1.9.2 documentation</title>
+  <title>selenium_driverless.types.options &mdash; Selenium-Driverless 1.9.3.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=ca017849"></script>
+        <script src="../../../../_static/documentation_options.js?v=58554080"></script>
         <script src="../../../../_static/doctools.js?v=888ff710"></script>
         <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -180,7 +180,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">add_arguments</span><span class="p">(</span>
             <span class="s2">&quot;--no-first-run&quot;</span><span class="p">,</span>  <span class="c1"># disable first run page</span>
-            <span class="s1">&#39;--disable-component-update&#39;</span><span class="p">,</span>  <span class="c1"># disable updates</span>
+            <span class="c1"># &#39;--disable-component-update&#39;,  # disable updates, breaks widevine</span>
             <span class="s1">&#39;--no-service-autorun&#39;</span><span class="p">,</span>  <span class="c1"># don&#39;t start a service</span>
             <span class="c1"># don&#39;t auto-reload pages on network errors, https://github.com/milahu/aiohttp_chromium/blob/61fe3150ed032ef8aa99b23dddbedaa1929c229c/src/aiohttp_chromium/client.py#L1116C9-L1118</span>
             <span class="s2">&quot;--disable-auto-reload&quot;</span><span class="p">,</span>
