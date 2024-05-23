@@ -1,3 +1,4 @@
+import asyncio
 import json
 from functools import reduce
 import aiofiles
@@ -23,13 +24,14 @@ def prefs_to_json(dot_prefs: dict):
 
 async def write_prefs(prefs: dict, prefs_path: str):
     # prefs as a dict
-    res = json.dumps(prefs)
-    async with aiofiles.open(prefs_path, encoding="latin1", mode="w+") as f:
+    res = await asyncio.get_event_loop().run_in_executor(None, lambda:json.dumps(prefs))
+    async with aiofiles.open(prefs_path, encoding="utf-8", mode="w+") as f:
         await f.write(res)
 
 
 async def read_prefs(prefs_path: str):
     # prefs as a dict
-    async with aiofiles.open(prefs_path, encoding="latin1", mode="r") as f:
+    async with aiofiles.open(prefs_path, encoding="utf-8", mode="r") as f:
         res = await f.read()
-    return json.loads(res)
+    res = await asyncio.get_event_loop().run_in_executor(None, lambda:json.loads(res))
+    return res
