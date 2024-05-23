@@ -33,7 +33,7 @@ def find_chrome_executable():
     """
     candidates = set()
     if IS_POSIX:
-        for item in os.environ.get("PATH").split(os.pathsep):
+        for item in os.environ.get("PATH", "").split(os.pathsep):
             for subitem in (
                     "google-chrome",
                     "chromium",
@@ -64,6 +64,7 @@ def find_chrome_executable():
     for candidate in candidates:
         if os.path.exists(candidate) and os.access(candidate, os.X_OK):
             return os.path.normpath(candidate)
+    raise FileNotFoundError("Couldn't find installed Chrome or Chromium executable")
 
 
 def sel_driverless_path():

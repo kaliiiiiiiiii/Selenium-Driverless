@@ -134,6 +134,7 @@
 <span class="c1"># others</span>
 <span class="kn">from</span> <span class="nn">cdp_socket.utils.conn</span> <span class="kn">import</span> <span class="n">get_json</span>
 <span class="kn">from</span> <span class="nn">selenium_driverless.types.options</span> <span class="kn">import</span> <span class="n">Options</span> <span class="k">as</span> <span class="n">ChromeOptions</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.utils.utils</span> <span class="kn">import</span> <span class="n">sel_driverless_path</span>
 <span class="kn">from</span> <span class="nn">selenium_driverless.types</span> <span class="kn">import</span> <span class="n">JSEvalException</span>
 <span class="kn">from</span> <span class="nn">selenium_driverless</span> <span class="kn">import</span> <span class="n">EXC_HANDLER</span>
 
@@ -228,6 +229,10 @@
 
             <span class="k">await</span> <span class="n">is_first_run</span><span class="p">()</span>
             <span class="n">user_agent</span> <span class="o">=</span> <span class="k">await</span> <span class="n">get_default_ua</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">use_extension</span><span class="p">:</span>
+                <span class="c1"># extension</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">add_extension</span><span class="p">(</span><span class="n">sel_driverless_path</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;files/mv3_extension&quot;</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">debugger_address</span><span class="p">:</span>
                 <span class="kn">from</span> <span class="nn">selenium_driverless.utils.utils</span> <span class="kn">import</span> <span class="n">random_port</span>
