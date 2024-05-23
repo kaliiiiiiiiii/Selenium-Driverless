@@ -55,6 +55,7 @@ from selenium_driverless.sync.base_target import BaseTarget as SyncBaseTarget
 # others
 from cdp_socket.utils.conn import get_json
 from selenium_driverless.types.options import Options as ChromeOptions
+from selenium_driverless.utils.utils import sel_driverless_path
 from selenium_driverless.types import JSEvalException
 from selenium_driverless import EXC_HANDLER
 
@@ -147,6 +148,10 @@ class Chrome:
 
             await is_first_run()
             user_agent = await get_default_ua()
+
+            if self._options.use_extension:
+                # extension
+                self._options.add_extension(sel_driverless_path() + "files/mv3_extension")
 
             if not self._options.debugger_address:
                 from selenium_driverless.utils.utils import random_port

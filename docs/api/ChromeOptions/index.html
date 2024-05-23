@@ -49,6 +49,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../Chrome/">webdriver.Chrome</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">ChromeOptions</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#selenium_driverless.types.options.Options"><code class="docutils literal notranslate"><span class="pre">Options</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.options.Options.use_extension"><code class="docutils literal notranslate"><span class="pre">Options.use_extension</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.options.Options.arguments"><code class="docutils literal notranslate"><span class="pre">Options.arguments</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.options.Options.add_argument"><code class="docutils literal notranslate"><span class="pre">Options.add_argument()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.options.Options.add_arguments"><code class="docutils literal notranslate"><span class="pre">Options.add_arguments()</span></code></a></li>
@@ -113,6 +114,17 @@
 <p class="admonition-title">Warning</p>
 <p>options should not be reused</p>
 </div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="selenium_driverless.types.options.Options.use_extension">
+<span class="sig-name descname"><span class="pre">use_extension</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#selenium_driverless.types.options.Options.use_extension" title="Link to this definition"></a></dt>
+<dd><p>don’t add the chrome-extension by default</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>setting proxies and auth while running requires the extension to be added. 
+As an alternative, you might use <code class="docutils literal notranslate"><span class="pre">--proxy-server=host:port</span></code> and <a class="reference external" href="https://kaliiiiiiiiii.github.io/Selenium-Driverless/api/RequestInterception/#request-interception">Requests-interception</a> to provide auth</p>
+</div>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="selenium_driverless.types.options.Options.arguments">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">arguments</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#selenium_driverless.types.options.Options.arguments" title="Link to this definition"></a></dt>

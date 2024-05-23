@@ -24,8 +24,6 @@ import warnings
 from abc import ABCMeta
 import typing
 from typing import Union, Optional, List
-
-from selenium_driverless.utils.utils import sel_driverless_path
 from selenium_driverless.scripts.prefs import prefs_to_json
 
 
@@ -40,17 +38,26 @@ class Options(metaclass=ABCMeta):
 
     """
 
+    use_extension: bool = True
+    """
+    don't add the chrome-extension by default
+    
+    .. warning::
+        setting proxies and auth while running requires the extension to be added. 
+        As an alternative, you might use ``--proxy-server=host:port`` and `Requests-interception <https://kaliiiiiiiiii.github.io/Selenium-Driverless/api/RequestInterception/#request-interception>`_ to provide auth
+    """
+
     def __init__(self) -> None:
 
         self._single_proxy = None
-        from selenium_driverless.utils.utils import find_chrome_executable, IS_POSIX
+        from selenium_driverless.utils.utils import IS_POSIX
         super().__init__()
 
         self._proxy = None
         # self.set_capability("pageLoadStrategy", "normal")
         self.mobile_options = None
 
-        self._binary_location = find_chrome_executable()
+        self._binary_location = None
         self._env = os.environ
         self._extension_paths = []
         self._extensions = []
@@ -104,15 +111,13 @@ class Options(metaclass=ABCMeta):
             "--no-default-browser-check",  # disable default browser message
             '--homepage=about:blank'  # set homepage
             "--wm-window-animations-disabled", "--animation-duration-scale=0",  # disable animations
-            "--enable-privacy-sandbox-ads-apis"  # ensure window.Fence, window.SharedStorage etc. exist, looks like chrome disables them when using automation
+            "--enable-privacy-sandbox-ads-apis"
+            # ensure window.Fence, window.SharedStorage etc. exist, looks like chrome disables them when using automation
         )
         if IS_POSIX:
             self.add_argument("--password-store=basic")
 
         self._is_remote = True
-
-        # extension
-        self.add_extension(sel_driverless_path() + "files/mv3_extension")
 
     @property
     def arguments(self) -> typing.List[str]:
@@ -275,6 +280,9 @@ class Options(metaclass=ABCMeta):
         """
         path to the Chromium binary
         """
+        from selenium_driverless.utils.utils import find_chrome_executable
+        if self._binary_location is None:
+            self._binary_location = find_chrome_executable()
         return self._binary_location
 
     @binary_location.setter
