@@ -16,6 +16,7 @@
 # under the License.
 
 # modified by kaliiiiiiiiii | Aurin Aegerter
+# all modifications are licensed under the license provided at LICENSE.md
 
 """The WebDriver implementation."""
 import os
@@ -271,7 +272,7 @@ class Chrome:
                 if target["type"] == "page":
                     target_id = target["id"]
                     self._current_target = await get_target(target_id=target_id, host=self._host,
-                                                            loop=self._loop, is_remote=self._is_remote, timeout=2,
+                                                            loop=self._loop, is_remote=self._is_remote, timeout=10,
                                                             max_ws_size=self._max_ws_size, driver=self, context=None)
 
                     # handle the context
@@ -422,8 +423,8 @@ class Chrome:
                 try:
                     mv3_target = await self.mv3_extension
                     self._auth_interception_enabled = False
-                    await self._ensure_auth_interception(timeout=0.3, set_flag=False)
-                    await mv3_target.execute_script("globalThis.authCreds = arguments[0]", self._auth, timeout=0.3)
+                    await self._ensure_auth_interception(timeout=0.5, set_flag=False)
+                    await mv3_target.execute_script("globalThis.authCreds = arguments[0]", self._auth, timeout=0.5)
                 except (asyncio.TimeoutError, TimeoutError):
                     await asyncio.sleep(0.1)
                     self._mv3_extension = None
@@ -538,7 +539,7 @@ class Chrome:
                     await make_global()
                 """
                 await asyncio.sleep(0.1)
-                await page.eval_async(script, timeout=5)
+                await page.eval_async(script, timeout=10)
             except Exception as e:
                 EXC_HANDLER(e)
                 self._extensions_incognito_allowed = False
@@ -815,7 +816,7 @@ class Chrome:
             # noinspection PyUnresolvedReferences
             try:
                 # assumption: chrome is still running
-                await self.base_target.execute_cdp_cmd("Browser.close", timeout=2)
+                await self.base_target.execute_cdp_cmd("Browser.close", timeout=7)
             except websockets.ConnectionClosedError:
                 pass
             except Exception as e:
@@ -1083,7 +1084,7 @@ class Chrome:
         """
         return await self.current_target.search_elements(query=query)
 
-    async def get_screenshot_as_file(self, filename: str) -> bool:
+    async def get_screenshot_as_file(self, filename: str) -> None:
         """Saves a screenshot of the current tab to a PNG image file.
         :param filename: The path you wish to save your screenshot to. should end with a `.png` extension.
 
@@ -1093,7 +1094,7 @@ class Chrome:
         """
         return await self.current_target.get_screenshot_as_file(filename=filename)
 
-    async def save_screenshot(self, filename) -> bool:
+    async def save_screenshot(self, filename) -> None:
         """alias to :func: `driver.get_screenshot_as_file <selenium_driverless.webdriver.Chrome.get_screenshot_as_file>`"""
         return await self.get_screenshot_as_file(filename)
 

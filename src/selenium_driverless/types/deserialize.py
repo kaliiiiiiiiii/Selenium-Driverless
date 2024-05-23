@@ -76,7 +76,7 @@ class JSRemoteObj:
         return self.___isolated_exec_id__
 
     async def __exec_raw__(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                           max_depth: int = None, timeout: float = 2, execution_context_id: str = None,
+                           max_depth: int = None, timeout: float = 10, execution_context_id: str = None,
                            unique_context: bool = False):
         """
         example:
@@ -164,7 +164,7 @@ class JSRemoteObj:
         return res
 
     async def __exec__(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                       timeout: float = 2, execution_context_id: str = None,
+                       timeout: float = 10, execution_context_id: str = None,
                        unique_context: bool = None):
         """
         example: script = "return elem.click()"
@@ -205,7 +205,7 @@ class JSRemoteObj:
         return res
 
     async def __exec_async__(self, script: str, *args, max_depth: int = 2,
-                             serialization: str = None, timeout: float = 2,
+                             serialization: str = None, timeout: float = 10,
                              obj_id=None, execution_context_id: str = None,
                              unique_context: bool = False):
         from selenium_driverless.types.webelement import WebElement
@@ -244,7 +244,7 @@ class JSRemoteObj:
         return res
 
     async def __eval_async__(self, script: str, *args, max_depth: int = 2,
-                             serialization: str = None, timeout: float = 2,
+                             serialization: str = None, timeout: float = 10,
                              obj_id=None, execution_context_id: str = None,
                              unique_context: bool = False):
         from selenium_driverless.types.webelement import WebElement

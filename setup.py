@@ -20,6 +20,7 @@ setuptools.setup(
         'Bug Reports':
             'https://github.com/kaliiiiiiiiii/Selenium-Driverless/issues',
         'Source Code': 'https://github.com/kaliiiiiiiiii/Selenium-Driverless',
+        'LICENSE':'https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/LICENSE.md'
     },
     package_dir={'': 'src'},
     packages=setuptools.find_namespace_packages(where='src'),
@@ -41,12 +42,12 @@ setuptools.setup(
         'Topic :: Internet :: WWW/HTTP :: Browsers',
 
     ],
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     install_requires=requirements,
     include_package_data=True,
     extras_require={
         'dev': ['check-manifest'],
         # 'test': ['coverage'],
     },
-    license='CC BY-NC-SA 4.0'
+    license='https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/LICENSE.md'
 )

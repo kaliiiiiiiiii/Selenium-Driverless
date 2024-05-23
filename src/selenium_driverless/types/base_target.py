@@ -76,7 +76,7 @@ class BaseTarget:
                         res = await session.get(url, timeout=10)
                         _json = await res.json()
                         break
-                except (aiohttp.ClientError, asyncio.TimeoutError, OSError) as e:
+                except (aiohttp.ClientError, asyncio.TimeoutError, OSError):
                     if (time.perf_counter() - start) > self._timeout:
                         raise asyncio.TimeoutError(
                             f"Couldn't connect to chrome within {self._timeout} seconds")

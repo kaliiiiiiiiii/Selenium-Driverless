@@ -14,7 +14,10 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-# edited by kaliiiiiiiiiii
+#
+# modified by kaliiiiiiiiii | Aurin Aegerter
+# all modifications are licensed under the license provided at LICENSE.md
+
 from __future__ import annotations
 
 import asyncio
@@ -879,12 +882,12 @@ class WebElement(JSRemoteObj):
         if node_id:
             if self._loop:
                 # noinspection PyUnresolvedReferences
-                return SyncWebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
-                                      isolated_exec_id=self.___isolated_exec_id__, frame_id=await self.__frame_id__)
+                return await SyncWebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
+                                            isolated_exec_id=self.___isolated_exec_id__, frame_id=await self.__frame_id__)
             else:
                 # noinspection PyUnresolvedReferences
-                return WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
-                                  isolated_exec_id=self.___isolated_exec_id__, frame_id=await self.__frame_id__)
+                return await WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
+                                        isolated_exec_id=self.___isolated_exec_id__, frame_id=await self.__frame_id__)
 
     @property
     def children(self):
