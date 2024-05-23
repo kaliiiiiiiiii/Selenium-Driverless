@@ -99,7 +99,7 @@ class Options(metaclass=ABCMeta):
 
         self.add_arguments(
             "--no-first-run",  # disable first run page
-            '--disable-component-update',  # disable updates
+            # '--disable-component-update',  # disable updates, breaks widevine
             '--no-service-autorun',  # don't start a service
             # don't auto-reload pages on network errors, https://github.com/milahu/aiohttp_chromium/blob/61fe3150ed032ef8aa99b23dddbedaa1929c229c/src/aiohttp_chromium/client.py#L1116C9-L1118
             "--disable-auto-reload",
