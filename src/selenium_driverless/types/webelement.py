@@ -197,10 +197,10 @@ class WebElement(JSRemoteObj):
     @property
     async def content_document(self):
         """
-        **async** gets the document of the iframe
+        **async** gets the contentDocument element of the iframe (or frame). Returns None if this isn't an iframe.
         """
         _desc = await self._describe()
-        if _desc.get("localName") == "iframe":
+        if _desc.get("localName") in ["iframe","frame"]:
             node = _desc.get("contentDocument")
             if node:
                 frame_id = _desc.get("frameId")

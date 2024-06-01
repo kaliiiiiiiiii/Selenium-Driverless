@@ -152,7 +152,7 @@ async def target_1_handler(target):
 
 async def target_2_handler(target):
     await target.get("about:blank")
-    await target.execute_script(script=read("/files/js/show_mousemove.js"))
+    await target.execute_script(await script=read("/files/js/show_mousemove.js"))
     await target.pointer.move_to(500, 500, total_time=2)
 
 
@@ -224,7 +224,8 @@ move_kwargs = {"total_time": 0.7, "accel": 2, "smooth_soft": 20}
 await pointer.move_to(100, 500)
 await pointer.click(500, 50, move_kwargs=move_kwargs, move_to=True)
 ```
-### Iframes
+### Iframes / Frames
+due `swtich_to.frame()` being deprecated for driverless, use this instead
 
 ```python
 iframes = await driver.find_elements(By.TAG_NAME, "iframe")
