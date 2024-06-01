@@ -225,7 +225,7 @@ await pointer.move_to(100, 500)
 await pointer.click(500, 50, move_kwargs=move_kwargs, move_to=True)
 ```
 ### Iframes / Frames
-due `swtich_to.frame()` is deprecated, use this instead
+due `swtich_to.frame()` being deprecated for driverless, use this instead
 
 ```python
 iframes = await driver.find_elements(By.TAG_NAME, "iframe")
