@@ -548,7 +548,7 @@ class WebElement(JSRemoteObj):
         send text & keys to the target
 
         :param text: the text to send to the target
-        :param click_kwargs: arguments to pass for :func:`Elem.send_keys <selenium_driverless.types.webelement.WebElement.send_keys>`
+        :param click_kwargs: arguments to pass for :func:`Elem.click <selenium_driverless.types.webelement.WebElement.click>`
         :param click_on: whether to click on the element before sending the keys
         """
         if click_kwargs is None:
