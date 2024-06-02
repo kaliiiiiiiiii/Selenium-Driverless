@@ -30,7 +30,7 @@ from selenium_driverless.types.alert import Alert
 from selenium_driverless.types.webelement import WebElement
 from selenium_driverless.sync.webelement import WebElement as SyncWebElement
 
-KEY_MAPPING = {
+KEY_MAPPING_EN = {
     'a': ('KeyA', 65), 'b': ('KeyB', 66), 'c': ('KeyC', 67), 'd': ('KeyD', 68), 'e': ('KeyE', 69),
     'f': ('KeyF', 70), 'g': ('KeyG', 71), 'h': ('KeyH', 72), 'i': ('KeyI', 73), 'j': ('KeyJ', 74),
     'k': ('KeyK', 75), 'l': ('KeyL', 76), 'm': ('KeyM', 77), 'n': ('KeyN', 78), 'o': ('KeyO', 79),
@@ -56,7 +56,40 @@ KEY_MAPPING = {
     ' ': ('Space', 32)
 }
 
-SHIFT_KEY_NEEDED = '~!@#$%^&*()_+{}|:"<>?'
+
+KEY_MAPPING_RU = {
+    'а': ('KeyА', 70), 'б': ('Comma', 188), 'в': ('KeyD', 68), 'г': ('KeyU', 85), 'д': ('KeyL', 76),
+    'e': ('KeyT', 84), 'ё': ('Backquote', 192), 'з': ('KeyP', 80), 'и': ('KeyB', 66), 'й': ('KeyQ', 81),
+    'к': ('KeyR', 82), 'л': ('KeyK', 75), 'м': ('KeyV', 86), 'н': ('KeyY', 89), 'о': ('KeyJ', 74),
+    'п': ('KeyG', 71), 'р': ('KeyH', 72), 'с': ('KeyC', 67), 'т': ('KeyN', 78), 'у': ('KeyE', 69),
+    'ф': ('KeyA', 65), 'х': ('BracketLeft', 219), 'ц': ('KeyW', 87), 'ч': ('KeyX', 88), 'ш': ('KeyI', 73),
+    'щ': ('KeyO', 79), 'ъ': ('BracketRight', 221), 'ы': ('KeyS', 83), 'ь': ('KeyM', 77), 'э': ('Quote', 222),
+    'ю': ('Period', 190), 'я': ('KeyZ', 90),
+    'А': ('KeyA', 70), 'Б': ('KeyB', 188), 'В': ('KeyV', 68), 'Г': ('KeyG', 85), 'Д': ('KeyDD', 76),
+    'Е': ('KeyE', 84), 'Ё': ('KeyYo', 192), 'З': ('KeyZ', 80), 'И': ('KeyI', 66), 'Й': ('KeyQ', 81),
+    'К': ('KeyK', 82), 'Л': ('KeyL', 75), 'М': ('KeyM', 86), 'Н': ('KeyN', 89), 'О': ('KeyO', 74),
+    'П': ('KeyP', 71), 'Р': ('KeyR', 72), 'С': ('KeyC', 67), 'Т': ('KeyT', 78), 'У': ('KeyU', 69),
+    'Ф': ('KeyF', 65), 'Х': ('KeyX', 219), 'Ц': ('KeyTS', 87), 'Ч': ('KeyTCH', 88), 'Ш': ('KeySH', 73),
+    'Щ': ('KeySCH', 79), 'Ъ': ('KeyHa', 221), 'Ы': ('KeyS', 83), 'Ь': ('KeySo', 77), 'Э': ('KeyEe', 222),
+    'Ю': ('KeyYu', 190), 'Я': ('KeyYa', 90),
+    '0': ('Digit0', 48), '1': ('Digit1', 49), '2': ('Digit2', 50),
+    '3': ('Digit3', 51), '4': ('Digit4', 52), '5': ('Digit5', 53), '6': ('Digit6', 54), '7': ('Digit7', 55),
+    '8': ('Digit8', 56), '9': ('Digit9', 57), '!': ('Digit1', 49), '"': ('Quote', 50), '#': ('Digit3', 51),
+    '$': ('Digit4', 52), '%': ('Digit5', 53), '&': ('Digit7', 55), "'": ('Quote', 222), '(': ('Digit9', 57),
+    ')': ('Digit0', 48), '*': ('Digit8', 56), '+': ('Equal', 187), ',': ('Comma', 191), '-': ('Minus', 189),
+    '.': ('Period', 191), '/': ('Slash', 220), ':': ('Semicolon', 54), ';': ('Semicolon', 52),
+    '<': ('Comma', 188),
+    '=': ('Equal', 187), '>': ('Period', 190), '?': ('Slash', 55), '@': ('Digit2', 50),
+    '[': ('BracketLeft', 219),
+    '\\': ('Backslash', 220), ']': ('BracketRight', 221), '^': ('Digit6', 54), '_': ('Minus', 189),
+    '`': ('Backquote', 192),
+    '{': ('BracketLeft', 219), '|': ('Backslash', 220), '}': ('BracketRight', 221), '~': ('Backquote', 192),
+    ' ': ('Space', 32)
+}
+
+SHIFT_KEY_NEEDED_EN = '~!@#$%^&*()_+{}|:"<>?'
+
+SHIFT_KEY_NEEDED_RU = ',;~!@#$%^&*()_+{}|:"<>?'
 
 
 class NoSuchIframe(Exception):
@@ -422,13 +455,28 @@ class Target:
         """the :class:`Pointer <selenium_driverless.input.pointer.Pointer>` for this target"""
         return self._pointer
 
-    async def send_keys(self, text: str, allow_not_on_mapping: bool = True):
+    async def send_keys(self, text: str,layout: str ="en", allow_not_on_mapping: bool = True):
         """
         send text & keys to the target
 
         :param text: the text to send to the target
+        :param layout: the keyboard layout, english qwerty by default
         :param allow_not_on_mapping: allow keys which aren't int the keyboard mapping
         """
+        if layout== "en":
+            KEY_MAPPING=KEY_MAPPING_EN
+        elif layout== "ru":
+            KEY_MAPPING=KEY_MAPPING_RU
+        else:
+            raise ValueError("mapping doesn't exist")
+        
+        if layout== "en":
+            SHIFT_KEY_NEEDED=SHIFT_KEY_NEEDED_EN
+        elif layout== "ru":
+            SHIFT_KEY_NEEDED=SHIFT_KEY_NEEDED_RU
+        else:
+            raise ValueError("mapping doesn't exist")
+            
         async with self._send_key_lock:
             for letter in text:
                 if letter in KEY_MAPPING:
