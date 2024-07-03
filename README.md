@@ -14,6 +14,10 @@ Note: This project is moving away from the selenium syntax
 - Network-interception ([documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/api/RequestInterception/))
 - Single requests ([documentation](https://kaliiiiiiiiii.github.io/Selenium-Driverless/api/Target/#selenium_driverless.types.target.Target.fetch))
 
+## Getting detected with interactions?
+[CDP-Patches](https://vinyzu.gitbook.io/cdp-patches-documentation) (headfull only) should fix this \
+(will integrate it at some time)
+
 ### Questions? 
 Feel free to join the [Driverless-Community](https://discord.com/invite/MzZZjr2ZM3) on **Discord**:)
 
