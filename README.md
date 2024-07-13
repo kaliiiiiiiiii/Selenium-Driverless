@@ -58,7 +58,7 @@ An AI-powered captcha-solver service.
 
 ### Dependencies
 
-* [Python >= 3.7](https://www.python.org/downloads/)
+* [Python >= 3.8](https://www.python.org/downloads/)
 * [Google-Chrome](https://www.google.de/chrome/) installed (Chromium not tested)
 
 ### Installing

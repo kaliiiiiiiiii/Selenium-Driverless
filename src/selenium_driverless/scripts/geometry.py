@@ -15,10 +15,10 @@ def gaussian_bias_rand(spread, border=0.05, bias=0.5) -> float:
     return res
 
 
-ElemType = typing.Union[np.ndarray[(int, int)], typing.List[typing.Union[typing.List, typing.Tuple]]]
+ElemType = typing.Union[np.ndarray, typing.List[typing.Union[typing.List, typing.Tuple]]]
 
 
-def point_in_rectangle(points: np.ndarray[(int, int)], a, b) -> typing.List[float]:
+def point_in_rectangle(points: np.ndarray, a, b) -> typing.List[float]:
     """
     Args:
     - points: List of four coordinates [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]

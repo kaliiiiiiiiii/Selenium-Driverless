@@ -1,6 +1,6 @@
 selenium
 cdp-socket>=1.0.6
-numpy~=1.26.2
+numpy
 aiofiles~=23.2
 matplotlib~=3.8.1
 scipy
@@ -16,6 +16,6 @@ sphinx-rtd-theme
 sphinx-autodoc-typehints
 sphinx
 jsondiff
-selenium_driverless
 typing_extensions
 aiodebug
+pytest-asyncio-cooperative
