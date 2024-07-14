@@ -22,7 +22,6 @@ async def test_bypass_turnstile(h_driver):
     wrappers = await h_driver.find_elements(By.XPATH, '//*[@class="cf-turnstile-wrapper"]')
     await asyncio.sleep(0.5)
 
-    shadow_document = None
     passed = False
     for wrapper in wrappers:
         # filter out correct iframe document
@@ -45,3 +44,4 @@ async def test_bypass_turnstile(h_driver):
                 except (NoSuchElementException, asyncio.TimeoutError):
                     passed = False
                 assert passed
+    assert passed
