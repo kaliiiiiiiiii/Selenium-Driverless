@@ -517,7 +517,7 @@ class Context:
 
     async def minimize_window(self) -> None:
         """Invokes the window manager-specific 'minimize' operation."""
-        await self.set_window_state("maximized")
+        await self.set_window_state("minimized")
 
     # noinspection PyUnusedLocal
     async def print_page(self) -> str:

@@ -982,7 +982,7 @@ class Chrome:
 
             Minimizing isn't recommended as it can throttle some functionalities in chrome.
         """
-        await self.set_window_state("maximized")
+        await self.set_window_state("minimized")
 
     # noinspection PyUnusedLocal
     async def print_page(self) -> str:
