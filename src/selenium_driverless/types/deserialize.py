@@ -599,6 +599,10 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
                                               execution_context_id=context_id))
         return elems
 
+    backend_node_id = None
+    if isinstance(_value, dict):
+        backend_node_id = _value.get('backendNodeId')
+
     # structures
     if _type == "array":
         if _value is None:
@@ -623,9 +627,6 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
                                                    isolated_exec_id=isolated_exec_id, frame_id=frame_id))
         return _res
 
-    backend_node_id = None
-    if isinstance(_value, dict):
-        backend_node_id = _value.get('backendNodeId')
     # non-json types
     elif _type == "bigint":
         return JSBigInt(_value)

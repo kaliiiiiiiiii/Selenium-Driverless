@@ -63,7 +63,7 @@ def sync_h_driver() -> typing.Generator[webdriver.Chrome, None, None]:
     options = mk_opt()
     options.headless = not no_headless
     with sync_webdriver.Chrome(options=options) as _driver:
-        driver.set_window_rect(x, y, width, height)
+        # driver.set_window_rect(x, y, width, height)
         yield _driver
 
 

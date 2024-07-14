@@ -85,7 +85,7 @@ def validate_click_event(event: dict, x, y, timestamp_range=2, pixel_range=1):
                      'initMouseEvent', 'initUIEvent', 'currentTarget', 'stopPropagation', 'timeStamp',
                      "sourceCapabilities",
                      'srcElement', 'composedPath', 'initEvent', 'preventDefault', 'stopImmediatePropagation', "view",
-                     "target","altitudeAngle"}
+                     "target", "altitudeAngle"}
     for key in click_expected.keys():
         expected_keys.add(key)
 
@@ -98,10 +98,8 @@ def validate_click_event(event: dict, x, y, timestamp_range=2, pixel_range=1):
                        'stopPropagation', 'composedPath', 'initEvent', 'preventDefault', 'stopImmediatePropagation']:
                 assert isinstance(value, JSFunction)
             elif key == "screenX":
-                pass
                 assert not in_range(value, x, pixel_range)
             elif key == "screenY":
-                pass
                 assert not in_range(value, y, pixel_range)
             elif key in ["clientX", "x"]:
                 assert in_range(value, x, pixel_range)
@@ -155,56 +153,41 @@ def validate_click_event(event: dict, x, y, timestamp_range=2, pixel_range=1):
     assert len(expected_keys) == 0
 
 
-@pytest.mark.asyncio
-async def test_click(driver):
+async def click_tester(driver, cdp_patches=False):
     await driver.current_target.execute_script(script)
     cords = [
         [100, 50],
         [200, 100],
         [300, 150]
     ]
-    p = driver.current_pointer
-    for x, y in cords:
-        await p.click(x, y, move_to=False)
+
+    if cdp_patches:
+        p = await AsyncInput(browser=driver, emulate_behaviour=False)
+        for x, y in cords:
+            await p.click("left", x, y)
+    else:
+        p = driver.current_pointer
+        for x, y in cords:
+            await p.click(x, y, move_to=False)
+
     events = await driver.execute_script("return window.events", max_depth=10)
     assert len(events) == 3
     for idx, event in enumerate(events):
         x, y = cords[idx]
         validate_click_event(event, x, y)
+
+
+@pytest.mark.asyncio
+async def test_click(driver):
+    await click_tester(driver)
 
 
 @pytest.mark.skip(reason="Headless will always fail")
 @pytest.mark.asyncio
 async def test_headless_click(h_driver):
-    await h_driver.current_target.execute_script(script)
-    cords = [
-        [100, 50],
-        [200, 100],
-        [300, 150]
-    ]
-    p = h_driver.current_pointer
-    for x, y in cords:
-        await p.click(x, y, move_to=False)
-    events = await h_driver.execute_script("return window.events", max_depth=10)
-    assert len(events) == 3
-    for idx, event in enumerate(events):
-        x, y = cords[idx]
-        validate_click_event(event, x, y)
+    await click_tester(h_driver)
 
 
 @pytest.mark.asyncio
 async def test_click_with_cdp_patches(driver):
-    await driver.current_target.execute_script(script)
-    cords = [
-        [100, 50],
-        [200, 100],
-        [300, 150]
-    ]
-    p = await AsyncInput(browser=driver, emulate_behaviour=False)
-    for x, y in cords:
-        await p.click("left", x, y)
-    events = await driver.execute_script("return window.events", max_depth=10)
-    assert len(events) == 3
-    for idx, event in enumerate(events):
-        x, y = cords[idx]
-        validate_click_event(event, x, y)
+    await click_tester(driver, cdp_patches=True)
