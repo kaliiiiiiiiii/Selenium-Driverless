@@ -7,12 +7,12 @@ import pathlib
 import jsondiff
 import pprint
 
-with open(pathlib.Path(os.getcwd() + "/files/clean.json"), "r", encoding="utf-8") as f:
+with open(pathlib.Path(os.getcwd() + "/assets/clean.json"), "r", encoding="utf-8") as f:
     clean = json.load(f)
 
 
 async def get_fp(driver: webdriver.Chrome):
-    await driver.get(os.getcwd() + "/files/index.html")
+    await driver.get(os.getcwd() + "/assets/index.html")
     js = """
         var elem = document.documentElement;
         function callback(e){

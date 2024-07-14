@@ -1,78 +1,41 @@
 from pathlib import Path
 import sys
-sys.path.append(str(Path(__file__).parent.parent.absolute())+"/src")
 
-import asyncio
+sys.path.append(str(Path(__file__).parent.parent.absolute()) + "/src")
+
 import pytest
+import pytest_asyncio
 import typing
+import socket
 from selenium_driverless import webdriver
-from selenium_driverless.types.target import Target
 
-no_headless = True
-max_tabs = 10
-max_drivers = 3
+no_headless = False
 
-full_driver: webdriver.Chrome = None
-headless_driver: webdriver.Chrome = None
-count = 0
-headless_count = 0
-close_lock = asyncio.Lock()
+try:
+    socket.setdefaulttimeout(2)
+    socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(("8.8.8.8", 53))
+    offline = False
+except socket.error as ex:
+    offline = True
 
-tab_sema = asyncio.Semaphore(max_tabs)
-driver_sema = asyncio.Semaphore(max_tabs)
+skip_offline = pytest.mark.skipif(offline, reason="can only run online")
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def driver() -> typing.Generator[webdriver.Chrome, None, None]:
-    async with driver_sema:
-        async with webdriver.Chrome() as _driver:
-            yield _driver
+    async with webdriver.Chrome() as _driver:
+        yield _driver
 
 
-@pytest.fixture
-async def h_driver() -> typing.Generator[webdriver.Chrome, None, None]:
-    async with driver_sema:
-        options = webdriver.ChromeOptions()
-        options.headless = not no_headless
-        async with webdriver.Chrome(options=options) as _driver:
-            yield _driver
+@pytest_asyncio.fixture
+async def driver() -> typing.Generator[webdriver.Chrome, None, None]:
+    options = webdriver.ChromeOptions()
+    options.headless = not no_headless
+    async with webdriver.Chrome(options=options) as _driver:
+        yield _driver
 
 
-@pytest.fixture
-async def tab() -> typing.Generator[Target, None, None]:
-    async with tab_sema:
-        global full_driver
-        global count
-        if count == 0:
-            full_driver = await webdriver.Chrome().__aenter__()
-        tab = await full_driver.new_window()
-        count += 1
-        try:
-            yield tab
-        finally:
-            async with close_lock:
-                if count == 1:
-                    await full_driver.quit()
-                count -= 1
-            await tab.close()
-
-
-@pytest.fixture
-async def h_tab() -> typing.Generator[Target, None, None]:
-    async with tab_sema:
-        global headless_driver
-        global headless_count
-        if headless_count == 0:
-            options = webdriver.ChromeOptions()
-            options.headless = not no_headless
-            headless_driver = await webdriver.Chrome(options=options).__aenter__()
-        tab: Target = await headless_driver.new_window()
-        headless_count += 1
-        try:
-            yield tab
-        finally:
-            async with close_lock:
-                if headless_count == 1:
-                    await headless_driver.quit()
-                headless_count -= 1
-            await tab.close()
+def pytest_runtest_setup(item):
+    if offline:
+        for _ in item.iter_markers(name="skip_offline"):
+            pytest.skip("Test requires being online")

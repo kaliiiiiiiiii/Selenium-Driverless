@@ -24,7 +24,7 @@
     "webdiver": false,
     "devicePixelRatio": 1.5,
     "innerWidth": 1280,
-    "innerHeight": 632,
+    "innerHeight": 633,
     "outerWidth": 720,
     "outerHeight": 720,
     "screen": {
@@ -35,17 +35,17 @@
         "colorDepth": 24,
         "pixelDepth": 24,
         "availLeft": 0,
-        "availTop": 0,
+        "availTop": -720,
         "orientation": {
             "angle": 0,
             "type": "landscape-primary"
         },
-        "isExtended": false
+        "isExtended": true
     },
     "connection": {
         "effectiveType": "4g",
-        "rtt": 50,
-        "downlink": 1.55,
+        "rtt": 200,
+        "downlink": 1.75,
         "saveData": false
     },
     "plugins": [
@@ -218,11 +218,11 @@
         "fullVersionList": [
             {
                 "brand": "Google Chrome",
-                "version": "125.0.6422.76"
+                "version": "125.0.6422.142"
             },
             {
                 "brand": "Chromium",
-                "version": "125.0.6422.76"
+                "version": "125.0.6422.142"
             },
             {
                 "brand": "Not.A/Brand",
@@ -233,7 +233,7 @@
         "model": "",
         "platform": "Windows",
         "platformVersion": "10.0.0",
-        "uaFullVersion": "125.0.6422.76"
+        "uaFullVersion": "125.0.6422.142"
     },
     "darkmode": true,
     "availabeFonts": [
@@ -3170,7 +3170,7 @@
         11429,
         79.99300087489064
     ],
-    "timing_native": 0.09999999403953552,
+    "timing_native": 0.09999990463256836,
     "permissions": {
         "background-sync": "granted",
         "clipboard-read": "prompt",
@@ -6649,7 +6649,7 @@
         5776,
         80.08318890814559
     ],
-    "timing_worker": 0.09999999403953552,
+    "timing_worker": 0.09999990463256836,
     "gl": {
         "BLEND_EQUATION": [
             32774,

@@ -195,12 +195,12 @@ class WebElement(JSRemoteObj):
         return self.___frame_id__
 
     @property
-    async def content_document(self):
+    async def content_document(self) -> WebElement:
         """
         **async** gets the contentDocument element of the iframe (or frame). Returns None if this isn't an iframe.
         """
         _desc = await self._describe()
-        if _desc.get("localName") in ["iframe","frame"]:
+        if _desc.get("localName") in ["iframe", "frame"]:
             node = _desc.get("contentDocument")
             if node:
                 frame_id = _desc.get("frameId")
@@ -233,6 +233,41 @@ class WebElement(JSRemoteObj):
                 return await targets[0]._document_elem
 
     @property
+    async def shadow_roots(self) -> typing.List[WebElement]:
+        """
+        **async** gets a list of currently connected shadow root documents
+        """
+        isolated_exec_id = await self.__isolated_exec_id__
+        _desc = await self._describe()
+        res = []
+        shadow_roots = _desc.get("shadowRoots", [])
+        for node in shadow_roots:
+            frame_id = _desc.get("frameId")
+            state = node.get('shadowRootType')
+
+            if self._loop:
+                from selenium_driverless.sync.webelement import WebElement as SyncWebElement
+                elem = await SyncWebElement(backend_node_id=node.get('backendNodeId'),
+                                            target=self.__target__, loop=self._loop,
+                                            class_name=f'#document-fragment({state} shadow-root)',
+                                            isolated_exec_id=isolated_exec_id, frame_id=frame_id)
+            else:
+                elem = await WebElement(backend_node_id=node.get('backendNodeId'),
+                                        target=self.__target__, loop=self._loop,
+                                        class_name=f'#document-fragment({state} shadow-root)',
+                                        isolated_exec_id=isolated_exec_id, frame_id=frame_id)
+            res.append(elem)
+        return res
+
+    @property
+    async def shadow_root(self) -> typing.Union[WebElement, None]:
+        """**async** returns the (first)  document for this element
+        """
+        roots = await self.shadow_roots
+        if len(roots) != 0:
+            return roots[0]
+
+    @property
     async def document_url(self):
         """**async** gets the url if the element is an iframe, else returns ``None``"""
         res = await self._describe()
@@ -254,7 +289,7 @@ class WebElement(JSRemoteObj):
         """
         return self._class_name
 
-    async def find_element(self, by: str, value: str, idx: int = 0, timeout: int or None = None):
+    async def find_element(self, by: str, value: str, idx: int = 0, timeout: int or None = None) -> WebElement:
         """find an element in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
@@ -682,16 +717,6 @@ class WebElement(JSRemoteObj):
         """Returns whether the element is enabled."""
         return not await self.get_property("disabled")
 
-    @property
-    async def shadow_root(self):
-        """the shadowRoot of the element
-
-        .. warning::
-            this does not support (yet) closed shadow-DOM elements
-        """
-        # todo: move to CDP
-        return await self.execute_script("return obj.shadowRoot")
-
     # RenderedWebElement Items
     async def is_displayed(self) -> bool:
 
@@ -883,7 +908,8 @@ class WebElement(JSRemoteObj):
             if self._loop:
                 # noinspection PyUnresolvedReferences
                 return await SyncWebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
-                                            isolated_exec_id=self.___isolated_exec_id__, frame_id=await self.__frame_id__)
+                                            isolated_exec_id=self.___isolated_exec_id__,
+                                            frame_id=await self.__frame_id__)
             else:
                 # noinspection PyUnresolvedReferences
                 return await WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
