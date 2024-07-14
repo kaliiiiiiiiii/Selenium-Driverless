@@ -1,7 +1,10 @@
+import pytest
+
 from selenium_driverless.sync import webdriver
 from selenium_driverless.types.by import By
 
 
+@pytest.mark.skip_offline
 def test_sync_selenium_detector(sync_h_driver):
     sync_h_driver.get('https://hmaker.github.io/selenium-detector/')
     elem = sync_h_driver.find_element(By.CSS_SELECTOR, "#chromedriver-token")
