@@ -19,4 +19,3 @@ def test_sync_selenium_detector(sync_h_driver):
     passed = sync_h_driver.find_element(By.XPATH, '//*[@id="chromedriver-test-container"]/span')
     text = passed.text
     assert text == "Passed!"
-    print(text)
