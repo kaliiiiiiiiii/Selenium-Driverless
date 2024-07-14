@@ -1,18 +1,17 @@
 import asyncio
 import pytest
-from selenium_driverless import webdriver
 from selenium_driverless.types.by import By
 from selenium_driverless.types.webelement import NoSuchElementException
 
 
 @pytest.mark.asyncio
 @pytest.mark.skip_offline
-async def test_bypass_turnstile(driver):
-    await driver.get("https://nopecha.com/demo/turnstile")
+async def test_bypass_turnstile(h_driver):
+    await h_driver.get("https://nopecha.com/demo/turnstile")
     await asyncio.sleep(0.5)
 
     # some random mouse-movements over iframes
-    pointer = driver.current_pointer
+    pointer = h_driver.current_pointer
     await pointer.move_to(500, 200, smooth_soft=60, total_time=0.5)
     await pointer.move_to(20, 50, smooth_soft=60, total_time=0.5)
     await pointer.move_to(8, 45, smooth_soft=60, total_time=0.5)
@@ -20,7 +19,7 @@ async def test_bypass_turnstile(driver):
     await pointer.move_to(166, 206, smooth_soft=60, total_time=0.5)
     await pointer.move_to(200, 205, smooth_soft=60, total_time=0.5)
 
-    wrappers = await driver.find_elements(By.XPATH, '//*[@class="cf-turnstile-wrapper"]')
+    wrappers = await h_driver.find_elements(By.XPATH, '//*[@class="cf-turnstile-wrapper"]')
     await asyncio.sleep(0.5)
 
     shadow_document = None

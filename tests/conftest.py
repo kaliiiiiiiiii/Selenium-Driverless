@@ -8,6 +8,7 @@ import pytest_asyncio
 import typing
 import socket
 from selenium_driverless import webdriver
+from selenium_driverless.sync import webdriver as sync_webdriver
 
 no_headless = False
 
@@ -28,10 +29,23 @@ async def driver() -> typing.Generator[webdriver.Chrome, None, None]:
 
 
 @pytest_asyncio.fixture
-async def driver() -> typing.Generator[webdriver.Chrome, None, None]:
+async def h_driver() -> typing.Generator[webdriver.Chrome, None, None]:
     options = webdriver.ChromeOptions()
     options.headless = not no_headless
     async with webdriver.Chrome(options=options) as _driver:
+        yield _driver
+
+@pytest.fixture
+def sync_driver() -> typing.Generator[webdriver.Chrome, None, None]:
+    with sync_webdriver.Chrome() as _driver:
+        yield _driver
+
+
+@pytest.fixture
+def sync_h_driver() -> typing.Generator[webdriver.Chrome, None, None]:
+    options = webdriver.ChromeOptions()
+    options.headless = not no_headless
+    with sync_webdriver.Chrome(options=options) as _driver:
         yield _driver
 
 

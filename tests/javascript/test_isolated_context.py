@@ -2,8 +2,8 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_isolated_execution_context(driver):
-    await driver.get('chrome://version')
+async def test_isolated_execution_context(h_driver):
+    await h_driver.get('chrome://version')
     script = """
             const proxy = new Proxy(document.documentElement, {
               get(target, prop, receiver) {
@@ -18,8 +18,8 @@ async def test_isolated_execution_context(driver):
               value: proxy
             })
             """
-    await driver.execute_script(script)
-    src = await driver.execute_script("return document.documentElement.outerHTML", unique_context=True)
-    mocked = await driver.execute_script("return document.documentElement.outerHTML", unique_context=False)
+    await h_driver.execute_script(script)
+    src = await h_driver.execute_script("return document.documentElement.outerHTML", unique_context=True)
+    mocked = await h_driver.execute_script("return document.documentElement.outerHTML", unique_context=False)
     assert mocked == "mocked value:)"
     assert src != "mocked value:)"
