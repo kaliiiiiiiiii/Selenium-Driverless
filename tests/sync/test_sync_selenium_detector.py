@@ -1,6 +1,5 @@
 import pytest
 
-from selenium_driverless.sync import webdriver
 from selenium_driverless.types.by import By
 
 
