@@ -80,8 +80,9 @@ class WebElement(JSRemoteObj):
                  node_id=None, backend_node_id: str = None, loop=None, class_name: str = None,
                  context_id: int = None, is_iframe: bool = False) -> None:
         self._loop = loop
-        if not (obj_id or node_id or backend_node_id):
-            raise ValueError("either js, obj_id or node_id need to be specified")
+        # {'type': 'node', 'weakLocalObjectReference': 1}
+        #if not (obj_id or node_id or backend_node_id):
+        #    raise ValueError("either js, obj_id or node_id need to be specified")
         self._node_id = node_id
         self._backend_node_id = backend_node_id
         self._class_name = class_name

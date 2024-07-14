@@ -623,6 +623,9 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
                                                    isolated_exec_id=isolated_exec_id, frame_id=frame_id))
         return _res
 
+    backend_node_id = None
+    if isinstance(_value, dict):
+        backend_node_id = _value.get('backendNodeId')
     # non-json types
     elif _type == "bigint":
         return JSBigInt(_value)
@@ -672,18 +675,22 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
         return JSArrayBuffer(obj_id, target=target,
                              isolated_exec_id=isolated_exec_id, frame_id=frame_id)
     elif _type == "node":
+
         if loop:
-            return await SyncWebElement(backend_node_id=_value.get('backendNodeId'), obj_id=obj_id, target=target,
+            return await SyncWebElement(backend_node_id=backend_node_id, obj_id=obj_id, target=target,
                                         loop=loop,
                                         class_name=class_name, context_id=context_id,
                                         isolated_exec_id=isolated_exec_id, frame_id=frame_id)
         else:
-            return await WebElement(backend_node_id=_value.get('backendNodeId'), obj_id=obj_id, target=target,
+            return await WebElement(backend_node_id=backend_node_id, obj_id=obj_id, target=target,
                                     loop=loop,
                                     class_name=class_name, context_id=context_id,
                                     isolated_exec_id=isolated_exec_id, frame_id=frame_id)
     elif _type == "window":
-        return JSWindow(context=_value.get("context"), obj_id=obj_id, target=target, isolated_exec_id=isolated_exec_id,
+        context = None
+        if _value is not None:
+            context = _value.get("context")
+        return JSWindow(context=context, obj_id=obj_id, target=target, isolated_exec_id=isolated_exec_id,
                         frame_id=frame_id)
     elif _type == "generator":
         return JSUnserializable(_type, _value, target=target, obj_id=obj_id,
