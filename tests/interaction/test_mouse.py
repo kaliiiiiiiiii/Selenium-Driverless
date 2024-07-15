@@ -29,9 +29,10 @@ script = """
         res["sourceCapabilities"] = jsonify(e.sourceCapabilities)
         window.events.push(res)
     }
-    b.addEventListener("click", h)
+    b.addEventListener("mousemove", h)
     b.addEventListener("mousedown", h)
     b.addEventListener("mouseup", h)
+    b.addEventListener("click", h)
     """
 
 mouse_event_expected = {
@@ -43,8 +44,6 @@ mouse_event_expected = {
     "button": 0,
     "buttons": 0,
     "relatedTarget": None,
-    "movementX": 0,
-    "movementY": 0,
     "fromElement": None,
     "detail": 1,
     "which": 1,
@@ -65,7 +64,7 @@ mouse_expected_keys = {"screenX", "screenY", "clientX", "clientY",
                        'getModifierState', 'initMouseEvent', 'initUIEvent', 'currentTarget',
                        'stopPropagation', 'timeStamp', "sourceCapabilities", 'srcElement',
                        'composedPath', 'initEvent', 'preventDefault', 'stopImmediatePropagation',
-                       "view", "target", "type", "toElement"}
+                       "view", "target", "type", "toElement", "movementX", "movementY"}
 
 click_expected = {
     "azimuthAngle": 0,
@@ -88,6 +87,9 @@ click_expected_keys = {
 mousedown_expected = {
     "buttons": 1,
 }
+mousemove_expected = {
+    "detail": 0,
+}
 
 
 def in_range(num, expected, _range):
@@ -95,8 +97,8 @@ def in_range(num, expected, _range):
 
 
 def validate_mouse_event(subtests, event: dict, x, y, time_origin: float,
-                         _type: typing.Literal["mousedown", "mouseup", "click"],
-                         timestamp_range=2, pixel_range=1):
+                         _type: typing.Literal["mousemove","mousedown", "mouseup", "click"],
+                         timestamp_range=3, pixel_range=1):
     now = time.time()
 
     expected = mouse_event_expected.copy()
@@ -105,6 +107,8 @@ def validate_mouse_event(subtests, event: dict, x, y, time_origin: float,
         expected.update(click_expected)
     elif _type == "mousedown":
         expected.update(mousedown_expected)
+    elif _type == "mousemove":
+        expected.update(mousemove_expected)
 
     expected_keys = mouse_expected_keys.copy()
     expected_keys.update(expected.keys())
@@ -115,7 +119,7 @@ def validate_mouse_event(subtests, event: dict, x, y, time_origin: float,
         expected_value = expected.get(key, special)
         if expected_value == special:
             # no constant == assertion
-            with subtests.test():
+            with subtests.test(key=key, value=value, type=_type):
                 if key in expected_keys:
                     expected_keys.remove(key)
                 if key in ['getCoalescedEvents', 'getPredictedEvents', 'getModifierState', 'initMouseEvent',
@@ -180,13 +184,18 @@ def validate_mouse_event(subtests, event: dict, x, y, time_origin: float,
                         assert value is None
                     else:
                         assert isinstance(value, WebElement)
+                elif key in ["movementX", "movementY"]:
+                    if _type != "mousemove":
+                        assert value == 0
+                    else:
+                        assert isinstance(value, int)
                 else:
                     raise ValueError(
                         f"Got unknown, unexpected attribute for event\n {key.__repr__()}={value.__repr__()}")
         else:
             expected_keys.remove(key)
 
-            with subtests.test(key=key):
+            with subtests.test(key=key,type=_type,value=value, expected=expected_value):
                 assert value == expected_value
     with subtests.test():
         assert len(expected_keys) == 0
@@ -194,7 +203,7 @@ def validate_mouse_event(subtests, event: dict, x, y, time_origin: float,
 
 async def click_tester(subtests, driver, cdp_patches=False):
     await driver.current_target.execute_script(script)
-    event_types = ["mousedown", "mouseup", "click"]
+    event_types = ["mousemove","mousedown", "mouseup", "click"]
     cords = [
         [100, 50],
         [200, 100],
@@ -204,18 +213,21 @@ async def click_tester(subtests, driver, cdp_patches=False):
     if cdp_patches:
         p = await AsyncInput(browser=driver, emulate_behaviour=False)
         for x, y in cords:
-            await p.click("left", x, y)
+            p.base.move(x,y)
+            await p.click("left", x, y, emulate_behaviour=False)
     else:
         p = driver.current_pointer
         for x, y in cords:
+            await p.base.move_to(x, y)
             await p.click(x, y, move_to=False)
 
     events, time_origin = await driver.execute_script("return [window.events, performance.timeOrigin]", max_depth=10)
-    assert len(events) == len(cords) * 3
+    group_n = 4
+    assert len(events) == len(cords) * group_n
 
     for idx in range(len(cords)):
         x, y = cords[idx]
-        grouped_events = events[idx * 3:(idx * 3) + 3]
+        grouped_events = events[idx * group_n:(idx * group_n) + group_n]
         for _type, event in zip(event_types, grouped_events):
             validate_mouse_event(subtests, event, x, y, time_origin, _type)
 
