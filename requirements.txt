@@ -20,3 +20,4 @@ typing_extensions
 aiodebug
 pytest-asyncio
 cdp-patches
+pytest-subtests
