@@ -308,12 +308,7 @@ class Chrome:
             await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
             if self._options.single_proxy:
                 await self.set_single_proxy(self._options.single_proxy)
-            downloads_dir = self._options.downloads_dir
-            if self._options.downloads_dir:
-                # ensure download events are dispatched
-                await self.set_download_behaviour("allowAndName", downloads_dir)
-            else:
-                await self.set_download_behaviour("default")
+
             self._started = True
         return self
 
