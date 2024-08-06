@@ -36,7 +36,9 @@ def mk_opt():
 @pytest_asyncio.fixture
 async def driver() -> typing.Generator[webdriver.Chrome, None, None]:
     options = mk_opt()
-    async with webdriver.Chrome(options=options) as _driver:
+    debug = False
+    # options.add_argument("--log-level=0")
+    async with webdriver.Chrome(options=options, debug=False) as _driver:
         await _driver.set_window_rect(x, y, width, height)
         yield _driver
 

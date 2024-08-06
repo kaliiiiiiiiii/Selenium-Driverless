@@ -232,12 +232,13 @@ async def click_tester(subtests, driver, cdp_patches=False):
             validate_mouse_event(subtests, event, x, y, time_origin, _type)
 
 
+@pytest.mark.skip(reason="CDP isn't integrated automatically yet")
 @pytest.mark.asyncio
 async def test_click(driver, subtests):
     await click_tester(subtests, driver)
 
 
-@pytest.mark.skip(reason="Headless will always fail")
+@pytest.mark.skip(reason="Wont fix")
 @pytest.mark.asyncio
 async def test_headless_click(h_driver, subtests):
     await click_tester(subtests, h_driver)

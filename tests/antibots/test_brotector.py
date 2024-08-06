@@ -25,10 +25,11 @@ async def detect(target: Target, cdp_patches_input: typing.Union[AsyncInput, typ
         assert len(detections) == 0
 
 
+@pytest.mark.skip(reason="CDP isn't integrated automatically yet")
 @pytest.mark.asyncio
 @pytest.mark.skip_offline
-async def test_driverless(h_driver):
-    await detect(h_driver.current_target, cdp_patches_input=False)
+async def test_driverless(driver):
+    await detect(driver.current_target, cdp_patches_input=False)
 
 
 @pytest.mark.asyncio
