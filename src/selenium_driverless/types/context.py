@@ -659,7 +659,7 @@ class Context:
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
         :param value: the actual query to find the elements by
-        :param timeout: how long to wait for now being in a page reload loop in seconds
+        :param timeout: how long to wait for not being in a page reload loop in seconds
         """
         target = await self.get_target()
         return await target.find_elements(by=by, value=value, timeout=timeout)

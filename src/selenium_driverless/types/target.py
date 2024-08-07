@@ -876,7 +876,7 @@ class Target:
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
         :param value: the actual query to find the elements by
-        :param timeout: how long to wait for now being in a page reload loop in seconds
+        :param timeout: how long to wait for not being in a page reload loop in seconds
         """
         start = time.perf_counter()
         while True:
