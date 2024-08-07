@@ -1,14 +1,14 @@
 from selenium_driverless.types.by import By
 from cdp_patches.input import AsyncInput
-from selenium_driverless.types.webelement import StaleElementReferenceException
+from selenium_driverless.types.webelement import NoSuchElementException
 import asyncio
 import pytest
 
 
-async def bet365_test(driver, async_input:AsyncInput=None):
-    async def click_login():
+async def bet365_test(driver, async_input: AsyncInput = None):
+    async def click_login(timeout: float = 30):
         login_button = await driver.find_element(By.XPATH, value='//*[@class="hm-MainHeaderRHSLoggedOutWide_Join "]',
-                                                 timeout=30)
+                                                 timeout=timeout)
         if async_input is None:
             await login_button.click()
         else:
@@ -21,8 +21,8 @@ async def bet365_test(driver, async_input:AsyncInput=None):
     await click_login()
     await asyncio.sleep(1)
     try:
-        await click_login()
-    except StaleElementReferenceException:
+        await click_login(timeout=3)
+    except (NoSuchElementException, asyncio.TimeoutError):
         pass
     await asyncio.sleep(3)
     url = await driver.current_url
