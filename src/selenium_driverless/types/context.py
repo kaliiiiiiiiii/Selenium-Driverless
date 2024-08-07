@@ -654,14 +654,15 @@ class Context:
         target = await self.get_target()
         return await target.find_element(by=by, value=value, timeout=timeout)
 
-    async def find_elements(self, by: str, value: str) -> typing.List[WebElement]:
+    async def find_elements(self, by: str, value: str, timeout: float= 3) -> typing.List[WebElement]:
         """find multiple elements in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
         :param value: the actual query to find the elements by
+        :param timeout: how long to wait for now being in a page reload loop in seconds
         """
         target = await self.get_target()
-        return await target.find_elements(by=by, value=value)
+        return await target.find_elements(by=by, value=value, timeout=timeout)
 
     async def search_elements(self, query: str, target_id: str = None) -> typing.List[WebElement]:
         """

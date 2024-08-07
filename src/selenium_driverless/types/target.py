@@ -871,14 +871,22 @@ class Target:
             raise NoSuchElementException()
         return elem
 
-    async def find_elements(self, by: str, value: str) -> typing.List[WebElement]:
+    async def find_elements(self, by: str, value: str, timeout: float= 3) -> typing.List[WebElement]:
         """find multiple elements in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
         :param value: the actual query to find the elements by
+        :param timeout: how long to wait for now being in a page reload loop in seconds
         """
-        parent = await self._document_elem
-        return await parent.find_elements(by=by, value=value)
+        start = time.perf_counter()
+        while True:
+            parent = await self._document_elem
+            try:
+                return await parent.find_elements(by=by, value=value)
+            except (StaleElementReferenceException, StaleJSRemoteObjReference):
+                await self._on_loaded()
+            if (not timeout) or (time.perf_counter() - start) > timeout:
+                raise asyncio.TimeoutError(f"Couldn't find elements within {timeout} seconds due to a target reload loop")
 
     async def set_source(self, source: str, timeout: float = 15):
         """
