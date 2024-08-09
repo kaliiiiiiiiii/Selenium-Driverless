@@ -120,6 +120,8 @@ class Chrome:
         self._is_remote = False
         self._has_incognito_contexts: bool = False
         self._started = False
+        self.port: int or None = None
+
 
     def __repr__(self):
         return f'<{type(self).__module__}.{type(self).__name__} (session="{self.current_target.id}")>'
@@ -299,17 +301,14 @@ class Chrome:
                     context._closed_callbacks.append(remove_context)
                     self._current_context = context
                     self._base_context = context
+                    self.port = self.base_context.base_target.socket.ws_url.split(":")[2].split("/")[0]
+
                     self._contexts[_id] = context
                     break
             await self.execute_cdp_cmd("Emulation.setFocusEmulationEnabled", {"enabled": True})
             if self._options.single_proxy:
                 await self.set_single_proxy(self._options.single_proxy)
-            downloads_dir = self._options.downloads_dir
-            if self._options.downloads_dir:
-                # ensure download events are dispatched
-                await self.set_download_behaviour("allowAndName", downloads_dir)
-            else:
-                await self.set_download_behaviour("default")
+
             self._started = True
         return self
 
