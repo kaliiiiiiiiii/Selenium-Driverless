@@ -43,18 +43,43 @@ pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/he
 
 ## Sponsors
 
-### [Capsolver](https://is.gd/pNs507)
+<table>
+  <tr>
+    <th width="50%" style="text-align: left;">Evomi</th>
+    <th width="50%" style="text-align: left;">Capsolver</th>
+  </tr>
+  <tr>
+    <td style="padding-right: 10px;">
+      <a href=https://is.gd/6eky7S">
+        <!--- https://is.gd/stats.php?url=6eky7S --->
+        <img src="https://my.evomi.com/images/brand/cta.png" alt="Evomi" style="max-width: 100%;"/>
+      </a>
+      <div style="margin-top: 10px;">
+        <p><strong>Evomi</strong> is your Swiss Quality, affordable Proxy Provider.</p>
+        <h4>Features:</h4>
+        <ul>
+          <li>🌍 <strong>Global Presence</strong>: Available in 150+ Countries</li>
+          <li>⚡ <strong>Guaranteed Low Latency</strong></li>
+          <li>🔒 <strong>Swiss Quality and Privacy</strong></li>
+          <li>🛡️ <strong>99.9% Uptime</strong></li>
+          <li>🤝 <strong>Dedicated Support</strong></li>
+          <li>🔧 <strong>Easy Integration</strong>: Compatible with most software and programming languages</li>
+        </ul>
+      </div>
+    </td>
+    <td style="padding-left: 10px;">
+      <a href="https://is.gd/pNs507">
+        <!--- https://is.gd/stats.php?url=pNs507 --->
+        <img src="assets/capsolver.png" alt="Capsolver" style="max-width: 100%;"/>
+      </a>
+      <div style="margin-top: 10px;">
+        <p>An AI-powered cpatcha solver, supportings reCAPTCHA V2, reCAPTCHA V3, hCaptcha, FunCaptcha, DataDome, AWS Captcha, Geetest, and Cloudflare Captcha / Challenge 5s, Imperva /     Incapsula, among others.
 
-<a href="https://is.gd/pNs507" >
-  <img src="assets/capsolver.png" alt="drawing" width="60%"/>
-</a>
-
-<!--- 
-https://is.gd/stats.php?url=pNs507
---->
-
-An AI-powered captcha-solver service.
-
+  Capsolver offers seamless API integration and provide browser extensions, making it easy to use their service directly within a browser.</p>
+      </div>
+    </td>
+  </tr>
+</table>
 
 ### Dependencies
 
