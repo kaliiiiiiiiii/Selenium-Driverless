@@ -50,7 +50,7 @@ pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/he
   </tr>
   <tr>
     <td style="padding-right: 10px;">
-      <a href=https://is.gd/6eky7S">
+      <a href="https://is.gd/6eky7S">
         <!--- https://is.gd/stats.php?url=6eky7S --->
         <img src="https://my.evomi.com/images/brand/cta.png" alt="Evomi" style="max-width: 100%;"/>
       </a>
