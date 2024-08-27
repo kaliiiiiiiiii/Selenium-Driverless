@@ -73,9 +73,9 @@ pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/he
         <img src="assets/capsolver.png" alt="Capsolver" style="max-width: 100%;"/>
       </a>
       <div style="margin-top: 10px;">
-        <p>An AI-powered cpatcha solver, supportings reCAPTCHA V2, reCAPTCHA V3, hCaptcha, FunCaptcha, DataDome, AWS Captcha, Geetest, and Cloudflare Captcha / Challenge 5s, Imperva /     Incapsula, among others.
+        <p>An AI-powered cpatcha solver, supporting reCAPTCHA V2, reCAPTCHA V3, hCaptcha, FunCaptcha, DataDome, AWS Captcha, Geetest, and Cloudflare Captcha / Challenge 5s, Imperva /     Incapsula, among others.
 
-  Capsolver offers seamless API integration and provide browser extensions, making it easy to use their service directly within a browser.</p>
+  Capsolver offers seamless API integration and provides browser extensions, making it easy to integrating their service without any code.</p>
       </div>
     </td>
   </tr>
