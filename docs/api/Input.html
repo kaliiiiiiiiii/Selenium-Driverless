@@ -110,6 +110,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.pointer.EventType.WHEEL"><code class="docutils literal notranslate"><span class="pre">EventType.WHEEL</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#select-element">Select Element</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.input.utils.select"><code class="docutils literal notranslate"><span class="pre">select()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="RequestInterception.html">Request-Interception</a></li>
@@ -487,6 +491,33 @@
 
 </dd></dl>
 
+<section id="select-element">
+<h2>Select Element<a class="headerlink" href="#select-element" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="selenium_driverless.input.utils.select">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selenium_driverless.input.utils.</span></span><span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">async_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeouts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/selenium_driverless/input/utils.html#select"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.input.utils.select" title="Permalink to this definition"></a></dt>
+<dd><p>Selects an option of a <code class="docutils literal notranslate"><span class="pre">&lt;select&gt;</span></code> element</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>elem</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="WebELement.html#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></a></span>) – <code class="docutils literal notranslate"><span class="pre">&lt;select&gt;</span></code> element to select an option from</p></li>
+<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – value for the option to select (can be different from the text!)</p></li>
+<li><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – the text of the option to select</p></li>
+<li><p><strong>async_input</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncInput</span></code>]</span>) – an instance of <code class="docutils literal notranslate"><span class="pre">cdp_patches.input.AsyncInput</span></code></p></li>
+<li><p><strong>timeouts</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – timeout in seconds between actions performed to select an option</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>this is potentially detectable without the use of <a class="reference external" href="https://github.com/Kaliiiiiiiiii-Vinyzu/CDP-Patches">CDP-patches</a> !</p>
+</div>
+</dd></dl>
+
+</section>
 </section>
 
 
