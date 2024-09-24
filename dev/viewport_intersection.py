@@ -29,6 +29,10 @@ def rectangle_corners(center, width, height, angle):
 
 def edge_intersection(p1, p2, p3, p4):
     """Find intersection of two line segments (p1p2 and p3p4)."""
+    # Check for identical points
+    if np.array_equal(p1, p2) or np.array_equal(p3, p4):
+        return None
+
     A1, B1 = p2[1] - p1[1], p1[0] - p2[0]
     C1 = A1 * p1[0] + B1 * p1[1]
 
@@ -40,16 +44,18 @@ def edge_intersection(p1, p2, p3, p4):
     if determinant == 0:
         return None  # Lines are parallel
 
+    # Calculate intersection coordinates
     x = (B2 * C1 - B1 * C2) / determinant
     y = (A1 * C2 - A2 * C1) / determinant
 
     # Check if intersection point is within both line segments
     if (np.min([p1[0], p2[0]]) <= x <= np.max([p1[0], p2[0]]) and
-            np.min([p1[1], p2[1]]) <= y <= np.max([p1[1], p2[1]]) and
-            np.min([p3[0], p4[0]]) <= x <= np.max([p3[0], p4[0]]) and
-            np.min([p3[1], p4[1]]) <= y <= np.max([p3[1], p4[1]])):
+        np.min([p1[1], p2[1]]) <= y <= np.max([p1[1], p2[1]]) and
+        np.min([p3[0], p4[0]]) <= x <= np.max([p3[0], p4[0]]) and
+        np.min([p3[1], p4[1]]) <= y <= np.max([p3[1], p4[1]])):
         return np.array([x, y])
     return None
+
 
 
 def point_in_polygon(point, polygon):
