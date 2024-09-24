@@ -511,7 +511,7 @@ class WebElement(JSRemoteObj):
         """Clicks the element.
 
         :param timeout: the time in seconds to take for clicking on the element
-        :param visible_timeout: the time in seconds to wait for being able to compute the elements box model
+        :param visible_timeout: the time in seconds to wait for the element to be at least partially visible
         :param spread_a: spread over a
         :param spread_b: spread over b
         :param bias_a: bias over a (0-1)

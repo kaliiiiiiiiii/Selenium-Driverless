@@ -113,7 +113,7 @@
 <span class="c1"># driverless</span>
 <span class="kn">from</span> <span class="nn">selenium_driverless.types.by</span> <span class="kn">import</span> <span class="n">By</span>
 <span class="kn">from</span> <span class="nn">selenium_driverless.types.deserialize</span> <span class="kn">import</span> <span class="n">JSRemoteObj</span><span class="p">,</span> <span class="n">StaleJSRemoteObjReference</span>
-<span class="kn">from</span> <span class="nn">selenium_driverless.scripts.geometry</span> <span class="kn">import</span> <span class="n">rand_mid_loc</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.scripts.geometry</span> <span class="kn">import</span> <span class="n">rand_mid_loc</span><span class="p">,</span> <span class="n">overlap</span><span class="p">,</span> <span class="n">is_point_in_polygon</span>
 
 
 <span class="k">class</span> <span class="nc">NoSuchElementException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
@@ -554,13 +554,21 @@
         <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args_builder</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.focus&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="WebElement.is_clickable"><a class="viewcode-back" href="../../../api/WebELement.html#selenium_driverless.types.webelement.WebElement.is_clickable">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">is_clickable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listener_depth</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="c1"># noinspection PyIncorrectDocstring</span>
+<div class="viewcode-block" id="WebElement.is_clickable"><a class="viewcode-back" href="../../../api/WebELement.html#selenium_driverless.types.webelement.WebElement.is_clickable">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">is_clickable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listener_depth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">box_model</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        returns ``True`` if the element type is one of &quot;a&quot;, &quot;button&quot;, &quot;command&quot;, &quot;details&quot;, &quot;input&quot;, &quot;select&quot;, &quot;textarea&quot;, &quot;video&quot;, &quot;map&quot;</span>
-<span class="sd">        else wise checks for &quot;click&quot;, &quot;mousedown&quot; or &quot;mouseup&quot; event listeners on the element</span>
+<span class="sd">        otherwise checks for &quot;click&quot;, &quot;mousedown&quot; or &quot;mouseup&quot; event listeners on the element</span>
 
 <span class="sd">        :param listener_depth: the depth (nested elements) to get event-listeners for</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">box_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">box_model</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_model</span>
+            <span class="k">except</span> <span class="n">ElementNotVisible</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_visible</span><span class="p">(</span><span class="n">box_model</span><span class="o">=</span><span class="n">box_model</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
         <span class="n">_type</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">tag_name</span>
         <span class="k">if</span> <span class="n">_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;button&quot;</span><span class="p">,</span> <span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="s2">&quot;details&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="s2">&quot;select&quot;</span><span class="p">,</span> <span class="s2">&quot;textarea&quot;</span><span class="p">,</span> <span class="s2">&quot;video&quot;</span><span class="p">,</span> <span class="s2">&quot;map&quot;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="kc">True</span>
@@ -574,14 +582,15 @@
                     <span class="k">break</span>
         <span class="k">return</span> <span class="n">is_clickable</span></div>
 
-<div class="viewcode-block" id="WebElement.click"><a class="viewcode-back" href="../../../api/WebELement.html#selenium_driverless.types.webelement.WebElement.click">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">visible_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span> <span class="n">spread_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="c1"># noinspection PyIncorrectDocstring</span>
+<div class="viewcode-block" id="WebElement.click"><a class="viewcode-back" href="../../../api/WebELement.html#selenium_driverless.types.webelement.WebElement.click">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">visible_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">spread_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
                     <span class="n">bias_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">bias_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">border</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span> <span class="n">scroll_to</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="n">move_to</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-                    <span class="n">ensure_clickable</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">ensure_clickable</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">box_model</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Clicks the element.</span>
 
 <span class="sd">        :param timeout: the time in seconds to take for clicking on the element</span>
-<span class="sd">        :param visible_timeout: the time in seconds to wait for being able to compute the elements box model</span>
+<span class="sd">        :param visible_timeout: the time in seconds to wait for the element to be at least partially visible</span>
 <span class="sd">        :param spread_a: spread over a</span>
 <span class="sd">        :param spread_b: spread over b</span>
 <span class="sd">        :param bias_a: bias over a (0-1)</span>
@@ -590,7 +599,7 @@
 <span class="sd">            Random generated points outside that border get re-generated.</span>
 <span class="sd">        :param scroll_to: whether to scroll to the element</span>
 <span class="sd">        :param move_to: whether to move the mouse to the element</span>
-<span class="sd">        :param ensure_clickable: whether to ensure that the element is clickable. Not reliable in on every webpage</span>
+<span class="sd">        :param ensure_clickable: whether to ensure that the element is clickable.</span>
 
 <span class="sd">        .. note::</span>
 <span class="sd">            a spread of 1 is equivalent to 6 std.</span>
@@ -603,17 +612,15 @@
         <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="n">cords</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">cords</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">mid_location</span><span class="p">(</span><span class="n">spread_a</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">,</span> <span class="n">bias_a</span><span class="p">,</span> <span class="n">bias_b</span><span class="p">,</span> <span class="n">border</span><span class="p">)</span>
-            <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="s1">&#39;Could not compute box model.&#39;</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">:</span>
-                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">e</span>
+                <span class="n">box_model</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_model</span>
+                <span class="n">cords</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">mid_location</span><span class="p">(</span><span class="n">spread_a</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">,</span> <span class="n">bias_a</span><span class="p">,</span> <span class="n">bias_b</span><span class="p">,</span> <span class="n">border</span><span class="p">,</span> <span class="n">box_model</span><span class="o">=</span><span class="n">box_model</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">ElementNotVisible</span><span class="p">:</span>
+                <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">visible_timeout</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Couldn&#39;t compute element location within </span><span class="si">{</span><span class="n">visible_timeout</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
         <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">cords</span>
         <span class="k">if</span> <span class="n">ensure_clickable</span><span class="p">:</span>
-            <span class="n">is_clickable</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_clickable</span><span class="p">()</span>
+            <span class="n">is_clickable</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_clickable</span><span class="p">(</span><span class="n">box_model</span><span class="o">=</span><span class="n">box_model</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">is_clickable</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">ElementNotClickable</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 
@@ -674,8 +681,9 @@
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus</span><span class="p">()</span>
         <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">send_keys</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
 
+    <span class="c1"># noinspection PyIncorrectDocstring</span>
 <div class="viewcode-block" id="WebElement.mid_location"><a class="viewcode-back" href="../../../api/WebELement.html#selenium_driverless.types.webelement.WebElement.mid_location">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">mid_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spread_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias_a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">bias_b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
-                           <span class="n">border</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+                           <span class="n">border</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span> <span class="n">box_model</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        returns random location in the element with probability close to the middle</span>
 
@@ -691,10 +699,42 @@
 <span class="sd">            relative to the element.</span>
 <span class="sd">            (=&gt; 99.7 %)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">box_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">box_model</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_model</span>
+        <span class="n">visible</span><span class="p">,</span> <span class="n">overlap_polygon</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_visible</span><span class="p">(</span><span class="n">box_model</span><span class="o">=</span><span class="n">box_model</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">visible</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ElementNotVisible</span><span class="p">(</span><span class="s2">&quot;Element is not displayed&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">box</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_model</span>
+        <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;Could not compute box model.&#39;</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ElementNotVisible</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">e</span>
 
-        <span class="n">box</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_model</span>
-        <span class="n">vertices</span> <span class="o">=</span> <span class="n">box</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span>
-        <span class="n">point</span> <span class="o">=</span> <span class="n">rand_mid_loc</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">spread_a</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">,</span> <span class="n">bias_a</span><span class="p">,</span> <span class="n">bias_b</span><span class="p">,</span> <span class="n">border</span><span class="p">)</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">,</span> <span class="s2">&quot;padding&quot;</span><span class="p">,</span> <span class="s2">&quot;border&quot;</span><span class="p">]</span>
+        <span class="n">vertices</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">point</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+            <span class="n">vertices</span> <span class="o">=</span> <span class="n">box</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">def</span> <span class="nf">helper</span><span class="p">(</span><span class="n">_point</span><span class="p">):</span>
+                    <span class="k">while</span> <span class="p">(</span><span class="ow">not</span> <span class="n">_point</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">is_point_in_polygon</span><span class="p">(</span><span class="n">_point</span><span class="p">,</span> <span class="n">overlap_polygon</span><span class="p">)):</span>
+                        <span class="c1"># todo: add better overlap point generation</span>
+                        <span class="n">_point</span> <span class="o">=</span> <span class="n">rand_mid_loc</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">spread_a</span><span class="p">,</span> <span class="n">spread_b</span><span class="p">,</span> <span class="n">bias_a</span><span class="p">,</span> <span class="n">bias_b</span><span class="p">,</span> <span class="n">border</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">_point</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">point</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">helper</span><span class="p">(</span><span class="n">point</span><span class="p">)),</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The area of the element is 0&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;The area of the element is 0&#39;</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">if</span> <span class="n">vertices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The area of the element is 0&#39;</span><span class="p">)</span>
 
         <span class="c1"># noinspection PyUnboundLocalVariable</span>
         <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -798,18 +838,47 @@
         <span class="k">return</span> <span class="ow">not</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s2">&quot;disabled&quot;</span><span class="p">)</span></div>
 
     <span class="c1"># RenderedWebElement Items</span>
-<div class="viewcode-block" id="WebElement.is_displayed"><a class="viewcode-back" href="../../../api/WebELement.html#selenium_driverless.types.webelement.WebElement.is_displayed">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">is_displayed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="WebElement.p_visible"><a class="viewcode-back" href="../../../api/WebELement.html#selenium_driverless.types.webelement.WebElement.p_visible">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">p_visible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">box_model</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]:</span>
 
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the element is visible to a user.&quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># Only go into this conditional for browsers that don&#39;t use the atom themselves</span>
-            <span class="n">size</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
-            <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="n">size</span><span class="p">[</span><span class="s2">&quot;height&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">size</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="s1">&#39;Could not compute box model.&#39;</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Whether the element is visible to a user.</span>
+<span class="sd">        This does not check the opacity, since the element might still be interactable.</span>
+<span class="sd">        Returns the percentage (0.0 to 1.0) visible within the viewport and polygon of the area visible</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">visible</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">polygon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+
+        <span class="n">elem_visible</span><span class="p">,</span> <span class="n">vh</span><span class="p">,</span> <span class="n">vw</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            const style = window.getComputedStyle(obj);</span>
+<span class="s2">            const elem_visible = ((style.display !== &#39;none&#39;) &amp;&amp; (style.visibility !== &#39;hidden&#39;))</span>
+<span class="s2">            const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)</span>
+<span class="s2">            const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)</span>
+<span class="s2">            return [elem_visible, vh, vw];</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+        <span class="n">viewport</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">vw</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">vw</span><span class="p">,</span> <span class="n">vh</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">vh</span><span class="p">]])</span>
+        <span class="k">if</span> <span class="n">elem_visible</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">box_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">box_model</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_model</span>
+                <span class="k">except</span> <span class="n">ElementNotVisible</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">visible</span><span class="p">,</span> <span class="n">polygon</span>
+            <span class="n">visible</span><span class="p">,</span> <span class="n">polygon</span> <span class="o">=</span> <span class="k">await</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">overlap</span><span class="p">(</span><span class="n">viewport</span><span class="p">,</span> <span class="n">box_model</span><span class="p">[</span><span class="s2">&quot;border&quot;</span><span class="p">]))</span>
+
+        <span class="k">return</span> <span class="n">visible</span><span class="p">,</span> <span class="n">polygon</span></div>
+
+<div class="viewcode-block" id="WebElement.is_visible"><a class="viewcode-back" href="../../../api/WebELement.html#selenium_driverless.types.webelement.WebElement.is_visible">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">is_visible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">box_model</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">minimum_p</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0001</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        returns true if the area of the element which is visible is bigger than minimum_p (0 to 1, percentage visible)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">box_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">box_model</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_model</span>
+            <span class="k">except</span> <span class="n">ElementNotVisible</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">False</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">e</span></div>
+        <span class="n">visible</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_visible</span><span class="p">(</span><span class="n">box_model</span><span class="o">=</span><span class="n">box_model</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">visible</span> <span class="o">&gt;</span> <span class="n">minimum_p</span></div>
 
     <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">location_once_scrolled_into_view</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
@@ -901,10 +970,14 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;DOM.getBoxModel&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;Could not compute box model.&#39;</span>
             <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s1">&#39;Cannot find context with specified id&#39;</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">StaleElementReferenceException</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ElementNotVisible</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">e</span>
+
         <span class="n">model</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]</span>
         <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">,</span> <span class="s1">&#39;padding&#39;</span><span class="p">,</span> <span class="s1">&#39;border&#39;</span><span class="p">,</span> <span class="s1">&#39;margin&#39;</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
