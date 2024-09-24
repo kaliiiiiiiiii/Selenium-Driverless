@@ -173,7 +173,8 @@ async def test_div(h_driver, subtests):
     button = await h_driver.execute_script(
         """
         const elem = document.createElement("div");
-        elem.style.height = "5%"; elem.style.width = "5%";
+        elem.style.height = "10%"; elem.style.width = "30%";
+        elem.style.transform = "rotate(-30deg)";
         elem.style.backgroundColor = "grey";
         document.body.appendChild(elem);
         return elem
@@ -223,4 +224,3 @@ async def test_rotated_long_table(h_driver, subtests):
     )
     # Call a function to run your tests on the created table
     await all_test(table, h_driver, subtests, expect_all_zero_fail=False)
-

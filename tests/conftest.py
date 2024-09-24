@@ -10,7 +10,7 @@ import socket
 from selenium_driverless import webdriver
 from selenium_driverless.sync import webdriver as sync_webdriver
 
-no_headless = False
+no_headless = True
 x = y = 30
 h_x = h_y = -2400  # https://issues.chromium.org/issues/367764867
 width = 1024
