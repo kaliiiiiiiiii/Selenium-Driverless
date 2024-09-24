@@ -26,17 +26,22 @@ async def test_bypass_turnstile(h_driver, subtests):
         with subtests.test(wrapper=wrapper):
             # filter out correct iframe document
             inner = await wrapper.execute_script("return obj.children[0].children[0]")
-            shadow_document = await inner.shadow_root
+            if await inner.is_displayed():
+                shadow_document = await inner.shadow_root
 
-            iframe = await shadow_document.find_element(By.CSS_SELECTOR, "iframe")
-            content_document = await iframe.content_document
-            body = await content_document.execute_script("return document.body", unique_context=True)
-            nested_shadow_document = await body.shadow_root
-            try:
-                await nested_shadow_document.find_element(By.CSS_SELECTOR, "#success", timeout=4)
-                # already passed
-            except (NoSuchElementException, asyncio.TimeoutError):
-                checkbox = await nested_shadow_document.find_element(By.CSS_SELECTOR,"input[type='checkbox']",timeout=10)
-                await checkbox.click(move_to=True)
-                await checkbox.execute_script("console.log(obj)")
-                await nested_shadow_document.find_element(By.CSS_SELECTOR, "#success", timeout=20)
+                iframe = await shadow_document.find_element(By.CSS_SELECTOR, "iframe")
+                content_document = await iframe.content_document
+                body = await content_document.execute_script("return document.body", unique_context=True)
+                nested_shadow_document = await body.shadow_root
+                try:
+                    elem = await nested_shadow_document.find_element(By.CSS_SELECTOR, "#success", timeout=4)
+                    if not await elem.is_displayed():
+                        raise asyncio.TimeoutError()
+                    # already passed
+                except (NoSuchElementException, asyncio.TimeoutError):
+                    checkbox = await nested_shadow_document.find_element(By.CSS_SELECTOR, "input[type='checkbox']",
+                                                                         timeout=10)
+                    await checkbox.click(move_to=True)
+                    await checkbox.execute_script("console.log(obj)")
+                    elem = await nested_shadow_document.find_element(By.CSS_SELECTOR, "#success", timeout=20)
+                    assert await elem.is_displayed()

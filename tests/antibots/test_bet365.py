@@ -36,6 +36,7 @@ async def test_headfull_bet365(driver):
     await bet365_test(driver)
 
 
+@pytest.mark.skip(reason="DNS_PROBE_FINISHED_NXDOMAIN")
 @pytest.mark.asyncio
 @pytest.mark.skip_offline
 async def test_headless_bet365(h_driver):

@@ -13,7 +13,7 @@ async def detect(target: Target, cdp_patches_input: typing.Union[AsyncInput, typ
     """
     await target.get("https://kaliiiiiiiiii.github.io/brotector/")
     await asyncio.sleep(0.5)
-    click_target = await target.find_element(By.ID, "copy-button")
+    click_target = await target.find_element(By.ID, "clickHere")
     if cdp_patches_input:
         x, y = await click_target.mid_location()
         await cdp_patches_input.click("left", x, y)

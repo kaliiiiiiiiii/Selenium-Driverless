@@ -482,6 +482,8 @@ class WebElement(JSRemoteObj):
 
         :param listener_depth: the depth (nested elements) to get event-listeners for
         """
+        if not await self.is_displayed():
+            return False
         _type = await self.tag_name
         if _type in ["a", "button", "command", "details", "input", "select", "textarea", "video", "map"]:
             return True
@@ -495,7 +497,7 @@ class WebElement(JSRemoteObj):
                     break
         return is_clickable
 
-    async def click(self, timeout: float = None, visible_timeout: float = 30, spread_a: float = 1, spread_b: float = 1,
+    async def click(self, timeout: float = None, visible_timeout: float = 10, spread_a: float = 1, spread_b: float = 1,
                     bias_a: float = 0.5, bias_b: float = 0.5, border: float = 0.05, scroll_to=True,
                     move_to: bool = True,
                     ensure_clickable: typing.Union[bool, int] = False) -> None:
@@ -511,7 +513,7 @@ class WebElement(JSRemoteObj):
             Random generated points outside that border get re-generated.
         :param scroll_to: whether to scroll to the element
         :param move_to: whether to move the mouse to the element
-        :param ensure_clickable: whether to ensure that the element is clickable. Not reliable in on every webpage
+        :param ensure_clickable: whether to ensure that the element is clickable.
 
         .. note::
             a spread of 1 is equivalent to 6 std.
@@ -527,9 +529,11 @@ class WebElement(JSRemoteObj):
                 cords = await self.mid_location(spread_a, spread_b, bias_a, bias_b, border)
             except CDPError as e:
                 if e.code == -32000 and 'Could not compute box model.' in e.message:
-                    await asyncio.sleep(0.1)
+                    await asyncio.sleep(0.05)
                 else:
                     raise e
+            except ElementNotVisible:
+                await asyncio.sleep(0.05)
             if (time.perf_counter() - start) > visible_timeout:
                 raise asyncio.TimeoutError(f"Couldn't compute element location within {visible_timeout} seconds")
         x, y = cords
@@ -613,9 +617,28 @@ class WebElement(JSRemoteObj):
             (=> 99.7 %)
         """
 
-        box = await self.box_model
-        vertices = box["content"]
-        point = rand_mid_loc(vertices, spread_a, spread_b, bias_a, bias_b, border)
+        if not await self.is_displayed():
+            raise ElementNotVisible("Element is not displayed")
+        try:
+            box = await self.box_model
+        except CDPError as e:
+            message = 'Could not compute box model.'
+            if e.code == -32000 and message in e.message:
+                raise ElementNotVisible(message)
+            else:
+                raise e
+
+        layers = ["content", "padding", "border"]
+        vertices = None
+        for layer in layers:
+            vertices = box[layer]
+            try:
+                point = rand_mid_loc(vertices, spread_a, spread_b, bias_a, bias_b, border)
+            except ValueError as e:
+                if e.args[0] != 'The area of the element is 0':
+                    raise e
+        if vertices is None:
+            raise ValueError('The area of the element is 0')
 
         # noinspection PyUnboundLocalVariable
         x = int(point[0])
@@ -721,16 +744,21 @@ class WebElement(JSRemoteObj):
     # RenderedWebElement Items
     async def is_displayed(self) -> bool:
 
-        """Whether the element is visible to a user."""
-        try:
-            # Only go into this conditional for browsers that don't use the atom themselves
-            size = await self.size
-            return not (size["height"] == 0 or size["width"] == 0)
-        except CDPError as e:
-            if e.code == -32000 and 'Could not compute box model.' in e.message:
-                return False
-            else:
-                raise e
+        """Whether the element is visible to a user.
+        This does not check the opacity, since the element might still be interactable
+        """
+
+        return await self.execute_script("""
+            const style = window.getComputedStyle(obj);
+            const rect = obj.getBoundingClientRect()
+            const isInViewPort = (
+                rect.top >= 0 && rect.left >= 0 &&
+                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && /* or $(window).height() */
+                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+            )
+            return ((rect.height !== 0) && (rect.width !== 0) && (style.display !== 'none') && 
+                (style.visibility !== 'hidden') && isInViewPort);
+            """)
 
     @property
     async def location_once_scrolled_into_view(self) -> dict:

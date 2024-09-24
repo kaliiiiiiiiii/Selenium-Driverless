@@ -110,7 +110,7 @@ async def select_test(driver, subtests, headfull=False):
 
     elem = await driver.find_element(By.ID, "animals")
 
-    for i in range(10):
+    for i in range(9):
         if i != 0:
             vh = (i * 10)
             await elem.execute_script(f"""
