@@ -831,7 +831,11 @@ class Target:
         """
         if not (cookie_dict.get("url") or cookie_dict.get("domain") or cookie_dict.get("path")):
             cookie_dict["url"] = await self.current_url
-        return await add_cookie(target=self, cookie_dict=cookie_dict)
+        context_id = None
+        # noinspection PyProtectedMember
+        if self._context._is_incognito:
+            context_id = self._browser_context_id
+        return await add_cookie(target=self, cookie_dict=cookie_dict, context_id=context_id)
 
     @property
     async def _document_elem(self) -> WebElement:

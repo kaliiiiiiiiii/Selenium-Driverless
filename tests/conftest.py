@@ -9,13 +9,13 @@ import typing
 import socket
 from selenium_driverless import webdriver
 from selenium_driverless.sync import webdriver as sync_webdriver
+from server_for_testing import Server
 
 no_headless = True
 x = y = 30
 h_x = h_y = -2400  # https://issues.chromium.org/issues/367764867
 width = 1024
 height = 720
-
 
 if no_headless:
     # noinspection PyRedeclaration
@@ -82,3 +82,9 @@ def pytest_runtest_setup(item):
     if offline:
         for _ in item.iter_markers(name="skip_offline"):
             pytest.skip("Test requires being online")
+
+
+@pytest.fixture(scope="module", autouse=True)
+def test_server():
+    with Server() as server:
+        yield server
