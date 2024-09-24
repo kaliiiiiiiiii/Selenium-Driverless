@@ -1,19 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
-# generated with chatgpt.com
+from selenium_driverless.scripts.geometry import overlap
 
 
-def rectangle_corners(center, width, height, angle):
+def rectangle_corners(center: np.ndarray, width: float, height: float, angle: float) -> np.ndarray:
     """Calculate the corners of a rectangle given center, width, height, and rotation angle."""
-    angle_rad = np.radians(angle)
-    cos_angle = np.cos(angle_rad)
-    sin_angle = np.sin(angle_rad)
+    angle_rad: float = np.radians(angle)
+    cos_angle: float = np.cos(angle_rad)
+    sin_angle: float = np.sin(angle_rad)
 
     # Half dimensions
     w, h = width / 2, height / 2
 
     # Define the rectangle's corners in local coordinates
-    corners = np.array([
+    corners: np.ndarray = np.array([
         [-w, -h],
         [w, -h],
         [w, h],
@@ -21,104 +21,20 @@ def rectangle_corners(center, width, height, angle):
     ])
 
     # Rotate and translate corners
-    rotation_matrix = np.array([[cos_angle, -sin_angle],
-                                [sin_angle, cos_angle]])
+    rotation_matrix: np.ndarray = np.array([[cos_angle, -sin_angle],
+                                            [sin_angle, cos_angle]])
 
     return np.dot(corners, rotation_matrix) + center
 
 
-def edge_intersection(p1, p2, p3, p4):
-    """Find intersection of two line segments (p1p2 and p3p4)."""
-    # Check for identical points
-    if np.array_equal(p1, p2) or np.array_equal(p3, p4):
-        return None
-
-    A1, B1 = p2[1] - p1[1], p1[0] - p2[0]
-    C1 = A1 * p1[0] + B1 * p1[1]
-
-    A2, B2 = p4[1] - p3[1], p3[0] - p4[0]
-    C2 = A2 * p3[0] + B2 * p3[1]
-
-    determinant = A1 * B2 - A2 * B1
-
-    if determinant == 0:
-        return None  # Lines are parallel
-
-    # Calculate intersection coordinates
-    x = (B2 * C1 - B1 * C2) / determinant
-    y = (A1 * C2 - A2 * C1) / determinant
-
-    # Check if intersection point is within both line segments
-    if (np.min([p1[0], p2[0]]) <= x <= np.max([p1[0], p2[0]]) and
-        np.min([p1[1], p2[1]]) <= y <= np.max([p1[1], p2[1]]) and
-        np.min([p3[0], p4[0]]) <= x <= np.max([p3[0], p4[0]]) and
-        np.min([p3[1], p4[1]]) <= y <= np.max([p3[1], p4[1]])):
-        return np.array([x, y])
-    return None
-
-
-
-def point_in_polygon(point, polygon):
-    """Check if a point is inside a polygon using ray casting."""
-    x, y = point
-    n = polygon.shape[0]
-    inside = False
-
-    p1x, p1y = polygon[0]
-    for i in range(n + 1):
-        p2x, p2y = polygon[i % n]
-        if y > min(p1y, p2y):
-            if y <= max(p1y, p2y):
-                if x <= max(p1x, p2x):
-                    if p1y != p2y:
-                        xints = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
-                    if p1x == p2x or x <= xints:
-                        inside = not inside
-        p1x, p1y = p2x, p2y
-
-    return inside
-
-
-def intersect_rectangles(rect1, rect2):
-    """Calculate the intersection polygon of two rectangles."""
-    intersection_points = []
-
-    # Define the edges of the rectangles
-    edges_rect1 = [(rect1[i], rect1[(i + 1) % 4]) for i in range(4)]
-    edges_rect2 = [(rect2[i], rect2[(i + 1) % 4]) for i in range(4)]
-
-    # Check for intersections between edges of the two rectangles
-    for edge1 in edges_rect1:
-        for edge2 in edges_rect2:
-            point = edge_intersection(edge1[0], edge1[1], edge2[0], edge2[1])
-            if point is not None:
-                intersection_points.append(point)
-
-    # Check if any corners of rectangle 1 are inside rectangle 2
-    intersection_points.extend(corner for corner in rect1 if point_in_polygon(corner, rect2))
-
-    # Check if any corners of rectangle 2 are inside rectangle 1
-    intersection_points.extend(corner for corner in rect2 if point_in_polygon(corner, rect1))
-
-    # Remove duplicates and convert to a NumPy array
-    unique_points = np.unique(np.array(intersection_points), axis=0)
-
-    # Sort points to form a valid polygon
-    if unique_points.shape[0] > 2:
-        centroid = np.mean(unique_points, axis=0)
-        angles = np.arctan2(unique_points[:, 1] - centroid[1], unique_points[:, 0] - centroid[0])
-        sorted_indices = np.argsort(angles)
-        return unique_points[sorted_indices]
-    return np.array([])  # Not enough points to form a polygon
-
-
-def plot_rectangles_and_intersection(rect1, rect2, intersection, title):
+def plot_rect_and_intersect(rect1: np.ndarray, rect2: np.ndarray, intersection: np.ndarray, title: str,
+                            percentage_overlap: float) -> None:
     """Plot the rectangles and their intersection."""
     plt.figure(figsize=(8, 8))
     plt.plot(*rect1.T, label='Rectangle 1', color='blue')
     plt.fill(*rect1.T, alpha=0.5, color='blue')
     plt.plot(*rect2.T, label='Rectangle 2', color='red')
-    plt.fill(*rect2.T, alpha=0.2, color='red')
+    plt.fill(*rect2.T, alpha=0.5, color='red')
 
     if intersection.size > 0:
         plt.plot(*intersection.T, label='Intersection', color='green')
@@ -131,11 +47,11 @@ def plot_rectangles_and_intersection(rect1, rect2, intersection, title):
     plt.grid()
     plt.gca().set_aspect('equal', adjustable='box')
     plt.legend()
-    plt.title(title)
+    plt.title(f'{title} (Overlap: {percentage_overlap:.2f}%)')
     plt.show()
 
 
-def main():
+def demo():
     test_cases = [
         # Full Inclusion
         {
@@ -182,12 +98,10 @@ def main():
         center2, width2, height2, angle2 = case["rect2"]
         rect2 = rectangle_corners(center2, width2, height2, angle2)
 
-        # Calculate intersection
-        intersection = intersect_rectangles(rect1, rect2)
-
-        # Plot the results
-        plot_rectangles_and_intersection(rect1, rect2, intersection, case["title"])
+        # Calculate percentage overlap and plot
+        percentage_overlap, intersection_polygon = overlap(rect1, rect2)
+        plot_rect_and_intersect(rect1, rect2, intersection_polygon, case["title"], percentage_overlap)
 
 
 if __name__ == "__main__":
-    main()
+    demo()

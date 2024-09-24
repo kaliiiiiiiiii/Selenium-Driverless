@@ -34,7 +34,7 @@ from cdp_socket.exceptions import CDPError
 # driverless
 from selenium_driverless.types.by import By
 from selenium_driverless.types.deserialize import JSRemoteObj, StaleJSRemoteObjReference
-from selenium_driverless.scripts.geometry import rand_mid_loc
+from selenium_driverless.scripts.geometry import rand_mid_loc, overlap, is_point_in_polygon
 
 
 class NoSuchElementException(Exception):
@@ -475,14 +475,20 @@ class WebElement(JSRemoteObj):
         args = self._args_builder
         return await self.__target__.execute_cdp_cmd("DOM.focus", args)
 
-    async def is_clickable(self, listener_depth=3):
+    # noinspection PyIncorrectDocstring
+    async def is_clickable(self, listener_depth=3, box_model: dict = None):
         """
         returns ``True`` if the element type is one of "a", "button", "command", "details", "input", "select", "textarea", "video", "map"
-        else wise checks for "click", "mousedown" or "mouseup" event listeners on the element
+        otherwise checks for "click", "mousedown" or "mouseup" event listeners on the element
 
         :param listener_depth: the depth (nested elements) to get event-listeners for
         """
-        if not await self.is_displayed():
+        if box_model is None:
+            try:
+                box_model = await self.box_model
+            except ElementNotVisible:
+                return False
+        if not await self.is_visible(box_model=box_model):
             return False
         _type = await self.tag_name
         if _type in ["a", "button", "command", "details", "input", "select", "textarea", "video", "map"]:
@@ -497,10 +503,11 @@ class WebElement(JSRemoteObj):
                     break
         return is_clickable
 
+    # noinspection PyIncorrectDocstring
     async def click(self, timeout: float = None, visible_timeout: float = 10, spread_a: float = 1, spread_b: float = 1,
                     bias_a: float = 0.5, bias_b: float = 0.5, border: float = 0.05, scroll_to=True,
                     move_to: bool = True,
-                    ensure_clickable: typing.Union[bool, int] = False) -> None:
+                    ensure_clickable: typing.Union[bool, int] = False, box_model: dict = None) -> None:
         """Clicks the element.
 
         :param timeout: the time in seconds to take for clicking on the element
@@ -526,19 +533,15 @@ class WebElement(JSRemoteObj):
         start = time.perf_counter()
         while not cords:
             try:
-                cords = await self.mid_location(spread_a, spread_b, bias_a, bias_b, border)
-            except CDPError as e:
-                if e.code == -32000 and 'Could not compute box model.' in e.message:
-                    await asyncio.sleep(0.05)
-                else:
-                    raise e
+                box_model = await self.box_model
+                cords = await self.mid_location(spread_a, spread_b, bias_a, bias_b, border, box_model=box_model)
             except ElementNotVisible:
                 await asyncio.sleep(0.05)
             if (time.perf_counter() - start) > visible_timeout:
                 raise asyncio.TimeoutError(f"Couldn't compute element location within {visible_timeout} seconds")
         x, y = cords
         if ensure_clickable:
-            is_clickable = await self.is_clickable()
+            is_clickable = await self.is_clickable(box_model=box_model)
             if not is_clickable:
                 raise ElementNotClickable(x, y)
 
@@ -599,8 +602,9 @@ class WebElement(JSRemoteObj):
             await self.focus()
         await self.__target__.send_keys(text)
 
+    # noinspection PyIncorrectDocstring
     async def mid_location(self, spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5,
-                           border: float = 0.05) -> typing.List[int]:
+                           border: float = 0.05, box_model: dict = None) -> typing.List[int]:
         """
         returns random location in the element with probability close to the middle
 
@@ -616,8 +620,11 @@ class WebElement(JSRemoteObj):
             relative to the element.
             (=> 99.7 %)
         """
-
-        if not await self.is_displayed():
+        loop = asyncio.get_event_loop()
+        if box_model is None:
+            box_model = await self.box_model
+        visible, overlap_polygon = await self.p_visible(box_model=box_model)
+        if not visible:
             raise ElementNotVisible("Element is not displayed")
         try:
             box = await self.box_model
@@ -630,10 +637,20 @@ class WebElement(JSRemoteObj):
 
         layers = ["content", "padding", "border"]
         vertices = None
+        point = []
         for layer in layers:
             vertices = box[layer]
             try:
-                point = rand_mid_loc(vertices, spread_a, spread_b, bias_a, bias_b, border)
+                def helper(_point):
+                    while (not _point) or (not is_point_in_polygon(_point, overlap_polygon)):
+                        # todo: add better overlap point generation
+                        _point = rand_mid_loc(vertices, spread_a, spread_b, bias_a, bias_b, border)
+                    return _point
+
+                try:
+                    point = await asyncio.wait_for(loop.run_in_executor(None, lambda: helper(point)), 2)
+                except asyncio.TimeoutError:
+                    raise ValueError('The area of the element is 0')
             except ValueError as e:
                 if e.args[0] != 'The area of the element is 0':
                     raise e
@@ -742,23 +759,47 @@ class WebElement(JSRemoteObj):
         return not await self.get_property("disabled")
 
     # RenderedWebElement Items
-    async def is_displayed(self) -> bool:
+    async def p_visible(self, box_model: dict = None) -> typing.Tuple[float, typing.Union[np.ndarray, list]]:
 
-        """Whether the element is visible to a user.
-        This does not check the opacity, since the element might still be interactable
         """
+        Whether the element is visible to a user.
+        This does not check the opacity, since the element might still be interactable.
+        Returns the percentage (0.0 to 1.0) visible within the viewport and polygon of the area visible
+        """
+        visible = 0
+        polygon = np.array([])
+        loop = asyncio.get_event_loop()
 
-        return await self.execute_script("""
+        elem_visible, vh, vw = await self.execute_script("""
             const style = window.getComputedStyle(obj);
-            const rect = obj.getBoundingClientRect()
-            const isInViewPort = (
-                rect.top >= 0 && rect.left >= 0 &&
-                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && /* or $(window).height() */
-                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-            )
-            return ((rect.height !== 0) && (rect.width !== 0) && (style.display !== 'none') && 
-                (style.visibility !== 'hidden') && isInViewPort);
-            """)
+            const elem_visible = ((style.display !== 'none') && (style.visibility !== 'hidden'))
+            const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+            const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+            return [elem_visible, vh, vw];
+            """, unique_context=True, max_depth=4)
+
+        viewport = np.array([[0, 0], [vw, 0], [vw, vh], [0, vh]])
+        if elem_visible:
+            if box_model is None:
+                try:
+                    box_model = await self.box_model
+                except ElementNotVisible:
+                    return visible, polygon
+            visible, polygon = await loop.run_in_executor(None, lambda: overlap(viewport, box_model["border"]))
+
+        return visible, polygon
+
+    async def is_visible(self, box_model: dict = None, minimum_p: float = 0.0001):
+        """
+        returns true if the area of the element which is visible is bigger than minimum_p (0 to 1, percentage visible)
+        """
+        if box_model is None:
+            try:
+                box_model = await self.box_model
+            except ElementNotVisible:
+                return False
+        visible, _ = await self.p_visible(box_model=box_model)
+        return visible > minimum_p
 
     @property
     async def location_once_scrolled_into_view(self) -> dict:
@@ -850,10 +891,14 @@ class WebElement(JSRemoteObj):
         try:
             res = await self.__target__.execute_cdp_cmd("DOM.getBoxModel", args)
         except CDPError as e:
+            message = 'Could not compute box model.'
             if e.code == -32000 and e.message == 'Cannot find context with specified id':
                 raise StaleElementReferenceException(self)
+            elif e.code == -32000 and message in e.message:
+                raise ElementNotVisible(message)
             else:
                 raise e
+
         model = res['model']
         keys = ['content', 'padding', 'border', 'margin']
         for key in keys:

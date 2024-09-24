@@ -59,7 +59,7 @@ async def zero_height_and_padding_test(elem: WebElement, subtests):
         *original_styles)
 
 
-async def all_zero_test(elem, subtests):
+async def all_zero_test(elem, subtests, expect_fail=True):
     original_styles = await elem.execute_script(
         'const orig_styles = [obj.style.height, obj.style.width, obj.style.padding, obj.style.borderWidth];'
         'obj.style.height = "0";'
@@ -68,7 +68,10 @@ async def all_zero_test(elem, subtests):
         'obj.style.borderWidth = "0";'
         'return orig_styles;'
     )
-    await expect_not_visible(elem, subtests)
+    if expect_fail:
+        await expect_not_visible(elem, subtests)
+    else:
+        await click_hit_test(elem, subtests)
     await elem.execute_script(
         'obj.style.height = arguments[0];'
         'obj.style.width = arguments[1];'
@@ -139,8 +142,8 @@ async def expect_not_visible(elem: WebElement, subtests):
             await elem.click(move_to=False, visible_timeout=1)
 
 
-async def all_test(elem: WebElement, driver, subtests, only_border_test=True):
-    await all_zero_test(elem, subtests)
+async def all_test(elem: WebElement, driver, subtests, only_border_test=True, expect_all_zero_fail=True):
+    await all_zero_test(elem, subtests, expect_fail=expect_all_zero_fail)
     if only_border_test:
         await zero_height_and_padding_test(elem, subtests)
     await zero_height_test(elem, subtests)
@@ -192,4 +195,32 @@ async def test_input(h_driver, subtests):
     )
     await all_test(button, h_driver, subtests)
 
-# todo: add tests for rotated and partially in viewport elements
+
+@pytest.mark.asyncio
+async def test_rotated_long_table(h_driver, subtests):
+    table = await h_driver.execute_script(
+        """
+        const table = document.createElement("table");
+        table.style.borderCollapse = "collapse";
+        table.style.transform = "rotate(40deg)";
+        table.style.width = "15%";
+        table.style.position = "absolute";
+        table.style.transformOrigin = "top left";
+
+        for (let i = 0; i < 10; i++) {
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.textContent = "Row " + (i + 1);
+            cell.style.border = "1px solid black";
+            cell.style.padding = "5px";
+            row.appendChild(cell);
+            table.appendChild(row);
+        }
+
+        document.body.appendChild(table);
+        return table;
+        """
+    )
+    # Call a function to run your tests on the created table
+    await all_test(table, h_driver, subtests, expect_all_zero_fail=False)
+

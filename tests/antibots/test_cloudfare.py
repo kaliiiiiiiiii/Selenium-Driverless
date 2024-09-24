@@ -26,7 +26,7 @@ async def test_bypass_turnstile(h_driver, subtests):
         with subtests.test(wrapper=wrapper):
             # filter out correct iframe document
             inner = await wrapper.execute_script("return obj.children[0].children[0]")
-            if await inner.is_displayed():
+            if await inner.is_visible():
                 shadow_document = await inner.shadow_root
 
                 iframe = await shadow_document.find_element(By.CSS_SELECTOR, "iframe")
@@ -35,13 +35,13 @@ async def test_bypass_turnstile(h_driver, subtests):
                 nested_shadow_document = await body.shadow_root
                 try:
                     elem = await nested_shadow_document.find_element(By.CSS_SELECTOR, "#success", timeout=4)
-                    if not await elem.is_displayed():
+                    if not await elem.is_visible():
                         raise asyncio.TimeoutError()
                     # already passed
                 except (NoSuchElementException, asyncio.TimeoutError):
                     checkbox = await nested_shadow_document.find_element(By.CSS_SELECTOR, "input[type='checkbox']",
                                                                          timeout=10)
                     await checkbox.click(move_to=True)
-                    await checkbox.execute_script("console.log(obj)")
+                    await asyncio.sleep(4)
                     elem = await nested_shadow_document.find_element(By.CSS_SELECTOR, "#success", timeout=20)
-                    assert await elem.is_displayed()
+                    assert await elem.is_visible()
