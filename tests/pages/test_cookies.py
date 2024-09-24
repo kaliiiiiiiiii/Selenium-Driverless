@@ -1,3 +1,6 @@
+import asyncio
+import json
+
 import pytest
 import uuid
 import datetime
@@ -75,4 +78,42 @@ async def test_get_del_cookie(h_driver, subtests, test_server):
     context2 = await h_driver.new_context()
     await isolation_test(context2.current_target, isolated, h_driver, test_server, subtests)
 
-# todo: test set cookie
+
+async def get_echo_cookies(target, url) -> dict:
+    loop = asyncio.get_event_loop()
+    await target.get(url)
+    resp = await target.fetch(url, credentials="include")
+    return await loop.run_in_executor(None, lambda: json.loads(resp["body"].decode("utf-8")))
+
+
+@pytest.mark.asyncio
+async def test_set_cookie(h_driver, subtests, test_server):
+    url = test_server.url + "/cookie_echo"
+    target = h_driver.current_target
+    expires = datetime.datetime.utcnow() + datetime.timedelta(days=30)
+    cookie = {'name': uuid.uuid4().hex,
+              'value': uuid.uuid4().hex,
+              'domain': 'localhost',
+              'path': '/',
+              'expires': expires.timestamp(),
+              'httpOnly': False,
+              'secure': False,
+              'session': False,
+              'priority': 'High',
+              'sameParty': False,
+              'sourceScheme': 'NonSecure',
+              'sourcePort': test_server.port
+              }
+    cookies_received = await get_echo_cookies(target, url)
+    with subtests.test():
+        assert len(cookies_received.keys()) == 0
+    await target.add_cookie(cookie)
+    cookies_received = await get_echo_cookies(target, url)
+    with subtests.test():
+        assert cookies_received[cookie["name"]] == cookie["value"]
+
+    get_cookie = (await target.get_cookies())[0]
+    for key, value in cookie.items():
+        value_got = get_cookie[key]
+        with subtests.test(key=key, value=value, value_got=value_got):
+            assert value == value_got

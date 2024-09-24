@@ -4,6 +4,7 @@ import asyncio
 from selenium_driverless.utils.utils import random_port
 from aiohttp import web
 from aiohttp.web import middleware
+import json
 
 
 @middleware
@@ -31,13 +32,18 @@ class Server:
         self.host = host
         self.app = web.Application(middlewares=[middleware])
         self.app.add_routes([
-            web.get('/cookie_setter', self.cookie_setter)
+            web.get('/cookie_setter', self.cookie_setter),
+            web.get("/cookie_echo", self.cookie_echo)
         ])
 
     async def cookie_setter(self, request: web.Request) -> web.Response:
         resp = web.Response(text="Hello World!")
         resp.set_cookie(**request.query)
         return resp
+
+    async def cookie_echo(self, request: web.Request) -> web.Response:
+        resp = await asyncio.get_event_loop().run_in_executor(None, lambda: json.dumps(dict(**request.cookies)))
+        return web.Response(text=resp, content_type="application/json")
 
     def __enter__(self):
         if not self._started:

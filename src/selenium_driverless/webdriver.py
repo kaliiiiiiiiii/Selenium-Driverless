@@ -62,6 +62,7 @@ from selenium_driverless import EXC_HANDLER
 
 class Chrome:
     """Control the chromium based browsers without any driver."""
+    port: int
 
     def __init__(
             self,
@@ -250,8 +251,8 @@ class Chrome:
                     self._options.debugger_address = f"127.0.0.1:{port}"
 
             host, port = self._options.debugger_address.split(":")
-            port = int(port)
-            self._host = f"{host}:{port}"
+            self.port = int(port)
+            self._host = f"{host}:{self.port}"
             if self._loop:
                 self._base_target = await SyncBaseTarget(host=self._host, is_remote=self._is_remote,
                                                          timeout=self._timeout, loop=self._loop,
@@ -566,8 +567,8 @@ class Chrome:
         """the current downloads directory for the current context"""
         return self.base_target.downloads_dir_for_context(context_id="DEFAULT")
 
-    async def set_download_behaviour(self,behaviour:typing.Literal["deny", "allow", "allowAndName", "default"],
-                                     path:str=None):
+    async def set_download_behaviour(self, behaviour: typing.Literal["deny", "allow", "allowAndName", "default"],
+                                     path: str = None):
         """set the download behaviour
 
         :param behaviour: the behaviour to set the downloading to
@@ -625,7 +626,7 @@ class Chrome:
         """
         return await self.current_target.get_targets_for_iframes(iframes=iframes)
 
-    async def wait_download(self, timeout:float or None=30) -> dict:
+    async def wait_download(self, timeout: float or None = 30) -> dict:
         """
         wait for a download on the current tab
 
@@ -651,7 +652,8 @@ class Chrome:
         """
         return await self.current_target.wait_download(timeout=timeout)
 
-    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> typing.Union[None, dict]:
+    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> typing.Union[
+        None, dict]:
         """Loads a web page in the current Target
 
         :param url: the url to load.
@@ -879,7 +881,7 @@ class Chrome:
                                 loop.run_in_executor(None,
                                                      lambda: clean_dirs_sync(
                                                          [self._options.user_data_dir])),
-                                timeout=max(5,int(timeout - (time.perf_counter() - start))))
+                                timeout=max(5, int(timeout - (time.perf_counter() - start))))
                         except Exception as e:
                             warnings.warn(
                                 "driver hasn't quit correctly, "
@@ -1073,7 +1075,7 @@ class Chrome:
         """
         return await self.current_target.find_element(by=by, value=value, timeout=timeout)
 
-    async def find_elements(self, by: str, value: str, timeout: float= 3) -> typing.List[WebElement]:
+    async def find_elements(self, by: str, value: str, timeout: float = 3) -> typing.List[WebElement]:
         """find multiple elements in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
