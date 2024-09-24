@@ -92,7 +92,7 @@ async def down(tab: Target):
         "isSystemKey": False
     }
     await tab.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
-    await asyncio.sleep(0.05)
+    await asyncio.sleep(0.01)
     key_event["type"] = "keyUp"
     await tab.execute_cdp_cmd("Input.dispatchKeyEvent", key_event)
 
@@ -132,7 +132,7 @@ async def select_test(driver, subtests, headfull=False):
     with subtests.test():
         with pytest.raises(ValueError):
             elem = await driver.find_element(By.ID, "animals")
-            await select(elem, "invalid", async_input=async_input)
+            await select(elem, "invalid", async_input=async_input, timeouts=0.001)
 
 
 @pytest.mark.skip("Wont fix")
