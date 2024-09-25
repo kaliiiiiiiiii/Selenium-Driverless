@@ -1,5 +1,7 @@
 # io
 import asyncio
+import base64
+import json
 import os.path
 import time
 import typing
@@ -1136,7 +1138,7 @@ class Target:
     async def fetch(self, url: str,
                     method: typing.Literal[
                         "GET", "POST", "HEAD", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", None] = "GET",
-                    headers: typing.Dict[str, str] = None, body: str = None,
+                    headers: typing.Dict[str, str] = None, body: typing.Union[bytes, str, dict] = None,
                     mode: typing.Literal["cors", "no-cors", "same-origin", None] = None,
                     credentials: typing.Literal["omit", "same-origin", "include"] = None,
                     cache: typing.Literal[
@@ -1166,14 +1168,18 @@ class Target:
             }
 
         """
-        # see
+        loop = asyncio.get_event_loop()
+        if isinstance(body, dict):
+            body = await loop.run_in_executor(None, lambda: json.dumps(body).encode("utf-8"))
+        elif isinstance(body, str):
+            body = await loop.run_in_executor(None, lambda: body.encode("utf-8"))
         options = {}
         if method:
             options["method"] = method
         if headers:
             options["headers"] = headers
         if body:
-            options["body"] = body
+            options["body"] = await loop.run_in_executor(None, lambda: base64.b64encode(body).decode("ascii"))
         if mode:
             options["mode"] = mode
         if credentials:
@@ -1194,11 +1200,27 @@ class Target:
             options["priority"] = priority
 
         script = """
-            function buffer2hex (buffer) {
-                return [...new Uint8Array (buffer)]
-                    .map (b => b.toString (16).padStart (2, "0"))
-                    .join ("");
-            }
+            async function bufferTobase64(array) {
+              return new Promise((resolve) => {
+                const blob = new Blob([array]);
+                const reader = new FileReader();
+                
+                reader.onload = (event) => {
+                  const dataUrl = event.target.result;
+                  const [_, base64] = dataUrl.split(',');
+                  
+                  resolve(base64);
+                };
+                
+                reader.readAsDataURL(blob);
+              });
+            };
+            async function base64ToBuffer(base64) {
+              const dataUrl = "data:application/octet-binary;base64," + base64;
+            
+              const res = await fetch(dataUrl)
+              return await res.arrayBuffer()
+            };
 
             function headers2dict(headers){
                 var my_dict = {};
@@ -1207,11 +1229,12 @@ class Target:
                 return my_dict}
 
             async function get(url, options){
+                if(options.body){options.body = await base64ToBuffer(options.body)}
                 var response = await fetch(url, options);
                 var buffer = await response.arrayBuffer()
-                var hex = buffer2hex(buffer)
+                var b64 = await bufferTobase64(buffer)
                 var res = {
-                        "HEX":hex,
+                        "b64":b64,
                         "headers":headers2dict(response.headers),
                         "ok":response.ok,
                         "status_code":response.status,
@@ -1220,18 +1243,18 @@ class Target:
                         "type":response.type,
                         "url":response.url
                         };
-                console.log(res)
                 return res;
             }
             return await get(arguments[0], arguments[1])
         """
         result = await self.eval_async(script, url, options, unique_context=True, timeout=timeout)
-        result["body"] = bytes.fromhex(result["HEX"])
-        del result["HEX"]
+        result["body"] = base64.b64decode(result["b64"])
+        del result["b64"]
         return result
 
     async def xhr(self, url: str,
                   method: typing.Literal["GET", "POST", "PUT", "DELETE"] = "GET",
+                  body: typing.Union[bytes, str, dict] = None,
                   user: str = None, password: str = None, with_credentials: bool = True, mime_type: str = "text/plain",
                   extra_headers: typing.Dict[str, str] = None,
                   timeout: float = 30) -> dict:
@@ -1241,6 +1264,7 @@ class Target:
 
         :param url: the url to get
         :param method: one of "GET", "POST", "PUT", "DELETE"
+        :param body: body to send with a request
         :param user: user to authenticate with
         :param password: password to authenticate with
         :param with_credentials: whether to include cookies
@@ -1266,33 +1290,40 @@ class Target:
         """
         if extra_headers is None:
             extra_headers = {}
+        loop = asyncio.get_event_loop()
+        if isinstance(body, dict):
+            body = await loop.run_in_executor(None, lambda: json.dumps(body).encode("utf-8"))
+        elif isinstance(body, str):
+            body = await loop.run_in_executor(None, lambda: body.encode("utf-8"))
+        if body is not None:
+            body = await loop.run_in_executor(None, lambda: base64.b64encode(body).decode("ascii"))
         script = """
-        function makeRequest(withCredentials, mimeType, extraHeaders, ...args) {
-            return new Promise(function (resolve, reject) {
-                try{
-                    let xhr = new XMLHttpRequest();
-
-                    if(!(args[3])){args[3] = null};
-                    if(!(args[4])){args[4] = null};
-                    xhr.overrideMimeType(mimeType);
-
-                    xhr.open(...args);
-                    Object.keys(extraHeaders).forEach(function(key) {
-                        xhr.setRequestHeader(key, extraHeaders[key])
-                    });
-                    xhr.withCredentials = withCredentials;
-
-                    xhr.onload = function () {
-                        resolve(xhr)
-                    };
-                    xhr.onerror = function () {
-                        reject(new Error("XHR failed"));
-                    };
-                    xhr.send();
-                }catch(e){reject(e)}
-            });
+        async function base64ToBuffer(base64) {
+              const dataUrl = "data:application/octet-binary;base64," + base64;
+            
+              const res = await fetch(dataUrl)
+              return await res.arrayBuffer()
         };
+        async function makeRequest(withCredentials, mimeType, extraHeaders, method, url, user, password, body) {
+            let xhr = new XMLHttpRequest();
 
+            if(!user){user = null};
+            if(!password){password = null};
+            if(!body){body = null}else{body = await base64ToBuffer(body)};
+            xhr.overrideMimeType(mimeType);
+
+            xhr.open(method, url, true, user, password);
+            Object.keys(extraHeaders).forEach((key) => {
+                xhr.setRequestHeader(key, extraHeaders[key])
+            });
+            xhr.withCredentials = withCredentials;
+            const promise = new Promise((resolve, reject) => {
+                xhr.onload = () => {resolve(xhr)};
+                xhr.onerror = () => {reject(new Error("XHR failed"))};
+            });
+            xhr.send(body);
+            return await promise
+        };
         var xhr =  await makeRequest(...arguments);
         data = {
             status: xhr.status,
@@ -1307,8 +1338,8 @@ class Target:
         };
         return data
         """
-        data = await self.eval_async(script, with_credentials, mime_type, extra_headers, method, url, True, user,
-                                     password,
+        data = await self.eval_async(script, with_credentials, mime_type,
+                                     extra_headers, method, url, user, password, body,
                                      timeout=timeout, unique_context=True)
 
         # parse headers

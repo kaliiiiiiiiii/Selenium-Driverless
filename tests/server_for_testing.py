@@ -34,7 +34,8 @@ class Server:
         self.app.add_routes([
             web.get('/cookie_setter', self.cookie_setter),
             web.get("/cookie_echo", self.cookie_echo),
-            web.get("/auth_challenge", self.auth_challenge)
+            web.get("/auth_challenge", self.auth_challenge),
+            web.get("/echo", self.echo), web.post("/echo", self.echo)
         ])
 
     async def cookie_setter(self, request: web.Request) -> web.Response:
@@ -45,6 +46,16 @@ class Server:
     async def cookie_echo(self, request: web.Request) -> web.Response:
         resp = await asyncio.get_event_loop().run_in_executor(None, lambda: json.dumps(dict(**request.cookies)))
         return web.Response(text=resp, content_type="application/json")
+
+    async def echo(self, request: web.Request) -> web.StreamResponse:
+        response = web.StreamResponse(headers=request.headers)
+        response.content_type = "text/html"
+        await response.prepare(request)
+        if request.can_read_body:
+            async for data, _ in request.content.iter_chunks():
+                await response.write(data)
+        await response.write_eof()
+        return response
 
     async def auth_challenge(self, request: web.Request) -> web.Response:
         auth_header = request.headers.get(hdrs.AUTHORIZATION)
