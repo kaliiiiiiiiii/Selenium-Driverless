@@ -53,7 +53,7 @@ KEY_MAPPING = {
     '\\': ('Backslash', 220), ']': ('BracketRight', 221), '^': ('Digit6', 54), '_': ('Minus', 189),
     '`': ('Backquote', 192),
     '{': ('BracketLeft', 219), '|': ('Backslash', 220), '}': ('BracketRight', 221), '~': ('Backquote', 192),
-    ' ': ('Space', 32)
+    ' ': ('Space', 32), '\r': ('Enter', 13)
 }
 
 SHIFT_KEY_NEEDED = '~!@#$%^&*()_+{}|:"<>?'
@@ -432,6 +432,8 @@ class Target:
         async with self._send_key_lock:
             for letter in text:
                 if letter in KEY_MAPPING:
+                    if letter == "\n":
+                        letter = "\r"
                     key_code, virtual_key_code = KEY_MAPPING[letter]
                 elif allow_not_on_mapping:
                     key_code, virtual_key_code = 0, 0
@@ -561,7 +563,8 @@ class Target:
             try:
                 res = await global_this.__exec__(script, *args, serialization=serialization,
                                                  max_depth=max_depth, timeout=timeout,
-                                                 execution_context_id=execution_context_id, unique_context=unique_context)
+                                                 execution_context_id=execution_context_id,
+                                                 unique_context=unique_context)
                 return res
             except StaleJSRemoteObjReference:
                 pass
@@ -593,7 +596,8 @@ class Target:
             try:
                 res = await global_this.__exec_async__(script, *args, serialization=serialization,
                                                        max_depth=max_depth, timeout=timeout,
-                                                       execution_context_id=execution_context_id, unique_context=unique_context)
+                                                       execution_context_id=execution_context_id,
+                                                       unique_context=unique_context)
                 return res
             except StaleJSRemoteObjReference:
                 await asyncio.sleep(0)
@@ -628,7 +632,8 @@ class Target:
             try:
                 res = await global_this.__eval_async__(script, *args, serialization=serialization,
                                                        max_depth=max_depth, timeout=timeout,
-                                                       execution_context_id=execution_context_id, unique_context=unique_context)
+                                                       execution_context_id=execution_context_id,
+                                                       unique_context=unique_context)
                 return res
             except StaleJSRemoteObjReference:
                 await asyncio.sleep(0)
@@ -670,7 +675,7 @@ class Target:
                 target.close()
         """
         try:
-            await self.execute_cdp_cmd("Target.closeTarget",{"targetId":self.id}, timeout=timeout)
+            await self.execute_cdp_cmd("Target.closeTarget", {"targetId": self.id}, timeout=timeout)
             await self._socket.close()
         except websockets.ConnectionClosedError:
             pass
@@ -834,7 +839,7 @@ class Target:
         context_id = None
         # noinspection PyProtectedMember
         if self._context._is_incognito:
-            context_id = self._browser_context_id
+            context_id = self.browser_context_id
         return await add_cookie(target=self, cookie_dict=cookie_dict, context_id=context_id)
 
     @property
@@ -875,7 +880,7 @@ class Target:
             raise NoSuchElementException()
         return elem
 
-    async def find_elements(self, by: str, value: str, timeout: float= 3) -> typing.List[WebElement]:
+    async def find_elements(self, by: str, value: str, timeout: float = 3) -> typing.List[WebElement]:
         """find multiple elements in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
@@ -890,7 +895,8 @@ class Target:
             except (StaleElementReferenceException, StaleJSRemoteObjReference):
                 await self._on_loaded()
             if (not timeout) or (time.perf_counter() - start) > timeout:
-                raise asyncio.TimeoutError(f"Couldn't find elements within {timeout} seconds due to a target reload loop")
+                raise asyncio.TimeoutError(
+                    f"Couldn't find elements within {timeout} seconds due to a target reload loop")
 
     async def set_source(self, source: str, timeout: float = 15):
         """
@@ -941,7 +947,7 @@ class Target:
             elems.append(elem)
         return elems
 
-    async def get_screenshot_as_file(self, filename:str) -> None:
+    async def get_screenshot_as_file(self, filename: str) -> None:
         """Saves a screenshot of the current window to a PNG image file.
 
         :param filename: The full path.
@@ -956,7 +962,7 @@ class Target:
         async with aiofiles.open(filename, "wb") as f:
             await f.write(png)
 
-    async def save_screenshot(self, filename:str) -> None:
+    async def save_screenshot(self, filename: str) -> None:
         """alias to :func: `driver.get_screenshot_as_file <selenium_driverless.webdriver.Chrome.get_screenshot_as_file>`"""
         return await self.get_screenshot_as_file(filename)
 
@@ -971,7 +977,7 @@ class Target:
         res = await self.execute_cdp_cmd("Page.captureSnapshot")
         return res["data"]
 
-    async def save_snapshot(self, filename:str):
+    async def save_snapshot(self, filename: str):
         """Saves a snapshot of the current window to a MHTML file.
 
         :param filename: The full path you wish to save your snapshot to. This
