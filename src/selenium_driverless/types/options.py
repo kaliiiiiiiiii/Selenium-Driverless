@@ -111,8 +111,9 @@ class Options(metaclass=ABCMeta):
             "--no-default-browser-check",  # disable default browser message
             '--homepage=about:blank'  # set homepage
             "--wm-window-animations-disabled", "--animation-duration-scale=0",  # disable animations
-            "--enable-privacy-sandbox-ads-apis"
+            "--enable-privacy-sandbox-ads-apis",
             # ensure window.Fence, window.SharedStorage etc. exist, looks like chrome disables them when using automation
+            "--disable-search-engine-choice-screen"  # for chrome>=127
         )
         if IS_POSIX:
             self.add_argument("--password-store=basic")
