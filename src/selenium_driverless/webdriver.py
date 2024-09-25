@@ -430,7 +430,7 @@ class Chrome:
                     mv3_target = await self.mv3_extension
                     self._auth_interception_enabled = False
                     await self._ensure_auth_interception(timeout=0.5, set_flag=False)
-                    await mv3_target.execute_script("globalThis.authCreds = arguments[0]", self._auth, timeout=0.5)
+                    await mv3_target.execute_script("globalThis.authCreds = arguments[0]", self._auth, timeout=0.5, unique_context=False)
                 except (asyncio.TimeoutError, TimeoutError):
                     await asyncio.sleep(0.1)
                     self._mv3_extension = None
@@ -502,7 +502,7 @@ class Chrome:
                     # fix WebRTC leak
                     await extension_target.execute_script(
                         "chrome.privacy.network.webRTCIPHandlingPolicy.set(arguments[0])",
-                        {"value": "disable_non_proxied_udp"}, timeout=2)
+                        {"value": "disable_non_proxied_udp"}, timeout=2, unique_context=False)
                 except (asyncio.TimeoutError, TimeoutError):
                     await asyncio.sleep(0.2)
                     return await self.mv3_extension
@@ -545,7 +545,7 @@ class Chrome:
                     await make_global()
                 """
                 await asyncio.sleep(0.1)
-                await page.eval_async(script, timeout=10)
+                await page.eval_async(script, timeout=10, unique_context=False)
             except Exception as e:
                 EXC_HANDLER(e)
                 self._extensions_incognito_allowed = False
@@ -688,7 +688,7 @@ class Chrome:
     async def execute_raw_script(self, script: str, *args, await_res: bool = False,
                                  serialization: typing.Literal["deep", "json", "idOnly"] = "deep",
                                  max_depth: int = None, timeout: int = 2, execution_context_id: str = None,
-                                 unique_context: bool = False):
+                                 unique_context: bool = True):
         """executes a JavaScript on ``GlobalThis`` such as
 
         .. code-block:: js
@@ -716,7 +716,7 @@ class Chrome:
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                              timeout: int = None,
                              target_id: str = None, execution_context_id: str = None,
-                             unique_context: bool = False):
+                             unique_context: bool = True):
         """executes JavaScript synchronously on ``GlobalThis`` such as
 
         .. code-block:: js
@@ -735,7 +735,7 @@ class Chrome:
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
                                    serialization: str = None, timeout: int = 2,
                                    target_id: str = None, execution_context_id: str = None,
-                                   unique_context: bool = False):
+                                   unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
 
         .. warning::
@@ -759,7 +759,7 @@ class Chrome:
     async def eval_async(self, script: str, *args, max_depth: int = 2,
                          serialization: str = None, timeout: int = 2,
                          target_id: str = None, execution_context_id: str = None,
-                         unique_context: bool = False):
+                         unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
 
         .. code-block:: js
@@ -1324,7 +1324,7 @@ class Chrome:
         """
         extension = await self.mv3_extension
         await extension.eval_async("await chrome.proxy.settings.set(arguments[0])",
-                                   {"value": proxy_config, "scope": 'regular'})
+                                   {"value": proxy_config, "scope": 'regular'}, unique_context=False)
 
     async def set_single_proxy(self, proxy: str, bypass_list=None):
         """
@@ -1397,7 +1397,7 @@ class Chrome:
             await chrome.proxy.settings.set(
               {value: {mode: "direct"}, scope: 'regular'}
             );
-        """)
+        """, unique_context=False)
 
     async def _ensure_auth_interception(self, timeout: float = 0.3, set_flag: bool = True):
         # internal, to re-apply auth interception which is broken when a new context gets opened. Due to how extensions in incognito work
@@ -1414,7 +1414,7 @@ class Chrome:
                             );
                         """
             mv3_target = await self.mv3_extension
-            await mv3_target.execute_script(script, timeout=timeout)
+            await mv3_target.execute_script(script, timeout=timeout, unique_context=False)
             if set_flag:
                 self._auth_interception_enabled = True
 
@@ -1446,8 +1446,10 @@ class Chrome:
                 "password": password
             }
         }
-        await mv3_target.execute_script("globalThis.authCreds[arguments[1]] = arguments[0]", arg, host_with_port)
+        await mv3_target.execute_script("globalThis.authCreds[arguments[1]] = arguments[0]", arg, host_with_port,
+                                        unique_context=False)
         self._auth[host_with_port] = arg
+
     async def wait_for_cdp(self, event: str, timeout: float or None = None) -> dict:
         """
         wait for an event on the current target

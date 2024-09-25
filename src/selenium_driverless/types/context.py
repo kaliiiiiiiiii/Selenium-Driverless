@@ -263,7 +263,7 @@ class Context:
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
                                  max_depth: int = None, timeout: int = 2, target_id: str = None,
-                                 execution_context_id: str = None, unique_context: bool = False):
+                                 execution_context_id: str = None, unique_context: bool = True):
         """
         example:
         script= "function(...arguments){obj.click()}"
@@ -278,7 +278,7 @@ class Context:
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                              timeout: int = None, target_id: str = None, execution_context_id: str = None,
-                             unique_context: bool = False):
+                             unique_context: bool = True):
         """executes JavaScript synchronously on ``GlobalThis`` such as
 
         .. code-block:: js
@@ -297,7 +297,7 @@ class Context:
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
                                    serialization: str = None, timeout: int = 2,
                                    target_id: str = None, execution_context_id: str = None,
-                                   unique_context: bool = False):
+                                   unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
 
         .. warning::
@@ -321,7 +321,7 @@ class Context:
     async def eval_async(self, script: str, *args, max_depth: int = 2,
                          serialization: str = None, timeout: int = 2,
                          target_id: str = None, execution_context_id: str = None,
-                         unique_context: bool = False):
+                         unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
 
         .. code-block:: js

@@ -24,7 +24,7 @@ async def get_fp(driver: webdriver.Chrome):
         return JSON.stringify(await data)
     """
     await asyncio.sleep(1)
-    fut = asyncio.ensure_future(driver.eval_async(js, timeout=10))
+    fut = asyncio.ensure_future(driver.eval_async(js, timeout=10, unique_context=False))
     await asyncio.sleep(1)
     pointer = driver.current_pointer
     await pointer.down(x=10, y=10)

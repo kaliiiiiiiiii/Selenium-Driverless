@@ -488,7 +488,7 @@ class Target:
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
                                  max_depth: int = None, timeout: float = 2, execution_context_id: str = None,
-                                 unique_context: bool = False):
+                                 unique_context: bool = True):
         """executes a JavaScript on ``GlobalThis`` such as
 
         .. code-block:: js
@@ -537,7 +537,7 @@ class Target:
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                              timeout: float = None, execution_context_id: str = None,
-                             unique_context: bool = None):
+                             unique_context: bool = True):
         """executes JavaScript synchronously on ``GlobalThis`` such as
 
         .. code-block:: js
@@ -561,7 +561,7 @@ class Target:
             try:
                 res = await global_this.__exec__(script, *args, serialization=serialization,
                                                  max_depth=max_depth, timeout=timeout,
-                                                 execution_context_id=execution_context_id)
+                                                 execution_context_id=execution_context_id, unique_context=unique_context)
                 return res
             except StaleJSRemoteObjReference:
                 pass
@@ -593,7 +593,7 @@ class Target:
             try:
                 res = await global_this.__exec_async__(script, *args, serialization=serialization,
                                                        max_depth=max_depth, timeout=timeout,
-                                                       execution_context_id=execution_context_id)
+                                                       execution_context_id=execution_context_id, unique_context=unique_context)
                 return res
             except StaleJSRemoteObjReference:
                 await asyncio.sleep(0)
@@ -601,7 +601,7 @@ class Target:
 
     async def eval_async(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                          timeout: float = None, execution_context_id: str = None,
-                         unique_context: bool = None):
+                         unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
 
         .. code-block:: js
@@ -628,7 +628,7 @@ class Target:
             try:
                 res = await global_this.__eval_async__(script, *args, serialization=serialization,
                                                        max_depth=max_depth, timeout=timeout,
-                                                       execution_context_id=execution_context_id)
+                                                       execution_context_id=execution_context_id, unique_context=unique_context)
                 return res
             except StaleJSRemoteObjReference:
                 await asyncio.sleep(0)

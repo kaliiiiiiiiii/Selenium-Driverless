@@ -1039,7 +1039,7 @@ class WebElement(JSRemoteObj):
 
     async def eval_async(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                          timeout: float = None, execution_context_id: str = None,
-                         unique_context: bool = None):
+                         unique_context: bool = True):
         """executes JavaScript asynchronously
 
         .. code-block:: js

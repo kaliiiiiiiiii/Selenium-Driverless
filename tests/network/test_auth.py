@@ -22,7 +22,7 @@ async def test_auth_extension(h_driver, subtests, test_server):
     user, _pass, resp, url = gen_url(test_server)
 
     with subtests.test():
-        await h_driver.get(url)
+        await h_driver.get(url, timeout=1)
         response = await h_driver.execute_script("return document.body.textContent")
         assert response != resp
 
@@ -38,7 +38,7 @@ async def test_auth_interceptor(h_driver, subtests, test_server):
     user, _pass, resp, url = gen_url(test_server)
 
     with subtests.test():
-        await h_driver.get(url)
+        await h_driver.get(url, timeout=1)
         response = await h_driver.execute_script("return document.body.textContent")
         assert response != resp
 

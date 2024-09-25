@@ -18,7 +18,7 @@ async def test_isolated_execution_context(h_driver):
               value: proxy
             })
             """
-    await h_driver.execute_script(script)
+    await h_driver.execute_script(script, unique_context=False)
     src = await h_driver.execute_script("return document.documentElement.outerHTML", unique_context=True)
     mocked = await h_driver.execute_script("return document.documentElement.outerHTML", unique_context=False)
     assert mocked == "mocked value:)"

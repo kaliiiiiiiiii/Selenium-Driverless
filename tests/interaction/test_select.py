@@ -50,10 +50,10 @@ select_html = """
 """
 
 track_js = """
-window.selected = undefined
-window.trusted = undefined
+globalThis.selected = undefined;
+globalThis.trusted = undefined;
 var elem = document.getElementById("animals")
-elem.addEventListener("change", (e)=>{window.selected=e.target.value; window.trusted = e.isTrusted});
+elem.addEventListener("change", (e)=>{globalThis.selected=e.target.value; globalThis.trusted = e.isTrusted});
 """
 
 
@@ -99,7 +99,7 @@ async def down(tab: Target):
 
 async def add_elem(driver: Chrome):
     await driver.current_target.set_source(select_html)
-    await driver.execute_script(track_js, unique_context=False)
+    await driver.execute_script(track_js, unique_context=True)
 
 
 async def select_test(driver, subtests, headfull=False):
@@ -123,8 +123,8 @@ async def select_test(driver, subtests, headfull=False):
 
         for value in values:
             await select(elem, value, async_input=async_input)
-            trusted, value_got = await driver.execute_script("return [window.trusted, window.selected]",
-                                                             unique_context=False)
+            trusted, value_got = await driver.execute_script("return [globalThis.trusted, globalThis.selected]",
+                                                             unique_context=True)
             with subtests.test():
                 assert value == value_got
             with subtests.test():

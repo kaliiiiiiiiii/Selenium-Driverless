@@ -21,7 +21,7 @@ async def detect(target: Target, cdp_patches_input: typing.Union[AsyncInput, typ
         await click_target.click()
     await asyncio.sleep(0.5)
     for _ in range(2):
-        detections = await target.eval_async(script)
+        detections = await target.eval_async(script, unique_context=False)
         assert len(detections) == 0
 
 

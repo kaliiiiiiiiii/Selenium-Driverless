@@ -77,7 +77,7 @@ class JSRemoteObj:
 
     async def __exec_raw__(self, script: str, *args, await_res: bool = False, serialization: str = None,
                            max_depth: int = None, timeout: float = 10, execution_context_id: str = None,
-                           unique_context: bool = False):
+                           unique_context: bool = True):
         """
         example:
         script= "function(...arguments){obj.click()}"
@@ -119,7 +119,6 @@ class JSRemoteObj:
                 else:
                     if arg.__context_id__ == exec_context:
                         obj_id = arg.__obj_id__
-
                 if obj_id:
                     is_value = False
                     _args.append({"objectId": obj_id})
@@ -165,7 +164,7 @@ class JSRemoteObj:
 
     async def __exec__(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                        timeout: float = 10, execution_context_id: str = None,
-                       unique_context: bool = None):
+                       unique_context: bool = True):
         """
         example: script = "return elem.click()"
         """
@@ -207,7 +206,7 @@ class JSRemoteObj:
     async def __exec_async__(self, script: str, *args, max_depth: int = 2,
                              serialization: str = None, timeout: float = 10,
                              obj_id=None, execution_context_id: str = None,
-                             unique_context: bool = False):
+                             unique_context: bool = True):
         from selenium_driverless.types.webelement import WebElement
 
         exec_context = self.__context_id__
@@ -246,7 +245,7 @@ class JSRemoteObj:
     async def __eval_async__(self, script: str, *args, max_depth: int = 2,
                              serialization: str = None, timeout: float = 10,
                              obj_id=None, execution_context_id: str = None,
-                             unique_context: bool = False):
+                             unique_context: bool = True):
         from selenium_driverless.types.webelement import WebElement
 
         exec_context = self.__context_id__
