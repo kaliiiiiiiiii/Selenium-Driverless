@@ -32,11 +32,15 @@ class Server:
         self.host = host
         self.app = web.Application(middlewares=[middleware])
         self.app.add_routes([
+            web.get("/", self.root),
             web.get('/cookie_setter', self.cookie_setter),
             web.get("/cookie_echo", self.cookie_echo),
             web.get("/auth_challenge", self.auth_challenge),
             web.get("/echo", self.echo), web.post("/echo", self.echo)
         ])
+
+    async def root(self, request: web.Request) -> web.Response:
+        return web.Response(text="Hello World!", content_type="text/html")
 
     async def cookie_setter(self, request: web.Request) -> web.Response:
         resp = web.Response(text="Hello World!")
