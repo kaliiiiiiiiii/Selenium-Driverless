@@ -1,11 +1,12 @@
 import asyncio
+import datetime
 import json
+import uuid
+from urllib import parse
 
 import pytest
-import uuid
-import datetime
-from urllib import parse
-from selenium_driverless.webdriver import Chrome, Target
+
+from selenium_driverless.webdriver import Target
 
 
 async def get_del_cookie_test(target: Target, subtests, test_server):
@@ -53,7 +54,7 @@ async def assert_n_cookies(target1, target2, n1, n2, subtests):
         assert len(cookies2) == n2
 
 
-async def isolation_test(target1, target2, driver: Chrome, test_server, subtests):
+async def isolation_test(target1, target2, test_server, subtests):
     url = test_server.url + "/cookie_setter?name=test&value=test"
     await assert_n_cookies(target1, target2, 0, 0, subtests)
     await target1.get(url)
@@ -73,10 +74,10 @@ async def test_get_del_cookie(h_driver, subtests, test_server):
     with subtests.test():
         await get_del_cookie_test(isolated, subtests, test_server)
 
-    await isolation_test(isolated, target, h_driver, test_server, subtests)
-    await isolation_test(target, isolated, h_driver, test_server, subtests)
+    await isolation_test(isolated, target, test_server, subtests)
+    await isolation_test(target, isolated, test_server, subtests)
     context2 = await h_driver.new_context()
-    await isolation_test(context2.current_target, isolated, h_driver, test_server, subtests)
+    await isolation_test(context2.current_target, isolated, test_server, subtests)
 
 
 async def get_echo_cookies(target, url) -> dict:

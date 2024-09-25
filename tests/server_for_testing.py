@@ -2,7 +2,7 @@ import threading
 import traceback
 import asyncio
 from selenium_driverless.utils.utils import random_port
-from aiohttp import web
+from aiohttp import web, BasicAuth, hdrs
 from aiohttp.web import middleware
 import json
 
@@ -33,7 +33,8 @@ class Server:
         self.app = web.Application(middlewares=[middleware])
         self.app.add_routes([
             web.get('/cookie_setter', self.cookie_setter),
-            web.get("/cookie_echo", self.cookie_echo)
+            web.get("/cookie_echo", self.cookie_echo),
+            web.get("/auth_challenge", self.auth_challenge)
         ])
 
     async def cookie_setter(self, request: web.Request) -> web.Response:
@@ -44,6 +45,27 @@ class Server:
     async def cookie_echo(self, request: web.Request) -> web.Response:
         resp = await asyncio.get_event_loop().run_in_executor(None, lambda: json.dumps(dict(**request.cookies)))
         return web.Response(text=resp, content_type="application/json")
+
+    async def auth_challenge(self, request: web.Request) -> web.Response:
+        auth_header = request.headers.get(hdrs.AUTHORIZATION)
+        auth = None
+        if auth_header:
+            try:
+                auth = BasicAuth.decode(auth_header=auth_header)
+            except ValueError:
+                pass
+        if auth is None or auth.login != request.query["user"] or auth.login == request.query["pass"]:
+            return web.Response(
+                body=b'',
+                status=401,
+                reason='UNAUTHORIZED',
+                headers={
+                    hdrs.WWW_AUTHENTICATE: f'Basic realm="Hello"',
+                    hdrs.CONTENT_TYPE: 'text/html; charset=utf-8',
+                    hdrs.CONNECTION: 'keep-alive',
+                },
+            )
+        return web.Response(text=request.query["resp"])
 
     def __enter__(self):
         if not self._started:

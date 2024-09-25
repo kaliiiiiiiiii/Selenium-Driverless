@@ -1448,18 +1448,6 @@ class Chrome:
         }
         await mv3_target.execute_script("globalThis.authCreds[arguments[1]] = arguments[0]", arg, host_with_port)
         self._auth[host_with_port] = arg
-
-    async def clear_auth(self):
-        """
-        clear the applied auth from :func:`webdriver.Chrome.set_auth <selenium_driverless.webdriver.Chrome.set_auth>`
-        """
-        # provide auth
-        mv3_target = await self.mv3_extension
-        script = "chrome.webRequest.onAuthRequired.removeListener(globalThis.onAuth);"
-        self._auth = {}
-        await mv3_target.execute_script(script)
-        self._auth_interception_enabled = False
-
     async def wait_for_cdp(self, event: str, timeout: float or None = None) -> dict:
         """
         wait for an event on the current target
