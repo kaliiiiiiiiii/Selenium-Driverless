@@ -219,7 +219,7 @@ asyncio.run(main())
 </details>
 
 ### Pointer Interaction
-see [@master/dev/show_mousemove.py](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/dev/show_mousemove.py) for visualization
+see [@master/tests/show_mousemove.py](https://github.com/kaliiiiiiiiii/Selenium-Driverless/blob/master/tests/show_mousemove.py) for visualization
 
 ```python
 pointer = driver.current_pointer
