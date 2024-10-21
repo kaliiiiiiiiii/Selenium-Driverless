@@ -76,6 +76,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.highlight"><code class="docutils literal notranslate"><span class="pre">WebElement.highlight()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.focus"><code class="docutils literal notranslate"><span class="pre">WebElement.focus()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.is_clickable"><code class="docutils literal notranslate"><span class="pre">WebElement.is_clickable()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.move_to"><code class="docutils literal notranslate"><span class="pre">WebElement.move_to()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.click"><code class="docutils literal notranslate"><span class="pre">WebElement.click()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.write"><code class="docutils literal notranslate"><span class="pre">WebElement.write()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.set_file"><code class="docutils literal notranslate"><span class="pre">WebElement.set_file()</span></code></a></li>
@@ -348,6 +349,18 @@ otherwise checks for “click”, “mousedown” or “mouseup” event listene
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>listener_depth</strong> – the depth (nested elements) to get event-listeners for</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.move_to">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">move_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visible_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spread_a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spread_b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">border</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scroll_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/selenium_driverless/types/webelement.html#WebElement.move_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.move_to" title="Permalink to this definition"></a></dt>
+<dd><p>moves the mouse to the element
+see <code class="xref py py-func docutils literal notranslate"><span class="pre">Elem.send_keys</span> <span class="pre">&lt;selenium_driverless.types.webelement.WebElement.click&gt;</span> <span class="pre">for</span> <span class="pre">details</span> <span class="pre">or</span> <span class="pre">the</span> <span class="pre">arguments()</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
