@@ -444,8 +444,7 @@ class InterceptedRequest:
             except websockets.ConnectionClosedError:
                 pass
 
-    async def fail_request(self, error_reason: typing.Literal[
-            "Failed", "Aborted", "TimedOut", "AccessDenied", "ConnectionClosed", "ConnectionReset", "ConnectionRefused", "ConnectionAborted", "ConnectionFailed", "NameNotResolved", "InternetDisconnected", "AddressUnreachable", "BlockedByClient", "BlockedByResponse"]):
+    async def fail_request(self, error_reason: typing.Literal["Failed", "Aborted", "TimedOut", "AccessDenied", "ConnectionClosed", "ConnectionReset", "ConnectionRefused", "ConnectionAborted", "ConnectionFailed", "NameNotResolved", "InternetDisconnected", "AddressUnreachable", "BlockedByClient", "BlockedByResponse"]):
         """
         fail the request or response
 
@@ -593,7 +592,8 @@ class InterceptedAuth:
             challenge_response["password"] = password
         try:
             await self.target.execute_cdp_cmd("Fetch.continueWithAuth",
-                                              {"requestId": self.id, "authChallengeResponse": challenge_response}, timeout=self.timeout)
+                                              {"requestId": self.id, "authChallengeResponse": challenge_response},
+                                              timeout=self.timeout)
             self._done = True
         except CDPError as e:
             if e.code == -32000 and e.message == 'Invalid state for continueInterceptedRequest':
@@ -698,11 +698,12 @@ class NetworkInterceptor:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self._bypass_service_workers:
-            try:
-                await self.target.execute_cdp_cmd("Fetch.disable")
-            except CDPError as e:
-                if not (e.code == -32000 and e.message == 'Fetch domain is not enabled'):
-                    raise e
+            await self.target.execute_cdp_cmd("Network.setBypassServiceWorker", {"bypass": False})
+        try:
+            await self.target.execute_cdp_cmd("Fetch.disable")
+        except CDPError as e:
+            if not (e.code == -32000 and e.message == 'Fetch domain is not enabled'):
+                raise e
         try:
             await self.target.remove_cdp_listener("Fetch.requestPaused", self._paused_handler)
         except ValueError:
@@ -774,6 +775,7 @@ class NetworkInterceptor:
             iterations should virtually take zero time, you might use ``asyncio.ensure_future`` where possible
 
         """
+
         async def _iter():
             while True:
                 fut, done = asyncio.Future(), asyncio.Future()
