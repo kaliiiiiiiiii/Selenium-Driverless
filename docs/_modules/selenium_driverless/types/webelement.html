@@ -896,6 +896,9 @@
 <div class="viewcode-block" id="WebElement.is_visible"><a class="viewcode-back" href="../../../api/WebELement.html#selenium_driverless.types.webelement.WebElement.is_visible">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">is_visible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">box_model</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">minimum_p</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0001</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        returns true if the area of the element which is visible is bigger than minimum_p (0 to 1, percentage visible)</span>
+
+<span class="sd">        .. note:</span>
+<span class="sd">            This does not check opacity=0</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">box_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -1132,8 +1135,6 @@
 <span class="sd">        .. code-block:: js</span>
 
 <span class="sd">            resolve = arguments[arguments.length-1]</span>
-
-<span class="sd">        ``this`` refers to ``globalThis`` (=&gt; window)</span>
 
 <span class="sd">        see :func:`Target.execute_raw_script &lt;selenium_driverless.types.target.Target.execute_raw_script&gt;` for argument descriptions</span>
 <span class="sd">        &quot;&quot;&quot;</span>

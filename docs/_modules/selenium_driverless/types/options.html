@@ -192,7 +192,10 @@
             <span class="s2">&quot;--wm-window-animations-disabled&quot;</span><span class="p">,</span> <span class="s2">&quot;--animation-duration-scale=0&quot;</span><span class="p">,</span>  <span class="c1"># disable animations</span>
             <span class="s2">&quot;--enable-privacy-sandbox-ads-apis&quot;</span><span class="p">,</span>
             <span class="c1"># ensure window.Fence, window.SharedStorage etc. exist, looks like chrome disables them when using automation</span>
-            <span class="s2">&quot;--disable-search-engine-choice-screen&quot;</span>  <span class="c1"># for chrome&gt;=127</span>
+            <span class="s2">&quot;--disable-search-engine-choice-screen&quot;</span><span class="p">,</span>  <span class="c1"># for chrome&gt;=127,</span>
+            <span class="c1"># &quot;--enable-field-trial-config&quot;</span>
+            <span class="c1"># https://source.chromium.org/chromium/chromium/src/+/main:components/variations/variations_url_constants.cc</span>
+            <span class="c1"># &quot;--variations-server-url=https://clientservices.googleapis.com/chrome-variations/seed&quot;</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">IS_POSIX</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--password-store=basic&quot;</span><span class="p">)</span>

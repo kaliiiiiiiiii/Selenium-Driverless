@@ -578,8 +578,6 @@
 
 <span class="sd">            function(...arguments){return document}</span>
 
-<span class="sd">        ``this`` and ``obj`` refers to ``globalThis`` (=&gt; window) here</span>
-
 <span class="sd">        :param script: the script as a string</span>
 <span class="sd">        :param args: the argument which are passed to the function. Those can be either json-serializable or a RemoteObject such as WebELement</span>
 <span class="sd">        :param await_res: whether to await the function or the return value of it</span>
@@ -607,7 +605,7 @@
                 <span class="n">global_this</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_this</span><span class="p">(</span><span class="n">execution_context_id</span><span class="p">)</span>
                 <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">global_this</span><span class="o">.</span><span class="n">__exec_raw__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">await_res</span><span class="o">=</span><span class="n">await_res</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
                                                      <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-                                                     <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">)</span>
+                                                     <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">StaleJSRemoteObjReference</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
             <span class="k">else</span><span class="p">:</span>
@@ -627,8 +625,6 @@
 
 <span class="sd">            return document</span>
 
-<span class="sd">        ``this`` and ``obj`` refers to ``globalThis`` (=&gt; window) here</span>
-
 <span class="sd">        see :func:`Target.execute_raw_script &lt;selenium_driverless.types.target.Target.execute_raw_script&gt;` for argument descriptions</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">execution_context_id</span> <span class="ow">and</span> <span class="n">unique_context</span><span class="p">:</span>
@@ -645,7 +641,7 @@
                 <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">global_this</span><span class="o">.</span><span class="n">__exec__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
                                                  <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
                                                  <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">,</span>
-                                                 <span class="n">unique_context</span><span class="o">=</span><span class="n">unique_context</span><span class="p">)</span>
+                                                 <span class="n">unique_context</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">res</span>
             <span class="k">except</span> <span class="n">StaleJSRemoteObjReference</span><span class="p">:</span>
                 <span class="k">pass</span>
@@ -659,8 +655,6 @@
 <span class="sd">        .. code-block:: js</span>
 
 <span class="sd">            resolve = arguments[arguments.length-1]</span>
-
-<span class="sd">        ``this`` and ``obj`` refers to ``globalThis`` (=&gt; window) here</span>
 
 <span class="sd">        see :func:`Target.execute_raw_script &lt;selenium_driverless.types.target.Target.execute_raw_script&gt;` for argument descriptions</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -678,7 +672,7 @@
                 <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">global_this</span><span class="o">.</span><span class="n">__exec_async__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
                                                        <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
                                                        <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">,</span>
-                                                       <span class="n">unique_context</span><span class="o">=</span><span class="n">unique_context</span><span class="p">)</span>
+                                                       <span class="n">unique_context</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">res</span>
             <span class="k">except</span> <span class="n">StaleJSRemoteObjReference</span><span class="p">:</span>
                 <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -696,8 +690,6 @@
 <span class="sd">            json = await res.json()</span>
 <span class="sd">            return json</span>
 
-<span class="sd">        ``this`` refers to ``globalThis`` (=&gt; window)</span>
-
 <span class="sd">        see :func:`Target.execute_raw_script &lt;selenium_driverless.types.target.Target.execute_raw_script&gt;` for argument descriptions</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">execution_context_id</span> <span class="ow">and</span> <span class="n">unique_context</span><span class="p">:</span>
@@ -714,7 +706,7 @@
                 <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">global_this</span><span class="o">.</span><span class="n">__eval_async__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
                                                        <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
                                                        <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">,</span>
-                                                       <span class="n">unique_context</span><span class="o">=</span><span class="n">unique_context</span><span class="p">)</span>
+                                                       <span class="n">unique_context</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">res</span>
             <span class="k">except</span> <span class="n">StaleJSRemoteObjReference</span><span class="p">:</span>
                 <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
