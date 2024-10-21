@@ -817,6 +817,9 @@ class WebElement(JSRemoteObj):
     async def is_visible(self, box_model: dict = None, minimum_p: float = 0.0001):
         """
         returns true if the area of the element which is visible is bigger than minimum_p (0 to 1, percentage visible)
+
+        .. note:
+            This does not check opacity=0
         """
         if box_model is None:
             try:

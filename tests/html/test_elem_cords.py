@@ -4,6 +4,15 @@ import asyncio
 import pytest
 import inspect
 
+style_scripts = [
+    ('elem.style.height = "0"; elem.style.width = "0"', False),
+    ('elem.style.display = "none"', False),
+    ('elem.style.position = "absolute"; elem.style.left = "-9999px"', False),
+    ('elem.style.visibility = "hidden"', False),
+    ('elem.style.opacity = "0"', True),
+    ('', True)
+]
+
 
 @pytest.mark.asyncio
 async def click_hit_test(elem: WebElement, subtests):
@@ -224,3 +233,20 @@ async def test_rotated_long_table(h_driver, subtests):
     )
     # Call a function to run your tests on the created table
     await all_test(table, h_driver, subtests, expect_all_zero_fail=False)
+
+
+@pytest.mark.asyncio
+async def test_elem_visible(h_driver, subtests):
+    for style_script, expected in style_scripts:
+        await h_driver.refresh()  # Reset the page before each test
+        elem: WebElement = await h_driver.execute_script(
+            'const elem = document.createElement("div");'
+            'elem.style.height = "20%";'
+            'elem.style.width = "20%";'
+            'document.body.appendChild(elem);'
+            f'{style_script};'
+            f'return elem;'
+        )
+        visible = await elem.is_visible()
+        with subtests.test(style=style_script, visible=visible, expected=expected):
+            assert visible == expected
