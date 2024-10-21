@@ -540,7 +540,7 @@ class Target:
                                        f"possibly due to a reload loop")
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: float = None, execution_context_id: str = None,
+                             timeout: float = 2, execution_context_id: str = None,
                              unique_context: bool = True):
         """executes JavaScript synchronously on ``GlobalThis`` such as
 
@@ -573,7 +573,7 @@ class Target:
         raise asyncio.TimeoutError("Couldn't execute script, possibly due to a reload loop")
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                                   timeout: float = None, execution_context_id: str = None,
+                                   timeout: float = 2, execution_context_id: str = None,
                                    unique_context: bool = None):
         """executes JavaScript asynchronously on ``GlobalThis``
 
@@ -606,7 +606,7 @@ class Target:
         raise asyncio.TimeoutError("Couldn't execute script, possibly due to a reload loop")
 
     async def eval_async(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                         timeout: float = None, execution_context_id: str = None,
+                         timeout: float = 2, execution_context_id: str = None,
                          unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
 
@@ -860,7 +860,7 @@ class Target:
         return self._document_elem_
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, timeout: int or None = None) -> WebElement:
+    async def find_element(self, by: str, value: str, timeout: float or None = None) -> WebElement:
         """find an element in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`

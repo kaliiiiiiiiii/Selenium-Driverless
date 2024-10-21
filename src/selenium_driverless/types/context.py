@@ -262,7 +262,7 @@ class Context:
         await self.current_target.send_keys(text)
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                                 max_depth: int = None, timeout: int = 2, target_id: str = None,
+                                 max_depth: int = None, timeout: float = 2, target_id: str = None,
                                  execution_context_id: str = None, unique_context: bool = True):
         """
         example:
@@ -277,7 +277,7 @@ class Context:
                                                unique_context=unique_context)
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: int = None, target_id: str = None, execution_context_id: str = None,
+                             timeout: float = 2, target_id: str = None, execution_context_id: str = None,
                              unique_context: bool = True):
         """executes JavaScript synchronously on ``GlobalThis`` such as
 
@@ -295,7 +295,7 @@ class Context:
                                            unique_context=unique_context)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
-                                   serialization: str = None, timeout: int = 2,
+                                   serialization: str = None, timeout: float = 2,
                                    target_id: str = None, execution_context_id: str = None,
                                    unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
@@ -319,7 +319,7 @@ class Context:
                                                  unique_context=unique_context)
 
     async def eval_async(self, script: str, *args, max_depth: int = 2,
-                         serialization: str = None, timeout: int = 2,
+                         serialization: str = None, timeout: float = 2,
                          target_id: str = None, execution_context_id: str = None,
                          unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
@@ -645,7 +645,7 @@ class Context:
         await asyncio.sleep(time_to_wait)
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, timeout: int or None = None) -> WebElement:
+    async def find_element(self, by: str, value: str, timeout: float or None = None) -> WebElement:
         """find an element in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`

@@ -290,7 +290,7 @@ class WebElement(JSRemoteObj):
         """
         return self._class_name
 
-    async def find_element(self, by: str, value: str, idx: int = 0, timeout: int or None = None) -> WebElement:
+    async def find_element(self, by: str, value: str, idx: int = 0, timeout: float or None = None) -> WebElement:
         """find an element in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
@@ -1038,7 +1038,7 @@ class WebElement(JSRemoteObj):
                                          execution_context_id=execution_context_id)
 
     async def eval_async(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                         timeout: float = None, execution_context_id: str = None,
+                         timeout: float = 2, execution_context_id: str = None,
                          unique_context: bool = True):
         """executes JavaScript asynchronously
 
