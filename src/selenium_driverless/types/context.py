@@ -106,7 +106,7 @@ class Context:
             if not _type == "page:":
                 targets = await self.targets
                 for _id, info in list(targets.items()):
-                    if info.type == "page":
+                    if info.type == "page" and not info.title.startswith("chrome-extension://"):
                         self._current_target = info.Target
                         break
                     else:
