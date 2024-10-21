@@ -51,7 +51,6 @@ async def base_driver():
     options = webdriver.ChromeOptions()
     env = os.environ.copy()
     options.env = env
-    env['NUMBER_OF_PROCESSORS'] = "4"
     async with webdriver.Chrome(options=options) as driver:
         return await get_fp(driver)
 

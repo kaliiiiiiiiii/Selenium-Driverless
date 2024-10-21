@@ -68,7 +68,7 @@ class SwitchTo:
         """
         return await self.get_alert()
 
-    async def get_alert(self, target_id: str = None, timeout: float = 5) -> Alert:
+    async def get_alert(self, timeout: float = 5) -> Alert:
         """Switches focus to an alert on the page.
 
         :Usage:
@@ -76,8 +76,7 @@ class SwitchTo:
 
                 alert = target.switch_to.alert
         """
-        target = await self._context.get_target(target_id=target_id)
-        return await target.get_alert(timeout=timeout)
+        return await self._context.current_target.get_alert(timeout=timeout)
 
     async def default_content(self, activate: bool = False) -> Target:
         """Switch focus to the default frame.

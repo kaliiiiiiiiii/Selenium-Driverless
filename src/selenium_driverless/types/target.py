@@ -499,8 +499,6 @@ class Target:
 
             function(...arguments){return document}
 
-        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
-
         :param script: the script as a string
         :param args: the argument which are passed to the function. Those can be either json-serializable or a RemoteObject such as WebELement
         :param await_res: whether to await the function or the return value of it
@@ -528,7 +526,7 @@ class Target:
                 global_this = await self._global_this(execution_context_id)
                 res = await global_this.__exec_raw__(script, *args, await_res=await_res, serialization=serialization,
                                                      max_depth=max_depth, timeout=timeout,
-                                                     execution_context_id=execution_context_id)
+                                                     execution_context_id=execution_context_id, unique_context=False)
             except StaleJSRemoteObjReference as e:
                 exc = e
             else:
@@ -548,8 +546,6 @@ class Target:
 
             return document
 
-        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
-
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
         if execution_context_id and unique_context:
@@ -566,7 +562,7 @@ class Target:
                 res = await global_this.__exec__(script, *args, serialization=serialization,
                                                  max_depth=max_depth, timeout=timeout,
                                                  execution_context_id=execution_context_id,
-                                                 unique_context=unique_context)
+                                                 unique_context=False)
                 return res
             except StaleJSRemoteObjReference:
                 pass
@@ -580,8 +576,6 @@ class Target:
         .. code-block:: js
 
             resolve = arguments[arguments.length-1]
-
-        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
 
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
@@ -599,7 +593,7 @@ class Target:
                 res = await global_this.__exec_async__(script, *args, serialization=serialization,
                                                        max_depth=max_depth, timeout=timeout,
                                                        execution_context_id=execution_context_id,
-                                                       unique_context=unique_context)
+                                                       unique_context=False)
                 return res
             except StaleJSRemoteObjReference:
                 await asyncio.sleep(0)
@@ -617,8 +611,6 @@ class Target:
             json = await res.json()
             return json
 
-        ``this`` refers to ``globalThis`` (=> window)
-
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
         if execution_context_id and unique_context:
@@ -635,7 +627,7 @@ class Target:
                 res = await global_this.__eval_async__(script, *args, serialization=serialization,
                                                        max_depth=max_depth, timeout=timeout,
                                                        execution_context_id=execution_context_id,
-                                                       unique_context=unique_context)
+                                                       unique_context=False)
                 return res
             except StaleJSRemoteObjReference:
                 await asyncio.sleep(0)

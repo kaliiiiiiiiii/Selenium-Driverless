@@ -113,7 +113,10 @@ class Options(metaclass=ABCMeta):
             "--wm-window-animations-disabled", "--animation-duration-scale=0",  # disable animations
             "--enable-privacy-sandbox-ads-apis",
             # ensure window.Fence, window.SharedStorage etc. exist, looks like chrome disables them when using automation
-            "--disable-search-engine-choice-screen"  # for chrome>=127
+            "--disable-search-engine-choice-screen",  # for chrome>=127,
+            # "--enable-field-trial-config"
+            # https://source.chromium.org/chromium/chromium/src/+/main:components/variations/variations_url_constants.cc
+            # "--variations-server-url=https://clientservices.googleapis.com/chrome-variations/seed"
         )
         if IS_POSIX:
             self.add_argument("--password-store=basic")

@@ -262,22 +262,20 @@ class Context:
         await self.current_target.send_keys(text)
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
-                                 max_depth: int = None, timeout: float = 2, target_id: str = None,
+                                 max_depth: int = None, timeout: float = 2,
                                  execution_context_id: str = None, unique_context: bool = True):
         """
         example:
         script= "function(...arguments){obj.click()}"
         "const obj" will be the Object according to obj_id
-        this is by default globalThis (=> window)
         """
-        target = await self.get_target(target_id)
-        return await target.execute_raw_script(script, *args, await_res=await_res,
+        return await self.current_target.execute_raw_script(script, *args, await_res=await_res,
                                                serialization=serialization, max_depth=max_depth,
                                                timeout=timeout, execution_context_id=execution_context_id,
                                                unique_context=unique_context)
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: float = 2, target_id: str = None, execution_context_id: str = None,
+                             timeout: float = 2, execution_context_id: str = None,
                              unique_context: bool = True):
         """executes JavaScript synchronously on ``GlobalThis`` such as
 
@@ -285,18 +283,15 @@ class Context:
 
             return document
 
-        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
-
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
-        target = await self.get_target(target_id)
-        return await target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
-                                           timeout=timeout, execution_context_id=execution_context_id,
-                                           unique_context=unique_context)
+        return await self.current_target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
+                                                        timeout=timeout, execution_context_id=execution_context_id,
+                                                        unique_context=unique_context)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
                                    serialization: str = None, timeout: float = 2,
-                                   target_id: str = None, execution_context_id: str = None,
+                                   execution_context_id: str = None,
                                    unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
 
@@ -308,19 +303,17 @@ class Context:
 
             resolve = arguments[arguments.length-1]
 
-        ``this`` refers to ``globalThis`` (=> window)
-
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
-        target = await self.get_target(target_id)
-        return await target.execute_async_script(script, *args, max_depth=max_depth, serialization=serialization,
-                                                 timeout=timeout,
-                                                 execution_context_id=execution_context_id,
-                                                 unique_context=unique_context)
+        return await self.current_target.execute_async_script(script, *args, max_depth=max_depth,
+                                                              serialization=serialization,
+                                                              timeout=timeout,
+                                                              execution_context_id=execution_context_id,
+                                                              unique_context=unique_context)
 
     async def eval_async(self, script: str, *args, max_depth: int = 2,
                          serialization: str = None, timeout: float = 2,
-                         target_id: str = None, execution_context_id: str = None,
+                         execution_context_id: str = None,
                          unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
 
@@ -331,15 +324,12 @@ class Context:
             json = await res.json()
             return json
 
-        ``this`` refers to ``globalThis`` (=> window)
-
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
-        target = await self.get_target(target_id)
-        return await target.eval_async(script, *args, max_depth=max_depth, serialization=serialization,
-                                       timeout=timeout,
-                                       execution_context_id=execution_context_id,
-                                       unique_context=unique_context)
+        return await self.current_target.eval_async(script, *args, max_depth=max_depth, serialization=serialization,
+                                                    timeout=timeout,
+                                                    execution_context_id=execution_context_id,
+                                                    unique_context=unique_context)
 
     @property
     async def current_url(self) -> str:
@@ -365,7 +355,7 @@ class Context:
         target = self.current_target
         return await target.page_source
 
-    async def close(self, timeout: float = 2, target_id: str = None) -> None:
+    async def close(self, timeout: float = 2) -> None:
         """Closes the current window.
 
         :Usage:
@@ -373,14 +363,10 @@ class Context:
 
                 target.close()
         """
-        if not target_id:
-            target_id = self.current_window_handle
-        target = await self.get_target(target_id)
-        await target.close(timeout=timeout)
+        await self.current_target.close(timeout=timeout)
 
-    async def focus(self, target_id: str = None):
-        target = await self.get_target(target_id)
-        await target.focus()
+    async def focus(self):
+        await self.current_target.focus()
 
     async def quit(self, timeout: float = 30, start_monotonic: float = None) -> None:
         """Quits the target and closes every associated window.
@@ -551,76 +537,44 @@ class Context:
         return self._switch_to
 
     # Navigation
-    async def back(self, target_id: str = None) -> None:
+    async def back(self) -> None:
         """Goes one step backward in the browser history.
-
-        :Usage:
-            ::
-
-                target.back()
         """
-        target = await self.get_target(target_id=target_id)
-        await target.back()
+        await self.current_target.back()
 
-    async def forward(self, target_id: str = None) -> None:
+    async def forward(self) -> None:
         """Goes one step forward in the browser history.
-
-        :Usage:
-            ::
-
-                target.forward()
         """
-        target = await self.get_target(target_id=target_id)
-        await target.forward()
+        await self.current_target.forward()
 
-    async def refresh(self, target_id: str = None) -> None:
-        """Refreshes the current page.
-
-        :Usage:
-            ::
-
-                target.refresh()
+    async def refresh(self) -> None:
+        """Refreshes the current page
         """
-        target = await self.get_target(target_id=target_id)
-        await target.refresh()
+        await self.current_target.refresh()
 
     # Options
-    async def get_cookies(self, target_id: str = None) -> List[dict]:
+    async def get_cookies(self) -> List[dict]:
         """Returns a set of dictionaries, corresponding to cookies visible in
         the current target.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_cookies()
+        return await self.current_target.get_cookies()
 
-    async def get_cookie(self, name, target_id: str = None) -> typing.Optional[typing.Dict]:
+    async def get_cookie(self, name) -> typing.Optional[typing.Dict]:
         """Get a single cookie by name. Returns the cookie if found, None if
         not.
-
-        :Usage:
-            ::
-
-                target.get_cookie('my_cookie')
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_cookie(name=name)
+        return await self.current_target.get_cookie(name=name)
 
     async def delete_cookie(self, name: str, url: str = None, domain: str = None,
-                            path: str = None, target_id: str = None) -> None:
+                            path: str = None) -> None:
         """Deletes a single cookie with the given name.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.delete_cookie(name=name, url=url, domain=domain, path=path)
+        return await self.current_target.delete_cookie(name=name, url=url, domain=domain, path=path)
 
-    async def delete_all_cookies(self, target_id: str = None) -> None:
+    async def delete_all_cookies(self, ) -> None:
         """Delete all cookies in the scope of the session.
-
-        :Usage:
-            ::
-
-                target.delete_all_cookies()
         """
-        target = await self.get_target(target_id=target_id)
-        await target.delete_all_cookies()
+        await self.current_target.delete_all_cookies()
 
     # noinspection GrazieInspection
     async def add_cookie(self, cookie_dict: dict) -> None:
@@ -665,12 +619,11 @@ class Context:
         target = await self.get_target()
         return await target.find_elements(by=by, value=value, timeout=timeout)
 
-    async def search_elements(self, query: str, target_id: str = None) -> typing.List[WebElement]:
+    async def search_elements(self, query: str) -> typing.List[WebElement]:
         """
         query:str | Plain text or query selector or XPath search query.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.search_elements(query=query)
+        return await self.current_target.search_elements(query=query)
 
     async def get_screenshot_as_file(self, filename: str) -> None:
         """Saves a screenshot of the current window to a PNG image file.
@@ -684,7 +637,7 @@ class Context:
         """alias to :func: `driver.get_screenshot_as_file <selenium_driverless.webdriver.Chrome.get_screenshot_as_file>`"""
         return await self.current_target.save_screenshot(filename=filename)
 
-    async def get_screenshot_as_png(self, target_id: str = None) -> bytes:
+    async def get_screenshot_as_png(self) -> bytes:
         """Gets the screenshot of the current window as a binary data.
 
         :Usage:
@@ -692,8 +645,7 @@ class Context:
 
                 target.get_screenshot_as_png()
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_screenshot_as_png()
+        return await self.current_target.get_screenshot_as_png()
 
     async def snapshot(self) -> str:
         """gets the current snapshot as mhtml"""
@@ -816,7 +768,7 @@ class Context:
 
         return bounds
 
-    async def get_network_conditions(self, target_id: str = None):
+    async def get_network_conditions(self):
         """Gets Chromium network emulation settings.
 
         :Returns:
@@ -824,14 +776,12 @@ class Context:
             {'latency': 4, 'download_throughput': 2, 'upload_throughput': 2,
             'offline': False}
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_network_conditions()
+        return await self.current_target.get_network_conditions()
 
     async def set_network_conditions(self, offline: bool, latency: int, download_throughput: int,
                                      upload_throughput: int,
                                      connection_type: typing.Literal[
-                                         "none", "cellular2g", "cellular3g", "cellular4g", "bluetooth", "ethernet", "wifi", "wimax", "other"],
-                                     target_id: str = None) -> None:
+                                         "none", "cellular2g", "cellular3g", "cellular4g", "bluetooth", "ethernet", "wifi", "wimax", "other"]) -> None:
         """Sets Chromium network emulation settings.
 
         :Args:
@@ -849,15 +799,13 @@ class Context:
 
             Note: 'throughput' can be used to set both (for download and upload).
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.set_network_conditions(offline=offline, latency=latency,
+        return await self.current_target.set_network_conditions(offline=offline, latency=latency,
                                                    download_throughput=download_throughput,
                                                    upload_throughput=upload_throughput, connection_type=connection_type)
 
-    async def delete_network_conditions(self, target_id: str = None) -> None:
+    async def delete_network_conditions(self) -> None:
         """Resets Chromium network emulation settings."""
-        target = await self.get_target(target_id=target_id)
-        await target.delete_network_conditions()
+        await self.current_target.delete_network_conditions()
 
     async def set_permissions(self, name: str, value: str, origin: str = None) -> None:
         """Sets Applicable Permission.
@@ -881,48 +829,43 @@ class Context:
             args["origin"] = origin
         await self.execute_cdp_cmd("Browser.setPermission", args)
 
-    async def wait_for_cdp(self, event: str, timeout: float or None = None, target_id: str = None) -> dict:
+    async def wait_for_cdp(self, event: str, timeout: float or None = None) -> dict:
         """
         wait for an event on the current target
         see :func:`Target.wait_for_cdp <selenium_driverless.types.target.Target.wait_for_cdp>` for reference
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.wait_for_cdp(event=event, timeout=timeout)
+        return await self.current_target.wait_for_cdp(event=event, timeout=timeout)
 
-    async def add_cdp_listener(self, event: str, callback: typing.Callable[[dict], any], target_id: str = None):
+    async def add_cdp_listener(self, event: str, callback: typing.Callable[[dict], any]):
         """
         add a listener for a CDP event on the current target
         see :func:`Target.add_cdp_listener <selenium_driverless.types.target.Target.add_cdp_listener>` for reference
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.add_cdp_listener(event=event, callback=callback)
+        return await self.current_target.add_cdp_listener(event=event, callback=callback)
 
-    async def remove_cdp_listener(self, event: str, callback: typing.Callable[[dict], any], target_id: str = None):
+    async def remove_cdp_listener(self, event: str, callback: typing.Callable[[dict], any]):
         """
         remove a listener for a CDP event on the current target
         see :func:`Target.remove_cdp_listener <selenium_driverless.types.target.Target.remove_cdp_listener>` for reference
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.remove_cdp_listener(event=event, callback=callback)
+        return await self.current_target.remove_cdp_listener(event=event, callback=callback)
 
-    async def get_cdp_event_iter(self, event: str, target_id: str = None) -> typing.AsyncIterable[dict]:
+    async def get_cdp_event_iter(self, event: str) -> typing.AsyncIterable[dict]:
         """
         iterate over CDP events on the current target
         see :func:`Target.get_cdp_event_iter <selenium_driverless.types.target.Target.get_cdp_event_iter>` for reference
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_cdp_event_iter(event=event)
+        return await self.current_target.get_cdp_event_iter(event=event)
 
     async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None,
-                              timeout: float or None = 10, target_id: str = None) -> dict:
+                              timeout: float or None = 10) -> dict:
         """Execute Chrome Devtools Protocol command on the current target
         executes it on :class:`Target.execute_cdp_cmd <selenium_driverless.types.base_target.BaseTarget>`
         if ``message:'Not allowed'`` received
         see :func:`Target.execute_cdp_cmd <selenium_driverless.types.target.Target.execute_cdp_cmd>` for reference
         """
-        target = await self.get_target(target_id=target_id)
         try:
-            return await target.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout)
+            return await self.current_target.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout)
         except CDPError as e:
             if e.code == -32000 and e.message == 'Not allowed':
                 return await self.base_target.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout)
@@ -942,53 +885,47 @@ class Context:
         return await self.current_target.xhr(*args, **kwargs)
 
     # noinspection PyTypeChecker
-    async def get_sinks(self, target_id: str = None) -> list:
+    async def get_sinks(self) -> list:
         """
         :Returns: A list of sinks available for Cast.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_sinks()
+        return await self.current_target.get_sinks()
 
-    async def get_issue_message(self, target_id: str = None):
+    async def get_issue_message(self):
         """
         :Returns: An error message when there is any issue in a Cast session.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_issue_message()
+        return await self.current_target.get_issue_message()
 
-    async def set_sink_to_use(self, sink_name: str, target_id: str = None) -> dict:
+    async def set_sink_to_use(self, sink_name: str) -> dict:
         """Sets a specific sink, using its name, as a Cast session receiver
         target.
 
         :Args:
          - sink_name: Name of the sink to use as the target.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.set_sink_to_use(sink_name=sink_name)
+        return await self.current_target.set_sink_to_use(sink_name=sink_name)
 
-    async def start_desktop_mirroring(self, sink_name: str, target_id: str = None) -> dict:
+    async def start_desktop_mirroring(self, sink_name: str) -> dict:
         """Starts a desktop mirroring session on a specific receiver target.
 
         :Args:
          - sink_name: Name of the sink to use as the target.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.start_desktop_mirroring(sink_name=sink_name)
+        return await self.current_target.start_desktop_mirroring(sink_name=sink_name)
 
-    async def start_tab_mirroring(self, sink_name: str, target_id: str = None) -> dict:
+    async def start_tab_mirroring(self, sink_name: str) -> dict:
         """Starts a tab mirroring session on a specific receiver target.
 
         :Args:
          - sink_name: Name of the sink to use as the target.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.start_tab_mirroring(sink_name=sink_name)
+        return await self.current_target.start_tab_mirroring(sink_name=sink_name)
 
-    async def stop_casting(self, sink_name: str, target_id: str = None) -> dict:
+    async def stop_casting(self, sink_name: str) -> dict:
         """Stops the existing Cast session on a specific receiver target.
 
         :Args:
          - sink_name: Name of the sink to stop the Cast session.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.stop_casting(sink_name=sink_name)
+        return await self.current_target.stop_casting(sink_name=sink_name)

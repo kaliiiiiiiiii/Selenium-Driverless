@@ -430,7 +430,8 @@ class Chrome:
                     mv3_target = await self.mv3_extension
                     self._auth_interception_enabled = False
                     await self._ensure_auth_interception(timeout=0.5, set_flag=False)
-                    await mv3_target.execute_script("globalThis.authCreds = arguments[0]", self._auth, timeout=0.5, unique_context=False)
+                    await mv3_target.execute_script("globalThis.authCreds = arguments[0]", self._auth, timeout=0.5,
+                                                    unique_context=False)
                 except (asyncio.TimeoutError, TimeoutError):
                     await asyncio.sleep(0.1)
                     self._mv3_extension = None
@@ -687,15 +688,13 @@ class Chrome:
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False,
                                  serialization: typing.Literal["deep", "json", "idOnly"] = "deep",
-                                 max_depth: int = None, timeout: float = 2, execution_context_id: str = None,
+                                 max_depth: int = None, timeout: float = 2, execution_context_id,
                                  unique_context: bool = True):
         """executes a JavaScript on ``GlobalThis`` such as
 
         .. code-block:: js
 
             function(...arguments){return document}
-
-        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
 
         :param script: the script as a string
         :param args: the argument which are passed to the function. Those can be either json-serializable or a RemoteObject such as WebElement
@@ -714,8 +713,7 @@ class Chrome:
                                                             unique_context=unique_context)
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: float = 2,
-                             target_id: str = None, execution_context_id: str = None,
+                             timeout: float = 2, execution_context_id: str = None,
                              unique_context: bool = True):
         """executes JavaScript synchronously on ``GlobalThis`` such as
 
@@ -723,18 +721,14 @@ class Chrome:
 
             return document
 
-        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
-
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
                 """
-        target = await self.get_target(target_id)
-        return await target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
-                                           timeout=timeout, execution_context_id=execution_context_id,
-                                           unique_context=unique_context)
+        return await self.current_target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
+                                                        timeout=timeout, execution_context_id=execution_context_id,
+                                                        unique_context=unique_context)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
-                                   serialization: str = None, timeout: float = 2,
-                                   target_id: str = None, execution_context_id: str = None,
+                                   serialization: str = None, timeout: float = 2, execution_context_id: str = None,
                                    unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
 
@@ -746,19 +740,16 @@ class Chrome:
 
             resolve = arguments[arguments.length-1]
 
-        ``this`` refers to ``globalThis`` (=> window)
-
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
-        target = await self.get_target(target_id)
-        return await target.execute_async_script(script, *args, max_depth=max_depth, serialization=serialization,
-                                                 timeout=timeout,
-                                                 execution_context_id=execution_context_id,
-                                                 unique_context=unique_context)
+        return await self.current_target.execute_async_script(script, *args, max_depth=max_depth,
+                                                              serialization=serialization,
+                                                              timeout=timeout,
+                                                              execution_context_id=execution_context_id,
+                                                              unique_context=unique_context)
 
     async def eval_async(self, script: str, *args, max_depth: int = 2,
-                         serialization: str = None, timeout: float = 2,
-                         target_id: str = None, execution_context_id: str = None,
+                         serialization: str = None, timeout: float = 2, execution_context_id: str = None,
                          unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
 
@@ -769,15 +760,12 @@ class Chrome:
             json = await res.json()
             return json
 
-        ``this`` refers to ``globalThis`` (=> window)
-
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
-        target = await self.get_target(target_id)
-        return await target.eval_async(script, *args, max_depth=max_depth, serialization=serialization,
-                                       timeout=timeout,
-                                       execution_context_id=execution_context_id,
-                                       unique_context=unique_context)
+        return await self.current_target.eval_async(script, *args, max_depth=max_depth, serialization=serialization,
+                                                    timeout=timeout,
+                                                    execution_context_id=execution_context_id,
+                                                    unique_context=unique_context)
 
     @property
     async def current_url(self) -> str:
@@ -1471,23 +1459,21 @@ class Chrome:
         """
         return await self.current_target.remove_cdp_listener(event=event, callback=callback)
 
-    async def get_cdp_event_iter(self, event: str, target_id: str = None) -> typing.AsyncIterable[dict]:
+    async def get_cdp_event_iter(self, event: str) -> typing.AsyncIterable[dict]:
         """
         iterate over CDP events on the current target
         see :func:`Target.get_cdp_event_iter <selenium_driverless.types.target.Target.get_cdp_event_iter>` for reference
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_cdp_event_iter(event=event)
+        return await self.current_target.get_cdp_event_iter(event=event)
 
     async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None,
-                              timeout: float or None = 10, target_id: str = None) -> dict:
+                              timeout: float or None = 10) -> dict:
         """Execute Chrome Devtools Protocol command on the current target
         executes it on :class:`Target.execute_cdp_cmd <selenium_driverless.types.base_target.BaseTarget>`
         if ``message:'Not allowed'`` received
         see :func:`Target.execute_cdp_cmd <selenium_driverless.types.target.Target.execute_cdp_cmd>` for reference
         """
-        return await self.current_context.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout,
-                                                          target_id=target_id)
+        return await self.current_context.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout)
 
     async def fetch(self, *args, **kwargs) -> dict:
         """
@@ -1504,19 +1490,17 @@ class Chrome:
         return await self.current_target.xhr(*args, **kwargs)
 
     # noinspection PyTypeChecker
-    async def get_sinks(self, target_id: str = None) -> list:
+    async def get_sinks(self) -> list:
         """
         :Returns: A list of sinks available for Cast.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_sinks()
+        return await self.current_target.get_sinks()
 
-    async def get_issue_message(self, target_id: str = None):
+    async def get_issue_message(self):
         """
         :Returns: An error message when there is any issue in a Cast session.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_issue_message()
+        return await self.current_target.get_issue_message()
 
     async def set_sink_to_use(self, sink_name: str) -> dict:
         """Sets a specific sink, using its name, as a Cast session receiver
@@ -1540,11 +1524,10 @@ class Chrome:
         """
         return await self.current_target.start_tab_mirroring(sink_name=sink_name)
 
-    async def stop_casting(self, sink_name: str, target_id: str = None) -> dict:
+    async def stop_casting(self, sink_name: str) -> dict:
         """Stops the existing Cast session on a specific receiver target.
 
         :Args:
          - sink_name: Name of the sink to stop the Cast session.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.stop_casting(sink_name=sink_name)
+        return await self.current_target.stop_casting(sink_name=sink_name)

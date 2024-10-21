@@ -1057,8 +1057,6 @@ class WebElement(JSRemoteObj):
 
             resolve = arguments[arguments.length-1]
 
-        ``this`` refers to ``globalThis`` (=> window)
-
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
         return await self.__exec_async__(script, *args, max_depth=max_depth, serialization=serialization,

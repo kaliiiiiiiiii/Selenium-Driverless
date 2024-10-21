@@ -82,7 +82,6 @@ class JSRemoteObj:
         example:
         script= "function(...arguments){obj.click()}"
         "const obj" will be the Object according to obj_id
-        this is by default globalThis (=> window)
         """
         from selenium_driverless.types import JSEvalException
         from selenium_driverless.types.webelement import WebElement
@@ -200,7 +199,7 @@ class JSRemoteObj:
                             """ + script + "})"
         res = await self.__exec_raw__(script, *args, max_depth=max_depth,
                                       serialization=serialization, timeout=timeout,
-                                      await_res=False, execution_context_id=exec_context)
+                                      await_res=False, execution_context_id=exec_context, unique_context=False)
         return res
 
     async def __exec_async__(self, script: str, *args, max_depth: int = 2,
@@ -239,7 +238,7 @@ class JSRemoteObj:
         res = await self.__exec_raw__(script, *args, max_depth=max_depth,
                                       serialization=serialization, timeout=timeout,
                                       await_res=True,
-                                      execution_context_id=exec_context)
+                                      execution_context_id=exec_context, unique_context=False)
         return res
 
     async def __eval_async__(self, script: str, *args, max_depth: int = 2,
@@ -272,7 +271,7 @@ class JSRemoteObj:
         res = await self.__exec_raw__(script, *args, max_depth=max_depth,
                                       serialization=serialization, timeout=timeout,
                                       await_res=True,
-                                      execution_context_id=exec_context)
+                                      execution_context_id=exec_context, unique_context=False)
         return res
 
 
