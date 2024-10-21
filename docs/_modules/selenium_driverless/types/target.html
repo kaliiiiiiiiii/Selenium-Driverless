@@ -79,6 +79,8 @@
   <h1>Source code for selenium_driverless.types.target</h1><div class="highlight"><pre>
 <span></span><span class="c1"># io</span>
 <span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">os.path</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">typing</span>
@@ -132,7 +134,7 @@
     <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Backslash&#39;</span><span class="p">,</span> <span class="mi">220</span><span class="p">),</span> <span class="s1">&#39;]&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;BracketRight&#39;</span><span class="p">,</span> <span class="mi">221</span><span class="p">),</span> <span class="s1">&#39;^&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Digit6&#39;</span><span class="p">,</span> <span class="mi">54</span><span class="p">),</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Minus&#39;</span><span class="p">,</span> <span class="mi">189</span><span class="p">),</span>
     <span class="s1">&#39;`&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Backquote&#39;</span><span class="p">,</span> <span class="mi">192</span><span class="p">),</span>
     <span class="s1">&#39;{&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;BracketLeft&#39;</span><span class="p">,</span> <span class="mi">219</span><span class="p">),</span> <span class="s1">&#39;|&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Backslash&#39;</span><span class="p">,</span> <span class="mi">220</span><span class="p">),</span> <span class="s1">&#39;}&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;BracketRight&#39;</span><span class="p">,</span> <span class="mi">221</span><span class="p">),</span> <span class="s1">&#39;~&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Backquote&#39;</span><span class="p">,</span> <span class="mi">192</span><span class="p">),</span>
-    <span class="s1">&#39; &#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Space&#39;</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="s1">&#39; &#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Space&#39;</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span> <span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Enter&#39;</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="n">SHIFT_KEY_NEEDED</span> <span class="o">=</span> <span class="s1">&#39;~!@#$%^&amp;*()_+</span><span class="si">{}</span><span class="s1">|:&quot;&lt;&gt;?&#39;</span>
@@ -511,6 +513,8 @@
         <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_key_lock</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">letter</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">letter</span> <span class="ow">in</span> <span class="n">KEY_MAPPING</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">letter</span> <span class="o">==</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">:</span>
+                        <span class="n">letter</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span>
                     <span class="n">key_code</span><span class="p">,</span> <span class="n">virtual_key_code</span> <span class="o">=</span> <span class="n">KEY_MAPPING</span><span class="p">[</span><span class="n">letter</span><span class="p">]</span>
                 <span class="k">elif</span> <span class="n">allow_not_on_mapping</span><span class="p">:</span>
                     <span class="n">key_code</span><span class="p">,</span> <span class="n">virtual_key_code</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
@@ -567,7 +571,7 @@
 
 <div class="viewcode-block" id="Target.execute_raw_script"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.execute_raw_script">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_raw_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">await_res</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                                  <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                                 <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+                                 <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;executes a JavaScript on ``GlobalThis`` such as</span>
 
 <span class="sd">        .. code-block:: js</span>
@@ -615,8 +619,8 @@
                                        <span class="sa">f</span><span class="s2">&quot;possibly due to a reload loop&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Target.execute_script"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.execute_script">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                             <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                             <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                             <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                             <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;executes JavaScript synchronously on ``GlobalThis`` such as</span>
 
 <span class="sd">        .. code-block:: js</span>
@@ -640,14 +644,15 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">global_this</span><span class="o">.</span><span class="n">__exec__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
                                                  <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-                                                 <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">)</span>
+                                                 <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">,</span>
+                                                 <span class="n">unique_context</span><span class="o">=</span><span class="n">unique_context</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">res</span>
             <span class="k">except</span> <span class="n">StaleJSRemoteObjReference</span><span class="p">:</span>
                 <span class="k">pass</span>
         <span class="k">raise</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t execute script, possibly due to a reload loop&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Target.execute_async_script"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.execute_async_script">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_async_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                                   <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                                    <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;executes JavaScript asynchronously on ``GlobalThis``</span>
 
@@ -672,15 +677,16 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">global_this</span><span class="o">.</span><span class="n">__exec_async__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
                                                        <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-                                                       <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">)</span>
+                                                       <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">,</span>
+                                                       <span class="n">unique_context</span><span class="o">=</span><span class="n">unique_context</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">res</span>
             <span class="k">except</span> <span class="n">StaleJSRemoteObjReference</span><span class="p">:</span>
                 <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t execute script, possibly due to a reload loop&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Target.eval_async"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.eval_async">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">eval_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                         <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                         <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                         <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                         <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;executes JavaScript asynchronously on ``GlobalThis`` such as</span>
 
 <span class="sd">        .. code-block:: js</span>
@@ -707,7 +713,8 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">global_this</span><span class="o">.</span><span class="n">__eval_async__</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
                                                        <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-                                                       <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">)</span>
+                                                       <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">,</span>
+                                                       <span class="n">unique_context</span><span class="o">=</span><span class="n">unique_context</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">res</span>
             <span class="k">except</span> <span class="n">StaleJSRemoteObjReference</span><span class="p">:</span>
                 <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -749,7 +756,7 @@
 <span class="sd">                target.close()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Target.closeTarget&quot;</span><span class="p">,{</span><span class="s2">&quot;targetId&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">},</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Target.closeTarget&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;targetId&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">},</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="k">except</span> <span class="n">websockets</span><span class="o">.</span><span class="n">ConnectionClosedError</span><span class="p">:</span>
             <span class="k">pass</span>
@@ -913,7 +920,7 @@
         <span class="n">context_id</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># noinspection PyProtectedMember</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">_is_incognito</span><span class="p">:</span>
-            <span class="n">context_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_browser_context_id</span>
+            <span class="n">context_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser_context_id</span>
         <span class="k">return</span> <span class="k">await</span> <span class="n">add_cookie</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">cookie_dict</span><span class="o">=</span><span class="n">cookie_dict</span><span class="p">,</span> <span class="n">context_id</span><span class="o">=</span><span class="n">context_id</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
@@ -932,7 +939,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_document_elem_</span>
 
     <span class="c1"># noinspection PyUnusedLocal</span>
-<div class="viewcode-block" id="Target.find_element"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.find_element">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebElement</span><span class="p">:</span>
+<div class="viewcode-block" id="Target.find_element"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.find_element">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebElement</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;find an element in the current target</span>
 
 <span class="sd">        :param by: one of the locators at :func:`By &lt;selenium_driverless.types.by.By&gt;`</span>
@@ -954,7 +961,7 @@
             <span class="k">raise</span> <span class="n">NoSuchElementException</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">elem</span></div>
 
-<div class="viewcode-block" id="Target.find_elements"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.find_elements">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">WebElement</span><span class="p">]:</span>
+<div class="viewcode-block" id="Target.find_elements"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.find_elements">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">WebElement</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;find multiple elements in the current target</span>
 
 <span class="sd">        :param by: one of the locators at :func:`By &lt;selenium_driverless.types.by.By&gt;`</span>
@@ -969,7 +976,8 @@
             <span class="k">except</span> <span class="p">(</span><span class="n">StaleElementReferenceException</span><span class="p">,</span> <span class="n">StaleJSRemoteObjReference</span><span class="p">):</span>
                 <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_loaded</span><span class="p">()</span>
             <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">timeout</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">timeout</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Couldn&#39;t find elements within </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2"> seconds due to a target reload loop&quot;</span><span class="p">)</span></div>
+                <span class="k">raise</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Couldn&#39;t find elements within </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2"> seconds due to a target reload loop&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Target.set_source"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.set_source">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">15</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1020,7 +1028,7 @@
             <span class="n">elems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">elems</span></div>
 
-<div class="viewcode-block" id="Target.get_screenshot_as_file"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.get_screenshot_as_file">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span><span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="Target.get_screenshot_as_file"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.get_screenshot_as_file">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a screenshot of the current window to a PNG image file.</span>
 
 <span class="sd">        :param filename: The full path.</span>
@@ -1035,7 +1043,7 @@
         <span class="k">async</span> <span class="k">with</span> <span class="n">aiofiles</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="k">await</span> <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">png</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Target.save_screenshot"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.save_screenshot">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">save_screenshot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span><span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="Target.save_screenshot"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.save_screenshot">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">save_screenshot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;alias to :func: `driver.get_screenshot_as_file &lt;selenium_driverless.webdriver.Chrome.get_screenshot_as_file&gt;`&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_screenshot_as_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
 
@@ -1050,7 +1058,7 @@
         <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Page.captureSnapshot&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Target.save_snapshot"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.save_snapshot">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">save_snapshot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span><span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="Target.save_snapshot"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.save_snapshot">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">save_snapshot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a snapshot of the current window to a MHTML file.</span>
 
 <span class="sd">        :param filename: The full path you wish to save your snapshot to. This</span>
@@ -1209,7 +1217,7 @@
 <div class="viewcode-block" id="Target.fetch"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.fetch">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
                     <span class="n">method</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span>
                         <span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="s2">&quot;HEAD&quot;</span><span class="p">,</span> <span class="s2">&quot;PUT&quot;</span><span class="p">,</span> <span class="s2">&quot;DELETE&quot;</span><span class="p">,</span> <span class="s2">&quot;CONNECT&quot;</span><span class="p">,</span> <span class="s2">&quot;OPTIONS&quot;</span><span class="p">,</span> <span class="s2">&quot;TRACE&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;GET&quot;</span><span class="p">,</span>
-                    <span class="n">headers</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">headers</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">body</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                     <span class="n">mode</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;cors&quot;</span><span class="p">,</span> <span class="s2">&quot;no-cors&quot;</span><span class="p">,</span> <span class="s2">&quot;same-origin&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                     <span class="n">credentials</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;omit&quot;</span><span class="p">,</span> <span class="s2">&quot;same-origin&quot;</span><span class="p">,</span> <span class="s2">&quot;include&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                     <span class="n">cache</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span>
@@ -1239,14 +1247,18 @@
 <span class="sd">            }</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># see</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="k">await</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">body</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="k">await</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">body</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
         <span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">method</span><span class="p">:</span>
             <span class="n">options</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
         <span class="k">if</span> <span class="n">headers</span><span class="p">:</span>
             <span class="n">options</span><span class="p">[</span><span class="s2">&quot;headers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">headers</span>
         <span class="k">if</span> <span class="n">body</span><span class="p">:</span>
-            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;body&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">body</span>
+            <span class="n">options</span><span class="p">[</span><span class="s2">&quot;body&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">body</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">mode</span><span class="p">:</span>
             <span class="n">options</span><span class="p">[</span><span class="s2">&quot;mode&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mode</span>
         <span class="k">if</span> <span class="n">credentials</span><span class="p">:</span>
@@ -1267,11 +1279,27 @@
             <span class="n">options</span><span class="p">[</span><span class="s2">&quot;priority&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">priority</span>
 
         <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">            function buffer2hex (buffer) {</span>
-<span class="s2">                return [...new Uint8Array (buffer)]</span>
-<span class="s2">                    .map (b =&gt; b.toString (16).padStart (2, &quot;0&quot;))</span>
-<span class="s2">                    .join (&quot;&quot;);</span>
-<span class="s2">            }</span>
+<span class="s2">            async function bufferTobase64(array) {</span>
+<span class="s2">              return new Promise((resolve) =&gt; {</span>
+<span class="s2">                const blob = new Blob([array]);</span>
+<span class="s2">                const reader = new FileReader();</span>
+<span class="s2">                </span>
+<span class="s2">                reader.onload = (event) =&gt; {</span>
+<span class="s2">                  const dataUrl = event.target.result;</span>
+<span class="s2">                  const [_, base64] = dataUrl.split(&#39;,&#39;);</span>
+<span class="s2">                  </span>
+<span class="s2">                  resolve(base64);</span>
+<span class="s2">                };</span>
+<span class="s2">                </span>
+<span class="s2">                reader.readAsDataURL(blob);</span>
+<span class="s2">              });</span>
+<span class="s2">            };</span>
+<span class="s2">            async function base64ToBuffer(base64) {</span>
+<span class="s2">              const dataUrl = &quot;data:application/octet-binary;base64,&quot; + base64;</span>
+<span class="s2">            </span>
+<span class="s2">              const res = await fetch(dataUrl)</span>
+<span class="s2">              return await res.arrayBuffer()</span>
+<span class="s2">            };</span>
 
 <span class="s2">            function headers2dict(headers){</span>
 <span class="s2">                var my_dict = </span><span class="si">{}</span><span class="s2">;</span>
@@ -1280,11 +1308,12 @@
 <span class="s2">                return my_dict}</span>
 
 <span class="s2">            async function get(url, options){</span>
+<span class="s2">                if(options.body){options.body = await base64ToBuffer(options.body)}</span>
 <span class="s2">                var response = await fetch(url, options);</span>
 <span class="s2">                var buffer = await response.arrayBuffer()</span>
-<span class="s2">                var hex = buffer2hex(buffer)</span>
+<span class="s2">                var b64 = await bufferTobase64(buffer)</span>
 <span class="s2">                var res = {</span>
-<span class="s2">                        &quot;HEX&quot;:hex,</span>
+<span class="s2">                        &quot;b64&quot;:b64,</span>
 <span class="s2">                        &quot;headers&quot;:headers2dict(response.headers),</span>
 <span class="s2">                        &quot;ok&quot;:response.ok,</span>
 <span class="s2">                        &quot;status_code&quot;:response.status,</span>
@@ -1293,18 +1322,18 @@
 <span class="s2">                        &quot;type&quot;:response.type,</span>
 <span class="s2">                        &quot;url&quot;:response.url</span>
 <span class="s2">                        };</span>
-<span class="s2">                console.log(res)</span>
 <span class="s2">                return res;</span>
 <span class="s2">            }</span>
 <span class="s2">            return await get(arguments[0], arguments[1])</span>
 <span class="s2">        &quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_async</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
-        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;body&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;HEX&quot;</span><span class="p">])</span>
-        <span class="k">del</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;HEX&quot;</span><span class="p">]</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;body&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;b64&quot;</span><span class="p">])</span>
+        <span class="k">del</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;b64&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">result</span></div>
 
 <div class="viewcode-block" id="Target.xhr"><a class="viewcode-back" href="../../../api/Target.html#selenium_driverless.types.target.Target.xhr">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">xhr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
                   <span class="n">method</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="s2">&quot;PUT&quot;</span><span class="p">,</span> <span class="s2">&quot;DELETE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;GET&quot;</span><span class="p">,</span>
+                  <span class="n">body</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                   <span class="n">user</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">with_credentials</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">mime_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;text/plain&quot;</span><span class="p">,</span>
                   <span class="n">extra_headers</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                   <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
@@ -1314,6 +1343,7 @@
 
 <span class="sd">        :param url: the url to get</span>
 <span class="sd">        :param method: one of &quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;DELETE&quot;</span>
+<span class="sd">        :param body: body to send with a request</span>
 <span class="sd">        :param user: user to authenticate with</span>
 <span class="sd">        :param password: password to authenticate with</span>
 <span class="sd">        :param with_credentials: whether to include cookies</span>
@@ -1339,33 +1369,40 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">extra_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">extra_headers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="k">await</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">body</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="k">await</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">body</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="k">await</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">body</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">))</span>
         <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">        function makeRequest(withCredentials, mimeType, extraHeaders, ...args) {</span>
-<span class="s2">            return new Promise(function (resolve, reject) {</span>
-<span class="s2">                try{</span>
-<span class="s2">                    let xhr = new XMLHttpRequest();</span>
-
-<span class="s2">                    if(!(args[3])){args[3] = null};</span>
-<span class="s2">                    if(!(args[4])){args[4] = null};</span>
-<span class="s2">                    xhr.overrideMimeType(mimeType);</span>
-
-<span class="s2">                    xhr.open(...args);</span>
-<span class="s2">                    Object.keys(extraHeaders).forEach(function(key) {</span>
-<span class="s2">                        xhr.setRequestHeader(key, extraHeaders[key])</span>
-<span class="s2">                    });</span>
-<span class="s2">                    xhr.withCredentials = withCredentials;</span>
-
-<span class="s2">                    xhr.onload = function () {</span>
-<span class="s2">                        resolve(xhr)</span>
-<span class="s2">                    };</span>
-<span class="s2">                    xhr.onerror = function () {</span>
-<span class="s2">                        reject(new Error(&quot;XHR failed&quot;));</span>
-<span class="s2">                    };</span>
-<span class="s2">                    xhr.send();</span>
-<span class="s2">                }catch(e){reject(e)}</span>
-<span class="s2">            });</span>
+<span class="s2">        async function base64ToBuffer(base64) {</span>
+<span class="s2">              const dataUrl = &quot;data:application/octet-binary;base64,&quot; + base64;</span>
+<span class="s2">            </span>
+<span class="s2">              const res = await fetch(dataUrl)</span>
+<span class="s2">              return await res.arrayBuffer()</span>
 <span class="s2">        };</span>
+<span class="s2">        async function makeRequest(withCredentials, mimeType, extraHeaders, method, url, user, password, body) {</span>
+<span class="s2">            let xhr = new XMLHttpRequest();</span>
 
+<span class="s2">            if(!user){user = null};</span>
+<span class="s2">            if(!password){password = null};</span>
+<span class="s2">            if(!body){body = null}else{body = await base64ToBuffer(body)};</span>
+<span class="s2">            xhr.overrideMimeType(mimeType);</span>
+
+<span class="s2">            xhr.open(method, url, true, user, password);</span>
+<span class="s2">            Object.keys(extraHeaders).forEach((key) =&gt; {</span>
+<span class="s2">                xhr.setRequestHeader(key, extraHeaders[key])</span>
+<span class="s2">            });</span>
+<span class="s2">            xhr.withCredentials = withCredentials;</span>
+<span class="s2">            const promise = new Promise((resolve, reject) =&gt; {</span>
+<span class="s2">                xhr.onload = () =&gt; {resolve(xhr)};</span>
+<span class="s2">                xhr.onerror = () =&gt; {reject(new Error(&quot;XHR failed&quot;))};</span>
+<span class="s2">            });</span>
+<span class="s2">            xhr.send(body);</span>
+<span class="s2">            return await promise</span>
+<span class="s2">        };</span>
 <span class="s2">        var xhr =  await makeRequest(...arguments);</span>
 <span class="s2">        data = {</span>
 <span class="s2">            status: xhr.status,</span>
@@ -1380,8 +1417,8 @@
 <span class="s2">        };</span>
 <span class="s2">        return data</span>
 <span class="s2">        &quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_async</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">with_credentials</span><span class="p">,</span> <span class="n">mime_type</span><span class="p">,</span> <span class="n">extra_headers</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span>
-                                     <span class="n">password</span><span class="p">,</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_async</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">with_credentials</span><span class="p">,</span> <span class="n">mime_type</span><span class="p">,</span>
+                                     <span class="n">extra_headers</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span>
                                      <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">unique_context</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># parse headers</span>

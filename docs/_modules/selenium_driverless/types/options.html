@@ -190,8 +190,9 @@
             <span class="s2">&quot;--no-default-browser-check&quot;</span><span class="p">,</span>  <span class="c1"># disable default browser message</span>
             <span class="s1">&#39;--homepage=about:blank&#39;</span>  <span class="c1"># set homepage</span>
             <span class="s2">&quot;--wm-window-animations-disabled&quot;</span><span class="p">,</span> <span class="s2">&quot;--animation-duration-scale=0&quot;</span><span class="p">,</span>  <span class="c1"># disable animations</span>
-            <span class="s2">&quot;--enable-privacy-sandbox-ads-apis&quot;</span>
+            <span class="s2">&quot;--enable-privacy-sandbox-ads-apis&quot;</span><span class="p">,</span>
             <span class="c1"># ensure window.Fence, window.SharedStorage etc. exist, looks like chrome disables them when using automation</span>
+            <span class="s2">&quot;--disable-search-engine-choice-screen&quot;</span>  <span class="c1"># for chrome&gt;=127</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">IS_POSIX</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--password-store=basic&quot;</span><span class="p">)</span>
