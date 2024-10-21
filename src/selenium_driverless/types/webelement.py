@@ -503,6 +503,30 @@ class WebElement(JSRemoteObj):
                     break
         return is_clickable
 
+    async def move_to(self, timeout: float = None, visible_timeout: float = 10, spread_a: float = 1,
+                      spread_b: float = 1,
+                      bias_a: float = 0.5, bias_b: float = 0.5, border: float = 0.05, scroll_to=True,
+                      box_model: dict = None) -> None:
+        """
+        moves the mouse to the element
+        see :func:`Elem.send_keys <selenium_driverless.types.webelement.WebElement.click> for details or the arguments`
+        """
+        if scroll_to:
+            await self.scroll_to()
+        cords = None
+        start = time.perf_counter()
+        while not cords:
+            try:
+                if box_model is None:
+                    box_model = await self.box_model
+                cords = await self.mid_location(spread_a, spread_b, bias_a, bias_b, border, box_model=box_model)
+            except ElementNotVisible:
+                await asyncio.sleep(0.05)
+            if (time.perf_counter() - start) > visible_timeout:
+                raise asyncio.TimeoutError(f"Couldn't compute element location within {visible_timeout} seconds")
+        x, y = cords
+        await self.__target__.pointer.move_to(x, y=y, total_time=timeout)
+
     # noinspection PyIncorrectDocstring
     async def click(self, timeout: float = None, visible_timeout: float = 10, spread_a: float = 1, spread_b: float = 1,
                     bias_a: float = 0.5, bias_b: float = 0.5, border: float = 0.05, scroll_to=True,
@@ -533,7 +557,8 @@ class WebElement(JSRemoteObj):
         start = time.perf_counter()
         while not cords:
             try:
-                box_model = await self.box_model
+                if box_model is None:
+                    box_model = await self.box_model
                 cords = await self.mid_location(spread_a, spread_b, bias_a, bias_b, border, box_model=box_model)
             except ElementNotVisible:
                 await asyncio.sleep(0.05)
