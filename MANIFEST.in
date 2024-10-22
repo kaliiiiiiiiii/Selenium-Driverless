@@ -1,6 +1,14 @@
 include pyproject.toml
 include *.md
 include LICENSE.md
-recursive-include tests test*.py
 include src/selenium_driverless/files/js/*
 include src/selenium_driverless/files/mv3_extension/*
+prune tests
+prune .github
+prune dev
+prune docs
+prune docs_source
+prune examples
+exclude build_upload.md
+exclude main.py
+exclude sync_main.py

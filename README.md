@@ -45,12 +45,12 @@ pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/he
 
 ### [Capsolver](https://is.gd/pNs507)
 
-<a href="https://is.gd/pNs507" >
-  <img src="assets/capsolver.png" alt="drawing" width="60%"/>
+<a href="https://is.gd/IcYvAB" >
+  <img src="assets/CapSolver Ads.png" alt="drawing" width="60%"/>
 </a>
 
 <!--- 
-https://is.gd/stats.php?url=pNs507
+https://is.gd/stats.php?url=IcYvAB
 --->
 
 An AI-powered captcha-solver service.
@@ -99,7 +99,7 @@ asyncio.run(main())
 ```
 
 ### synchronous
-asyncified, might be buggy
+asyncified, bugs are to expect
 
 <details>
 
