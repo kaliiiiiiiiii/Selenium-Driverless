@@ -34,7 +34,7 @@ from cdp_socket.exceptions import CDPError
 # driverless
 from selenium_driverless.types.by import By
 from selenium_driverless.types.deserialize import JSRemoteObj, StaleJSRemoteObjReference
-from selenium_driverless.scripts.geometry import rand_mid_loc
+from selenium_driverless.scripts.geometry import rand_mid_loc, overlap, is_point_in_polygon
 
 
 class NoSuchElementException(Exception):
@@ -80,8 +80,9 @@ class WebElement(JSRemoteObj):
                  node_id=None, backend_node_id: str = None, loop=None, class_name: str = None,
                  context_id: int = None, is_iframe: bool = False) -> None:
         self._loop = loop
-        if not (obj_id or node_id or backend_node_id):
-            raise ValueError("either js, obj_id or node_id need to be specified")
+        # {'type': 'node', 'weakLocalObjectReference': 1}
+        #if not (obj_id or node_id or backend_node_id):
+        #    raise ValueError("either js, obj_id or node_id need to be specified")
         self._node_id = node_id
         self._backend_node_id = backend_node_id
         self._class_name = class_name
@@ -195,12 +196,12 @@ class WebElement(JSRemoteObj):
         return self.___frame_id__
 
     @property
-    async def content_document(self):
+    async def content_document(self) -> WebElement:
         """
-        **async** gets the document of the iframe
+        **async** gets the contentDocument element of the iframe (or frame). Returns None if this isn't an iframe.
         """
         _desc = await self._describe()
-        if _desc.get("localName") == "iframe":
+        if _desc.get("localName") in ["iframe", "frame"]:
             node = _desc.get("contentDocument")
             if node:
                 frame_id = _desc.get("frameId")
@@ -233,6 +234,41 @@ class WebElement(JSRemoteObj):
                 return await targets[0]._document_elem
 
     @property
+    async def shadow_roots(self) -> typing.List[WebElement]:
+        """
+        **async** gets a list of currently connected shadow root documents
+        """
+        isolated_exec_id = await self.__isolated_exec_id__
+        _desc = await self._describe()
+        res = []
+        shadow_roots = _desc.get("shadowRoots", [])
+        for node in shadow_roots:
+            frame_id = _desc.get("frameId")
+            state = node.get('shadowRootType')
+
+            if self._loop:
+                from selenium_driverless.sync.webelement import WebElement as SyncWebElement
+                elem = await SyncWebElement(backend_node_id=node.get('backendNodeId'),
+                                            target=self.__target__, loop=self._loop,
+                                            class_name=f'#document-fragment({state} shadow-root)',
+                                            isolated_exec_id=isolated_exec_id, frame_id=frame_id)
+            else:
+                elem = await WebElement(backend_node_id=node.get('backendNodeId'),
+                                        target=self.__target__, loop=self._loop,
+                                        class_name=f'#document-fragment({state} shadow-root)',
+                                        isolated_exec_id=isolated_exec_id, frame_id=frame_id)
+            res.append(elem)
+        return res
+
+    @property
+    async def shadow_root(self) -> typing.Union[WebElement, None]:
+        """**async** returns the (first)  document for this element
+        """
+        roots = await self.shadow_roots
+        if len(roots) != 0:
+            return roots[0]
+
+    @property
     async def document_url(self):
         """**async** gets the url if the element is an iframe, else returns ``None``"""
         res = await self._describe()
@@ -254,7 +290,7 @@ class WebElement(JSRemoteObj):
         """
         return self._class_name
 
-    async def find_element(self, by: str, value: str, idx: int = 0, timeout: int or None = None):
+    async def find_element(self, by: str, value: str, idx: int = 0, timeout: float or None = None) -> WebElement:
         """find an element in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
@@ -439,13 +475,21 @@ class WebElement(JSRemoteObj):
         args = self._args_builder
         return await self.__target__.execute_cdp_cmd("DOM.focus", args)
 
-    async def is_clickable(self, listener_depth=3):
+    # noinspection PyIncorrectDocstring
+    async def is_clickable(self, listener_depth=3, box_model: dict = None):
         """
         returns ``True`` if the element type is one of "a", "button", "command", "details", "input", "select", "textarea", "video", "map"
-        else wise checks for "click", "mousedown" or "mouseup" event listeners on the element
+        otherwise checks for "click", "mousedown" or "mouseup" event listeners on the element
 
         :param listener_depth: the depth (nested elements) to get event-listeners for
         """
+        if box_model is None:
+            try:
+                box_model = await self.box_model
+            except ElementNotVisible:
+                return False
+        if not await self.is_visible(box_model=box_model):
+            return False
         _type = await self.tag_name
         if _type in ["a", "button", "command", "details", "input", "select", "textarea", "video", "map"]:
             return True
@@ -459,14 +503,39 @@ class WebElement(JSRemoteObj):
                     break
         return is_clickable
 
-    async def click(self, timeout: float = None, visible_timeout: float = 30, spread_a: float = 1, spread_b: float = 1,
+    async def move_to(self, timeout: float = None, visible_timeout: float = 10, spread_a: float = 1,
+                      spread_b: float = 1,
+                      bias_a: float = 0.5, bias_b: float = 0.5, border: float = 0.05, scroll_to=True,
+                      box_model: dict = None) -> None:
+        """
+        moves the mouse to the element
+        see :func:`Elem.send_keys <selenium_driverless.types.webelement.WebElement.click> for details or the arguments`
+        """
+        if scroll_to:
+            await self.scroll_to()
+        cords = None
+        start = time.perf_counter()
+        while not cords:
+            try:
+                if box_model is None:
+                    box_model = await self.box_model
+                cords = await self.mid_location(spread_a, spread_b, bias_a, bias_b, border, box_model=box_model)
+            except ElementNotVisible:
+                await asyncio.sleep(0.05)
+            if (time.perf_counter() - start) > visible_timeout:
+                raise asyncio.TimeoutError(f"Couldn't compute element location within {visible_timeout} seconds")
+        x, y = cords
+        await self.__target__.pointer.move_to(x, y=y, total_time=timeout)
+
+    # noinspection PyIncorrectDocstring
+    async def click(self, timeout: float = None, visible_timeout: float = 10, spread_a: float = 1, spread_b: float = 1,
                     bias_a: float = 0.5, bias_b: float = 0.5, border: float = 0.05, scroll_to=True,
                     move_to: bool = True,
-                    ensure_clickable: typing.Union[bool, int] = False) -> None:
+                    ensure_clickable: typing.Union[bool, int] = False, box_model: dict = None) -> None:
         """Clicks the element.
 
         :param timeout: the time in seconds to take for clicking on the element
-        :param visible_timeout: the time in seconds to wait for being able to compute the elements box model
+        :param visible_timeout: the time in seconds to wait for the element to be at least partially visible
         :param spread_a: spread over a
         :param spread_b: spread over b
         :param bias_a: bias over a (0-1)
@@ -475,7 +544,7 @@ class WebElement(JSRemoteObj):
             Random generated points outside that border get re-generated.
         :param scroll_to: whether to scroll to the element
         :param move_to: whether to move the mouse to the element
-        :param ensure_clickable: whether to ensure that the element is clickable. Not reliable in on every webpage
+        :param ensure_clickable: whether to ensure that the element is clickable.
 
         .. note::
             a spread of 1 is equivalent to 6 std.
@@ -488,17 +557,16 @@ class WebElement(JSRemoteObj):
         start = time.perf_counter()
         while not cords:
             try:
-                cords = await self.mid_location(spread_a, spread_b, bias_a, bias_b, border)
-            except CDPError as e:
-                if e.code == -32000 and 'Could not compute box model.' in e.message:
-                    await asyncio.sleep(0.1)
-                else:
-                    raise e
+                if box_model is None:
+                    box_model = await self.box_model
+                cords = await self.mid_location(spread_a, spread_b, bias_a, bias_b, border, box_model=box_model)
+            except ElementNotVisible:
+                await asyncio.sleep(0.05)
             if (time.perf_counter() - start) > visible_timeout:
                 raise asyncio.TimeoutError(f"Couldn't compute element location within {visible_timeout} seconds")
         x, y = cords
         if ensure_clickable:
-            is_clickable = await self.is_clickable()
+            is_clickable = await self.is_clickable(box_model=box_model)
             if not is_clickable:
                 raise ElementNotClickable(x, y)
 
@@ -548,7 +616,7 @@ class WebElement(JSRemoteObj):
         send text & keys to the target
 
         :param text: the text to send to the target
-        :param click_kwargs: arguments to pass for :func:`Elem.send_keys <selenium_driverless.types.webelement.WebElement.send_keys>`
+        :param click_kwargs: arguments to pass for :func:`Elem.click <selenium_driverless.types.webelement.WebElement.click>`
         :param click_on: whether to click on the element before sending the keys
         """
         if click_kwargs is None:
@@ -559,8 +627,9 @@ class WebElement(JSRemoteObj):
             await self.focus()
         await self.__target__.send_keys(text)
 
+    # noinspection PyIncorrectDocstring
     async def mid_location(self, spread_a: float = 1, spread_b: float = 1, bias_a: float = 0.5, bias_b: float = 0.5,
-                           border: float = 0.05) -> typing.List[int]:
+                           border: float = 0.05, box_model: dict = None) -> typing.List[int]:
         """
         returns random location in the element with probability close to the middle
 
@@ -576,10 +645,42 @@ class WebElement(JSRemoteObj):
             relative to the element.
             (=> 99.7 %)
         """
+        loop = asyncio.get_event_loop()
+        if box_model is None:
+            box_model = await self.box_model
+        visible, overlap_polygon = await self.p_visible(box_model=box_model)
+        if not visible:
+            raise ElementNotVisible("Element is not displayed")
+        try:
+            box = await self.box_model
+        except CDPError as e:
+            message = 'Could not compute box model.'
+            if e.code == -32000 and message in e.message:
+                raise ElementNotVisible(message)
+            else:
+                raise e
 
-        box = await self.box_model
-        vertices = box["content"]
-        point = rand_mid_loc(vertices, spread_a, spread_b, bias_a, bias_b, border)
+        layers = ["content", "padding", "border"]
+        vertices = None
+        point = []
+        for layer in layers:
+            vertices = box[layer]
+            try:
+                def helper(_point):
+                    while (not _point) or (not is_point_in_polygon(_point, overlap_polygon)):
+                        # todo: add better overlap point generation
+                        _point = rand_mid_loc(vertices, spread_a, spread_b, bias_a, bias_b, border)
+                    return _point
+
+                try:
+                    point = await asyncio.wait_for(loop.run_in_executor(None, lambda: helper(point)), 2)
+                except asyncio.TimeoutError:
+                    raise ValueError('The area of the element is 0')
+            except ValueError as e:
+                if e.args[0] != 'The area of the element is 0':
+                    raise e
+        if vertices is None:
+            raise ValueError('The area of the element is 0')
 
         # noinspection PyUnboundLocalVariable
         x = int(point[0])
@@ -682,29 +783,51 @@ class WebElement(JSRemoteObj):
         """Returns whether the element is enabled."""
         return not await self.get_property("disabled")
 
-    @property
-    async def shadow_root(self):
-        """the shadowRoot of the element
-
-        .. warning::
-            this does not support (yet) closed shadow-DOM elements
-        """
-        # todo: move to CDP
-        return await self.execute_script("return obj.shadowRoot")
-
     # RenderedWebElement Items
-    async def is_displayed(self) -> bool:
+    async def p_visible(self, box_model: dict = None) -> typing.Tuple[float, typing.Union[np.ndarray, list]]:
 
-        """Whether the element is visible to a user."""
-        try:
-            # Only go into this conditional for browsers that don't use the atom themselves
-            size = await self.size
-            return not (size["height"] == 0 or size["width"] == 0)
-        except CDPError as e:
-            if e.code == -32000 and 'Could not compute box model.' in e.message:
+        """
+        Whether the element is visible to a user.
+        This does not check the opacity, since the element might still be interactable.
+        Returns the percentage (0.0 to 1.0) visible within the viewport and polygon of the area visible
+        """
+        visible = 0
+        polygon = np.array([])
+        loop = asyncio.get_event_loop()
+
+        elem_visible, vh, vw = await self.execute_script("""
+            const style = window.getComputedStyle(obj);
+            const elem_visible = ((style.display !== 'none') && (style.visibility !== 'hidden'))
+            const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+            const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+            return [elem_visible, vh, vw];
+            """, unique_context=True, max_depth=4)
+
+        viewport = np.array([[0, 0], [vw, 0], [vw, vh], [0, vh]])
+        if elem_visible:
+            if box_model is None:
+                try:
+                    box_model = await self.box_model
+                except ElementNotVisible:
+                    return visible, polygon
+            visible, polygon = await loop.run_in_executor(None, lambda: overlap(viewport, box_model["border"]))
+
+        return visible, polygon
+
+    async def is_visible(self, box_model: dict = None, minimum_p: float = 0.0001):
+        """
+        returns true if the area of the element which is visible is bigger than minimum_p (0 to 1, percentage visible)
+
+        .. note:
+            This does not check opacity=0
+        """
+        if box_model is None:
+            try:
+                box_model = await self.box_model
+            except ElementNotVisible:
                 return False
-            else:
-                raise e
+        visible, _ = await self.p_visible(box_model=box_model)
+        return visible > minimum_p
 
     @property
     async def location_once_scrolled_into_view(self) -> dict:
@@ -796,10 +919,14 @@ class WebElement(JSRemoteObj):
         try:
             res = await self.__target__.execute_cdp_cmd("DOM.getBoxModel", args)
         except CDPError as e:
+            message = 'Could not compute box model.'
             if e.code == -32000 and e.message == 'Cannot find context with specified id':
                 raise StaleElementReferenceException(self)
+            elif e.code == -32000 and message in e.message:
+                raise ElementNotVisible(message)
             else:
                 raise e
+
         model = res['model']
         keys = ['content', 'padding', 'border', 'margin']
         for key in keys:
@@ -883,7 +1010,8 @@ class WebElement(JSRemoteObj):
             if self._loop:
                 # noinspection PyUnresolvedReferences
                 return await SyncWebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
-                                            isolated_exec_id=self.___isolated_exec_id__, frame_id=await self.__frame_id__)
+                                            isolated_exec_id=self.___isolated_exec_id__,
+                                            frame_id=await self.__frame_id__)
             else:
                 # noinspection PyUnresolvedReferences
                 return await WebElement(node_id=node_id, target=self.__target__, context_id=self.__context_id__,
@@ -929,8 +1057,6 @@ class WebElement(JSRemoteObj):
 
             resolve = arguments[arguments.length-1]
 
-        ``this`` refers to ``globalThis`` (=> window)
-
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
         return await self.__exec_async__(script, *args, max_depth=max_depth, serialization=serialization,
@@ -938,8 +1064,8 @@ class WebElement(JSRemoteObj):
                                          execution_context_id=execution_context_id)
 
     async def eval_async(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                         timeout: float = None, execution_context_id: str = None,
-                         unique_context: bool = None):
+                         timeout: float = 2, execution_context_id: str = None,
+                         unique_context: bool = True):
         """executes JavaScript asynchronously
 
         .. code-block:: js

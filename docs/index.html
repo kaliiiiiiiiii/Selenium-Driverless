@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documentation of Driverless &mdash; Selenium-Driverless 1.9.3.1 documentation</title>
+  <title>Documentation of Driverless &mdash; Selenium-Driverless 1.9.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -15,13 +15,13 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=58554080"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=1ac0efc4"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="genindex/" />
-    <link rel="search" title="Search" href="search/" />
-    <link rel="next" title="By Element Locator" href="api/By/" /> 
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="By Element Locator" href="api/By.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -36,7 +36,7 @@
             Selenium-Driverless
           </a>
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search/" method="get">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -44,14 +44,14 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="api/By/">By Element Locator</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/Chrome/">webdriver.Chrome</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/ChromeOptions/">ChromeOptions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/Context/">Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/Input/">Input</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/RequestInterception/">Request-Interception</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/Target/">Target</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/WebELement/">WebElement</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/By.html">By Element Locator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/Chrome.html">webdriver.Chrome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/ChromeOptions.html">ChromeOptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/Context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/Input.html">Input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/RequestInterception.html">Request-Interception</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/Target.html">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/WebELement.html">WebElement</a></li>
 </ul>
 
         </div>
@@ -79,7 +79,7 @@
            <div itemprop="articleBody">
              
   <section id="documentation-of-driverless">
-<h1>Documentation of Driverless<a class="headerlink" href="#documentation-of-driverless" title="Link to this heading"></a></h1>
+<h1>Documentation of Driverless<a class="headerlink" href="#documentation-of-driverless" title="Permalink to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 </div>
 <div class="admonition note">
@@ -89,13 +89,13 @@ some methods aren’t documented yet properly</p>
 </div>
 </section>
 <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h1>
 <div class="highlight-Shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>selenium-driverless
 </pre></div>
 </div>
 </section>
 <section id="usage">
-<h1>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h1>
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h1>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">selenium_driverless</span> <span class="kn">import</span> <span class="n">webdriver</span>
  <span class="kn">from</span> <span class="nn">selenium_driverless.types.by</span> <span class="kn">import</span> <span class="n">By</span>
  <span class="kn">import</span> <span class="nn">asyncio</span>
@@ -123,57 +123,58 @@ some methods aren’t documented yet properly</p>
 </pre></div>
 </div>
 <section id="api">
-<h2>API<a class="headerlink" href="#api" title="Link to this heading"></a></h2>
+<h2>API<a class="headerlink" href="#api" title="Permalink to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="api/By/">By Element Locator</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/By/#selenium_driverless.types.by.By"><code class="docutils literal notranslate"><span class="pre">By</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/By.html">By Element Locator</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/By.html#selenium_driverless.types.by.By"><code class="docutils literal notranslate"><span class="pre">By</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/Chrome/">webdriver.Chrome</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/Chrome/#selenium_driverless.webdriver.Chrome"><code class="docutils literal notranslate"><span class="pre">Chrome</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/Chrome/#selenium_driverless.scripts.switch_to.SwitchTo"><code class="docutils literal notranslate"><span class="pre">SwitchTo</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/Chrome.html">webdriver.Chrome</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/Chrome.html#selenium_driverless.webdriver.Chrome"><code class="docutils literal notranslate"><span class="pre">Chrome</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/Chrome.html#selenium_driverless.scripts.switch_to.SwitchTo"><code class="docutils literal notranslate"><span class="pre">SwitchTo</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/ChromeOptions/">ChromeOptions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/ChromeOptions/#selenium_driverless.types.options.Options"><code class="docutils literal notranslate"><span class="pre">Options</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/ChromeOptions.html">ChromeOptions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/ChromeOptions.html#selenium_driverless.types.options.Options"><code class="docutils literal notranslate"><span class="pre">Options</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/Context/">Context</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/Context/#selenium_driverless.types.context.Context"><code class="docutils literal notranslate"><span class="pre">Context</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/Context.html">Context</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/Context.html#selenium_driverless.types.context.Context"><code class="docutils literal notranslate"><span class="pre">Context</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/Input/">Input</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/Input/#selenium_driverless.input.pointer.Pointer"><code class="docutils literal notranslate"><span class="pre">Pointer</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/Input/#selenium_driverless.input.pointer.BasePointer"><code class="docutils literal notranslate"><span class="pre">BasePointer</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/Input/#selenium_driverless.input.pointer.PointerEvent"><code class="docutils literal notranslate"><span class="pre">PointerEvent</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/Input/#selenium_driverless.input.pointer.Modifiers"><code class="docutils literal notranslate"><span class="pre">Modifiers</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/Input/#selenium_driverless.input.pointer.PointerType"><code class="docutils literal notranslate"><span class="pre">PointerType</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/Input/#selenium_driverless.input.pointer.MouseButton"><code class="docutils literal notranslate"><span class="pre">MouseButton</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/Input/#selenium_driverless.input.pointer.Buttons"><code class="docutils literal notranslate"><span class="pre">Buttons</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/Input/#selenium_driverless.input.pointer.EventType"><code class="docutils literal notranslate"><span class="pre">EventType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/Input.html">Input</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/Input.html#selenium_driverless.input.pointer.Pointer"><code class="docutils literal notranslate"><span class="pre">Pointer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/Input.html#selenium_driverless.input.pointer.BasePointer"><code class="docutils literal notranslate"><span class="pre">BasePointer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/Input.html#selenium_driverless.input.pointer.PointerEvent"><code class="docutils literal notranslate"><span class="pre">PointerEvent</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/Input.html#selenium_driverless.input.pointer.Modifiers"><code class="docutils literal notranslate"><span class="pre">Modifiers</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/Input.html#selenium_driverless.input.pointer.PointerType"><code class="docutils literal notranslate"><span class="pre">PointerType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/Input.html#selenium_driverless.input.pointer.MouseButton"><code class="docutils literal notranslate"><span class="pre">MouseButton</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/Input.html#selenium_driverless.input.pointer.Buttons"><code class="docutils literal notranslate"><span class="pre">Buttons</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/Input.html#selenium_driverless.input.pointer.EventType"><code class="docutils literal notranslate"><span class="pre">EventType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/Input.html#select-element">Select Element</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/RequestInterception/">Request-Interception</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/RequestInterception/#example-script">Example Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/RequestInterception/#api">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/RequestInterception.html">Request-Interception</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/RequestInterception.html#example-script">Example Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/RequestInterception.html#api">API</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/Target/">Target</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/Target/#selenium_driverless.types.target.Target"><code class="docutils literal notranslate"><span class="pre">Target</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/Target/#selenium_driverless.types.target.TargetInfo"><code class="docutils literal notranslate"><span class="pre">TargetInfo</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/Target/#selenium_driverless.types.base_target.BaseTarget"><code class="docutils literal notranslate"><span class="pre">BaseTarget</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/Target.html">Target</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/Target.html#selenium_driverless.types.target.Target"><code class="docutils literal notranslate"><span class="pre">Target</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/Target.html#selenium_driverless.types.target.TargetInfo"><code class="docutils literal notranslate"><span class="pre">TargetInfo</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/Target.html#selenium_driverless.types.base_target.BaseTarget"><code class="docutils literal notranslate"><span class="pre">BaseTarget</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/WebELement/">WebElement</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/WebELement/#selenium_driverless.types.webelement.WebElement"><code class="docutils literal notranslate"><span class="pre">WebElement</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/WebELement.html">WebElement</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/WebELement.html#selenium_driverless.types.webelement.WebElement"><code class="docutils literal notranslate"><span class="pre">WebElement</span></code></a></li>
 </ul>
 </li>
 </ul>
 </div>
 </section>
 <section id="source">
-<h2>Source<a class="headerlink" href="#source" title="Link to this heading"></a></h2>
+<h2>Source<a class="headerlink" href="#source" title="Permalink to this heading"></a></h2>
 <p>see <a class="reference external" href="https://github.com/kaliiiiiiiiii/Selenium-Driverless">github.com/kaliiiiiiiiii/Selenium-Driverless</a></p>
 </section>
 </section>
@@ -182,7 +183,7 @@ some methods aren’t documented yet properly</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="api/By/" class="btn btn-neutral float-right" title="By Element Locator" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api/By.html" class="btn btn-neutral float-right" title="By Element Locator" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -25,3 +25,8 @@ Input
 
 .. autoclass:: selenium_driverless.input.pointer.EventType
     :members:
+
+Select Element
+~~~~~~~~~~~~~~~
+
+.. autofunction:: selenium_driverless.input.utils.select

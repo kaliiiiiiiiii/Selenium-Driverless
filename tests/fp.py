@@ -7,12 +7,12 @@ import pathlib
 import jsondiff
 import pprint
 
-with open(pathlib.Path(os.getcwd() + "/files/clean.json"), "r", encoding="utf-8") as f:
+with open(pathlib.Path(os.getcwd() + "/assets/clean.json"), "r", encoding="utf-8") as f:
     clean = json.load(f)
 
 
 async def get_fp(driver: webdriver.Chrome):
-    await driver.get(os.getcwd() + "/files/index.html")
+    await driver.get(os.getcwd() + "/assets/index.html")
     js = """
         var elem = document.documentElement;
         function callback(e){
@@ -24,7 +24,7 @@ async def get_fp(driver: webdriver.Chrome):
         return JSON.stringify(await data)
     """
     await asyncio.sleep(1)
-    fut = asyncio.ensure_future(driver.eval_async(js, timeout=10))
+    fut = asyncio.ensure_future(driver.eval_async(js, timeout=10, unique_context=False))
     await asyncio.sleep(1)
     pointer = driver.current_pointer
     await pointer.down(x=10, y=10)
@@ -51,7 +51,6 @@ async def base_driver():
     options = webdriver.ChromeOptions()
     env = os.environ.copy()
     options.env = env
-    env['NUMBER_OF_PROCESSORS'] = "4"
     async with webdriver.Chrome(options=options) as driver:
         return await get_fp(driver)
 

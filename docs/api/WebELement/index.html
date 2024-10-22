@@ -57,6 +57,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.context_id"><code class="docutils literal notranslate"><span class="pre">WebElement.context_id</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.node_id"><code class="docutils literal notranslate"><span class="pre">WebElement.node_id</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.content_document"><code class="docutils literal notranslate"><span class="pre">WebElement.content_document</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.shadow_roots"><code class="docutils literal notranslate"><span class="pre">WebElement.shadow_roots</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.shadow_root"><code class="docutils literal notranslate"><span class="pre">WebElement.shadow_root</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.document_url"><code class="docutils literal notranslate"><span class="pre">WebElement.document_url</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.backend_node_id"><code class="docutils literal notranslate"><span class="pre">WebElement.backend_node_id</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.class_name"><code class="docutils literal notranslate"><span class="pre">WebElement.class_name</span></code></a></li>
@@ -87,7 +89,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.get_attribute"><code class="docutils literal notranslate"><span class="pre">WebElement.get_attribute()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.is_selected"><code class="docutils literal notranslate"><span class="pre">WebElement.is_selected()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.is_enabled"><code class="docutils literal notranslate"><span class="pre">WebElement.is_enabled()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.shadow_root"><code class="docutils literal notranslate"><span class="pre">WebElement.shadow_root</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.is_displayed"><code class="docutils literal notranslate"><span class="pre">WebElement.is_displayed()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.location_once_scrolled_into_view"><code class="docutils literal notranslate"><span class="pre">WebElement.location_once_scrolled_into_view</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.scroll_to"><code class="docutils literal notranslate"><span class="pre">WebElement.scroll_to()</span></code></a></li>
@@ -169,8 +170,20 @@ the <code class="docutils literal notranslate"><span class="pre">DOM.NodeId</spa
 
 <dl class="py property">
 <dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.content_document">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">content_document</span></span><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.content_document" title="Link to this definition"></a></dt>
-<dd><p><strong>async</strong> gets the document of the iframe</p>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">content_document</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><span class="pre">WebElement</span></a></em><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.content_document" title="Link to this definition"></a></dt>
+<dd><p><strong>async</strong> gets the contentDocument element of the iframe (or frame). Returns None if this isn’t an iframe.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.shadow_roots">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shadow_roots</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><span class="pre">WebElement</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.shadow_roots" title="Link to this definition"></a></dt>
+<dd><p><strong>async</strong> gets a list of currently connected shadow root documents</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.shadow_root">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shadow_root</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><span class="pre">WebElement</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.shadow_root" title="Link to this definition"></a></dt>
+<dd><p><strong>async</strong> returns the (first)  document for this element</p>
 </dd></dl>
 
 <dl class="py property">
@@ -203,6 +216,9 @@ the <code class="docutils literal notranslate"><span class="pre">DOM.NodeId</spa
 <li><p><strong>timeout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – how long to wait for the element to exist</p></li>
 <li><p><strong>idx</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – might be removed</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#selenium_driverless.types.webelement.WebElement" title="selenium_driverless.types.webelement.WebElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">WebElement</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -417,7 +433,7 @@ You might consider using <a class="reference internal" href="#selenium_driverles
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the text to send to the target</p></li>
-<li><p><strong>click_kwargs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span>) – arguments to pass for <a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.send_keys" title="selenium_driverless.types.webelement.WebElement.send_keys"><code class="xref py py-func docutils literal notranslate"><span class="pre">Elem.send_keys</span></code></a></p></li>
+<li><p><strong>click_kwargs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span>) – arguments to pass for <a class="reference internal" href="#selenium_driverless.types.webelement.WebElement.click" title="selenium_driverless.types.webelement.WebElement.click"><code class="xref py py-func docutils literal notranslate"><span class="pre">Elem.click</span></code></a></p></li>
 <li><p><strong>click_on</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to click on the element before sending the keys</p></li>
 </ul>
 </dd>
@@ -544,16 +560,6 @@ instead</p>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="selenium_driverless.types.webelement.WebElement.shadow_root">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shadow_root</span></span><a class="headerlink" href="#selenium_driverless.types.webelement.WebElement.shadow_root" title="Link to this definition"></a></dt>
-<dd><p>the shadowRoot of the element</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>this does not support (yet) closed shadow-DOM elements</p>
-</div>
 </dd></dl>
 
 <dl class="py method">

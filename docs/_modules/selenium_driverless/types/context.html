@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>selenium_driverless.types.context &mdash; Selenium-Driverless 1.9.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=1ac0efc4"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Selenium-Driverless
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/By.html">By Element Locator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/Chrome.html">webdriver.Chrome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/ChromeOptions.html">ChromeOptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/Context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/Input.html">Input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/RequestInterception.html">Request-Interception</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/Target.html">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/WebELement.html">WebElement</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Selenium-Driverless</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">selenium_driverless.types.context</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for selenium_driverless.types.context</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Licensed to the Software Freedom Conservancy (SFC) under one</span>
+<span class="c1"># or more contributor license agreements.  See the NOTICE file</span>
+<span class="c1"># distributed with this work for additional information</span>
+<span class="c1"># regarding copyright ownership.  The SFC licenses this file</span>
+<span class="c1"># to you under the Apache License, Version 2.0 (the</span>
+<span class="c1"># &quot;License&quot;); you may not use this file except in compliance</span>
+<span class="c1"># with the License.  You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing,</span>
+<span class="c1"># software distributed under the License is distributed on an</span>
+<span class="c1"># &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="c1"># KIND, either express or implied.  See the License for the</span>
+<span class="c1"># specific language governing permissions and limitations</span>
+<span class="c1"># under the License.</span>
+<span class="c1">#</span>
+<span class="c1"># modified by kaliiiiiiiiii | Aurin Aegerter</span>
+<span class="c1"># all modifications are licensed under the license provided at LICENSE.md</span>
+
+<span class="sd">&quot;&quot;&quot;The WebDriver implementation.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="c1"># io</span>
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">websockets</span>
+<span class="kn">from</span> <span class="nn">cdp_socket.exceptions</span> <span class="kn">import</span> <span class="n">CDPError</span>
+
+<span class="c1"># selenium</span>
+<span class="c1"># SwitchTo</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.scripts.switch_to</span> <span class="kn">import</span> <span class="n">SwitchTo</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.sync.switch_to</span> <span class="kn">import</span> <span class="n">SwitchTo</span> <span class="k">as</span> <span class="n">SyncSwitchTo</span>
+
+<span class="c1"># targets</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.types.base_target</span> <span class="kn">import</span> <span class="n">BaseTarget</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.types.target</span> <span class="kn">import</span> <span class="n">Target</span><span class="p">,</span> <span class="n">TargetInfo</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.scripts.driver_utils</span> <span class="kn">import</span> <span class="n">get_targets</span><span class="p">,</span> <span class="n">get_target</span>
+
+<span class="c1"># other</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.input.pointer</span> <span class="kn">import</span> <span class="n">Pointer</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.types.webelement</span> <span class="kn">import</span> <span class="n">WebElement</span>
+<span class="kn">from</span> <span class="nn">selenium_driverless.utils.utils</span> <span class="kn">import</span> <span class="n">check_timeout</span>
+
+
+<div class="viewcode-block" id="Context"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context">[docs]</a><span class="k">class</span> <span class="nc">Context</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Allows you to drive the browser without chromedriver.&quot;&quot;&quot;</span>
+    <span class="n">_is_incognito</span><span class="p">:</span> <span class="nb">bool</span>
+
+    <span class="c1"># noinspection PyProtectedMember</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_target</span><span class="p">:</span> <span class="n">Target</span><span class="p">,</span> <span class="n">driver</span><span class="p">,</span> <span class="n">context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">loop</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">AbstractEventLoop</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">is_incognito</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">max_ws_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">20</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">AbstractEventLoop</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">browser_pid</span><span class="p">:</span> <span class="nb">int</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_targets</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Target</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_switch_to</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_started</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span> <span class="o">=</span> <span class="n">loop</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_target</span> <span class="o">=</span> <span class="n">base_target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_host</span> <span class="o">=</span> <span class="n">base_target</span><span class="o">.</span><span class="n">_host</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_remote</span> <span class="o">=</span> <span class="n">base_target</span><span class="o">.</span><span class="n">_is_remote</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_ws_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">max_ws_size</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context_id</span> <span class="o">=</span> <span class="n">context_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_closed_callbacks</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="nb">callable</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_driver</span> <span class="o">=</span> <span class="n">driver</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_incognito</span> <span class="o">=</span> <span class="n">is_incognito</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;&lt;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1"> (session=&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">current_window_handle</span><span class="si">}</span><span class="s1">&quot;)&gt;&#39;</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="fm">__aenter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_session</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="fm">__aexit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="fm">__await__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_session</span><span class="p">()</span><span class="o">.</span><span class="fm">__await__</span><span class="p">()</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">start_session</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">selenium_driverless.webdriver</span> <span class="kn">import</span> <span class="n">Chrome</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="p">:</span> <span class="n">Chrome</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_started</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">context_id</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_context_id</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_target</span><span class="o">.</span><span class="n">browser_context_id</span>
+            <span class="n">_type</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">type</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_type</span> <span class="o">==</span> <span class="s2">&quot;page:&quot;</span><span class="p">:</span>
+                <span class="n">targets</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span>
+                <span class="k">for</span> <span class="n">_id</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">targets</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                    <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;page&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">info</span><span class="o">.</span><span class="n">url</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;chrome-extension://&quot;</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_current_target</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">Target</span>
+                        <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">del</span> <span class="n">targets</span><span class="p">[</span><span class="n">_id</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_switch_to</span> <span class="o">=</span> <span class="k">await</span> <span class="n">SyncSwitchTo</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">,</span> <span class="n">context_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_context_id</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_switch_to</span> <span class="o">=</span> <span class="k">await</span> <span class="n">SwitchTo</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">,</span> <span class="n">context_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_context_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">targets</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">focus</span><span class="p">(</span><span class="n">activate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_started</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">frame_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">frame_tree</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">targets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TargetInfo</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_targets</span><span class="p">()</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">context_id</span><span class="o">=</span><span class="s2">&quot;self&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TargetInfo</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">context_id</span> <span class="o">==</span> <span class="s2">&quot;self&quot;</span><span class="p">:</span>
+            <span class="n">context_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context_id</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">get_targets</span><span class="p">(</span><span class="n">cdp_exec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">,</span> <span class="n">target_getter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">,</span> <span class="n">_type</span><span class="o">=</span><span class="n">_type</span><span class="p">,</span>
+                                 <span class="n">context_id</span><span class="o">=</span><span class="n">context_id</span><span class="p">,</span> <span class="n">max_ws_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_ws_size</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_target</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_target</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">base_target</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseTarget</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="o">.</span><span class="n">base_target</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_isolated_context_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># noinspection PyProtectedMember</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">_isolated_context_id</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">max_ws_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">max_ws_size</span><span class="p">:</span>
+            <span class="n">max_ws_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_ws_size</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">target_id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_target</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">Target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_targets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">target_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">target</span><span class="p">:</span>
+            <span class="n">target</span><span class="p">:</span> <span class="n">Target</span> <span class="o">=</span> <span class="k">await</span> <span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="o">=</span><span class="n">target_id</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_host</span><span class="p">,</span>
+                                              <span class="n">loop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">,</span> <span class="n">is_remote</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_is_remote</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+                                              <span class="n">max_ws_size</span><span class="o">=</span><span class="n">max_ws_size</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_driver</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_targets</span><span class="p">[</span><span class="n">target_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span>
+
+            <span class="c1"># noinspection PyUnusedLocal</span>
+            <span class="k">def</span> <span class="nf">remove_target</span><span class="p">(</span><span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">target_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_targets</span><span class="p">:</span>
+                    <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_targets</span><span class="p">[</span><span class="n">target_id</span><span class="p">]</span>
+
+            <span class="c1"># noinspection PyProtectedMember</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">_on_closed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">remove_target</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">target</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_target_for_iframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iframe</span><span class="p">:</span> <span class="n">WebElement</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_target_for_iframe</span><span class="p">(</span><span class="n">iframe</span><span class="o">=</span><span class="n">iframe</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Context.set_download_behaviour"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.set_download_behaviour">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_download_behaviour</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">behavior</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;deny&quot;</span><span class="p">,</span> <span class="s2">&quot;allow&quot;</span><span class="p">,</span> <span class="s2">&quot;allowAndName&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">],</span>
+                                     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;set the download behaviour</span>
+
+<span class="sd">        :param behavior: the behaviour to set the downloading to</span>
+<span class="sd">        :param path: the path to the default download directory</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            setting ``behaviour=allow`` instead of ``allowAndName`` can cause some bugs</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;behavior&quot;</span><span class="p">:</span> <span class="n">behavior</span><span class="p">,</span> <span class="s2">&quot;eventsEnabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+            <span class="n">_dir</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">_dir</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;path can&#39;t point to a file&quot;</span><span class="p">)</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;downloadPath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_dir</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_incognito</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;browserContextId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context_id</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Browser.setDownloadBehavior&quot;</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">downloads_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the current downloads directory&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_incognito</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">downloads_dir_for_context</span><span class="p">(</span><span class="n">context_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">context_id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">downloads_dir_for_context</span><span class="p">(</span><span class="n">context_id</span><span class="o">=</span><span class="s2">&quot;DEFAULT&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Context.wait_download"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.wait_download">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">wait_download</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        wait for a download on the current tab</span>
+
+<span class="sd">        returns something like</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            {</span>
+<span class="sd">                &quot;frameId&quot;: &quot;2D543B5E8B14945B280C537A4882A695&quot;,</span>
+<span class="sd">                &quot;guid&quot;: &quot;c91df4d5-9b45-4962-84df-3749bd3f926d&quot;,</span>
+<span class="sd">                &quot;url&quot;: &quot;https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf&quot;,</span>
+<span class="sd">                &quot;suggestedFilename&quot;: &quot;dummy.pdf&quot;,</span>
+
+<span class="sd">                # only if options.downloads_dir specified</span>
+<span class="sd">                &quot;guid_file&quot;: &quot;D:\\System\\AppData\\PyCharm\\scratches\\downloads\\c91df4d5-9b45-4962-84df-3749bd3f926d&quot;</span>
+<span class="sd">            }</span>
+
+<span class="sd">        :param timeout: time in seconds to wait for a download</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            downloads from iframes not supported yet</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">wait_download</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.get"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.get">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">referrer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wait_load</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Loads a web page in the current Target</span>
+
+<span class="sd">        :param url: the url to load.</span>
+<span class="sd">        :param referrer: the referrer to load the page with</span>
+<span class="sd">        :param wait_load: whether to wait for the webpage to load</span>
+<span class="sd">        :param timeout: the maximum time in seconds for waiting on load</span>
+
+<span class="sd">        returns the same as :func:`Target.wait_download &lt;selenium_driverless.types.target.Target.wait_download&gt;` if the url initiates a download</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_incognito</span> <span class="ow">and</span> <span class="n">url</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;chrome://extensions&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> only supported in non-incognito contexts&quot;</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">referrer</span><span class="o">=</span><span class="n">referrer</span><span class="p">,</span> <span class="n">wait_load</span><span class="o">=</span><span class="n">wait_load</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">title</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the title of the current target&quot;&quot;&quot;</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target_info</span>
+        <span class="k">return</span> <span class="n">target</span><span class="o">.</span><span class="n">title</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_pointer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pointer</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;the :class:`Pointer &lt;selenium_driverless.input.pointer.Pointer&gt;` for the current target&quot;&quot;&quot;</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span>
+        <span class="k">return</span> <span class="n">target</span><span class="o">.</span><span class="n">pointer</span>
+
+<div class="viewcode-block" id="Context.send_keys"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.send_keys">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">send_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        send text &amp; keys to the current target</span>
+
+<span class="sd">        :param text: the text to send</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">send_keys</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.execute_raw_script"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.execute_raw_script">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_raw_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">await_res</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                 <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                                 <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        example:</span>
+<span class="sd">        script= &quot;function(...arguments){obj.click()}&quot;</span>
+<span class="sd">        &quot;const obj&quot; will be the Object according to obj_id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">execute_raw_script</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">await_res</span><span class="o">=</span><span class="n">await_res</span><span class="p">,</span>
+                                               <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span>
+                                               <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">,</span>
+                                               <span class="n">unique_context</span><span class="o">=</span><span class="n">unique_context</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.execute_script"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.execute_script">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                             <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                             <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;executes JavaScript synchronously on ``GlobalThis`` such as</span>
+
+<span class="sd">        .. code-block:: js</span>
+
+<span class="sd">            return document</span>
+
+<span class="sd">        see :func:`Target.execute_raw_script &lt;selenium_driverless.types.target.Target.execute_raw_script&gt;` for argument descriptions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
+                                                        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">,</span>
+                                                        <span class="n">unique_context</span><span class="o">=</span><span class="n">unique_context</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.execute_async_script"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.execute_async_script">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_async_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                                   <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                                   <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;executes JavaScript asynchronously on ``GlobalThis`` such as</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            using execute_async_script is not recommended as it doesn&#39;t handle exceptions correctly.</span>
+<span class="sd">            Use :func:`Chrome.eval_async &lt;selenium_driverless.webdriver.Chrome.eval_async&gt;`</span>
+
+<span class="sd">        .. code-block:: js</span>
+
+<span class="sd">            resolve = arguments[arguments.length-1]</span>
+
+<span class="sd">        see :func:`Target.execute_raw_script &lt;selenium_driverless.types.target.Target.execute_raw_script&gt;` for argument descriptions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">execute_async_script</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span>
+                                                              <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
+                                                              <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+                                                              <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">,</span>
+                                                              <span class="n">unique_context</span><span class="o">=</span><span class="n">unique_context</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.eval_async"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.eval_async">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">eval_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                         <span class="n">serialization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                         <span class="n">execution_context_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                         <span class="n">unique_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;executes JavaScript asynchronously on ``GlobalThis`` such as</span>
+
+<span class="sd">        .. code-block:: js</span>
+
+<span class="sd">            res = await fetch(&quot;https://httpbin.org/get&quot;);</span>
+<span class="sd">            // mind CORS!</span>
+<span class="sd">            json = await res.json()</span>
+<span class="sd">            return json</span>
+
+<span class="sd">        see :func:`Target.execute_raw_script &lt;selenium_driverless.types.target.Target.execute_raw_script&gt;` for argument descriptions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">eval_async</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">serialization</span><span class="o">=</span><span class="n">serialization</span><span class="p">,</span>
+                                                    <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+                                                    <span class="n">execution_context_id</span><span class="o">=</span><span class="n">execution_context_id</span><span class="p">,</span>
+                                                    <span class="n">unique_context</span><span class="o">=</span><span class="n">unique_context</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">current_url</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the URL of the current page.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                target.current_url</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">url</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">page_source</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the docs_source of the current page.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                target.page_source</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">page_source</span>
+
+<div class="viewcode-block" id="Context.close"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.close">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Closes the current window.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                target.close()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">focus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">focus</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Context.quit"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.quit">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">quit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span> <span class="n">start_monotonic</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Quits the target and closes every associated window.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                target.quit()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">selenium_driverless</span> <span class="kn">import</span> <span class="n">EXC_HANDLER</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">start_monotonic</span><span class="p">:</span>
+            <span class="n">start_monotonic</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+        <span class="c1"># noinspection PyBroadException</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">context_id</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_remote</span><span class="p">:</span>
+                <span class="c1"># noinspection PyUnresolvedReferences,PyBroadException</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Target.disposeBrowserContext&quot;</span><span class="p">,</span>
+                                                           <span class="p">{</span><span class="s2">&quot;browserContextId&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">context_id</span><span class="p">})</span>
+                <span class="k">except</span> <span class="n">websockets</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionClosedError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="kn">import</span> <span class="nn">sys</span>
+                    <span class="n">EXC_HANDLER</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">targets</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span>
+                <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">targets</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+                    <span class="c1"># noinspection PyUnresolvedReferences</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">target</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">Target</span>
+                        <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+                        <span class="n">check_timeout</span><span class="p">(</span><span class="n">start_monotonic</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">websockets</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidStatusCode</span><span class="p">:</span>
+                        <span class="c1"># already closed</span>
+                        <span class="k">pass</span>
+                    <span class="k">except</span> <span class="ne">ConnectionAbortedError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+            <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed_callbacks</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">callback</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isawaitable</span><span class="p">(</span><span class="n">res</span><span class="p">):</span>
+                    <span class="k">await</span> <span class="n">res</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">EXC_HANDLER</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">current_target_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">info</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_window_handle</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the current target_id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">current_window_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Browser.getWindowForTarget&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;targetId&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_window_handle</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;windowId&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">context_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">window_handles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">TargetInfo</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the handles of all windows within the current session.&quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;window_handles aren&#39;t ordered&quot;</span><span class="p">)</span>
+        <span class="n">tabs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span>
+        <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">targets</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;page&quot;</span><span class="p">:</span>
+                <span class="n">tabs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tabs</span>
+
+<div class="viewcode-block" id="Context.new_window"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.new_window">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">new_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">type_hint</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;tab&quot;</span><span class="p">,</span> <span class="s2">&quot;window&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tab&quot;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                         <span class="n">focus</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">background</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Target</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;creates a new tab or window</span>
+
+<span class="sd">        :param type_hint: what kind of target to create</span>
+<span class="sd">        :param url: url to start the target at</span>
+<span class="sd">        :param activate: whether to bring the target to the front</span>
+<span class="sd">        :param focus: whether to emulate focus on the target</span>
+<span class="sd">        :param background: whether to start the target in the background</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_incognito</span> <span class="ow">and</span> <span class="n">url</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;chrome://extensions&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2"> only supported in non-incognito contexts&quot;</span><span class="p">)</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">url</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">type_hint</span> <span class="o">==</span> <span class="s2">&quot;window&quot;</span><span class="p">:</span>
+            <span class="n">args</span><span class="p">[</span><span class="s2">&quot;newWindow&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">type_hint</span> <span class="o">==</span> <span class="s2">&quot;tab&quot;</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;type hint needs to be &#39;window&#39; or &#39;tab&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">background</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">args</span><span class="p">[</span><span class="s2">&quot;background&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">background</span>
+
+        <span class="c1"># noinspection PyProtectedMember</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_id</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_incognito</span><span class="p">:</span>
+            <span class="n">args</span><span class="p">[</span><span class="s2">&quot;browserContextId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_id</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Target.createTarget&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="n">target_id</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="s2">&quot;targetId&quot;</span><span class="p">]</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">(</span><span class="n">target_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">activate</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">activate</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">focus</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">focus</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">target</span></div>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_window_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="s2">&quot;minimized&quot;</span><span class="p">,</span> <span class="s2">&quot;maximized&quot;</span><span class="p">,</span> <span class="s2">&quot;fullscreen&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">states</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;expected one of </span><span class="si">{</span><span class="n">states</span><span class="si">}</span><span class="s2">, but got: </span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">window_id</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_window_id</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;windowState&quot;</span><span class="p">:</span> <span class="n">state</span><span class="p">}</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Browser.setWindowBounds&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="n">bounds</span><span class="p">,</span> <span class="s2">&quot;windowId&quot;</span><span class="p">:</span> <span class="n">window_id</span><span class="p">})</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">normalize_window</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_window_state</span><span class="p">(</span><span class="s2">&quot;normal&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Context.maximize_window"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.maximize_window">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">maximize_window</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Maximizes the current window that webdriver is using.&quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_window_state</span><span class="p">(</span><span class="s2">&quot;maximized&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.fullscreen_window"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.fullscreen_window">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">fullscreen_window</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Invokes the window manager-specific &#39;full screen&#39; operation.&quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_window_state</span><span class="p">(</span><span class="s2">&quot;fullscreen&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.minimize_window"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.minimize_window">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">minimize_window</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Invokes the window manager-specific &#39;minimize&#39; operation.&quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_window_state</span><span class="p">(</span><span class="s2">&quot;minimized&quot;</span><span class="p">)</span></div>
+
+    <span class="c1"># noinspection PyUnusedLocal</span>
+<div class="viewcode-block" id="Context.print_page"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.print_page">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">print_page</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Takes PDF of the current page.</span>
+
+<span class="sd">        The target makes the best effort to return a PDF based on the</span>
+<span class="sd">        provided parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">print_page</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">switch_to</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SwitchTo</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :Returns:</span>
+<span class="sd">            - SwitchTo: an object containing all options to switch focus into</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                element = target.switch_to.active_element</span>
+<span class="sd">                alert = target.switch_to.alert</span>
+<span class="sd">                target.switch_to.default_content()</span>
+<span class="sd">                target.switch_to.frame(&#39;frame_name&#39;)</span>
+<span class="sd">                target.switch_to.frame(1)</span>
+<span class="sd">                target.switch_to.frame(target.find_elements(By.TAG_NAME, &quot;iframe&quot;)[0])</span>
+<span class="sd">                target.switch_to.parent_frame()</span>
+<span class="sd">                target.switch_to.window(&#39;main&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_switch_to</span>
+
+    <span class="c1"># Navigation</span>
+<div class="viewcode-block" id="Context.back"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.back">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">back</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Goes one step backward in the browser history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">back</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Context.forward"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.forward">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Goes one step forward in the browser history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Context.refresh"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.refresh">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">refresh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Refreshes the current page</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">refresh</span><span class="p">()</span></div>
+
+    <span class="c1"># Options</span>
+<div class="viewcode-block" id="Context.get_cookies"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.get_cookies">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cookies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a set of dictionaries, corresponding to cookies visible in</span>
+<span class="sd">        the current target.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_cookies</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Context.get_cookie"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.get_cookie">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cookie</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a single cookie by name. Returns the cookie if found, None if</span>
+<span class="sd">        not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_cookie</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.delete_cookie"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.delete_cookie">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">delete_cookie</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deletes a single cookie with the given name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">delete_cookie</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.delete_all_cookies"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.delete_all_cookies">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">delete_all_cookies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete all cookies in the scope of the session.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">delete_all_cookies</span><span class="p">()</span></div>
+
+    <span class="c1"># noinspection GrazieInspection</span>
+<div class="viewcode-block" id="Context.add_cookie"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.add_cookie">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">add_cookie</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cookie_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds a cookie to your current session.</span>
+
+<span class="sd">        :param cookie_dict: A dictionary object, with required keys - &quot;name&quot; and &quot;value&quot;;</span>
+<span class="sd">            optional keys - &quot;path&quot;, &quot;domain&quot;, &quot;secure&quot;, &quot;httpOnly&quot;, &quot;expiry&quot;, &quot;sameSite&quot;</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                target.add_cookie({&#39;name&#39; : &#39;foo&#39;, &#39;value&#39; : &#39;bar&#39;})</span>
+<span class="sd">                target.add_cookie({&#39;name&#39; : &#39;foo&#39;, &#39;value&#39; : &#39;bar&#39;, &#39;path&#39; : &#39;/&#39;})</span>
+<span class="sd">                target.add_cookie({&#39;name&#39; : &#39;foo&#39;, &#39;value&#39; : &#39;bar&#39;, &#39;path&#39; : &#39;/&#39;, &#39;secure&#39; : True})</span>
+<span class="sd">                target.add_cookie({&#39;name&#39; : &#39;foo&#39;, &#39;value&#39; : &#39;bar&#39;, &#39;sameSite&#39; : &#39;Strict&#39;})</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">add_cookie</span><span class="p">(</span><span class="n">cookie_dict</span><span class="o">=</span><span class="n">cookie_dict</span><span class="p">)</span></div>
+
+    <span class="c1"># Timeouts</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">sleep</span><span class="p">(</span><span class="n">time_to_wait</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">time_to_wait</span><span class="p">)</span>
+
+    <span class="c1"># noinspection PyUnusedLocal</span>
+<div class="viewcode-block" id="Context.find_element"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.find_element">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebElement</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;find an element in the current target</span>
+
+<span class="sd">        :param by: one of the locators at :func:`By &lt;selenium_driverless.types.by.By&gt;`</span>
+<span class="sd">        :param value: the actual query to find the element by</span>
+<span class="sd">        :param timeout: how long to wait for the element to exist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">()</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">find_element</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.find_elements"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.find_elements">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">WebElement</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;find multiple elements in the current target</span>
+
+<span class="sd">        :param by: one of the locators at :func:`By &lt;selenium_driverless.types.by.By&gt;`</span>
+<span class="sd">        :param value: the actual query to find the elements by</span>
+<span class="sd">        :param timeout: how long to wait for not being in a page reload loop in seconds</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target</span><span class="p">()</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">find_elements</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.search_elements"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.search_elements">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">search_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">WebElement</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        query:str | Plain text or query selector or XPath search query.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">search_elements</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.get_screenshot_as_file"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.get_screenshot_as_file">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a screenshot of the current window to a PNG image file.</span>
+
+<span class="sd">        :param filename: The full path you wish to save your screenshot to. This</span>
+<span class="sd">                   should end with a `.png` extension.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_screenshot_as_file</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.save_screenshot"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.save_screenshot">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">save_screenshot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;alias to :func: `driver.get_screenshot_as_file &lt;selenium_driverless.webdriver.Chrome.get_screenshot_as_file&gt;`&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">save_screenshot</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.get_screenshot_as_png"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.get_screenshot_as_png">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_screenshot_as_png</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the screenshot of the current window as a binary data.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                target.get_screenshot_as_png()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_screenshot_as_png</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Context.snapshot"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.snapshot">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">snapshot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;gets the current snapshot as mhtml&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">snapshot</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Context.save_snapshot"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.save_snapshot">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">save_snapshot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves a snapshot of the current window to a MHTML file.</span>
+
+<span class="sd">        :param filename: The full path you wish to save your snapshot to. This</span>
+<span class="sd">                   should end with a ``.mhtml`` extension.</span>
+
+<span class="sd">        .. code-block:: Python</span>
+
+<span class="sd">            await driver.get_snapshot(&#39;snapshot.mhtml&#39;)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">save_snapshot</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+
+    <span class="c1"># noinspection PyPep8Naming</span>
+<div class="viewcode-block" id="Context.set_window_size"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.set_window_size">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_window_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">windowHandle</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;current&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets the width and height of the current window. (window.resizeTo)</span>
+
+<span class="sd">        :Args:</span>
+<span class="sd">         - width: the width in pixels to set the window to</span>
+<span class="sd">         - height: the height in pixels to set the window to</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                target.set_window_size(800,600)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">windowHandle</span> <span class="o">!=</span> <span class="s2">&quot;current&quot;</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Only &#39;current&#39; window is supported for W3C compatible browsers.&quot;</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_window_rect</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">width</span><span class="p">),</span> <span class="n">height</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">height</span><span class="p">))</span></div>
+
+    <span class="c1"># noinspection PyPep8Naming</span>
+<div class="viewcode-block" id="Context.get_window_size"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.get_window_size">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_window_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the width and height of the current window.&quot;&quot;&quot;</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_window_rect</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">size</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">size</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">size</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;width&quot;</span><span class="p">,</span> <span class="s2">&quot;height&quot;</span><span class="p">)}</span></div>
+
+    <span class="c1"># noinspection PyPep8Naming</span>
+<div class="viewcode-block" id="Context.set_window_position"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.set_window_position">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_window_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">windowHandle</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;current&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets the x,y position of the current window. (window.moveTo)</span>
+
+<span class="sd">        :Args:</span>
+<span class="sd">         - x: the x-coordinate in pixels to set the window position</span>
+<span class="sd">         - y: the y-coordinate in pixels to set the window position</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                target.set_window_position(0,0)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">windowHandle</span> <span class="o">!=</span> <span class="s2">&quot;current&quot;</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Only &#39;current&#39; window is supported for W3C compatible browsers.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_window_rect</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">y</span><span class="p">))</span></div>
+
+    <span class="c1"># noinspection PyPep8Naming</span>
+<div class="viewcode-block" id="Context.get_window_position"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.get_window_position">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_window_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">windowHandle</span><span class="o">=</span><span class="s2">&quot;current&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the x,y position of the current window.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                target.get_window_position()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">windowHandle</span> <span class="o">!=</span> <span class="s2">&quot;current&quot;</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Only &#39;current&#39; window is supported for W3C compatible browsers.&quot;</span><span class="p">)</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_window_rect</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">position</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)}</span></div>
+
+<div class="viewcode-block" id="Context.get_window_rect"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.get_window_rect">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_window_rect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the x, y coordinates of the window as well as height and width</span>
+<span class="sd">        of the current window.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                target.get_window_rect()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Browser.getWindowBounds&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;windowId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_window_id</span><span class="p">})</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="n">json</span><span class="p">[</span><span class="s2">&quot;bounds&quot;</span><span class="p">]</span>
+        <span class="n">json</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">json</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span>
+        <span class="n">json</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="p">[</span><span class="s2">&quot;top&quot;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">json</span><span class="p">[</span><span class="s2">&quot;top&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">json</span></div>
+
+<div class="viewcode-block" id="Context.set_window_rect"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.set_window_rect">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_window_rect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets the x, y coordinates of the window as well as height and width</span>
+<span class="sd">        of the current window. This method is only supported for W3C compatible</span>
+<span class="sd">        browsers; other browsers should use `set_window_position` and</span>
+<span class="sd">        `set_window_size`.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                target.set_window_rect(x=10, y=10)</span>
+<span class="sd">                target.set_window_rect(width=100, height=200)</span>
+<span class="sd">                target.set_window_rect(x=10, y=10, width=100, height=200)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">height</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">width</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;x and y or height and width need values&quot;</span><span class="p">)</span>
+
+        <span class="n">bounds</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;left&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;top&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="n">width</span><span class="p">,</span> <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="n">height</span><span class="p">}</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Browser.setWindowBounds&quot;</span><span class="p">,</span>
+                                   <span class="p">{</span><span class="s2">&quot;windowId&quot;</span><span class="p">:</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_window_id</span><span class="p">,</span> <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="n">bounds</span><span class="p">})</span>
+        <span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span>
+        <span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;top&quot;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;top&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">bounds</span></div>
+
+<div class="viewcode-block" id="Context.get_network_conditions"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.get_network_conditions">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_network_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets Chromium network emulation settings.</span>
+
+<span class="sd">        :Returns:</span>
+<span class="sd">            A dict. For example:</span>
+<span class="sd">            {&#39;latency&#39;: 4, &#39;download_throughput&#39;: 2, &#39;upload_throughput&#39;: 2,</span>
+<span class="sd">            &#39;offline&#39;: False}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_network_conditions</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Context.set_network_conditions"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.set_network_conditions">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_network_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offline</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">latency</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">download_throughput</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                     <span class="n">upload_throughput</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                     <span class="n">connection_type</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span>
+                                         <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;cellular2g&quot;</span><span class="p">,</span> <span class="s2">&quot;cellular3g&quot;</span><span class="p">,</span> <span class="s2">&quot;cellular4g&quot;</span><span class="p">,</span> <span class="s2">&quot;bluetooth&quot;</span><span class="p">,</span> <span class="s2">&quot;ethernet&quot;</span><span class="p">,</span> <span class="s2">&quot;wifi&quot;</span><span class="p">,</span> <span class="s2">&quot;wimax&quot;</span><span class="p">,</span> <span class="s2">&quot;other&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets Chromium network emulation settings.</span>
+
+<span class="sd">        :Args:</span>
+<span class="sd">         - network_conditions: A dict with conditions specification.</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                target.set_network_conditions(</span>
+<span class="sd">                    offline=False,</span>
+<span class="sd">                    latency=5,  # additional latency (ms)</span>
+<span class="sd">                    download_throughput=500 * 1024,  # maximal throughput</span>
+<span class="sd">                    upload_throughput=500 * 1024,  # maximal throughput</span>
+<span class="sd">                    connection_type=&quot;wifi&quot;)</span>
+
+<span class="sd">            Note: &#39;throughput&#39; can be used to set both (for download and upload).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">set_network_conditions</span><span class="p">(</span><span class="n">offline</span><span class="o">=</span><span class="n">offline</span><span class="p">,</span> <span class="n">latency</span><span class="o">=</span><span class="n">latency</span><span class="p">,</span>
+                                                   <span class="n">download_throughput</span><span class="o">=</span><span class="n">download_throughput</span><span class="p">,</span>
+                                                   <span class="n">upload_throughput</span><span class="o">=</span><span class="n">upload_throughput</span><span class="p">,</span> <span class="n">connection_type</span><span class="o">=</span><span class="n">connection_type</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.delete_network_conditions"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.delete_network_conditions">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">delete_network_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resets Chromium network emulation settings.&quot;&quot;&quot;</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">delete_network_conditions</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Context.set_permissions"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.set_permissions">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_permissions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">origin</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets Applicable Permission.</span>
+
+<span class="sd">        :Args:</span>
+<span class="sd">         - name: The item to set the permission on.</span>
+<span class="sd">         - value: The value to set on the item</span>
+
+<span class="sd">        :Usage:</span>
+<span class="sd">            ::</span>
+
+<span class="sd">                target.set_permissions(&#39;clipboard-read&#39;, &#39;denied&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;granted&quot;</span><span class="p">,</span> <span class="s2">&quot;denied&quot;</span><span class="p">,</span> <span class="s2">&quot;prompt&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">settings</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;value needs to be within </span><span class="si">{</span><span class="n">settings</span><span class="si">}</span><span class="s2">, but got </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;permission&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">},</span> <span class="s2">&quot;setting&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">context_id</span><span class="p">:</span>
+            <span class="n">args</span><span class="p">[</span><span class="s2">&quot;browserContextId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context_id</span>
+        <span class="k">if</span> <span class="n">origin</span><span class="p">:</span>
+            <span class="n">args</span><span class="p">[</span><span class="s2">&quot;origin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">origin</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="s2">&quot;Browser.setPermission&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.wait_for_cdp"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.wait_for_cdp">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">wait_for_cdp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        wait for an event on the current target</span>
+<span class="sd">        see :func:`Target.wait_for_cdp &lt;selenium_driverless.types.target.Target.wait_for_cdp&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">wait_for_cdp</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.add_cdp_listener"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.add_cdp_listener">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">add_cdp_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">any</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        add a listener for a CDP event on the current target</span>
+<span class="sd">        see :func:`Target.add_cdp_listener &lt;selenium_driverless.types.target.Target.add_cdp_listener&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">add_cdp_listener</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.remove_cdp_listener"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.remove_cdp_listener">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">remove_cdp_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">any</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        remove a listener for a CDP event on the current target</span>
+<span class="sd">        see :func:`Target.remove_cdp_listener &lt;selenium_driverless.types.target.Target.remove_cdp_listener&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">remove_cdp_listener</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.get_cdp_event_iter"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.get_cdp_event_iter">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_cdp_event_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">AsyncIterable</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        iterate over CDP events on the current target</span>
+<span class="sd">        see :func:`Target.get_cdp_event_iter &lt;selenium_driverless.types.target.Target.get_cdp_event_iter&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_cdp_event_iter</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.execute_cdp_cmd"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.execute_cdp_cmd">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute_cdp_cmd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cmd_args</span><span class="p">:</span> <span class="nb">dict</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                              <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute Chrome Devtools Protocol command on the current target</span>
+<span class="sd">        executes it on :class:`Target.execute_cdp_cmd &lt;selenium_driverless.types.base_target.BaseTarget&gt;`</span>
+<span class="sd">        if ``message:&#39;Not allowed&#39;`` received</span>
+<span class="sd">        see :func:`Target.execute_cdp_cmd &lt;selenium_driverless.types.target.Target.execute_cdp_cmd&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span> <span class="n">cmd_args</span><span class="o">=</span><span class="n">cmd_args</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32000</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s1">&#39;Not allowed&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_target</span><span class="o">.</span><span class="n">execute_cdp_cmd</span><span class="p">(</span><span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span> <span class="n">cmd_args</span><span class="o">=</span><span class="n">cmd_args</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.fetch"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.fetch">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        executes a JS ``fetch`` request within the current target</span>
+<span class="sd">        see :func:`Target.fetch &lt;selenium_driverless.types.target.Target.fetch&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.xhr"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.xhr">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">xhr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        executes a JS ``XMLHttpRequest`` request within the current target</span>
+<span class="sd">        see :func:`Target.fetch &lt;selenium_driverless.types.target.Target.fetch&gt;` for reference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">xhr</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="c1"># noinspection PyTypeChecker</span>
+<div class="viewcode-block" id="Context.get_sinks"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.get_sinks">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_sinks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :Returns: A list of sinks available for Cast.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_sinks</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Context.get_issue_message"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.get_issue_message">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_issue_message</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :Returns: An error message when there is any issue in a Cast session.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">get_issue_message</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Context.set_sink_to_use"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.set_sink_to_use">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_sink_to_use</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets a specific sink, using its name, as a Cast session receiver</span>
+<span class="sd">        target.</span>
+
+<span class="sd">        :Args:</span>
+<span class="sd">         - sink_name: Name of the sink to use as the target.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">set_sink_to_use</span><span class="p">(</span><span class="n">sink_name</span><span class="o">=</span><span class="n">sink_name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.start_desktop_mirroring"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.start_desktop_mirroring">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">start_desktop_mirroring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Starts a desktop mirroring session on a specific receiver target.</span>
+
+<span class="sd">        :Args:</span>
+<span class="sd">         - sink_name: Name of the sink to use as the target.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">start_desktop_mirroring</span><span class="p">(</span><span class="n">sink_name</span><span class="o">=</span><span class="n">sink_name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.start_tab_mirroring"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.start_tab_mirroring">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">start_tab_mirroring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Starts a tab mirroring session on a specific receiver target.</span>
+
+<span class="sd">        :Args:</span>
+<span class="sd">         - sink_name: Name of the sink to use as the target.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">start_tab_mirroring</span><span class="p">(</span><span class="n">sink_name</span><span class="o">=</span><span class="n">sink_name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.stop_casting"><a class="viewcode-back" href="../../../api/Context.html#selenium_driverless.types.context.Context.stop_casting">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">stop_casting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Stops the existing Cast session on a specific receiver target.</span>
+
+<span class="sd">        :Args:</span>
+<span class="sd">         - sink_name: Name of the sink to stop the Cast session.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_target</span><span class="o">.</span><span class="n">stop_casting</span><span class="p">(</span><span class="n">sink_name</span><span class="o">=</span><span class="n">sink_name</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Aurin Aegerter (aka Steve, kaliiiiiiiiii).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

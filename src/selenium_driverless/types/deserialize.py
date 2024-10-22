@@ -77,12 +77,11 @@ class JSRemoteObj:
 
     async def __exec_raw__(self, script: str, *args, await_res: bool = False, serialization: str = None,
                            max_depth: int = None, timeout: float = 10, execution_context_id: str = None,
-                           unique_context: bool = False):
+                           unique_context: bool = True):
         """
         example:
         script= "function(...arguments){obj.click()}"
         "const obj" will be the Object according to obj_id
-        this is by default globalThis (=> window)
         """
         from selenium_driverless.types import JSEvalException
         from selenium_driverless.types.webelement import WebElement
@@ -119,7 +118,6 @@ class JSRemoteObj:
                 else:
                     if arg.__context_id__ == exec_context:
                         obj_id = arg.__obj_id__
-
                 if obj_id:
                     is_value = False
                     _args.append({"objectId": obj_id})
@@ -165,7 +163,7 @@ class JSRemoteObj:
 
     async def __exec__(self, script: str, *args, max_depth: int = 2, serialization: str = None,
                        timeout: float = 10, execution_context_id: str = None,
-                       unique_context: bool = None):
+                       unique_context: bool = True):
         """
         example: script = "return elem.click()"
         """
@@ -201,13 +199,13 @@ class JSRemoteObj:
                             """ + script + "})"
         res = await self.__exec_raw__(script, *args, max_depth=max_depth,
                                       serialization=serialization, timeout=timeout,
-                                      await_res=False, execution_context_id=exec_context)
+                                      await_res=False, execution_context_id=exec_context, unique_context=False)
         return res
 
     async def __exec_async__(self, script: str, *args, max_depth: int = 2,
                              serialization: str = None, timeout: float = 10,
                              obj_id=None, execution_context_id: str = None,
-                             unique_context: bool = False):
+                             unique_context: bool = True):
         from selenium_driverless.types.webelement import WebElement
 
         exec_context = self.__context_id__
@@ -240,13 +238,13 @@ class JSRemoteObj:
         res = await self.__exec_raw__(script, *args, max_depth=max_depth,
                                       serialization=serialization, timeout=timeout,
                                       await_res=True,
-                                      execution_context_id=exec_context)
+                                      execution_context_id=exec_context, unique_context=False)
         return res
 
     async def __eval_async__(self, script: str, *args, max_depth: int = 2,
                              serialization: str = None, timeout: float = 10,
                              obj_id=None, execution_context_id: str = None,
-                             unique_context: bool = False):
+                             unique_context: bool = True):
         from selenium_driverless.types.webelement import WebElement
 
         exec_context = self.__context_id__
@@ -273,7 +271,7 @@ class JSRemoteObj:
         res = await self.__exec_raw__(script, *args, max_depth=max_depth,
                                       serialization=serialization, timeout=timeout,
                                       await_res=True,
-                                      execution_context_id=exec_context)
+                                      execution_context_id=exec_context, unique_context=False)
         return res
 
 
@@ -599,6 +597,10 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
                                               execution_context_id=context_id))
         return elems
 
+    backend_node_id = None
+    if isinstance(_value, dict):
+        backend_node_id = _value.get('backendNodeId')
+
     # structures
     if _type == "array":
         if _value is None:
@@ -672,18 +674,22 @@ async def parse_deep(deep: dict, target, isolated_exec_id: int, frame_id: int, s
         return JSArrayBuffer(obj_id, target=target,
                              isolated_exec_id=isolated_exec_id, frame_id=frame_id)
     elif _type == "node":
+
         if loop:
-            return await SyncWebElement(backend_node_id=_value.get('backendNodeId'), obj_id=obj_id, target=target,
+            return await SyncWebElement(backend_node_id=backend_node_id, obj_id=obj_id, target=target,
                                         loop=loop,
                                         class_name=class_name, context_id=context_id,
                                         isolated_exec_id=isolated_exec_id, frame_id=frame_id)
         else:
-            return await WebElement(backend_node_id=_value.get('backendNodeId'), obj_id=obj_id, target=target,
+            return await WebElement(backend_node_id=backend_node_id, obj_id=obj_id, target=target,
                                     loop=loop,
                                     class_name=class_name, context_id=context_id,
                                     isolated_exec_id=isolated_exec_id, frame_id=frame_id)
     elif _type == "window":
-        return JSWindow(context=_value.get("context"), obj_id=obj_id, target=target, isolated_exec_id=isolated_exec_id,
+        context = None
+        if _value is not None:
+            context = _value.get("context")
+        return JSWindow(context=context, obj_id=obj_id, target=target, isolated_exec_id=isolated_exec_id,
                         frame_id=frame_id)
     elif _type == "generator":
         return JSUnserializable(_type, _value, target=target, obj_id=obj_id,

@@ -1,5 +1,7 @@
 # io
 import asyncio
+import base64
+import json
 import os.path
 import time
 import typing
@@ -53,7 +55,7 @@ KEY_MAPPING = {
     '\\': ('Backslash', 220), ']': ('BracketRight', 221), '^': ('Digit6', 54), '_': ('Minus', 189),
     '`': ('Backquote', 192),
     '{': ('BracketLeft', 219), '|': ('Backslash', 220), '}': ('BracketRight', 221), '~': ('Backquote', 192),
-    ' ': ('Space', 32)
+    ' ': ('Space', 32), '\r': ('Enter', 13)
 }
 
 SHIFT_KEY_NEEDED = '~!@#$%^&*()_+{}|:"<>?'
@@ -432,6 +434,8 @@ class Target:
         async with self._send_key_lock:
             for letter in text:
                 if letter in KEY_MAPPING:
+                    if letter == "\n":
+                        letter = "\r"
                     key_code, virtual_key_code = KEY_MAPPING[letter]
                 elif allow_not_on_mapping:
                     key_code, virtual_key_code = 0, 0
@@ -488,14 +492,12 @@ class Target:
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False, serialization: str = None,
                                  max_depth: int = None, timeout: float = 2, execution_context_id: str = None,
-                                 unique_context: bool = False):
+                                 unique_context: bool = True):
         """executes a JavaScript on ``GlobalThis`` such as
 
         .. code-block:: js
 
             function(...arguments){return document}
-
-        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
 
         :param script: the script as a string
         :param args: the argument which are passed to the function. Those can be either json-serializable or a RemoteObject such as WebELement
@@ -524,7 +526,7 @@ class Target:
                 global_this = await self._global_this(execution_context_id)
                 res = await global_this.__exec_raw__(script, *args, await_res=await_res, serialization=serialization,
                                                      max_depth=max_depth, timeout=timeout,
-                                                     execution_context_id=execution_context_id)
+                                                     execution_context_id=execution_context_id, unique_context=False)
             except StaleJSRemoteObjReference as e:
                 exc = e
             else:
@@ -536,15 +538,13 @@ class Target:
                                        f"possibly due to a reload loop")
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: float = None, execution_context_id: str = None,
-                             unique_context: bool = None):
+                             timeout: float = 2, execution_context_id: str = None,
+                             unique_context: bool = True):
         """executes JavaScript synchronously on ``GlobalThis`` such as
 
         .. code-block:: js
 
             return document
-
-        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
 
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
@@ -561,22 +561,21 @@ class Target:
             try:
                 res = await global_this.__exec__(script, *args, serialization=serialization,
                                                  max_depth=max_depth, timeout=timeout,
-                                                 execution_context_id=execution_context_id)
+                                                 execution_context_id=execution_context_id,
+                                                 unique_context=False)
                 return res
             except StaleJSRemoteObjReference:
                 pass
         raise asyncio.TimeoutError("Couldn't execute script, possibly due to a reload loop")
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                                   timeout: float = None, execution_context_id: str = None,
+                                   timeout: float = 2, execution_context_id: str = None,
                                    unique_context: bool = None):
         """executes JavaScript asynchronously on ``GlobalThis``
 
         .. code-block:: js
 
             resolve = arguments[arguments.length-1]
-
-        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
 
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
@@ -593,15 +592,16 @@ class Target:
             try:
                 res = await global_this.__exec_async__(script, *args, serialization=serialization,
                                                        max_depth=max_depth, timeout=timeout,
-                                                       execution_context_id=execution_context_id)
+                                                       execution_context_id=execution_context_id,
+                                                       unique_context=False)
                 return res
             except StaleJSRemoteObjReference:
                 await asyncio.sleep(0)
         raise asyncio.TimeoutError("Couldn't execute script, possibly due to a reload loop")
 
     async def eval_async(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                         timeout: float = None, execution_context_id: str = None,
-                         unique_context: bool = None):
+                         timeout: float = 2, execution_context_id: str = None,
+                         unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
 
         .. code-block:: js
@@ -610,8 +610,6 @@ class Target:
             // mind CORS!
             json = await res.json()
             return json
-
-        ``this`` refers to ``globalThis`` (=> window)
 
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
@@ -628,7 +626,8 @@ class Target:
             try:
                 res = await global_this.__eval_async__(script, *args, serialization=serialization,
                                                        max_depth=max_depth, timeout=timeout,
-                                                       execution_context_id=execution_context_id)
+                                                       execution_context_id=execution_context_id,
+                                                       unique_context=False)
                 return res
             except StaleJSRemoteObjReference:
                 await asyncio.sleep(0)
@@ -670,7 +669,7 @@ class Target:
                 target.close()
         """
         try:
-            await self.execute_cdp_cmd("Target.closeTarget",{"targetId":self.id}, timeout=timeout)
+            await self.execute_cdp_cmd("Target.closeTarget", {"targetId": self.id}, timeout=timeout)
             await self._socket.close()
         except websockets.ConnectionClosedError:
             pass
@@ -831,7 +830,11 @@ class Target:
         """
         if not (cookie_dict.get("url") or cookie_dict.get("domain") or cookie_dict.get("path")):
             cookie_dict["url"] = await self.current_url
-        return await add_cookie(target=self, cookie_dict=cookie_dict)
+        context_id = None
+        # noinspection PyProtectedMember
+        if self._context._is_incognito:
+            context_id = self.browser_context_id
+        return await add_cookie(target=self, cookie_dict=cookie_dict, context_id=context_id)
 
     @property
     async def _document_elem(self) -> WebElement:
@@ -849,7 +852,7 @@ class Target:
         return self._document_elem_
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, timeout: int or None = None) -> WebElement:
+    async def find_element(self, by: str, value: str, timeout: float or None = None) -> WebElement:
         """find an element in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
@@ -871,14 +874,23 @@ class Target:
             raise NoSuchElementException()
         return elem
 
-    async def find_elements(self, by: str, value: str) -> typing.List[WebElement]:
+    async def find_elements(self, by: str, value: str, timeout: float = 3) -> typing.List[WebElement]:
         """find multiple elements in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
         :param value: the actual query to find the elements by
+        :param timeout: how long to wait for not being in a page reload loop in seconds
         """
-        parent = await self._document_elem
-        return await parent.find_elements(by=by, value=value)
+        start = time.perf_counter()
+        while True:
+            parent = await self._document_elem
+            try:
+                return await parent.find_elements(by=by, value=value)
+            except (StaleElementReferenceException, StaleJSRemoteObjReference):
+                await self._on_loaded()
+            if (not timeout) or (time.perf_counter() - start) > timeout:
+                raise asyncio.TimeoutError(
+                    f"Couldn't find elements within {timeout} seconds due to a target reload loop")
 
     async def set_source(self, source: str, timeout: float = 15):
         """
@@ -929,7 +941,7 @@ class Target:
             elems.append(elem)
         return elems
 
-    async def get_screenshot_as_file(self, filename:str) -> None:
+    async def get_screenshot_as_file(self, filename: str) -> None:
         """Saves a screenshot of the current window to a PNG image file.
 
         :param filename: The full path.
@@ -944,7 +956,7 @@ class Target:
         async with aiofiles.open(filename, "wb") as f:
             await f.write(png)
 
-    async def save_screenshot(self, filename:str) -> None:
+    async def save_screenshot(self, filename: str) -> None:
         """alias to :func: `driver.get_screenshot_as_file <selenium_driverless.webdriver.Chrome.get_screenshot_as_file>`"""
         return await self.get_screenshot_as_file(filename)
 
@@ -959,7 +971,7 @@ class Target:
         res = await self.execute_cdp_cmd("Page.captureSnapshot")
         return res["data"]
 
-    async def save_snapshot(self, filename:str):
+    async def save_snapshot(self, filename: str):
         """Saves a snapshot of the current window to a MHTML file.
 
         :param filename: The full path you wish to save your snapshot to. This
@@ -1118,7 +1130,7 @@ class Target:
     async def fetch(self, url: str,
                     method: typing.Literal[
                         "GET", "POST", "HEAD", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", None] = "GET",
-                    headers: typing.Dict[str, str] = None, body: str = None,
+                    headers: typing.Dict[str, str] = None, body: typing.Union[bytes, str, dict] = None,
                     mode: typing.Literal["cors", "no-cors", "same-origin", None] = None,
                     credentials: typing.Literal["omit", "same-origin", "include"] = None,
                     cache: typing.Literal[
@@ -1148,14 +1160,18 @@ class Target:
             }
 
         """
-        # see
+        loop = asyncio.get_event_loop()
+        if isinstance(body, dict):
+            body = await loop.run_in_executor(None, lambda: json.dumps(body).encode("utf-8"))
+        elif isinstance(body, str):
+            body = await loop.run_in_executor(None, lambda: body.encode("utf-8"))
         options = {}
         if method:
             options["method"] = method
         if headers:
             options["headers"] = headers
         if body:
-            options["body"] = body
+            options["body"] = await loop.run_in_executor(None, lambda: base64.b64encode(body).decode("ascii"))
         if mode:
             options["mode"] = mode
         if credentials:
@@ -1176,11 +1192,27 @@ class Target:
             options["priority"] = priority
 
         script = """
-            function buffer2hex (buffer) {
-                return [...new Uint8Array (buffer)]
-                    .map (b => b.toString (16).padStart (2, "0"))
-                    .join ("");
-            }
+            async function bufferTobase64(array) {
+              return new Promise((resolve) => {
+                const blob = new Blob([array]);
+                const reader = new FileReader();
+                
+                reader.onload = (event) => {
+                  const dataUrl = event.target.result;
+                  const [_, base64] = dataUrl.split(',');
+                  
+                  resolve(base64);
+                };
+                
+                reader.readAsDataURL(blob);
+              });
+            };
+            async function base64ToBuffer(base64) {
+              const dataUrl = "data:application/octet-binary;base64," + base64;
+            
+              const res = await fetch(dataUrl)
+              return await res.arrayBuffer()
+            };
 
             function headers2dict(headers){
                 var my_dict = {};
@@ -1189,11 +1221,12 @@ class Target:
                 return my_dict}
 
             async function get(url, options){
+                if(options.body){options.body = await base64ToBuffer(options.body)}
                 var response = await fetch(url, options);
                 var buffer = await response.arrayBuffer()
-                var hex = buffer2hex(buffer)
+                var b64 = await bufferTobase64(buffer)
                 var res = {
-                        "HEX":hex,
+                        "b64":b64,
                         "headers":headers2dict(response.headers),
                         "ok":response.ok,
                         "status_code":response.status,
@@ -1202,18 +1235,18 @@ class Target:
                         "type":response.type,
                         "url":response.url
                         };
-                console.log(res)
                 return res;
             }
             return await get(arguments[0], arguments[1])
         """
         result = await self.eval_async(script, url, options, unique_context=True, timeout=timeout)
-        result["body"] = bytes.fromhex(result["HEX"])
-        del result["HEX"]
+        result["body"] = base64.b64decode(result["b64"])
+        del result["b64"]
         return result
 
     async def xhr(self, url: str,
                   method: typing.Literal["GET", "POST", "PUT", "DELETE"] = "GET",
+                  body: typing.Union[bytes, str, dict] = None,
                   user: str = None, password: str = None, with_credentials: bool = True, mime_type: str = "text/plain",
                   extra_headers: typing.Dict[str, str] = None,
                   timeout: float = 30) -> dict:
@@ -1223,6 +1256,7 @@ class Target:
 
         :param url: the url to get
         :param method: one of "GET", "POST", "PUT", "DELETE"
+        :param body: body to send with a request
         :param user: user to authenticate with
         :param password: password to authenticate with
         :param with_credentials: whether to include cookies
@@ -1248,33 +1282,40 @@ class Target:
         """
         if extra_headers is None:
             extra_headers = {}
+        loop = asyncio.get_event_loop()
+        if isinstance(body, dict):
+            body = await loop.run_in_executor(None, lambda: json.dumps(body).encode("utf-8"))
+        elif isinstance(body, str):
+            body = await loop.run_in_executor(None, lambda: body.encode("utf-8"))
+        if body is not None:
+            body = await loop.run_in_executor(None, lambda: base64.b64encode(body).decode("ascii"))
         script = """
-        function makeRequest(withCredentials, mimeType, extraHeaders, ...args) {
-            return new Promise(function (resolve, reject) {
-                try{
-                    let xhr = new XMLHttpRequest();
-
-                    if(!(args[3])){args[3] = null};
-                    if(!(args[4])){args[4] = null};
-                    xhr.overrideMimeType(mimeType);
-
-                    xhr.open(...args);
-                    Object.keys(extraHeaders).forEach(function(key) {
-                        xhr.setRequestHeader(key, extraHeaders[key])
-                    });
-                    xhr.withCredentials = withCredentials;
-
-                    xhr.onload = function () {
-                        resolve(xhr)
-                    };
-                    xhr.onerror = function () {
-                        reject(new Error("XHR failed"));
-                    };
-                    xhr.send();
-                }catch(e){reject(e)}
-            });
+        async function base64ToBuffer(base64) {
+              const dataUrl = "data:application/octet-binary;base64," + base64;
+            
+              const res = await fetch(dataUrl)
+              return await res.arrayBuffer()
         };
+        async function makeRequest(withCredentials, mimeType, extraHeaders, method, url, user, password, body) {
+            let xhr = new XMLHttpRequest();
 
+            if(!user){user = null};
+            if(!password){password = null};
+            if(!body){body = null}else{body = await base64ToBuffer(body)};
+            xhr.overrideMimeType(mimeType);
+
+            xhr.open(method, url, true, user, password);
+            Object.keys(extraHeaders).forEach((key) => {
+                xhr.setRequestHeader(key, extraHeaders[key])
+            });
+            xhr.withCredentials = withCredentials;
+            const promise = new Promise((resolve, reject) => {
+                xhr.onload = () => {resolve(xhr)};
+                xhr.onerror = () => {reject(new Error("XHR failed"))};
+            });
+            xhr.send(body);
+            return await promise
+        };
         var xhr =  await makeRequest(...arguments);
         data = {
             status: xhr.status,
@@ -1289,8 +1330,8 @@ class Target:
         };
         return data
         """
-        data = await self.eval_async(script, with_credentials, mime_type, extra_headers, method, url, True, user,
-                                     password,
+        data = await self.eval_async(script, with_credentials, mime_type,
+                                     extra_headers, method, url, user, password, body,
                                      timeout=timeout, unique_context=True)
 
         # parse headers

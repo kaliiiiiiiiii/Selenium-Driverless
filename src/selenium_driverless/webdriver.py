@@ -62,6 +62,7 @@ from selenium_driverless import EXC_HANDLER
 
 class Chrome:
     """Control the chromium based browsers without any driver."""
+    port: int
 
     def __init__(
             self,
@@ -250,8 +251,8 @@ class Chrome:
                     self._options.debugger_address = f"127.0.0.1:{port}"
 
             host, port = self._options.debugger_address.split(":")
-            port = int(port)
-            self._host = f"{host}:{port}"
+            self.port = int(port)
+            self._host = f"{host}:{self.port}"
             if self._loop:
                 self._base_target = await SyncBaseTarget(host=self._host, is_remote=self._is_remote,
                                                          timeout=self._timeout, loop=self._loop,
@@ -274,7 +275,7 @@ class Chrome:
                 self.browser_pid = self._process.pid
             targets = await get_json(self._host, timeout=self._timeout)
             for target in targets:
-                if target["type"] == "page":
+                if target["type"] == "page" and not target["url"].startswith("chrome-extension://"):
                     target_id = target["id"]
                     self._current_target = await get_target(target_id=target_id, host=self._host,
                                                             loop=self._loop, is_remote=self._is_remote, timeout=10,
@@ -429,7 +430,8 @@ class Chrome:
                     mv3_target = await self.mv3_extension
                     self._auth_interception_enabled = False
                     await self._ensure_auth_interception(timeout=0.5, set_flag=False)
-                    await mv3_target.execute_script("globalThis.authCreds = arguments[0]", self._auth, timeout=0.5)
+                    await mv3_target.execute_script("globalThis.authCreds = arguments[0]", self._auth, timeout=0.5,
+                                                    unique_context=False)
                 except (asyncio.TimeoutError, TimeoutError):
                     await asyncio.sleep(0.1)
                     self._mv3_extension = None
@@ -501,7 +503,7 @@ class Chrome:
                     # fix WebRTC leak
                     await extension_target.execute_script(
                         "chrome.privacy.network.webRTCIPHandlingPolicy.set(arguments[0])",
-                        {"value": "disable_non_proxied_udp"}, timeout=2)
+                        {"value": "disable_non_proxied_udp"}, timeout=2, unique_context=False)
                 except (asyncio.TimeoutError, TimeoutError):
                     await asyncio.sleep(0.2)
                     return await self.mv3_extension
@@ -544,7 +546,7 @@ class Chrome:
                     await make_global()
                 """
                 await asyncio.sleep(0.1)
-                await page.eval_async(script, timeout=10)
+                await page.eval_async(script, timeout=10, unique_context=False)
             except Exception as e:
                 EXC_HANDLER(e)
                 self._extensions_incognito_allowed = False
@@ -566,8 +568,8 @@ class Chrome:
         """the current downloads directory for the current context"""
         return self.base_target.downloads_dir_for_context(context_id="DEFAULT")
 
-    async def set_download_behaviour(self,behaviour:typing.Literal["deny", "allow", "allowAndName", "default"],
-                                     path:str=None):
+    async def set_download_behaviour(self, behaviour: typing.Literal["deny", "allow", "allowAndName", "default"],
+                                     path: str = None):
         """set the download behaviour
 
         :param behaviour: the behaviour to set the downloading to
@@ -625,7 +627,7 @@ class Chrome:
         """
         return await self.current_target.get_targets_for_iframes(iframes=iframes)
 
-    async def wait_download(self, timeout:float or None=30) -> dict:
+    async def wait_download(self, timeout: float or None = 30) -> dict:
         """
         wait for a download on the current tab
 
@@ -651,7 +653,8 @@ class Chrome:
         """
         return await self.current_target.wait_download(timeout=timeout)
 
-    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> typing.Union[None, dict]:
+    async def get(self, url: str, referrer: str = None, wait_load: bool = True, timeout: float = 30) -> typing.Union[
+        None, dict]:
         """Loads a web page in the current Target
 
         :param url: the url to load.
@@ -685,15 +688,13 @@ class Chrome:
 
     async def execute_raw_script(self, script: str, *args, await_res: bool = False,
                                  serialization: typing.Literal["deep", "json", "idOnly"] = "deep",
-                                 max_depth: int = None, timeout: int = 2, execution_context_id: str = None,
-                                 unique_context: bool = False):
+                                 max_depth: int = None, timeout: float = 2, execution_context_id,
+                                 unique_context: bool = True):
         """executes a JavaScript on ``GlobalThis`` such as
 
         .. code-block:: js
 
             function(...arguments){return document}
-
-        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
 
         :param script: the script as a string
         :param args: the argument which are passed to the function. Those can be either json-serializable or a RemoteObject such as WebElement
@@ -712,28 +713,23 @@ class Chrome:
                                                             unique_context=unique_context)
 
     async def execute_script(self, script: str, *args, max_depth: int = 2, serialization: str = None,
-                             timeout: int = None,
-                             target_id: str = None, execution_context_id: str = None,
-                             unique_context: bool = False):
+                             timeout: float = 2, execution_context_id: str = None,
+                             unique_context: bool = True):
         """executes JavaScript synchronously on ``GlobalThis`` such as
 
         .. code-block:: js
 
             return document
 
-        ``this`` and ``obj`` refers to ``globalThis`` (=> window) here
-
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
                 """
-        target = await self.get_target(target_id)
-        return await target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
-                                           timeout=timeout, execution_context_id=execution_context_id,
-                                           unique_context=unique_context)
+        return await self.current_target.execute_script(script, *args, max_depth=max_depth, serialization=serialization,
+                                                        timeout=timeout, execution_context_id=execution_context_id,
+                                                        unique_context=unique_context)
 
     async def execute_async_script(self, script: str, *args, max_depth: int = 2,
-                                   serialization: str = None, timeout: int = 2,
-                                   target_id: str = None, execution_context_id: str = None,
-                                   unique_context: bool = False):
+                                   serialization: str = None, timeout: float = 2, execution_context_id: str = None,
+                                   unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
 
         .. warning::
@@ -744,20 +740,17 @@ class Chrome:
 
             resolve = arguments[arguments.length-1]
 
-        ``this`` refers to ``globalThis`` (=> window)
-
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
-        target = await self.get_target(target_id)
-        return await target.execute_async_script(script, *args, max_depth=max_depth, serialization=serialization,
-                                                 timeout=timeout,
-                                                 execution_context_id=execution_context_id,
-                                                 unique_context=unique_context)
+        return await self.current_target.execute_async_script(script, *args, max_depth=max_depth,
+                                                              serialization=serialization,
+                                                              timeout=timeout,
+                                                              execution_context_id=execution_context_id,
+                                                              unique_context=unique_context)
 
     async def eval_async(self, script: str, *args, max_depth: int = 2,
-                         serialization: str = None, timeout: int = 2,
-                         target_id: str = None, execution_context_id: str = None,
-                         unique_context: bool = False):
+                         serialization: str = None, timeout: float = 2, execution_context_id: str = None,
+                         unique_context: bool = True):
         """executes JavaScript asynchronously on ``GlobalThis`` such as
 
         .. code-block:: js
@@ -767,15 +760,12 @@ class Chrome:
             json = await res.json()
             return json
 
-        ``this`` refers to ``globalThis`` (=> window)
-
         see :func:`Target.execute_raw_script <selenium_driverless.types.target.Target.execute_raw_script>` for argument descriptions
         """
-        target = await self.get_target(target_id)
-        return await target.eval_async(script, *args, max_depth=max_depth, serialization=serialization,
-                                       timeout=timeout,
-                                       execution_context_id=execution_context_id,
-                                       unique_context=unique_context)
+        return await self.current_target.eval_async(script, *args, max_depth=max_depth, serialization=serialization,
+                                                    timeout=timeout,
+                                                    execution_context_id=execution_context_id,
+                                                    unique_context=unique_context)
 
     @property
     async def current_url(self) -> str:
@@ -879,7 +869,7 @@ class Chrome:
                                 loop.run_in_executor(None,
                                                      lambda: clean_dirs_sync(
                                                          [self._options.user_data_dir])),
-                                timeout=max(5,int(timeout - (time.perf_counter() - start))))
+                                timeout=max(5, int(timeout - (time.perf_counter() - start))))
                         except Exception as e:
                             warnings.warn(
                                 "driver hasn't quit correctly, "
@@ -982,7 +972,7 @@ class Chrome:
 
             Minimizing isn't recommended as it can throttle some functionalities in chrome.
         """
-        await self.set_window_state("maximized")
+        await self.set_window_state("minimized")
 
     # noinspection PyUnusedLocal
     async def print_page(self) -> str:
@@ -1064,7 +1054,7 @@ class Chrome:
         await asyncio.sleep(time_to_wait)
 
     # noinspection PyUnusedLocal
-    async def find_element(self, by: str, value: str, timeout: int or None = None) -> WebElement:
+    async def find_element(self, by: str, value: str, timeout: float or None = None) -> WebElement:
         """find an element in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
@@ -1073,13 +1063,14 @@ class Chrome:
         """
         return await self.current_target.find_element(by=by, value=value, timeout=timeout)
 
-    async def find_elements(self, by: str, value: str) -> typing.List[WebElement]:
+    async def find_elements(self, by: str, value: str, timeout: float = 3) -> typing.List[WebElement]:
         """find multiple elements in the current target
 
         :param by: one of the locators at :func:`By <selenium_driverless.types.by.By>`
         :param value: the actual query to find the elements by
+        :param timeout: how long to wait for not being in a page reload loop in seconds
         """
-        return await self.current_target.find_elements(by=by, value=value)
+        return await self.current_target.find_elements(by=by, value=value, timeout=timeout)
 
     async def search_elements(self, query: str) -> typing.List[WebElement]:
         """
@@ -1321,7 +1312,7 @@ class Chrome:
         """
         extension = await self.mv3_extension
         await extension.eval_async("await chrome.proxy.settings.set(arguments[0])",
-                                   {"value": proxy_config, "scope": 'regular'})
+                                   {"value": proxy_config, "scope": 'regular'}, unique_context=False)
 
     async def set_single_proxy(self, proxy: str, bypass_list=None):
         """
@@ -1394,7 +1385,7 @@ class Chrome:
             await chrome.proxy.settings.set(
               {value: {mode: "direct"}, scope: 'regular'}
             );
-        """)
+        """, unique_context=False)
 
     async def _ensure_auth_interception(self, timeout: float = 0.3, set_flag: bool = True):
         # internal, to re-apply auth interception which is broken when a new context gets opened. Due to how extensions in incognito work
@@ -1411,7 +1402,7 @@ class Chrome:
                             );
                         """
             mv3_target = await self.mv3_extension
-            await mv3_target.execute_script(script, timeout=timeout)
+            await mv3_target.execute_script(script, timeout=timeout, unique_context=False)
             if set_flag:
                 self._auth_interception_enabled = True
 
@@ -1443,19 +1434,9 @@ class Chrome:
                 "password": password
             }
         }
-        await mv3_target.execute_script("globalThis.authCreds[arguments[1]] = arguments[0]", arg, host_with_port)
+        await mv3_target.execute_script("globalThis.authCreds[arguments[1]] = arguments[0]", arg, host_with_port,
+                                        unique_context=False)
         self._auth[host_with_port] = arg
-
-    async def clear_auth(self):
-        """
-        clear the applied auth from :func:`webdriver.Chrome.set_auth <selenium_driverless.webdriver.Chrome.set_auth>`
-        """
-        # provide auth
-        mv3_target = await self.mv3_extension
-        script = "chrome.webRequest.onAuthRequired.removeListener(globalThis.onAuth);"
-        self._auth = {}
-        await mv3_target.execute_script(script)
-        self._auth_interception_enabled = False
 
     async def wait_for_cdp(self, event: str, timeout: float or None = None) -> dict:
         """
@@ -1478,23 +1459,21 @@ class Chrome:
         """
         return await self.current_target.remove_cdp_listener(event=event, callback=callback)
 
-    async def get_cdp_event_iter(self, event: str, target_id: str = None) -> typing.AsyncIterable[dict]:
+    async def get_cdp_event_iter(self, event: str) -> typing.AsyncIterable[dict]:
         """
         iterate over CDP events on the current target
         see :func:`Target.get_cdp_event_iter <selenium_driverless.types.target.Target.get_cdp_event_iter>` for reference
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_cdp_event_iter(event=event)
+        return await self.current_target.get_cdp_event_iter(event=event)
 
     async def execute_cdp_cmd(self, cmd: str, cmd_args: dict or None = None,
-                              timeout: float or None = 10, target_id: str = None) -> dict:
+                              timeout: float or None = 10) -> dict:
         """Execute Chrome Devtools Protocol command on the current target
         executes it on :class:`Target.execute_cdp_cmd <selenium_driverless.types.base_target.BaseTarget>`
         if ``message:'Not allowed'`` received
         see :func:`Target.execute_cdp_cmd <selenium_driverless.types.target.Target.execute_cdp_cmd>` for reference
         """
-        return await self.current_context.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout,
-                                                          target_id=target_id)
+        return await self.current_context.execute_cdp_cmd(cmd=cmd, cmd_args=cmd_args, timeout=timeout)
 
     async def fetch(self, *args, **kwargs) -> dict:
         """
@@ -1511,19 +1490,17 @@ class Chrome:
         return await self.current_target.xhr(*args, **kwargs)
 
     # noinspection PyTypeChecker
-    async def get_sinks(self, target_id: str = None) -> list:
+    async def get_sinks(self) -> list:
         """
         :Returns: A list of sinks available for Cast.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_sinks()
+        return await self.current_target.get_sinks()
 
-    async def get_issue_message(self, target_id: str = None):
+    async def get_issue_message(self):
         """
         :Returns: An error message when there is any issue in a Cast session.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.get_issue_message()
+        return await self.current_target.get_issue_message()
 
     async def set_sink_to_use(self, sink_name: str) -> dict:
         """Sets a specific sink, using its name, as a Cast session receiver
@@ -1547,11 +1524,10 @@ class Chrome:
         """
         return await self.current_target.start_tab_mirroring(sink_name=sink_name)
 
-    async def stop_casting(self, sink_name: str, target_id: str = None) -> dict:
+    async def stop_casting(self, sink_name: str) -> dict:
         """Stops the existing Cast session on a specific receiver target.
 
         :Args:
          - sink_name: Name of the sink to stop the Cast session.
         """
-        target = await self.get_target(target_id=target_id)
-        return await target.stop_casting(sink_name=sink_name)
+        return await self.current_target.stop_casting(sink_name=sink_name)

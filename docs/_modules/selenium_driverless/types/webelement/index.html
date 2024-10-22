@@ -276,12 +276,12 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">___frame_id__</span>
 
     <span class="nd">@property</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">content_document</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">content_document</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebElement</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        **async** gets the document of the iframe</span>
+<span class="sd">        **async** gets the contentDocument element of the iframe (or frame). Returns None if this isn&#39;t an iframe.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">_desc</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_describe</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">_desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;localName&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;iframe&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;localName&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;iframe&quot;</span><span class="p">,</span> <span class="s2">&quot;frame&quot;</span><span class="p">]:</span>
             <span class="n">node</span> <span class="o">=</span> <span class="n">_desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;contentDocument&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">node</span><span class="p">:</span>
                 <span class="n">frame_id</span> <span class="o">=</span> <span class="n">_desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;frameId&quot;</span><span class="p">)</span>
@@ -314,6 +314,41 @@
                 <span class="k">return</span> <span class="k">await</span> <span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_document_elem</span>
 
     <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">shadow_roots</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">WebElement</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        **async** gets a list of currently connected shadow root documents</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">isolated_exec_id</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__isolated_exec_id__</span>
+        <span class="n">_desc</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_describe</span><span class="p">()</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">shadow_roots</span> <span class="o">=</span> <span class="n">_desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;shadowRoots&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">shadow_roots</span><span class="p">:</span>
+            <span class="n">frame_id</span> <span class="o">=</span> <span class="n">_desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;frameId&quot;</span><span class="p">)</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;shadowRootType&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">selenium_driverless.sync.webelement</span> <span class="kn">import</span> <span class="n">WebElement</span> <span class="k">as</span> <span class="n">SyncWebElement</span>
+                <span class="n">elem</span> <span class="o">=</span> <span class="k">await</span> <span class="n">SyncWebElement</span><span class="p">(</span><span class="n">backend_node_id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;backendNodeId&#39;</span><span class="p">),</span>
+                                            <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">,</span>
+                                            <span class="n">class_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;#document-fragment(</span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s1"> shadow-root)&#39;</span><span class="p">,</span>
+                                            <span class="n">isolated_exec_id</span><span class="o">=</span><span class="n">isolated_exec_id</span><span class="p">,</span> <span class="n">frame_id</span><span class="o">=</span><span class="n">frame_id</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">elem</span> <span class="o">=</span> <span class="k">await</span> <span class="n">WebElement</span><span class="p">(</span><span class="n">backend_node_id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;backendNodeId&#39;</span><span class="p">),</span>
+                                        <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">,</span>
+                                        <span class="n">class_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;#document-fragment(</span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s1"> shadow-root)&#39;</span><span class="p">,</span>
+                                        <span class="n">isolated_exec_id</span><span class="o">=</span><span class="n">isolated_exec_id</span><span class="p">,</span> <span class="n">frame_id</span><span class="o">=</span><span class="n">frame_id</span><span class="p">)</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="nd">@property</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">shadow_root</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">WebElement</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;**async** returns the (first)  document for this element</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">roots</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">shadow_roots</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">roots</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">roots</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">document_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;**async** gets the url if the element is an iframe, else returns ``None``&quot;&quot;&quot;</span>
         <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_describe</span><span class="p">()</span>
@@ -337,7 +372,7 @@
 
 <div class="viewcode-block" id="WebElement.find_element">
 <a class="viewcode-back" href="../../../../api/WebELement/#selenium_driverless.types.webelement.WebElement.find_element">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="ow">or</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebElement</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;find an element in the current target</span>
 
 <span class="sd">        :param by: one of the locators at :func:`By &lt;selenium_driverless.types.by.By&gt;`</span>
@@ -673,7 +708,7 @@
 <span class="sd">        send text &amp; keys to the target</span>
 
 <span class="sd">        :param text: the text to send to the target</span>
-<span class="sd">        :param click_kwargs: arguments to pass for :func:`Elem.send_keys &lt;selenium_driverless.types.webelement.WebElement.send_keys&gt;`</span>
+<span class="sd">        :param click_kwargs: arguments to pass for :func:`Elem.click &lt;selenium_driverless.types.webelement.WebElement.click&gt;`</span>
 <span class="sd">        :param click_on: whether to click on the element before sending the keys</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">click_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -828,16 +863,6 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns whether the element is enabled.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s2">&quot;disabled&quot;</span><span class="p">)</span></div>
 
-
-    <span class="nd">@property</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">shadow_root</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;the shadowRoot of the element</span>
-
-<span class="sd">        .. warning::</span>
-<span class="sd">            this does not support (yet) closed shadow-DOM elements</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># todo: move to CDP</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span><span class="s2">&quot;return obj.shadowRoot&quot;</span><span class="p">)</span>
 
     <span class="c1"># RenderedWebElement Items</span>
 <div class="viewcode-block" id="WebElement.is_displayed">
@@ -1042,7 +1067,8 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">:</span>
                 <span class="c1"># noinspection PyUnresolvedReferences</span>
                 <span class="k">return</span> <span class="k">await</span> <span class="n">SyncWebElement</span><span class="p">(</span><span class="n">node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="p">,</span> <span class="n">context_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__context_id__</span><span class="p">,</span>
-                                            <span class="n">isolated_exec_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">___isolated_exec_id__</span><span class="p">,</span> <span class="n">frame_id</span><span class="o">=</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__frame_id__</span><span class="p">)</span>
+                                            <span class="n">isolated_exec_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">___isolated_exec_id__</span><span class="p">,</span>
+                                            <span class="n">frame_id</span><span class="o">=</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__frame_id__</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># noinspection PyUnresolvedReferences</span>
                 <span class="k">return</span> <span class="k">await</span> <span class="n">WebElement</span><span class="p">(</span><span class="n">node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__target__</span><span class="p">,</span> <span class="n">context_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__context_id__</span><span class="p">,</span>
