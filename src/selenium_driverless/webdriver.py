@@ -275,7 +275,7 @@ class Chrome:
                 self.browser_pid = self._process.pid
             targets = await get_json(self._host, timeout=self._timeout)
             for target in targets:
-                if target["type"] == "page":
+                if target["type"] == "page" and not target["url"].startswith("chrome-extension://"):
                     target_id = target["id"]
                     self._current_target = await get_target(target_id=target_id, host=self._host,
                                                             loop=self._loop, is_remote=self._is_remote, timeout=10,

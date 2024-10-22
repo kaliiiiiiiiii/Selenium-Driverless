@@ -106,7 +106,7 @@ class Context:
             if not _type == "page:":
                 targets = await self.targets
                 for _id, info in list(targets.items()):
-                    if info.type == "page" and not info.title.startswith("chrome-extension://"):
+                    if info.type == "page" and not info.url.startswith("chrome-extension://"):
                         self._current_target = info.Target
                         break
                     else:
@@ -433,13 +433,7 @@ class Context:
 
     @property
     async def window_handles(self) -> List[TargetInfo]:
-        """Returns the handles of all windows within the current session.
-
-        :Usage:
-            ::
-
-                target.window_handles
-        """
+        """Returns the handles of all windows within the current session."""
         warnings.warn("window_handles aren't ordered")
         tabs = []
         targets = await self.targets
