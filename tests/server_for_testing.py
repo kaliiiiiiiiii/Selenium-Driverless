@@ -39,6 +39,7 @@ class Server:
             web.get("/echo", self.echo), web.post("/echo", self.echo)
         ])
 
+    # noinspection PyUnusedLocal
     async def root(self, request: web.Request) -> web.Response:
         return web.Response(text="Hello World!", content_type="text/html")
 
@@ -48,6 +49,7 @@ class Server:
         return resp
 
     async def cookie_echo(self, request: web.Request) -> web.Response:
+        # noinspection PyTypeChecker
         resp = await asyncio.get_event_loop().run_in_executor(None, lambda: json.dumps(dict(**request.cookies)))
         return web.Response(text=resp, content_type="application/json")
 
@@ -86,7 +88,7 @@ class Server:
         if not self._started:
             self.port = random_port()
             self.url = f"http://{self.host}:{self.port}"
-            self.thread = threading.Thread(target=lambda: web.run_app(self.app, host=self.host, port=self.port),
+            self.thread = threading.Thread(target=lambda: web.run_app(self.app, host=self.host, port=self.port, handle_signals=False),
                                            daemon=True)
             self.thread.start()
         return self
