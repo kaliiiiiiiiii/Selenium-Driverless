@@ -7,6 +7,7 @@ scipy
 platformdirs
 websockets~=12.0
 aiohttp~=3.9.3
+platformdirs~=4.3.6
 
 # dev
 setuptools~=69.0.3
