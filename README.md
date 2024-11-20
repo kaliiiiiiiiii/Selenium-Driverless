@@ -43,18 +43,7 @@ pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/he
 
 ## Sponsors
 
-### [Capsolver](https://is.gd/pNs507)
-
-<a href="https://is.gd/IcYvAB" >
-  <img src="assets/CapSolver Ads.png" alt="drawing" width="60%"/>
-</a>
-
-<!--- 
-https://is.gd/stats.php?url=IcYvAB
---->
-
-An AI-powered captcha-solver service.
-
+This project is currently not being sponsored.
 
 ### Dependencies
 
