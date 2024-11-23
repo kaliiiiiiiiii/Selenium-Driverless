@@ -31,16 +31,6 @@ pip install https://github.com/kaliiiiiiiiii/Selenium-Driverless/archive/refs/he
 ```
 </details>
 
-
-#### Also, feel free to
-<a href="https://www.buymeacoffee.com/kaliiii">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://www.buymeacoffee.com/assets/img/custom_images/black_img.png" />
-    <source media="(prefers-color-scheme: light)" srcset="https://www.buymeacoffee.com/assets/img/custom_images/white_img.png" />
-    <img alt="Star History Chart" src="https://www.buymeacoffee.com/assets/img/custom_images/black_img.png" />
-  </picture>
-</a>
-
 ## Sponsors
 
 This project is currently not being sponsored.
