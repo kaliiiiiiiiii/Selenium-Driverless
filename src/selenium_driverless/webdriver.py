@@ -121,6 +121,7 @@ class Chrome:
         self._is_remote = False
         self._has_incognito_contexts: bool = False
         self._started = False
+        self._is_developer_mode = False
 
     def __repr__(self):
         return f'<{type(self).__module__}.{type(self).__name__} (session="{self.current_target.id}")>'
@@ -371,6 +372,7 @@ class Chrome:
         :param proxy_server: a proxy-server to use for the context
         :param proxy_bypass_list: a list of proxies to ignore
         """
+        await self.enable_developer_mode()
         await self.ensure_extensions_incognito_allowed()
         if proxy_bypass_list is None:
             proxy_bypass_list = ["localhost"]
@@ -516,6 +518,33 @@ class Chrome:
                     break
             self._mv3_extension = extension_target
         return self._mv3_extension
+
+    async def enable_developer_mode(self, timeout: float = 10):
+        """enable developer mode"""
+        if not self._is_developer_mode:
+            self._is_developer_mode = True
+            page = None
+            try:
+                base_ctx = self._base_context
+                page: Context = await base_ctx.new_window("tab", "chrome://extensions", activate=False)
+                script = """
+                    async function make_dev_global(){
+                        await chrome.developerPrivate.updateProfileConfiguration({
+                            inDeveloperMode: true
+                        });
+                    };
+                    await make_dev_global()
+                """
+                await asyncio.sleep(0.1)
+                await page.eval_async(script, timeout=10, unique_context=False)
+            except Exception as e:
+                EXC_HANDLER(e)
+                self._is_developer_mode = False
+                if page:
+                    await page.close()
+                await self.enable_developer_mode()
+            self._is_developer_mode = True
+            await page.close()
 
     async def ensure_extensions_incognito_allowed(self):
         """
