@@ -433,9 +433,9 @@ class Target:
         """
         async with self._send_key_lock:
             for letter in text:
+                if letter == "\n":
+                    letter = "\r"
                 if letter in KEY_MAPPING:
-                    if letter == "\n":
-                        letter = "\r"
                     key_code, virtual_key_code = KEY_MAPPING[letter]
                 elif allow_not_on_mapping:
                     key_code, virtual_key_code = 0, 0
